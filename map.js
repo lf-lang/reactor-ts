@@ -6,68 +6,68 @@
 // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
 
 export class Map<K, V> {
-	
-	obj: Object;
 
-	constructor() {
-		this.obj = {};
-	}
+    obj: Object;
 
-	clear() {
-		this.obj = {};
-	}
+    constructor() {
+        this.obj = {};
+    }
 
-	/**
-	 * Removes any value associated to the key and returns the value that 
-	 * Map.prototype.has(key) would have previously returned. 
-	 */
-	delete(key: K): boolean {
-		var present = this.has(key);
-		delete this.obj[key];
-		return present;
-	}
+    clear() {
+        this.obj = {};
+    }
 
-	entries() {
+    /**
+     * Removes any value associated to the key and returns the value that
+     * Map.prototype.has(key) would have previously returned.
+     */
+    delete(key: K): boolean {
+        var present = this.has(key);
+        delete this.obj[key];
+        return present;
+    }
 
-		// FIXME:
-		// Returns a new Iterator object that contains an array of [key, value] for each element in the Map object in insertion order.
-	}
+    entries() {
 
-	//forEach() {
-		// FIXME:
-		// Calls callbackFn once for each key-value pair present in the Map object, in insertion order. If a thisArg parameter is provided to forEach, it will be used as the this value for each callback.
-	//}
+        // FIXME:
+        // Returns a new Iterator object that contains an array of [key, value] for each element in the Map object in insertion order.
+    }
 
-	get(key: K): ?V {
-		return this.obj[key];
-	}
+    //forEach() {
+        // FIXME:
+        // Calls callbackFn once for each key-value pair present in the Map object, in insertion order. If a thisArg parameter is provided to forEach, it will be used as the this value for each callback.
+    //}
 
-	set(key: K, value: V) {
-		this.obj[key] = value; 
-	}
+    get(key: K): ?V {
+        return this.obj[key];
+    }
 
-	has(key: K): boolean {
-		for (var k in this.keys()) {
-			if (k == key) {
-				return true;
-			}
-		}
-		return false;
-	}
+    set(key: K, value: V) {
+        this.obj[key] = value;
+    }
 
-	keys() {
-		return this.obj.keys();
-	}
+    has(key: K): boolean {
+        for (var k in this.keys()) {
+            if (k == key) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	obj() {
-		return this.obj.obj();
-	}
+    keys() {
+        return this.obj.keys();
+    }
 
-	values(): Array<V> {
-		var arr: Array<V> = [];
-		for (var k in this.keys()) {
-			arr.push(this.obj[k]);
-		}
-		return arr;
-	}
+    obj() {
+        return this.obj.obj();
+    }
+
+    values(): Array<V> {
+        var arr: Array<V> = [];
+        for (var k in this.keys()) {
+            arr.push(this.obj[k]);
+        }
+        return arr;
+    }
 }

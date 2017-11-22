@@ -7,35 +7,35 @@ import {Timeout, Director} from './director'
 
 class DiscreteEvents implements Director {
 
-	setTimeout(fn: Function, delay: number): Timeout {
-		
-	}
+    setTimeout(fn: Function, delay: number): Timeout {
 
-	clearTimeout(timeout: Timeout): void {
+    }
 
-	}
-	
-	setImmediate(fn: Function): Immediate {
+    clearTimeout(timeout: Timeout): void {
 
-	}
-	
-	clearImmediate(handle: Immediate): void {
+    }
 
-	}
-	
-	setInterval(timeout: Timeout): void {
+    setImmediate(fn: Function): Immediate {
 
-	}
-	clearInterval(handle: Timeout): void {
+    }
 
-	}
+    clearImmediate(handle: Immediate): void {
 
-	send(port: Port, value: any): void {
+    }
 
-	} // FIXME: types
-	get(port: Port): any {
+    setInterval(timeout: Timeout): void {
 
-	}
+    }
+    clearInterval(handle: Timeout): void {
+
+    }
+
+    send(port: Port, value: any): void {
+
+    } // FIXME: types
+    get(port: Port): any {
+
+    }
 
 
 }

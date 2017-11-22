@@ -28,4 +28,4 @@ class Swarmlet extends Composite {
     setup() {
         this.add(new Adder("My Adder"));
     }
-} 
+}

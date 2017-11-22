@@ -1289,14 +1289,14 @@ Accessor.prototype.getMonitor = function () {
 
     // Fill the object to return
     obj = {
-    	'name': this.accessorName,
+        'name': this.accessorName,
         'type': type,
         'monitoringInformation': this.monitor,
         'composites': []
     };
 
     if (this.containedAccessors && this.containedAccessors.length > 0) {
-		for (var i = 0; i < this.containedAccessors.length; i++) {
+        for (var i = 0; i < this.containedAccessors.length; i++) {
             obj.composites.push(this.containedAccessors[i].getMonitor());
         }
     }
@@ -2093,12 +2093,12 @@ Accessor.prototype.removeReification = function () {
     }
 
     // Remove the containment relationship
-   	var acc = thiz.containedAccessors.pop();
+       var acc = thiz.containedAccessors.pop();
     if (acc.container) {
-    	acc.container = null;
+        acc.container = null;
     }
 
-	// Disconnect the mutableAccessor from the reifying one
+    // Disconnect the mutableAccessor from the reifying one
     Object.keys(thiz.inputsMap).forEach(function (key) {
         thiz.disconnect(key, acc, thiz.inputsMap[key]);
     });
@@ -2106,14 +2106,14 @@ Accessor.prototype.removeReification = function () {
         thiz.disconnect(acc, key, thiz.outputsMap[key]);
     });
 
-	// Wrapup the accessor to remove
-	acc.wrapup();
+    // Wrapup the accessor to remove
+    acc.wrapup();
 
-	// Empty mapping objects
+    // Empty mapping objects
     thiz.inputsMap = {};
     thiz.outputsMap = {};
     if (thiz.parametersMap) {
-    	thiz.parametersMap = {};
+        thiz.parametersMap = {};
     }
 
     // Update the mutableAccessor state and history
@@ -2488,8 +2488,8 @@ function convertType(value, destination, name) {
         }
     } else if (typeof value === 'string') {
         // Provided value is a reported to be a string.  Note that it might
-    	// actually be a JSON object but is reported to be a string.
-    	// Destination type is boolean, number, int, or JSON.
+        // actually be a JSON object but is reported to be a string.
+        // Destination type is boolean, number, int, or JSON.
         if (value === '') {
             // If the value is an empty string, then convert
             // to null, unless the destination type is JSON.
@@ -2498,17 +2498,17 @@ function convertType(value, destination, name) {
             }
         } else {
             try {
-            	// Try to parse JSON.  This sometimes fails for strings
-            	// which are not enclosed in quotation marks.  Note also
-            	// the Javascript type (here, string) does not necessarily
-            	// match the type of the parsed JSON (e.g. could be an object).
-            	var originalValue = value;
+                // Try to parse JSON.  This sometimes fails for strings
+                // which are not enclosed in quotation marks.  Note also
+                // the Javascript type (here, string) does not necessarily
+                // match the type of the parsed JSON (e.g. could be an object).
+                var originalValue = value;
 
                 value = JSON.parse(value);
             } catch (error) {
-            	// Assume it is a string.
-            	// Note this approach does not allow us to catch malformed JSON.
-            	value = originalValue;
+                // Assume it is a string.
+                // Note this approach does not allow us to catch malformed JSON.
+                value = originalValue;
             }
         }
     } else if (destination.type === 'boolean' && typeof value !== 'boolean') {
@@ -2557,7 +2557,7 @@ function getMonitoringInformation() {
     var result = {};
     for (var i = 0; i < topLevelAccessors.length; i++) {
         result[topLevelAccessors[i].accessorName] =
-       			topLevelAccessors[i].getMonitor();
+                   topLevelAccessors[i].getMonitor();
     };
     return result;
 }
