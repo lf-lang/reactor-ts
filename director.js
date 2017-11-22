@@ -8,9 +8,9 @@ import {Descendant, Component, Composite, Port} from './hierarchy';
 /**
  * Type class for timers.
  */
-declare export class Timeout extends Number {
-    +ref?: () => this;
-    +unref?: () => this;
+export class Timeout extends Number {
+    +ref: ?(() => this);
+    +unref: ?(() => this);
 }
 
 /** Type alias for handles of "immediately" scheduled callbacks. */

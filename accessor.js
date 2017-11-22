@@ -9,7 +9,7 @@ import {Actor} from './actor';
 
 export class Accessor extends Actor {
 
-    handlers: Array<function>;
+    handlers: Array<Function>;
     triggers: Map<string, number>;
 
     /**
@@ -23,7 +23,7 @@ export class Accessor extends Actor {
      * Register an input handler. A handle is returned that can be used for
      * unregistering.
      */
-    addInputHandler(input: string, handler: function): number {
+    addInputHandler(input: string, handler: Function): number {
         var index = this.handlers.push(handler) -1;
         this.triggers.set(input, index);
         return index;

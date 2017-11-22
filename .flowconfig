@@ -1,0 +1,13 @@
+[ignore]
+.*/__tests__/.*
+.*\.ignore\.js
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+
+[strict]
