@@ -1,0 +1,27 @@
+{
+  "name": "accessor-flow",
+  "version": "0.0.1",
+  "description": "Accessors enable composing heterogeneous devices and services.",
+  "main": "accessor.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "flow-bin": "^0.59.0",
+    "jest": "^21.2.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "repoman@repo.eecs.berkeley.edu:users/marten/flow.git"
+  },
+  "keywords": [
+    "flow",
+    "accessor"
+  ],
+  "author": "Marten Lohstroh, Ben Zhang",
+  "license": "BSD-3-Clause"
+}
