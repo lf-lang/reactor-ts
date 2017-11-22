@@ -17,6 +17,8 @@ export class Accessor extends Actor {
      */
     constructor(name: string) {
         super(name);
+        this.handlers = [];
+        this.triggers = new Map();
     }
 
     /**

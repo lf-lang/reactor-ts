@@ -123,7 +123,7 @@ export class NamedDescendant<T> extends Nameable implements Descendant<T> { // F
  */
 export class Port extends NamedDescendant<Component> {
 
-    queue = [];
+    queue: Array<any>;
     portType: PortType;
     dataType: ?string; // FIXME: use a proper type here.
     options: ?Object;
