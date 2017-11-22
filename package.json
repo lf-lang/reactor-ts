@@ -3,16 +3,15 @@
   "version": "0.0.1",
   "description": "Accessors enable composing heterogeneous devices and services.",
   "main": "accessor.js",
-  "directories": {
-    "doc": "docs"
-  },
   "dependencies": {},
   "devDependencies": {
+    "documentation": "^5.3.3",
     "flow-bin": "^0.59.0",
     "jest": "^21.2.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "doc": "documentation build commonHost.js -f html -o docs"
   },
   "repository": {
     "type": "git",
