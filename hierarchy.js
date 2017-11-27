@@ -1,5 +1,10 @@
 // @flow
 
+/**
+ * @file Defines various classes and interfaces for accessor hierarchy.
+ * @author Marten Lohstroh
+ */
+
 'use strict';
 
 /** ES6 imports */
@@ -13,9 +18,13 @@ export type PortType = "input" | "output" | "parameter" | "portparameter";
 export type Visibility = "full" | "none" | "expert" | "notEditable";
 
 /**
- * A Base class for named objects.
+ * A Base class for named objects. One can get and set any nameable object's
+ * name. NamedDescendant, Component are also nameable
+ * classes. Composite is not (why?)
  */
 export class Nameable { // FIXME: perhaps extend EventEmitter? Or let Component extend EventEmitter? Idea: probably the director should be an event emitter, not the other components.
+    // Why EventEmitter?
+
     name: string;
 
     /** Instantiate an object and name it. */
@@ -36,9 +45,21 @@ export class Nameable { // FIXME: perhaps extend EventEmitter? Or let Component 
 }
 
 /**
- * A generic container.
+ * A generic container that can contain anything that's nameable:
+ * nameddescendant, component.
+ *
+ * A PortSet contains Port.
+ * A Composite contains Component.
+ *
  */
 export interface Container<T: Nameable> {
+    // What about using interface property instead of functions?
+    // interface Container<T: Nameable> {
+    //   components: Map<string, T>;
+    // }
+
+    // What about Container<T, E: Containable<T>>?
+    //
     // Ideally, we would have Container<Containable<T>>, but
     // higher-kinded polymorphism is not supported by Flow at this time.
     // Instead we use an extra level of containment -- ports are be
@@ -82,12 +103,23 @@ export interface Container<T: Nameable> {
 
 /**
  * Interface that specifies hierarchical relations between objects.
+ *
+ * A Port is a Descendant of Component.
+ * A PortSet is a Descendant of Component.
+ * A Composite is a Descendant of another Composite
  */
 export interface Descendant<T> {
     setParent(parent: ?T): void;
     getParent(): ?T;
     getFullyQualifiedName(): string;
 }
+
+// What about using interface property instead of functions?
+// This is already the case for Component...
+// interface Descendant {
+//   parent: ?T;
+// }
+
 
 /**
  * A descendant that has a name. Its fully qualified name is prefixed by the
@@ -103,6 +135,8 @@ export class NamedDescendant<T> extends Nameable implements Descendant<T> { // F
     getFullyQualifiedName(): string { // check for null
         var name = "";
         if (parent != null) {
+            // @todo: parent should also implement Descendant? Need generic
+            // bounds.
             name = parent.getFullyQualifiedName();
         }
         return name + "." + this.getName();
@@ -122,11 +156,18 @@ export class NamedDescendant<T> extends Nameable implements Descendant<T> { // F
  * A FIFO queue with some meta data that represents a port.
  */
 export class Port extends NamedDescendant<Component> {
-
     queue: Array<any>;
     portType: PortType;
+
+    // What about using generics Port<T>
+    // this.queue is Array<T>
+    // And when we connect two ports, their types have to be matched (or the
+    // output port's type is a subtype of the subsequent input port's type)?
     dataType: ?string; // FIXME: use a proper type here.
+
+    // What is port options?
     options: ?Object;
+
     visibility: ?Visibility;
 
     constructor(name: string, portType: PortType, dataType?: ?string,
@@ -150,6 +191,7 @@ export class Port extends NamedDescendant<Component> {
     }
 
     push(value: any): void {
+        // Why isn't parameter a separate type?
         if (this.portType == "parameter") {
             this.queue[0] = value;
         } else {
@@ -157,6 +199,8 @@ export class Port extends NamedDescendant<Component> {
         }
     }
 
+    // What happens to parameter? Read once only?
+    // If nothing inside the port, returns undefined?
     pop(): any {
         return this.queue.shift();
     }
@@ -165,6 +209,7 @@ export class Port extends NamedDescendant<Component> {
         this.queue = [];
     }
 
+    // If nothing inside the port, returns undefined?
     peek(): any {
         return this.queue[0];
     }
@@ -223,7 +268,7 @@ export class PortSet extends NamedDescendant<Component> implements Container<Por
         this.members = new Map();
     }
 
-    add(port: Port): void {
+    add(port: Port) {
         if (!this.members.has(port.getName())) {
             // NOTE: skipping this  container in the descendent chain.
             port.setParent(this.parent);
@@ -236,10 +281,10 @@ export class PortSet extends NamedDescendant<Component> implements Container<Por
     }
 
     get(name: string): ?Port {
-        this.members.get(name);
+        return this.members.get(name);
     }
 
-    remove(name: string): void {
+    remove(name: string) {
         this.members.delete(name);
     }
 
@@ -292,6 +337,8 @@ export class Composite extends Component implements Executable, Container<Compon
     /**
      *
      */
+    // @todo: this can be a stand alone function because it does not need to
+    // access this.
     connect(source: Port, sink: Port): void {
 
         var ssource = source.getParent();
@@ -347,6 +394,8 @@ export class Composite extends Component implements Executable, Container<Compon
      */
     add(component: Component) {
         this.components.set(component.getName(), component);
+
+        // Wouldn't `component.setParent(this)` be enough?
         var parent = component.getParent;
         if (parent != null) {
             parent.remove(component);
