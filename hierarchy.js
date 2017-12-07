@@ -132,6 +132,7 @@ export class Port extends NamedDescendant<Component> {
     constructor(name: string, portType: PortType, dataType?: ?string,
         value?: ?any, options?: ?Object, visibility?: ?Visibility) {
         super(name);
+        this.queue = [];
         this.portType = portType;
         this.dataType = dataType;
         this.options = options;
@@ -236,7 +237,7 @@ export class PortSet extends NamedDescendant<Component> implements Container<Por
     }
 
     get(name: string): ?Port {
-        this.members.get(name);
+        return this.members.get(name);
     }
 
     remove(name: string): void {

@@ -3,7 +3,6 @@
 'use strict';
 
 /** ES6 imports */
-import {Map} from './map';
 import {Port, PortSet} from './hierarchy';
 import {Actor} from './actor';
 
@@ -34,7 +33,7 @@ export class Accessor extends Actor {
     /**
      * Declare a new input.
      */
-    input(name: string, options?: ?Object) {
+    newInput(name: string, options?: ?Object) {
         if (options == null) {
             this.ports.add(new Port(name, "input"));
         } else {
@@ -48,23 +47,31 @@ export class Accessor extends Actor {
         }
     }
 
-    /**
-     * Retrieve a value from an input port with a given name.
-     */
-    get(name: string) {
+    provideInput(name: string, value: any) {
         var port = this.ports.get(name);
 
         if (port == null) {
             throw "No port named: `" + name + "`."
-        } else if (port.getPortType() != "input"
-            && port.getPortType() != "portparameter") {
-            throw "Port named `" + name + "` is not an input port."
-        } else if (this.parent == null || this.parent.getDirector() == null) {
-            throw "No director to coordinate the execution of this accessor.";
-        } else {
-            return this.parent.getDirector().get(port);
         }
 
+        if (port.getPortType() != "input") {
+            throw "Port named `" + name + "` is not an input port."
+        }
+
+        port.push(value);
+    }
+
+    /**
+     * Retrieve a value from an input/output port with a given name.
+     */
+    get(name: string): any {
+        var port = this.ports.get(name);
+
+        if (port == null) {
+            throw "No port named: `" + name + "`."
+        }
+
+        return port.pop();
     }
 
     /**
@@ -91,7 +98,7 @@ export class Accessor extends Actor {
     /**
      * Declare a new output
      */
-    output(name: string, options?: ?Object) {
+    newOutput(name: string, options?: ?Object) {
         if (options == null) {
             this.ports.add(new Port(name, "output"));
         } else {
@@ -113,21 +120,20 @@ export class Accessor extends Actor {
     }
 
     /**
-     * Send a value from an output port with a given name.
+     * Send a value to an output port with a given name.
      */
     send(name: string, value: any) {
         var port = this.ports.get(name);
 
         if (port == null) {
             throw "No port named: `" + name + "`."
-        } else if (port.getPortType() != "output") {
-            throw "Port named `" + name + "` is not an input port."
-        } else if (this.parent == null || this.parent.getDirector() == null) {
-            throw "No director to coordinate the execution of this accessor.";
-        } else {
-            return this.parent.getDirector().get(port);
         }
 
+        if (port.getPortType() != "output") {
+            throw "Port named `" + name + "` is not an output port."
+        }
+
+        port.push(value);
     }
 
     /**
@@ -161,9 +167,7 @@ export class Accessor extends Actor {
     fire(): void {
         // invoke input handlers
         var keys = this.triggers.keys();
-        for (var i = 0, len = keys.length; i < len; i++) {
-
-            var name = keys[i];
+        for (let name of keys) {
             var index = this.triggers.get(name);
             var port = this.ports.get(name);
             if (index == null) {

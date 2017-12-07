@@ -3,7 +3,6 @@
 'use strict';
 
 /** ES6 imports */
-import {Map} from './map';
 import {Component, Port, PortSet} from './hierarchy'
 
 /** Flow type imports */

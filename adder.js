@@ -6,17 +6,19 @@ import {Accessor} from './accessor';
 import {Composite} from './hierarchy'
 
 export class Adder extends Accessor {
-
-    setup () {
+    setup() {
         super.setup();
-        this.input('in1');
-        this.input('in2')
-        this.output('output');
+        this.newInput('in1');
+        this.newInput('in2')
+        this.newOutput('output');
     }
 
-    initialize () {
+    initialize() {
         var thiz = this;
-        this.addInputHandler('in1', function() { thiz.send('output', thiz.get('in1') + thiz.get('in2'))});
+        var add = function() {
+            thiz.send('output', thiz.get('in1') + thiz.get('in2'))
+        };
+        this.addInputHandler('in1', add);
     }
 
     wrapup() {

@@ -14,7 +14,7 @@
     "jest": "^21.2.1"
   },
   "scripts": {
-    "test": "flow && jest --coverage",
+    "test": "flow && jest --coverage --watch",
     "doc": "documentation build *.js -f html -o docs"
   },
   "repository": {
