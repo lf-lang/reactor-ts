@@ -14,15 +14,7 @@ export class Adder extends Accessor {
     }
 
     initialize() {
-        var thiz = this;
-        var add = function() {
-            thiz.send('output', thiz.get('in1') + thiz.get('in2'))
-        };
-        this.addInputHandler('in1', add);
-    }
-
-    wrapup() {
-
+        this.on('in1', () => this.send('output', this.get('in1') + this.get('in2')));
     }
 }
 

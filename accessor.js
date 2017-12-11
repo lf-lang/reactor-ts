@@ -31,6 +31,13 @@ export class Accessor extends Actor {
     }
 
     /**
+     * A handy shortcut to `Accessor.addInputHandler` function.
+     */
+    on(input: string, handler: Function): number {
+        return this.addInputHandler(input, handler);
+    }
+
+    /**
      * Declare a new input.
      */
     newInput(name: string, options?: ?Object) {
@@ -110,7 +117,7 @@ export class Accessor extends Actor {
     /**
      * Declare a new parameter.
      */
-    parameter(name: string, options?: ?Object) {
+    newParameter(name: string, options?: ?Object) {
         if (options == null) {
             this.ports.add(new Port(name, "parameter"));
         } else {
