@@ -2,10 +2,7 @@
 
 'use strict';
 
-/** ES6 imports */
 import {Component, Port, PortSet} from './hierarchy'
-
-/** Flow type imports */
 import type {Executable, ExecutionStatus} from './director';
 
 // NOTE: the semantics of postfire (state update) would be difficult to enforce

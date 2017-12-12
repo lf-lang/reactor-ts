@@ -2,7 +2,6 @@
 
 'use strict';
 
-/** ES6 imports */
 import {Port, PortSet} from './hierarchy';
 import {Actor} from './actor';
 

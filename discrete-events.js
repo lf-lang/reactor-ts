@@ -6,7 +6,7 @@ import type { Timeout, Immediate, Director } from './director';
 import type { Executable, ExecutionPhase, ExecutionStatus } from './director';
 import type {Port, Composite} from './hierarchy';
 
-class DiscreteEvents implements Director {
+export class DiscreteEvents implements Director {
     // **************************************
     //
     // interface Director

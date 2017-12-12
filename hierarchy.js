@@ -270,6 +270,9 @@ export class Composite extends Component implements Executable, Container<Compon
     constructor(name: string, parent?: ?Composite, director?: ?Director) {
         //(this: Executable);
 
+        super(name, parent);
+        this.components = new Map();
+
         if (parent != null) {
             if (parent.contains(name)) {
                 throw "A component with name '" + name + "' already exists in `" + parent.getFullyQualifiedName() + "`.";
@@ -279,10 +282,8 @@ export class Composite extends Component implements Executable, Container<Compon
                 throw "Top-level container must have a director.";
             }
         }
-        super(name, parent);
 
         this.director = director;
-
     }
 
     /** List the components in this container. */
@@ -347,21 +348,25 @@ export class Composite extends Component implements Executable, Container<Compon
      * the descendant chain accordingly.
      */
     add(component: Component) {
-        this.components.set(component.getName(), component);
-        var parent = component.getParent;
+        // remove previous parent
+        var parent = component.getParent();
         if (parent != null) {
-            parent.remove(component);
+            parent.remove(component.getName());
         }
+        // add this as the new parent
+        this.components.set(component.getName(), component);
         component.setParent(this);
     }
 
     /**
-     *
+     * Remove a component identified by the component name (string).
      */
     remove(name: string) {
-        // disconnect wires
-
-        // remove the component
+        let component = this.components.get(name);
+        if (component != undefined) {
+            component.setParent(null);
+        }
+        this.components.delete(name);
     }
 
     substitute(component: Component | Port) {

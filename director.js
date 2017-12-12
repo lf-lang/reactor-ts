@@ -61,7 +61,6 @@ export interface Director extends Executable, Descendant<Composite>, Scheduler {
     connect(source: Port, destination: Port): void;
 
     getExecutionPhase(): ExecutionPhase;
-
 }
 
 
