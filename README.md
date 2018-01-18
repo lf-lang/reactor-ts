@@ -9,6 +9,12 @@ Accessor in Flow
 
 Make sure you have a recent version (such as 8.x) of NodeJS installed.
 
+To make sure all Node modules are installed, run:
+
+```
+npm run test
+```
+
 To test with [Jest](https://facebook.github.io/jest/), run:
 
 ```
