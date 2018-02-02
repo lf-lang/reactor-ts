@@ -84,7 +84,7 @@ export class Accessor extends Actor {
      * Retrieve a parameter value.
      */
     getParameter(name: string): any {
-        var    port = this.ports.get(name);
+        var port = this.ports.get(name);
         if (port != null && port.getPortType() == "parameter") {
             return port.peek();
         } else {
