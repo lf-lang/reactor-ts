@@ -1,30 +1,37 @@
 {
-  "name": "accessor-flow",
-  "version": "0.0.1",
-  "description": "Accessors enable composing heterogeneous devices and services.",
-  "main": "accessor.js",
-  "dependencies": {},
-  "devDependencies": {
-    "babel-jest": "^21.2.0",
-    "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-flow": "^6.23.0",
-    "documentation": "^5.3.3",
-    "flow-bin": "^0.59.0",
-    "jest": "^21.2.1"
-  },
-  "scripts": {
-    "test": "flow && jest --coverage",
-    "doc": "documentation build *.js -f html -o docs"
-  },
-  "repository": {
-    "type": "git",
-    "url": "repoman@repo.eecs.berkeley.edu:users/marten/flow.git"
-  },
-  "keywords": [
-    "flow",
-    "accessor"
-  ],
-  "author": "Marten Lohstroh, Ben Zhang",
-  "license": "BSD-3-Clause"
+    "name": "accessor-flow",
+    "version": "0.0.1",
+    "description": "Accessors enable composing heterogeneous devices and services.",
+    "main": "lib/index.js",
+    "dependencies": {},
+    "devDependencies": {
+        "babel-cli": "^6.26.0",
+        "babel-jest": "^21.2.0",
+        "babel-plugin-transform-flow-strip-types": "^6.22.0",
+        "babel-preset-es2015": "^6.24.1",
+        "babel-preset-flow": "^6.23.0",
+        "documentation": "^5.3.3",
+        "eslint": "^4.16.0",
+        "flow-bin": "^0.59.0",
+        "jest": "^21.2.1"
+    },
+    "files": [
+        "lib"
+    ],
+    "scripts": {
+        "build": "rm -rf lib && babel -D src -d lib && npm run doc",
+        "test": "flow && jest --coverage",
+        "doc": "documentation build lib/*.js -f html -o docs",
+        "lint": "eslint src"
+    },
+    "repository": {
+        "type": "git",
+        "url": "repoman@repo.eecs.berkeley.edu:users/marten/flow.git"
+    },
+    "keywords": [
+        "flow",
+        "accessor"
+    ],
+    "author": "Marten Lohstroh, Ben Zhang",
+    "license": "BSD-3-Clause"
 }

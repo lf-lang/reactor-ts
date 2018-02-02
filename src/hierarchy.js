@@ -2,7 +2,6 @@
 
 'use strict';
 
-/** ES6 imports */
 import type {Executable, Director, ExecutionStatus} from './director'
 
 /** The available kinds of ports. */
@@ -39,24 +38,31 @@ export class Nameable {
  * A generic container.
  */
 export interface Container<T: Nameable> {
-    /** Add an element to this container. */
+    /*
+     * Add an element to this container.
+     * @param {T} element
+     */
     add(element: T): void;
 
-    /** Remove an element from this container. */
+    /*
+     * Remove an element from this container.
+     * @param {string} name
+     */
     remove(name: string): void;
 
     /**
      * Add an element to this container. If a component with the same name
      * already exists, replace it, and reconnect dangling wires to the new
-     * component in the same configuration as they were attached to the
-     * replaced component, to the extend possible. Wires formerly connected
-     * to a port that is not available on the replacement component will
-     * be removed.
+     * component in the same configuration as they were attached to the replaced
+     * component, to the extend possible. Wires formerly connected to a port
+     * that is not available on the replacement component will be removed.
      *
      * NOTE: this is where types will need to come in.
      *
      * NOTE: the mutable accessor will have to extend this by adding wires in
      * case extra ports are available.
+     *
+     * @param {T} element
      */
     substitute(element: T): void;
 }
