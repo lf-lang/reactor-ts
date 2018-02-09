@@ -2,7 +2,7 @@
 
 'use strict';
 
-import {Component, Port, PortSet} from './hierarchy'
+import {Composite, Component, Port, PortSet} from './hierarchy'
 import type {Executable, ExecutionStatus} from './director';
 
 /**
