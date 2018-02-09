@@ -15,13 +15,27 @@ export class Actor extends Component implements Executable {
     status: ExecutionStatus;
 
     /**
-     * Construct a new Actor.
+     * Constructs a new Actor with a specific name.
      */
-    constructor(name: string) {
-        super(name);
+    constructor(name: string, parent?: ?Composite) {
+        super(name, parent);
         this.ports = new PortSet(this);
         this.status = "idle";
         (this: Executable); // check that interfaces are implemented properly.
+    }
+
+    /**
+     * Adds a new input port, identified by the name.
+     */
+    addInputPort(name: string) {
+        this.ports.add(new Port(name, "input"));
+    }
+
+    /**
+     * Adds a new output port, identified by the name.
+     */
+    addOutputPort(name: string) {
+        this.ports.add(new Port(name, "output"));
     }
 
     /**
@@ -29,6 +43,13 @@ export class Actor extends Component implements Executable {
      */
     getPorts(): PortSet {
         return this.ports;
+    }
+
+    /**
+     * Return a specific port,
+     */
+    getPort(name: string): ?Port {
+        return this.ports.get(name);
     }
 
     // **************************************

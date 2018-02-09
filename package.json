@@ -27,9 +27,12 @@
     ],
     "scripts": {
         "build": "rm -rf lib && babel -D src -d lib && npm run doc",
-        "test": "flow && jest --coverage",
         "doc": "documentation build src/*.js -f html -o docs",
-        "lint": "eslint src"
+        "documentation": "documentation",
+        "flow": "flow",
+        "jest": "jest",
+        "lint": "eslint src",
+        "test": "flow && jest --coverage"
     },
     "repository": {
         "type": "git",

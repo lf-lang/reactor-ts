@@ -1,4 +1,5 @@
-/** Get a resource.
+/**
+ * Get a resource.
  *  Below are the types of resources that are handled
  *  all other resources will cause an error.
  *

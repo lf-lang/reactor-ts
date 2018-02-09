@@ -56,12 +56,9 @@ export interface Container<T: Nameable> {
      * component in the same configuration as they were attached to the replaced
      * component, to the extend possible. Wires formerly connected to a port
      * that is not available on the replacement component will be removed.
-     *
      * NOTE: this is where types will need to come in.
-     *
      * NOTE: the mutable accessor will have to extend this by adding wires in
      * case extra ports are available.
-     *
      * @param {T} element
      */
     substitute(element: T): void;
@@ -169,7 +166,7 @@ export class Component extends Nameable implements Descendant<Composite> {
 
     parent: ?Composite;
 
-    constructor (name: string, parent?: ?Composite):void {
+    constructor(name: string, parent?: ?Composite): void {
         super(name);
         this.parent = parent;
     }
@@ -209,6 +206,9 @@ export class PortSet extends NamedDescendant<Component> implements Container<Por
         this.members = new Map();
     }
 
+    /**
+     * Adds a new port by name, throws error if the port already exists.
+     */
     add(port: Port): void {
         if (!this.members.has(port.getName())) {
             // NOTE: skipping this  container in the descendent chain.
@@ -221,14 +221,24 @@ export class PortSet extends NamedDescendant<Component> implements Container<Por
         }
     }
 
+    /**
+     * Gets the port by name, returns null if the port does not exist.
+     */
     get(name: string): ?Port {
         return this.members.get(name);
     }
 
+    /**
+     * Removes the port by name, does nothing if the port does not exist.
+     */
     remove(name: string): void {
         this.members.delete(name);
     }
 
+    /**
+     * Substitutes a port with a different port; if the port by name does not
+     * exist; this is equivalent to add a new port.
+     */
     substitute(port: Port) {
         // NOTE: skipping this container in the descendent chain.
         port.setParent(this.parent);
@@ -353,6 +363,9 @@ export class Composite extends Component implements Executable, Container<Compon
         this.components.delete(name);
     }
 
+    /**
+     * Substitutes a component
+     */
     substitute(component: Component | Port) {
         // add the component
 
