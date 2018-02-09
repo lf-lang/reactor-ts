@@ -277,7 +277,7 @@ export class Composite extends Component implements Executable, Container<Compon
     // }
 
     /**
-     *
+     * Connects a source port to sink port.
      */
     connect(source: Port, sink: Port): void {
 

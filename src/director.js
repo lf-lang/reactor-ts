@@ -2,7 +2,6 @@
 
 'use strict';
 
-/** ES6 imports */
 import {Descendant, Component, Composite, Port} from './hierarchy';
 
 /**
@@ -62,54 +61,3 @@ export interface Director extends Executable, Descendant<Composite>, Scheduler {
 
     getExecutionPhase(): ExecutionPhase;
 }
-
-
-/**
- *
- */
-// export class StatusUpdate implements Executable, Scheduler { // implements Attribute?
-
-//     status: ExecutionStatus;
-
-//     setup(): void {
-//         for (let component of this.getSchedule()) {
-//              component.setStatus("settingup");
-//              component.setup();
-//              component.setStatus("idle");
-//         }
-//     }
-
-//     initialize() {
-
-//     }
-
-//     fire() {
-
-//     }
-
-//     postfire() {
-
-//     }
-
-//     wrapup() {
-
-//     }
-
-//     setStatus(status: ExecutionStatus) {
-//         this.status = status;
-//     }
-
-//     getStatus(): ExecutionStatus {
-//         return "idle";
-//     }
-
-//     getSchedule(): Array<Executable> {
-//                 for (let component of this.getParent().deepComponentList()) { // FIXME: where to get the schedule from? deep contains()
-//         //     component.setStatus("settingup");
-//         //     component.setup();
-//         //     component.setStatus("idle");
-//         }
-//         return null;
-//     }
-
-// }

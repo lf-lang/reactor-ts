@@ -2,8 +2,6 @@
 
 'use strict';
 
-/** ES6 imports */
-
 /**
  * Interface of the host.
  */

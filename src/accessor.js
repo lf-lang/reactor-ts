@@ -5,6 +5,9 @@
 import {Port, PortSet} from './hierarchy';
 import {Actor} from './actor';
 
+/**
+ * An accessor is a special type of actor.
+ */
 export class Accessor extends Actor {
 
     handlers: Array<Function>;
@@ -12,6 +15,7 @@ export class Accessor extends Actor {
 
     /**
      * Construct a new Accessor.
+     * @memberof accessor.Accessor
      */
     constructor(name: string) {
         super(name);

@@ -2,9 +2,14 @@
 
 'use strict';
 
-//declare interface Iterable<>
+// declare interface Iterable<>
 // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
 
+/**
+ * Map with type information (i.e. all keys and values are of the same type),
+ * enforced by flow. We should use this `Map` as a drop-in replacement at places
+ * Javascript Map is used.
+ */
 export class Map<K, V> {
 
     obj: Object;
