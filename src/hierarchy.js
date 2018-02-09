@@ -2,7 +2,6 @@
 
 'use strict';
 
-/** ES6 imports */
 import type {Executable, Director, ExecutionStatus} from './director'
 
 /** The available kinds of ports. */
@@ -15,7 +14,7 @@ export type Visibility = "full" | "none" | "expert" | "notEditable";
 /**
  * A Base class for named objects.
  */
-export class Nameable { // FIXME: perhaps extend EventEmitter? Or let Component extend EventEmitter? Idea: probably the director should be an event emitter, not the other components.
+export class Nameable {
     name: string;
 
     /** Instantiate an object and name it. */
@@ -39,45 +38,33 @@ export class Nameable { // FIXME: perhaps extend EventEmitter? Or let Component 
  * A generic container.
  */
 export interface Container<T: Nameable> {
-    // Ideally, we would have Container<Containable<T>>, but
-    // higher-kinded polymorphism is not supported by Flow at this time.
-    // Instead we use an extra level of containment -- ports are be
-    // contained in a PortSet -- yet ports are linked directly to their
-    // parent component via the Descendant interface, bypassing this
-    // extra level of containment when looking up the descendant chain.
-    // This means that the descendant chain may skip links of the
-    // containment chain.
-
-    /** Add an element to this container. */
+    /*
+     * Add an element to this container.
+     * @param {T} element
+     */
     add(element: T): void;
 
-    /** Remove an element from this container. */
+    /*
+     * Remove an element from this container.
+     * @param {string} name
+     */
     remove(name: string): void;
 
     /**
      * Add an element to this container. If a component with the same name
      * already exists, replace it, and reconnect dangling wires to the new
-     * component in the same configuration as they were attached to the
-     * replaced component, to the extend possible. Wires formerly connected
-     * to a port that is not available on the replacement component will
-     * be removed.
+     * component in the same configuration as they were attached to the replaced
+     * component, to the extend possible. Wires formerly connected to a port
+     * that is not available on the replacement component will be removed.
      *
      * NOTE: this is where types will need to come in.
-     * NOTE: the mutable accessor will have to extend this by adding wires in case extra ports are available.
+     *
+     * NOTE: the mutable accessor will have to extend this by adding wires in
+     * case extra ports are available.
+     *
+     * @param {T} element
      */
     substitute(element: T): void;
-
-     /**
-      * List the opaque components that are directly or indirectly
-      * contained by this container.
-      */
-    //deepComponentList(): Array<T>;
-
-    /** List the components in this container. */
-    //componentList(): Array<T>; // FIXME: this should not be part of this interface, it should be part of composite
-
-    // note: PERHAPS have a get containers function and
-
 }
 
 /**
@@ -93,7 +80,7 @@ export interface Descendant<T> {
  * A descendant that has a name. Its fully qualified name is prefixed by the
  * fully qualified name of its parent in the descendant chain.
  */
-export class NamedDescendant<T> extends Nameable implements Descendant<T> { // FIXME: rename!
+export class NamedDescendant<T> extends Nameable implements Descendant<T> {
     parent: ?T;
 
     constructor(name: string) {
@@ -122,7 +109,6 @@ export class NamedDescendant<T> extends Nameable implements Descendant<T> { // F
  * A FIFO queue with some meta data that represents a port.
  */
 export class Port extends NamedDescendant<Component> {
-
     queue: Array<any>;
     portType: PortType;
     dataType: ?string; // FIXME: use a proper type here.
@@ -175,7 +161,6 @@ export class Port extends NamedDescendant<Component> {
     }
 
 }
-
 
 /**
  * A component has a name and is containable by a Composite.
@@ -341,7 +326,6 @@ export class Composite extends Component implements Executable, Container<Compon
     //     }
     //     return arr;
     // }
-
 
     /**
      * Add a component to this composite. This operation also updates
