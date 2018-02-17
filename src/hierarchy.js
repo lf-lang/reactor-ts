@@ -62,6 +62,27 @@ export interface Container<T: Nameable> {
      * @param {T} element
      */
     substitute(element: T): void;
+
+
+    // Ideally, we would have Container<Containable<T>>, but
+    // higher-kinded polymorphism is not supported by Flow at this time.
+    // Instead we use an extra level of containment -- ports are be
+    // contained in a PortSet -- yet ports are linked directly to their
+    // parent component via the Descendant interface, bypassing this
+    // extra level of containment when looking up the descendant chain.
+    // This means that the descendant chain may skip links of the
+    // containment chain.
+    /**
+     * List the opaque components that are directly or indirectly
+     * contained by this container.
+     */
+    //deepComponentList(): Array<T>;
+
+    /** List the components in this container. */
+    //componentList(): Array<T>; // FIXME: this should not be part of this interface, it should be part of composite
+
+    // note: PERHAPS have a get containers function and
+
 }
 
 /**
