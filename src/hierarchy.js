@@ -4,11 +4,16 @@
 
 import type {Executable, Director, ExecutionStatus} from './director'
 
-/** The available kinds of ports. */
-export type PortType = "input" | "output" | "parameter" | "portparameter";
+/** 
+ * The available kinds of ports. 
+ * @todo: Figure out how to deal with portparameters i.e., ports of type "parameter" 
+ */
+export type PortType = "input" | "output" | "parameter";
 
-/** A hint to the host of whether this port should be made visible. */
-// FIXME: should also affect the connectability of the port?
+/** 
+ * A hint to the host of whether this port should be made visible.
+ * @todo: should also affect the connectability of the port?
+ */
 export type Visibility = "full" | "none" | "expert" | "notEditable";
 
 /**
@@ -31,20 +36,20 @@ export class Nameable {
     setName(name: string) {
         this.name = name;
     }
-
 }
 
 /**
  * A generic container.
  */
 export interface Container<T: Nameable> {
-    /*
+    
+    /**
      * Add an element to this container.
      * @param {T} element
      */
     add(element: T): void;
 
-    /*
+    /**
      * Remove an element from this container.
      * @param {string} name
      */
@@ -56,8 +61,8 @@ export interface Container<T: Nameable> {
      * component in the same configuration as they were attached to the replaced
      * component, to the extend possible. Wires formerly connected to a port
      * that is not available on the replacement component will be removed.
-     * NOTE: this is where types will need to come in.
-     * NOTE: the mutable accessor will have to extend this by adding wires in
+     * @todo: this is where types will need to come in.
+     * @todo: the mutable accessor may have to extend this by adding wires in
      * case extra ports are available.
      * @param {T} element
      */
@@ -78,13 +83,23 @@ export interface Descendant<T> {
  * fully qualified name of its parent in the descendant chain.
  */
 export class NamedDescendant<T> extends Nameable implements Descendant<T> {
+    /** The parent of this descendant. */
     parent: ?T;
 
-    constructor(name: string) {
+    /**
+     * Construct a new descendant with the a given name and given parent.
+     * If this is an orphaned nameable, the parent argument can be omitted
+     * or be null.
+     */
+    constructor(name: string, parent?: ?T) {
         super(name);
+        this.parent = parent;
     }
 
-    getFullyQualifiedName(): string { // check for null
+    /**
+     * Return the fully qualified name of this nameable based on its ancestry.
+     */
+    getFullyQualifiedName(): string {
         var name = "";
         if (parent != null) {
             name = parent.getFullyQualifiedName();
@@ -92,10 +107,16 @@ export class NamedDescendant<T> extends Nameable implements Descendant<T> {
         return name + "." + this.getName();
     }
 
+    /**
+     * Set the parent of this nameable.
+     */
     setParent(parent: ?T) {
         this.parent = parent;
     }
 
+    /**
+     * Get the parent of this nameable.
+     */
     getParent(): ?T {
         return this.parent;
     }
@@ -105,13 +126,15 @@ export class NamedDescendant<T> extends Nameable implements Descendant<T> {
 /**
  * A FIFO queue with some meta data that represents a port.
  */
-export class Port extends NamedDescendant<Component> {
-    queue: Array<any>;
+export class Port<T> extends NamedDescendant<Component> {
+    queue: Array<T>;
     portType: PortType;
-    dataType: ?string; // FIXME: use a proper type here.
     options: ?Object;
     visibility: ?Visibility;
 
+    /**
+     *
+     */
     constructor(name: string, portType: PortType, dataType?: ?string,
         value?: ?any, options?: ?Object, visibility?: ?Visibility) {
         super(name);
