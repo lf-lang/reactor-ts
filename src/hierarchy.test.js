@@ -1,25 +1,25 @@
-import { Port, Component, PortSet, Composite } from "./hierarchy";
+
+import { InputPort, OutputPort, Component, Composite } from "./hierarchy";
 import { DiscreteEvents } from "./discrete-events";
 
-describe('portset', () => {
-    let component = new Component("component");
-    let ports = new PortSet(component);
-
+describe('ports', () => {
+    let actor = new Actor("component");
+    
     it('basic add and get', () => {
-        ports.add(new Port("in", "input"));
-        ports.add(new Port("out", "output"));
+        actor.add(new InputPort("in"));
+        actor.add(new OutputPort("out"));
 
-        var port = ports.get("in");
+        var port = actor.lookup("in");
         expect(port != null).toBeTruthy();
-        expect(port.getPortType()).toBe("input");
+        expect(port instanceof InputPort).toBeTruthy();
 
-        var port = ports.get("out");
+        var port = actor.lookup("out");
         expect(port != null).toBeTruthy();
-        expect(port.getPortType()).toBe("output");
+        expect(port instanceof OutputPort).toBeTruthy();
     });
 
     it('no random port', () => {
-        var port = ports.get("random");
+        var port = actor.get("random");
         expect(port).toBe(undefined);
     });
 });

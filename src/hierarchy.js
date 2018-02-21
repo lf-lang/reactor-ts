@@ -74,13 +74,13 @@ export interface Container<T: Nameable> extends Nameable {
 
 export class PortBase<T> implements Containable<Component> {
     /** The component this port is contained by. */
-    parent: ?Component = null;
+    parent: ?Component;
     
     /** The name of this port. */
     name: string;
 
     /** The visibility of this port. */
-    visibility: Visibility = "full";
+    visibility: Visibility;
     
     /**
      * Construct a new port. Upon creation it will not be
@@ -88,6 +88,7 @@ export class PortBase<T> implements Containable<Component> {
      */
     constructor(name: string) {
         this.name = name;
+        this.visibility = "full";
         (this: Containable<Component>);
     }
 
@@ -117,12 +118,13 @@ export class InputPort<T> extends PortBase<T> {
     default: ?T;
 
     /** The width of this port. By default it is 1.*/
-    width: number = 1;
+    width: number;
 
     /** Construct a new input port given a name and a set of options. */
     constructor(name: string, options?: ?{value?: T, isParameter?: boolean, 
         visibility?: Visibility,width?: number}) {
         super(name);
+        this.width = 1;
         if (options != null) {
             this.default = options['value'];
             if (options['width'] != null) {
@@ -147,13 +149,14 @@ export class Parameter<T> extends InputPort<T> {
  * A collection of meta data that represents a port.
  */
 export class OutputPort<T> extends PortBase<T> {
-    spontaneous: boolean = false;
+    spontaneous: boolean;;
     
     /**
      * Construct a new output port given a name and a set of options.
      */
     constructor(name: string, options?: ?{spontaneous?: boolean, visibility?: Visibility}) {
         super(name);
+        this.spontaneous = false;
         if (options != null) {
             if (options['spontaneous'] != null) {
                 this.spontaneous = options['spontaneous'];
