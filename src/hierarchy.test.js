@@ -1,5 +1,5 @@
 //@flow
-import {Actor, InputPort, OutputPort, Component, Composite} from "./hierarchy";
+import {Actor, InputPort, OutputPort, Component, Composite, Parameter} from "./hierarchy";
 import {DiscreteEvents} from "./discrete-events";
 
 describe('ports', () => {
@@ -8,6 +8,7 @@ describe('ports', () => {
     it('basic add and get', () => {
         actor.add(new InputPort("in"));
         actor.add(new OutputPort("out"));
+        actor.add(new Parameter("parm"));
 
         var port = actor.lookup("in");
         expect(port != null).toBeTruthy();
@@ -16,12 +17,18 @@ describe('ports', () => {
         var port = actor.lookup("out");
         expect(port != null).toBeTruthy();
         expect(port instanceof OutputPort).toBeTruthy();
+
+        var port = actor.lookup("parm");
+        expect(port != null).toBeTruthy();
+        expect(port instanceof Parameter).toBeTruthy();
+
     });
 
     it('no random port', () => {
         var port = actor.lookup("random");
         expect(port).toBe(undefined);
     });
+    
 });
 
 describe('composite', () => {

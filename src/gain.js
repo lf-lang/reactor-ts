@@ -3,6 +3,7 @@
 'use strict';
 
 import {Accessor} from './accessor';
+//import {Actor} from './hierarchy';
 
 export class Gain extends Accessor {
     setup() {

@@ -10,7 +10,7 @@ import type {Executable, Director, ExecutionStatus} from './director'
  */
 export type Visibility = "full" | "none" | "expert" | "notEditable";
 
-export type Port<T> = InputPort<T>|OutputPort<T>; // FIXME: Maybe add Parameter?
+export type Port<T> = InputPort<T>|OutputPort<T>;
 
 /**
  * An interface for named objects.
@@ -72,6 +72,9 @@ export interface Container<T: Nameable> extends Nameable {
 
 }
 
+/**
+ * A base class for ports.
+ */
 export class PortBase<T> implements Containable<Component> {
     /** The component this port is contained by. */
     parent: ?Component;
@@ -139,17 +142,25 @@ export class InputPort<T> extends PortBase<T> {
 }
 
 /**
- * Unlike normal input ports, parameters cannot be updated.
+ * Unlike normal input ports (...)
  */
 export class Parameter<T> extends InputPort<T> {
+    
+    update: boolean;
 
+    /** Construct a parameter. It must have a value. */
+    constructor(name: string, value: T, update:boolean) {
+        var obj = {default: value};
+        super(name, obj);
+        this.update = update;
+    }
 }
 
 /**
  * A collection of meta data that represents a port.
  */
 export class OutputPort<T> extends PortBase<T> {
-    spontaneous: boolean;;
+    spontaneous: boolean;
     
     /**
      * Construct a new output port given a name and a set of options.
@@ -225,7 +236,6 @@ export class Component implements Containable<Composite>, Executable {
      * prior to firing.
      */
     prefire() {
-        // override this in accessor
     }
 
     /**
@@ -251,7 +261,9 @@ export class Component implements Containable<Composite>, Executable {
 
 export class Actor extends Component implements Container<Port<mixed>> {
 
+    /** The input ports of this actor. */
     inputs: Map<string, InputPort<mixed>>;
+    /** The output ports of this actor. */
     outputs: Map<string, OutputPort<mixed>>;
 
     /**
@@ -270,16 +282,17 @@ export class Actor extends Component implements Container<Port<mixed>> {
      * Add a new port by name, throw an error if the port already exists.
      */
     add(port: Port<mixed>): void {
-        if (port instanceof InputPort && !this.inputs.has(port.name)) {
+        if (this.inputs.has(port.name) || this.outputs.has(port.name)) {
+            throw "Port or parameter with name `" + port.getFullyQualifiedName() 
+            + "` already exists. `";
+        }
+        if (port instanceof InputPort) {
             port.parent = this;
             this.inputs.set(port.name, port);
         } 
-        else if (port instanceof OutputPort && !this.outputs.has(port.name)) {
+        else if (port instanceof OutputPort) {
             port.parent = this;
             this.outputs.set(port.name, port);
-        } else {
-            throw "Port or parameter with name `" + port.getFullyQualifiedName() 
-            + "` already exists. `"
         }
     }
 
@@ -295,16 +308,42 @@ export class Actor extends Component implements Container<Port<mixed>> {
         }
     }
 
+    /** 
+     * Return an array containing all the ports/parameters of this actor.
+     */
     getAll(): Array<mixed> {
         return Array.from(this.inputs.values()).concat(Array.from(this.outputs.values()));
     }
 
+    /**
+     * Return an array containing all the input ports of this actor,
+     * including parameters that are updateable.
+     */
     getInputs(): Array<InputPort<mixed>> {
-        return Array.from(this.inputs.values());
+        return Array.from(this.inputs.values()).filter(
+            port => (!(port instanceof Parameter) || port.update === true));
     }
 
+    /**
+     * Return an array containing all the output ports of this actor.
+     */
     getOutputs(): Array<OutputPort<mixed>> {
         return Array.from(this.outputs.values());
+    }
+
+    /**
+     * Return an array containing all the parameters of this actor,
+     * including ones that are updateable.
+     */    
+    getParameters(): Array<Parameter<mixed>> {
+        var parms: Array<Parameter<mixed>> = [];
+        for (var port in this.inputs.values()) {
+            if (port instanceof Parameter)
+                parms.push(port);
+        }
+       return parms;
+       // NOTE: flow can't hack this:
+       // return (Array.from(this.inputs.values()).filter(port => (port instanceof Parameter)): Array<Parameter<mixed>>);
     }
 
     /**
@@ -347,16 +386,6 @@ export class Composite extends Actor implements Container<Component|Port<mixed>>
         super(name);
         this.components = new Map();
 
-        // if (parent != null) {
-        //     if (parent.contains(name)) {
-        //         throw "A component with name '" + name + "' already exists in `" + parent.getFullyQualifiedName() + "`.";
-        //     }
-        // } else {
-        //     if (director == null) {
-        //         throw "Top-level container must have a director.";
-        //     }
-        // } 
-        //this.director = director;
         (this: Executable);
         (this: Container<Component|Port<mixed>>);
     }
