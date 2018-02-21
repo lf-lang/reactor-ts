@@ -41,10 +41,11 @@ export interface Containable<T> extends Nameable {
 export interface Container<T: Nameable> extends Nameable {
     
     /**
-     * Add an element to this container.
+     * Add an element to this container. Return true if 
+     * the element was added successfully, false otherwise.
      * @param {T} element
      */
-    add(element: T): void;
+    add(element: T): boolean;
 
     /**
      * Get an element from this container.
@@ -149,10 +150,15 @@ export class Parameter<T> extends InputPort<T> {
     update: boolean;
 
     /** Construct a parameter. It must have a value. */
-    constructor(name: string, value: T, update:boolean) {
+    constructor(name: string, value: T, update?:boolean) {
         var obj = {default: value};
         super(name, obj);
-        this.update = update;
+        if (update != null) {
+            this.update = update;    
+        } else {
+            this.update = false;
+        }
+        
     }
 }
 
@@ -279,12 +285,11 @@ export class Actor extends Component implements Container<Port<mixed>> {
 
 
     /**
-     * Add a new port by name, throw an error if the port already exists.
+     * Add a new port by name; return false if the port already exists.
      */
-    add(port: Port<mixed>): void {
+    add(port: Port<mixed>): boolean {
         if (this.inputs.has(port.name) || this.outputs.has(port.name)) {
-            throw "Port or parameter with name `" + port.getFullyQualifiedName() 
-            + "` already exists. `";
+            return false;
         }
         if (port instanceof InputPort) {
             port.parent = this;
@@ -294,6 +299,7 @@ export class Actor extends Component implements Container<Port<mixed>> {
             port.parent = this;
             this.outputs.set(port.name, port);
         }
+        return true;
     }
 
     /**
@@ -364,22 +370,42 @@ export class Actor extends Component implements Container<Port<mixed>> {
     }
 }
 
-// export class Relation implements Containable<Composite> {
+export class Relation<T> implements Containable<Composite> {
 
-// }
+    from: Port<T>;
+    to: Port<T>;
+    parent: ?Composite;
+    name: string;
+
+    constructor(from: Port<T>, to:Port<T>, name: string) {
+        this.from = from;
+        this.to = to;
+        this.name = name;
+    }
+
+    getFullyQualifiedName(): string {
+        var prefix = "";
+        if (this.parent != null) {
+            prefix = this.parent.getFullyQualifiedName();
+        }
+        if (prefix != "") {
+            return prefix + "." + this.name;
+        } else {
+            return this.name;
+        }
+    }
+}
 
 /**
- * A composite is a container for other components. A component can be
- * added to a composite, removed from it, or substituted by another
- * component. Two components within a composite can be connected to one
- * another via their ports.
+ * A composite is a container for other components, ports, and relations.
  */
-export class Composite extends Actor implements Container<Component|Port<mixed>> { //|Relation
+export class Composite extends Actor implements 
+        Container<Component|Port<mixed>|Relation<mixed>> {
 
     director: ?Director;
     components: Map<string, Component>;
     ports: Map<string, Component>;
-    //relations: Map<Port<mixed>, Array<Port<mixed>>>;
+    relations: Array<Relation<mixed>>;
     status: ExecutionStatus;
 
     constructor(name: string) {
@@ -387,45 +413,9 @@ export class Composite extends Actor implements Container<Component|Port<mixed>>
         this.components = new Map();
 
         (this: Executable);
-        (this: Container<Component|Port<mixed>>);
+        (this: Container<Component|Port<mixed>|Relation<mixed>>);
     }
 
-    /**
-     * Connects a source port to sink port.
-     */
-    connect(source: Port<mixed>, sink: Port<mixed>): void {
-
-        var ssource = source.parent;
-        var ssink = sink.parent;
-
-        if (ssource == ssink) {
-            throw "Cannot connect two ports from the same components."; // FIXME: maybe this should be allowed instead.
-        }
-        // The ports' parents are siblings.
-        else if (ssource != null && ssink != null && ssource.parent == ssink.parent) {
-            var parent = this.parent;
-            if (parent != null) {
-                parent.getDirector().connect(source, sink); // FIXME
-            }
-
-            // output -> input
-
-        }
-        // The source's component is a parent of the sink's component.
-        else if (ssource != null && ssink != null && ssource == ssink.parent) {
-            // input -> input
-
-        }
-        // The sink's component is a parent of the source's component.
-        else if (ssource != null && ssink != null && ssink == ssource.parent) {
-            // output -> output
-
-        }
-        // Source and sink cannot be connected.
-        else {
-            throw "Cannot connect port `" + source.name + "` to port `" + sink.name + "` because there is no direct path between them.";
-        }
-    }
 
     initialize():void {
         if (this.parent == null && this.director == null) {
@@ -436,10 +426,9 @@ export class Composite extends Actor implements Container<Component|Port<mixed>>
      * Add a component to this composite. This operation also updates
      * the containment chain accordingly.
      */
-    add(obj: Component|Port<mixed>) {
+    add(obj: Component|Port<mixed>|Relation<mixed>): boolean {
         if (obj instanceof InputPort || obj instanceof OutputPort) {
-            super.add(obj);
-            return;
+            return super.add(obj);
         }
         if (obj instanceof Component) {
             // unlink
@@ -447,13 +436,13 @@ export class Composite extends Actor implements Container<Component|Port<mixed>>
                 obj.parent.remove(obj.name);
             }
             if (this.components.get(obj.name) != null) {
-                throw "Duplicate component " + obj.name 
-                    + " in container " + this.name + "."
+                return false;
             } else {
                 this.components.set(obj.name, obj);
-                obj.parent = this;    
+                obj.parent = this;
             }
         }
+        return true;
     }
 
     getAll(): Array<mixed> {
@@ -461,7 +450,7 @@ export class Composite extends Actor implements Container<Component|Port<mixed>>
     }
 
     /**
-     * Remove a component identified by the component name (string).
+     * Remove a containable identified by its name (string).
      */
     remove(name: string) {
         let component = this.components.get(name);
@@ -479,7 +468,7 @@ export class Composite extends Actor implements Container<Component|Port<mixed>>
      * that is not available on the replacement component will be removed.
      * @todo: implement this
      */
-    substitute(component: Component|Port<mixed>) {
+    substitute(component: Component|Port<mixed>|Relation<mixed>) {
         // add the component
 
         // reconnect wires
