@@ -2,13 +2,32 @@
 
 'use strict';
 
-import {Port, PortSet} from './hierarchy';
-import {Actor} from './actor';
+import {Actor, InputPort, OutputPort, Parameter} from './hierarchy';
+
+import type {Port, Visibility} from './hierarchy'
+
+export type LegacyInputType = "boolean"|"int"|"number"|"string"|"JSON";
+export type LegacyInputSpec = {type?: LegacyInputType, value?: any, options?: any, visibility: Visibility};
+
+export interface AccessorAPI {
+    addInputHandler(input: string, handler: Function): number;
+    getParameter(name: string): any;
+    /**
+     * Set up this accessors actor interface prior to exection.
+     * The base implementation only sets the status to "settingup."
+     * Subclasses should override this method, call super() and, at
+     * the end of the method, set the status to "idle."
+     */
+    setup(): void;
+    //...
+}
 
 /**
- * An accessor is a special type of actor.
+ * An an actor that implements the accessor API.
+ * The semantics of get and send are different from
+ * Port.send and Port.recv => prefire!
  */
-export class Accessor extends Actor {
+export class Accessor extends Actor implements AccessorAPI {
 
     handlers: Array<Function>;
     triggers: Map<string, number>;
@@ -41,57 +60,52 @@ export class Accessor extends Actor {
     }
 
     /**
-     * Declare a new input.
+     * Legacy method for declaring a new input.
      */
-    newInput(name: string, options?: ?Object) {
-        if (options == null) {
-            this.ports.add(new Port(name, "input"));
+    input(name: string, spec?: LegacyInputSpec) {
+        if (spec == null) {
+            this.add(new InputPort(name));
         } else {
-            if (options.value != null) {
-                this.ports.add(new Port(name, "portparameter", options.type,
-                    options.value, options.options, options.visibility));
-            } else {
-                this.ports.add(new Port(name, "input", options.type,
-                    options.value, options.options, options.visibility));
+            var options = {};
+            if (spec.value != null) {
+                options['value'] = spec.value;
+            }
+            if (spec.visibility != null) {
+                options['visibility'] = spec.visibility;
+            }
+            if (spec.type != null) {
+                if (spec.value == null || 
+                    ((spec.type == "int" && typeof options.value === "number") 
+                        || typeof options.value === spec.type)) {
+                    this.add(new InputPort(name, options));
+                } else {
+                    throw "Supplied default value incompatible with given type."
+                }
             }
         }
-    }
-
-    provideInput(name: string, value: any) {
-        var port = this.ports.get(name);
-
-        if (port == null) {
-            throw "No port named: `" + name + "`."
-        }
-
-        if (port.getPortType() != "input") {
-            throw "Port named `" + name + "` is not an input port."
-        }
-
-        port.push(value);
     }
 
     /**
      * Retrieve a value from an input/output port with a given name.
      */
     get(name: string): any {
-        var port = this.ports.get(name);
+        var port = this.lookup(name);
 
         if (port == null) {
             throw "No port named: `" + name + "`."
         }
 
-        return port.pop();
+        return null; // FIXME: need to retrieve token from map
     }
 
     /**
      * Retrieve a parameter value.
      */
     getParameter(name: string): any {
-        var port = this.ports.get(name);
-        if (port != null && port.getPortType() == "parameter") {
-            return port.peek();
-        } else {
+        var port = this.lookup(name);
+        if (port != null && port instanceof Parameter) {
+            return null; // FIXME: need to retrieve token from map
+        } else {    
             throw "No parameter named `" + name + "`.";
         }
     }
@@ -108,42 +122,31 @@ export class Accessor extends Actor {
     /**
      * Declare a new output
      */
-    newOutput(name: string, options?: ?Object) {
-        if (options == null) {
-            this.ports.add(new Port(name, "output"));
-        } else {
-            this.ports.add(new Port(name, "output", options.type,
-                options.value, options.options, options.visibility));
-        }
+    output(name: string, options?: ?Object) {
+        this.add(new OutputPort(name, options));
     }
 
     /**
      * Declare a new parameter.
      */
-    newParameter(name: string, options?: ?Object) {
-        if (options == null) {
-            this.ports.add(new Port(name, "parameter"));
-        } else {
-            this.ports.add(new Port(name, "parameter", options.type,
-                options.value, options.options, options.visibility));
-        }
+    parameter(name: string, options?: ?Object) {
+        this.add(new Parameter(name, options));
     }
 
     /**
      * Send a value to an output port with a given name.
      */
     send(name: string, value: any) {
-        var port = this.ports.get(name);
+        var port = this.lookup(name);
 
         if (port == null) {
             throw "No port named: `" + name + "`."
         }
 
-        if (port.getPortType() != "output") {
+        if (!(port instanceof Parameter)) {
             throw "Port named `" + name + "` is not an output port."
         }
-
-        port.push(value);
+        //FIXME: do the send
     }
 
     /**
@@ -152,9 +155,9 @@ export class Accessor extends Actor {
     setParameter(name: string, value: any):void {
         // only change the value if not executing, throw an exception otherwise
         if (this.parent == null || this.parent.getDirector().getExecutionPhase() == "setup") {
-            var port = this.ports.get(name);
-            if (port != null && port.getPortType() == "parameter") {
-                port.push(value);
+            var port = this.lookup(name);
+            if (port != null && port instanceof Parameter) {
+                //port.push(value); // FIXME
             } else {
                 throw "No parameter named `" + name + "`.";
             }
@@ -168,27 +171,38 @@ export class Accessor extends Actor {
      * Set up this accessors actor interface prior to exection.
      */
     setup(): void {
-        this.ports = new PortSet(this);
+        //
+    }
+
+    /**
+     * todo: for each input, pop one token off their queue
+     */
+    prefire(): void {
+        // for (port: Port in this.portset.getInputs()) {
+            return;
+        // }
     }
 
     /**
      * Fire this accessor.
      */
     fire(): void {
+        super.fire(); // this will call prefire
         // invoke input handlers
         var keys = this.triggers.keys();
         for (let name of keys) {
             var index = this.triggers.get(name);
-            var port = this.ports.get(name);
+            var port = this.lookup(name);
             if (index == null) {
                 throw "Unable to find handler."
             } else {
                 var handler = this.handlers[index];
             }
 
-            if (port != null && port.peek() != null) {
-                handler.call(this);
-            }
+            // FIXME:
+            // if (port != null && port.peek() != null) {
+            //     handler.call(this);
+            // }
 
             // Current situation
             // Node-specific: Ports are one-slot buffers; sends are destructive

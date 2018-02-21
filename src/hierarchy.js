@@ -5,49 +5,57 @@
 import type {Executable, Director, ExecutionStatus} from './director'
 
 /** 
- * The available kinds of ports. 
- * @todo: Figure out how to deal with portparameters i.e., ports of type "parameter" 
- */
-export type PortType = "input" | "output" | "parameter";
-
-/** 
  * A hint to the host of whether this port should be made visible.
  * @todo: should also affect the connectability of the port?
  */
 export type Visibility = "full" | "none" | "expert" | "notEditable";
 
+export type Port<T> = InputPort<T>|OutputPort<T>; // FIXME: Maybe add Parameter?
+
 /**
- * A Base class for named objects.
+ * An interface for named objects.
  */
-export class Nameable {
+export interface Nameable {
+    /** The name of this object. */
     name: string;
 
-    /** Instantiate an object and name it. */
-    constructor(name: string) {
-        this.name = name;
-    }
-
-    /** Get this object's name. */
-    getName(): string {
-        return this.name;
-    }
-
-    /** Set this object's name. */
-    setName(name: string) {
-        this.name = name;
-    }
+    /** Return a globally unique identifier. */
+    getFullyQualifiedName(): string;
 }
 
 /**
- * A generic container.
+ * An extension of the Nameable interface for objects that 
+ * are part of a hierarchy. The type parameter denotes the 
+ * type of object that it can be contained by.
  */
-export interface Container<T: Nameable> {
+export interface Containable<T> extends Nameable {
+    
+    /** The container of this object. */
+    parent: ?T;
+}
+
+/**
+ * A generic container. It can contain things that are named,
+ * and it must have a name itself.
+ */
+export interface Container<T: Nameable> extends Nameable {
     
     /**
      * Add an element to this container.
      * @param {T} element
      */
     add(element: T): void;
+
+    /**
+     * Get an element from this container.
+     * @param {string} name
+     */    
+    lookup(name: string): ?T;
+
+    /**
+     * Get an elements held by this container.
+     */    
+    getAll(): Array<mixed>;
 
     /**
      * Remove an element from this container.
@@ -57,240 +65,266 @@ export interface Container<T: Nameable> {
 
     /**
      * Add an element to this container. If a component with the same name
-     * already exists, replace it, and reconnect dangling wires to the new
-     * component in the same configuration as they were attached to the replaced
-     * component, to the extend possible. Wires formerly connected to a port
-     * that is not available on the replacement component will be removed.
-     * @todo: this is where types will need to come in.
-     * @todo: the mutable accessor may have to extend this by adding wires in
-     * case extra ports are available.
+     * already exists, replace it.
      * @param {T} element
      */
     substitute(element: T): void;
 
-
-    // Ideally, we would have Container<Containable<T>>, but
-    // higher-kinded polymorphism is not supported by Flow at this time.
-    // Instead we use an extra level of containment -- ports are be
-    // contained in a PortSet -- yet ports are linked directly to their
-    // parent component via the Descendant interface, bypassing this
-    // extra level of containment when looking up the descendant chain.
-    // This means that the descendant chain may skip links of the
-    // containment chain.
-    /**
-     * List the opaque components that are directly or indirectly
-     * contained by this container.
-     */
-    //deepComponentList(): Array<T>;
-
-    /** List the components in this container. */
-    //componentList(): Array<T>; // FIXME: this should not be part of this interface, it should be part of composite
-
-    // note: PERHAPS have a get containers function and
-
 }
 
-/**
- * Interface that specifies hierarchical relations between objects.
- */
-export interface Descendant<T> {
-    setParent(parent: ?T): void;
-    getParent(): ?T;
-    getFullyQualifiedName(): string;
-}
+export class PortBase<T> implements Containable<Component> {
+    /** The component this port is contained by. */
+    parent: ?Component = null;
+    
+    /** The name of this port. */
+    name: string;
 
-/**
- * A descendant that has a name. Its fully qualified name is prefixed by the
- * fully qualified name of its parent in the descendant chain.
- */
-export class NamedDescendant<T> extends Nameable implements Descendant<T> {
-    /** The parent of this descendant. */
-    parent: ?T;
-
+    /** The visibility of this port. */
+    visibility: Visibility = "full";
+    
     /**
-     * Construct a new descendant with the a given name and given parent.
-     * If this is an orphaned nameable, the parent argument can be omitted
-     * or be null.
+     * Construct a new port. Upon creation it will not be
+     * associated to any component.
      */
-    constructor(name: string, parent?: ?T) {
-        super(name);
-        this.parent = parent;
+    constructor(name: string) {
+        this.name = name;
+        (this: Containable<Component>);
     }
 
     /**
      * Return the fully qualified name of this nameable based on its ancestry.
      */
     getFullyQualifiedName(): string {
-        var name = "";
-        if (parent != null) {
-            name = parent.getFullyQualifiedName();
+        var prefix = "";
+        if (this.parent != null) {
+            prefix = this.parent.getFullyQualifiedName();
         }
-        return name + "." + this.getName();
-    }
-
-    /**
-     * Set the parent of this nameable.
-     */
-    setParent(parent: ?T) {
-        this.parent = parent;
-    }
-
-    /**
-     * Get the parent of this nameable.
-     */
-    getParent(): ?T {
-        return this.parent;
-    }
-}
-
-
-/**
- * A FIFO queue with some meta data that represents a port.
- */
-export class Port<T> extends NamedDescendant<Component> {
-    queue: Array<T>;
-    portType: PortType;
-    options: ?Object;
-    visibility: ?Visibility;
-
-    /**
-     *
-     */
-    constructor(name: string, portType: PortType, dataType?: ?string,
-        value?: ?any, options?: ?Object, visibility?: ?Visibility) {
-        super(name);
-        this.queue = [];
-        this.portType = portType;
-        this.dataType = dataType;
-        this.options = options;
-        if (value != null) {
-            this.queue.push(value);
-        }
-        this.options = options;
-        this.visibility = visibility;
-    }
-
-    getPortType(): PortType {
-        return this.portType;
-    }
-    getDataType(): ?string {
-        return this.dataType;
-    }
-
-    push(value: any): void {
-        if (this.portType == "parameter") {
-            this.queue[0] = value;
+        if (prefix != "") {
+            return prefix + "." + this.name;
         } else {
-            this.queue.push(value);
+            return this.name;
         }
     }
+}
 
-    pop(): any {
-        return this.queue.shift();
-    }
+/**
+ * An input port. The type parameter denotes the type
+ * of values that to pass through this port.
+ */
+export class InputPort<T> extends PortBase<T> {
+    
+    /** A default value that is used when input is absent. */
+    default: ?T;
 
-    reset(): void {
-        this.queue = [];
-    }
+    /** The width of this port. By default it is 1.*/
+    width: number = 1;
 
-    peek(): any {
-        return this.queue[0];
+    /** Construct a new input port given a name and a set of options. */
+    constructor(name: string, options?: ?{value?: T, isParameter?: boolean, 
+        visibility?: Visibility,width?: number}) {
+        super(name);
+        if (options != null) {
+            this.default = options['value'];
+            if (options['width'] != null) {
+                this.width = options['width'];
+            }
+            if (options['visibility'] != null) {
+                this.visibility = options['visibility'];
+            }
+        }
+        (this: Port<T>);
     }
+}
 
-    getOptions(): ?Object {
-        return this.options;
-    }
+/**
+ * Unlike normal input ports, parameters cannot be updated.
+ */
+export class Parameter<T> extends InputPort<T> {
 
 }
 
 /**
- * A component has a name and is containable by a Composite.
+ * A collection of meta data that represents a port.
  */
-export class Component extends Nameable implements Descendant<Composite> {
+export class OutputPort<T> extends PortBase<T> {
+    spontaneous: boolean = false;
+    
+    /**
+     * Construct a new output port given a name and a set of options.
+     */
+    constructor(name: string, options?: ?{spontaneous?: boolean, visibility?: Visibility}) {
+        super(name);
+        if (options != null) {
+            if (options['spontaneous'] != null) {
+                this.spontaneous = options['spontaneous'];
+            }
+            if (options['visibility'] != null) {
+                this.visibility = options['visibility'];
+            }
+        }
+        (this: Port<T>);
+    }
+}
 
+/**
+ * A base class for executable components. Importantly, components can only 
+ * be contained by a specific kind of component, namely a composite.
+ * @todo: it might be a good idea to base this class of off EventEmitter.
+ */
+export class Component implements Containable<Composite>, Executable {
+
+    name: string;
     parent: ?Composite;
 
-    constructor(name: string, parent?: ?Composite): void {
-        super(name);
-        this.parent = parent;
+    constructor(name: string) {
+        this.name = name;
+        (this: Containable<Composite>);
+        (this: Executable);
     }
 
+    /**
+     * Return the fully qualified name of this nameable based on its ancestry.
+     */
     getFullyQualifiedName(): string {
         var prefix = "";
         if (this.parent != null) {
             prefix = this.parent.getFullyQualifiedName();
         }
-
         if (prefix != "") {
-            return prefix + "." + this.getName();
+            return prefix + "." + this.name;
         } else {
-            return this.getName();
+            return this.name;
         }
     }
 
-    getParent(): ?Composite {
-        return this.parent;
+    // **************************************
+    //
+    // interface Executable
+    //
+    // **************************************
+
+    /**
+     * Initialize the component as the first phase of its execution.
+     */
+    initialize(): void {
+    
     }
 
-    setParent(parent: ?Composite) {
-        this.parent = parent;
+    /**
+     * Fire this component.
+     */
+    fire(): void {
+        this.prefire();
+    }
+
+    /**
+     * @todo: we probably need this in order to let accessors fetch inputs 
+     * prior to firing.
+     */
+    prefire() {
+        // override this in accessor
+    }
+
+    /**
+     * Only used in the context of SR where components need to fire multiple
+     * times before they commit to a new state. The fire method of such 
+     * component must be side-effect-free.
+     */
+    postfire() {
+    }
+
+    /**
+     * Clean up any state not to be carried over to the next execution.
+     */
+    wrapup(): void {
+    }
+
+    /**
+     * Set the current execution status. Only to be called by the director.
+     */
+    setStatus(status: ExecutionStatus): void {
     }
 }
 
-/**
- * A collection of ports. No duplicate names are allowed.
- */
-export class PortSet extends NamedDescendant<Component> implements Container<Port> {
+export class Actor extends Component implements Container<Port<mixed>> {
 
-    members: Map<string, Port>;
-
-    constructor(parent: Component) {
-        super("ports");
-        this.parent = parent;
-        this.members = new Map();
-    }
+    inputs: Map<string, InputPort<mixed>>;
+    outputs: Map<string, OutputPort<mixed>>;
 
     /**
-     * Adds a new port by name, throws error if the port already exists.
+     * Constructs a new Actor with a specific name.
      */
-    add(port: Port): void {
-        if (!this.members.has(port.getName())) {
-            // NOTE: skipping this  container in the descendent chain.
-            port.setParent(this.parent);
-            this.members.set(port.getName(), port);
+    constructor(name: string, parent?: ?Composite) {
+        super(name);
+        this.parent = parent;
+        this.inputs = new Map();
+        this.outputs = new Map();
+        (this: Container<Port<mixed>>);
+    }
+
+
+    /**
+     * Add a new port by name, throw an error if the port already exists.
+     */
+    add(port: Port<mixed>): void {
+        if (port instanceof InputPort && !this.inputs.has(port.name)) {
+            port.parent = this;
+            this.inputs.set(port.name, port);
+        } 
+        else if (port instanceof OutputPort && !this.outputs.has(port.name)) {
+            port.parent = this;
+            this.outputs.set(port.name, port);
         } else {
-            throw "Port or parameter with name `"
-                + "` is already defined for component `"
-                + this.getFullyQualifiedName() + "`.";
+            throw "Port or parameter with name `" + port.getFullyQualifiedName() 
+            + "` already exists. `"
         }
     }
 
     /**
-     * Gets the port by name, returns null if the port does not exist.
+     * Return the port associated to given name. If no such port exists, return null.
      */
-    get(name: string): ?Port {
-        return this.members.get(name);
+    lookup(name: string): ?Port<mixed> {
+        var port = this.inputs.get(name);
+        if (port != null) {
+            return port;
+        } else {
+            return this.outputs.get(name);
+        }
+    }
+
+    getAll(): Array<mixed> {
+        return Array.from(this.inputs.values()).concat(Array.from(this.outputs.values()));
+    }
+
+    getInputs(): Array<InputPort<mixed>> {
+        return Array.from(this.inputs.values());
+    }
+
+    getOutputs(): Array<OutputPort<mixed>> {
+        return Array.from(this.outputs.values());
     }
 
     /**
-     * Removes the port by name, does nothing if the port does not exist.
+     * Remove a port by name, do nothing if the port does not exist.
      */
     remove(name: string): void {
-        this.members.delete(name);
+        this.inputs.delete(name) && this.outputs.delete(name);
     }
 
     /**
-     * Substitutes a port with a different port; if the port by name does not
-     * exist; this is equivalent to add a new port.
+     * Substitute an existing port.
+     * @todo: How do we make sure that the substitution is safe?
      */
-    substitute(port: Port) {
-        // NOTE: skipping this container in the descendent chain.
-        port.setParent(this.parent);
-        this.members.set(port.getName(), port);
+    substitute(port: Port<mixed>) {
+        // Loop up the port.
+        var current = this.lookup(port.name);
+        // FIXME.
     }
+}
 
- }
+// export class Relation implements Containable<Composite> {
 
+// }
 
 /**
  * A composite is a container for other components. A component can be
@@ -298,18 +332,16 @@ export class PortSet extends NamedDescendant<Component> implements Container<Por
  * component. Two components within a composite can be connected to one
  * another via their ports.
  */
-export class Composite extends Component implements Executable, Container<Component>, Descendant<Composite> {
+export class Composite extends Actor implements Container<Component|Port<mixed>> { //|Relation
 
     director: ?Director;
-    inputs: Container<Port>
-    outputs: Container<Port>
     components: Map<string, Component>;
+    ports: Map<string, Component>;
+    //relations: Map<Port<mixed>, Array<Port<mixed>>>;
     status: ExecutionStatus;
 
     constructor(name: string, parent?: ?Composite, director?: ?Director) {
-        //(this: Executable);
-
-        super(name, parent);
+        super(name);
         this.components = new Map();
 
         if (parent != null) {
@@ -320,30 +352,26 @@ export class Composite extends Component implements Executable, Container<Compon
             if (director == null) {
                 throw "Top-level container must have a director.";
             }
-        }
-
+        } 
         this.director = director;
+        (this: Executable);
+        (this: Container<Component|Port<mixed>>);
     }
-
-    /** List the components in this container. */
-    // componentList(): Array<Component> {
-    //     return Array.from(this.components.values());
-    // }
 
     /**
      * Connects a source port to sink port.
      */
-    connect(source: Port, sink: Port): void {
+    connect(source: Port<mixed>, sink: Port<mixed>): void {
 
-        var ssource = source.getParent();
-        var ssink = sink.getParent();
+        var ssource = source.parent;
+        var ssink = sink.parent;
 
         if (ssource == ssink) {
             throw "Cannot connect two ports from the same components."; // FIXME: maybe this should be allowed instead.
         }
         // The ports' parents are siblings.
-        else if (ssource != null && ssink != null && ssource.getParent() == ssink.getParent()) {
-            var parent = this.getParent();
+        else if (ssource != null && ssink != null && ssource.parent == ssink.parent) {
+            var parent = this.parent;
             if (parent != null) {
                 parent.getDirector().connect(source, sink); // FIXME
             }
@@ -352,48 +380,47 @@ export class Composite extends Component implements Executable, Container<Compon
 
         }
         // The source's component is a parent of the sink's component.
-        else if (ssource != null && ssink != null && ssource == ssink.getParent()) {
+        else if (ssource != null && ssink != null && ssource == ssink.parent) {
             // input -> input
 
         }
         // The sink's component is a parent of the source's component.
-        else if (ssource != null && ssink != null && ssink == ssource.getParent()) {
+        else if (ssource != null && ssink != null && ssink == ssource.parent) {
             // output -> output
 
         }
         // Source and sink cannot be connected.
         else {
-            throw "Cannot connect port `" + source.getName() + "` to port `" + sink.getName() + "` because there is no direct path between them.";
+            throw "Cannot connect port `" + source.name + "` to port `" + sink.name + "` because there is no direct path between them.";
         }
-
     }
 
     /**
-      * List the opaque components that are directly or indirectly
-      * contained by this container.
-      */
-    // deepComponentList(): Array<Component> {
-    //     var arr: Array<Component> = this.componentList();
-    //     for (var component of this.componentList) {
-    //         // FIXME: expect a type error here, need to check for instanceof??
-    //         arr.concat(component.deepComponentList());
-    //     }
-    //     return arr;
-    // }
-
-    /**
      * Add a component to this composite. This operation also updates
-     * the descendant chain accordingly.
+     * the containment chain accordingly.
      */
-    add(component: Component) {
-        // remove previous parent
-        var parent = component.getParent();
-        if (parent != null) {
-            parent.remove(component.getName());
+    add(obj: Component|Port<mixed>) {
+        if (obj instanceof InputPort || obj instanceof OutputPort) {
+            super.add(obj);
+            return;
         }
-        // add this as the new parent
-        this.components.set(component.getName(), component);
-        component.setParent(this);
+        if (obj instanceof Component) {
+            // unlink
+            if (obj.parent != null) {
+                obj.parent.remove(obj.name);
+            }
+            if (this.components.get(obj.name) != null) {
+                throw "Duplicate component " + obj.name 
+                    + " in container " + this.name + "."
+            } else {
+                this.components.set(obj.name, obj);
+                obj.parent = this;    
+            }
+        }
+    }
+
+    getAll(): Array<mixed> {
+        return Array.from(this.inputs.values()).concat(Array.from(this.outputs.values()));
     }
 
     /**
@@ -402,15 +429,20 @@ export class Composite extends Component implements Executable, Container<Compon
     remove(name: string) {
         let component = this.components.get(name);
         if (component != undefined) {
-            component.setParent(null);
+            component.parent == null;
         }
         this.components.delete(name);
     }
 
     /**
-     * Substitutes a component
+     * Add an element to this container. If a component with the same name
+     * already exists, replace it, and reconnect dangling wires to the new
+     * component in the same configuration as they were attached to the replaced
+     * component, to the extent possible. Wires formerly connected to a port
+     * that is not available on the replacement component will be removed.
+     * @todo: implement this
      */
-    substitute(component: Component | Port) {
+    substitute(component: Component|Port<mixed>) {
         // add the component
 
         // reconnect wires
@@ -448,27 +480,21 @@ export class Composite extends Component implements Executable, Container<Compon
         }
     }
 
-    getStatus(): ExecutionStatus {
-        return this.status;
-    }
-
-    setStatus(status: ExecutionStatus) {
-        this.status = status;
-    }
-
-    setup() {
-
-    }
-
     setDirector(director: Director): void {
-        director.setParent(this);
+        director.parent = this;
         this.director = director;
     }
 
-    initialize() {
-
+    /**
+      * List the opaque components that are directly or indirectly
+      * contained by this container.
+      */
+    deepComponentList(): Array<Component> {
+        return [];
     }
-    fire() {}
-    postfire() {}
-    wrapup() {}
+
+    /** List the components in this container. */
+    componentList(): Array<Component>{
+        return [];
+    }
 }

@@ -2,7 +2,8 @@
 
 'use strict';
 
-import {Descendant, Component, Composite, Port} from './hierarchy';
+import {Component, Composite, Containable} from './hierarchy';
+import type {Port} from './hierarchy';
 
 /**
  * Type class for timers.
@@ -25,13 +26,10 @@ export type ExecutionStatus = "idle" | "settingup" | "initializing" | "firing" |
  * An actor, director, or attribute must implement these methods.
  */
 export interface Executable {
-    setup(): void;
     initialize(): void;
     fire(): void;
     postfire(): void;
     wrapup(): void;
-    setStatus(status: ExecutionStatus):void;
-    getStatus(): ExecutionStatus;
 }
 
 export interface Scheduler {
@@ -43,7 +41,7 @@ export interface Scheduler {
  * embedded in a composite. A composite cannot execute without a director
  * associated to it directly or have one reachable up its containment chain.
  */
-export interface Director extends Executable, Descendant<Composite>, Scheduler {
+export interface Director extends Executable, Containable<Composite>, Scheduler {
 
     setTimeout(fn: Function, delay: number): Timeout;
     clearTimeout(timeout: Timeout): void;
@@ -54,10 +52,10 @@ export interface Director extends Executable, Descendant<Composite>, Scheduler {
     setInterval(timeout: Timeout): void;
     clearInterval(handle: Timeout): void;
 
-    send(port: Port, value: any): void; // FIXME: types
-    get(port: Port): any;
+    send(port: Port<mixed>, value: any): void; // FIXME: types
+    get(port: Port<mixed>): any;
 
-    connect(source: Port, destination: Port): void;
+    connect(source: Port<mixed>, destination: Port<mixed>): void;
 
     getExecutionPhase(): ExecutionPhase;
 }

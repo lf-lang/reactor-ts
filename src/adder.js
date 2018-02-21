@@ -8,9 +8,9 @@ import {Composite} from './hierarchy'
 export class Adder extends Accessor {
     setup() {
         super.setup();
-        this.newInput('in1');
-        this.newInput('in2')
-        this.newOutput('output');
+        this.input('in1');
+        this.input('in2')
+        this.output('output');
     }
 
     initialize() {

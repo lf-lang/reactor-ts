@@ -7,9 +7,9 @@ import {Accessor} from './accessor';
 export class Gain extends Accessor {
     setup() {
         super.setup();
-        this.newInput('input');
-        this.newOutput('scaled');
-        this.newParameter('gain');
+        this.input('input');
+        this.output('scaled');
+        this.parameter('gain');
     }
 
     initialize() {

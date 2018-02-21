@@ -1,7 +1,7 @@
 [ignore]
 .*/__tests__/.*
 .*\.ignore\.js
-
+.*/documentation/.*
 [include]
 
 [libs]

@@ -2,11 +2,12 @@
 
 'use strict';
 
+import {Component} from './hierarchy';
 import type { Timeout, Immediate, Director } from './director';
 import type { Executable, ExecutionPhase, ExecutionStatus } from './director';
 import type {Port, Composite} from './hierarchy';
 
-export class DiscreteEvents implements Director {
+export class DiscreteEvents extends Component implements Director {
     // **************************************
     //
     // interface Director
@@ -32,13 +33,13 @@ export class DiscreteEvents implements Director {
     clearInterval(handle: Timeout): void {
     }
 
-    send(port: Port, value: any): void {
+    send(port: Port<mixed>, value: any): void {
     } // FIXME: types
 
-    get(port: Port): any {
+    get(port: Port<mixed>): any {
     }
 
-    connect(source: Port, destination: Port): void {
+    connect(source: Port<mixed>, destination: Port<mixed>): void {
     }
 
     getExecutionPhase(): ExecutionPhase {
