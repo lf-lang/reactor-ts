@@ -343,20 +343,20 @@ export class Composite extends Actor implements Container<Component|Port<mixed>>
     //relations: Map<Port<mixed>, Array<Port<mixed>>>;
     status: ExecutionStatus;
 
-    constructor(name: string, parent?: ?Composite, director?: ?Director) {
+    constructor(name: string) {
         super(name);
         this.components = new Map();
 
-        if (parent != null) {
-            if (parent.contains(name)) {
-                throw "A component with name '" + name + "' already exists in `" + parent.getFullyQualifiedName() + "`.";
-            }
-        } else {
-            if (director == null) {
-                throw "Top-level container must have a director.";
-            }
-        } 
-        this.director = director;
+        // if (parent != null) {
+        //     if (parent.contains(name)) {
+        //         throw "A component with name '" + name + "' already exists in `" + parent.getFullyQualifiedName() + "`.";
+        //     }
+        // } else {
+        //     if (director == null) {
+        //         throw "Top-level container must have a director.";
+        //     }
+        // } 
+        //this.director = director;
         (this: Executable);
         (this: Container<Component|Port<mixed>>);
     }
@@ -398,6 +398,11 @@ export class Composite extends Actor implements Container<Component|Port<mixed>>
         }
     }
 
+    initialize():void {
+        if (this.parent == null && this.director == null) {
+            throw "Top-level container must have a director.";
+        }
+    }
     /**
      * Add a component to this composite. This operation also updates
      * the containment chain accordingly.
