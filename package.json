@@ -20,6 +20,7 @@
         "eslint-plugin-promise": "^3.6.0",
         "eslint-plugin-standard": "^3.0.1",
         "flow-bin": "^0.59.0",
+        "flow-typed": "^2.3.0",
         "jest": "^21.2.1"
     },
     "files": [
@@ -30,7 +31,8 @@
         "doc": "documentation build src/*.js -f html -o docs",
         "documentation": "documentation",
         "flow": "flow",
-        "jest": "jest",
+        "flow-typed": "flow-typed",
+	"jest": "jest",
         "lint": "eslint src",
         "test": "flow && jest --coverage"
     },
