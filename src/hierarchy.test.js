@@ -57,7 +57,9 @@ describe('composite', () => {
     });
 
     it('director check', () => {
-        expect(topLevel.initialize()).toThrowError("Top-level container must have a director");
+        expect(() => {
+            topLevel.initialize()
+        }).toThrowError("Top-level container must have a director");
     });
 });
 
