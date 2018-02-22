@@ -1,13 +1,13 @@
-import { Actor, Port, Component, PortSet, Composite, DiscreteEvents } from "../src/index.js";
+import { Actor, OutputPort, InputPort, Port, Component, PortSet, Composite, DiscreteEvents } from "../src/index.js";
 
 describe('simple two actors send/recv', () => {
     // Ideally we should use a dummy director. For now, DE works.
     let director = new DiscreteEvents();
     let root = new Composite("root", null, director);
     let actor1 = new Actor("actor1", root);
-    actor1.addOutputPort("out");
+    actor1.add(new OutputPort("out"));
     let actor2 = new Actor("actor2", root);
-    actor2.addInputPort("in");
+    actor2.add(new InputPort("in"));
 
     // root.connect(actor1.getPort("out"), actor1.getPort("in"));
     // actor1.send("out", 1);
