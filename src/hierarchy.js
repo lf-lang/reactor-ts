@@ -58,6 +58,7 @@ export interface Container<T: Nameable> extends Nameable {
 
     /**
      * Get an elements held by this container.
+     * @todo: this might not be very useful. Remove it?
      */    
     getAll(): Array<mixed>;
 
@@ -149,7 +150,8 @@ export class InputPort<T> extends PortBase<T> {
 }
 
 /**
- * Unlike normal input ports (...)
+ * A parameter is an input port that has a default value, and that
+ * value may or may not be updated by inputs.
  */
 export class Parameter<T> extends InputPort<T> {
     
@@ -402,12 +404,17 @@ export class Actor extends Component implements Container<Port<any>> {
 
     /**
      * Substitute an existing port.
-     * @todo: How do we make sure that the substitution is safe?
+     * @todo: Make sure that the substitution is safe.
      */
     substitute(port: Port<mixed>) {
-        // Loop up the port.
-        var current = this.find(port.name, "ports");
-        // FIXME.
+        var current = this.findPort(port.name);
+        if (current == null) {
+            this.add(port);
+        } else {
+            // FIXME: do some checks
+            this.remove(current);
+            this.add(port);
+        }
     }
 }
 
@@ -527,8 +534,11 @@ export class Composite extends Actor implements
         return this.relations.get(name);
     } 
 
-    getAll(): Array<mixed> { // FIXME: incomplete.
-        return Array.from(this.inputs.values()).concat(Array.from(this.outputs.values()));
+    getAll(): Array<mixed> {
+        return Array.from(this.inputs.values())
+            .concat(Array.from(this.outputs.values()))
+            .concat(Array.from(this.components.values()))
+            .concat(Array.from(this.relations.values()));
     }
 
     /**
@@ -550,22 +560,13 @@ export class Composite extends Actor implements
      * that is not available on the replacement component will be removed.
      * @todo: implement this
      */
-    substitute(component: Component|Port<mixed>|Relation<mixed>) {
-        // add the component
-
-        // reconnect wires
-    }
-
-
-    /** Return true if a component with a given name is a contained
-      * in this container, return false otherwise.
-      */
-    contains(name: string): boolean { // FIXME: take namable object here!
-        if (this.components.has(name)) {
-            return true;
-        } else {
-            return false;
+    substitute(obj: Component|Port<mixed>|Relation<mixed>) {
+        if (obj instanceof InputPort || obj instanceof OutputPort) {
+            super.substitute(obj);
         }
+        // add the component
+        // FIXME
+        // reconnect wires
     }
 
     /**

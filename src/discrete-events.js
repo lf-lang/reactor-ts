@@ -85,11 +85,19 @@ export class DiscreteEvents extends Component implements Director {
                     container = ssource;
                 } else {
                     // non-composite
-                    if (!(source instanceof OutputPort && 
-                        sink instanceof InputPort)) {
-                        throw "Cannot connect inputs to inputs or outputs "
-                        + "to outputs if unnested.";
+                    if ((source instanceof InputPort && 
+                        sink instanceof OutputPort)) {
+                        throw "Cannot connect input to output on the same actor.";
                     }
+                    if ((source instanceof InputPort && 
+                        sink instanceof InputPort)) {
+                        throw "Cannot connect input to input on the same actor.";
+                    }
+                    if ((source instanceof OutputPort && 
+                        sink instanceof OutputPort)) {
+                        throw "Cannot connect output to output on the same actor.";
+                    }
+                    // output -> input loop is allowed
                     if (ssource.parent == null) {
                         throw "No composite available to store relation.";
                     } else {
@@ -141,7 +149,7 @@ export class DiscreteEvents extends Component implements Director {
         }
 
         // FIXME: do some extra checks here.
-        // Generally: Do the types match?
+        // Generally: Do the types match? Check width.
         // In DE: Does the new topology introduce zero-delay feedback?
         // In SR: Does the new topology introduce consumption-rate mismatches?
         var rel = new Relation(source, sink, source.name + "->" + sink.name);
