@@ -24,6 +24,27 @@ describe('ports', () => {
 
     });
 
+    actor = new Actor("component");
+    
+    it('add using constructor', () => {
+        new InputPort("in", actor);
+        new OutputPort("out", actor);
+        new Parameter("parm", actor);
+
+        var port = actor.find("in");
+        expect(port != null).toBeTruthy();
+        expect(port instanceof InputPort).toBeTruthy();
+
+        var port = actor.find("out");
+        expect(port != null).toBeTruthy();
+        expect(port instanceof OutputPort).toBeTruthy();
+
+        var port = actor.find("parm");
+        expect(port != null).toBeTruthy();
+        expect(port instanceof Parameter).toBeTruthy();
+
+    });
+
     it('no random port', () => {
         var port = actor.find("random");
         expect(port).toBe(undefined);
@@ -41,6 +62,16 @@ describe('composite', () => {
         composite.add(component);
         expect(composite.parent).toBe(topLevel);
         expect(component.parent).toBe(composite);
+    });
+
+    it('compose hierarchy using constructor', () => {
+        topLevel.remove("composite");
+        composite.remove("component");
+        let composite2 = new Composite("composite2", topLevel);
+        let component2 = new Component("component2", composite2);
+        expect(composite2.parent).toBe(topLevel);
+        expect(component2.parent).toBe(composite2);
+
     });
 
     it('qualified names in hierarchy chain', () => {
@@ -64,7 +95,6 @@ describe('composite', () => {
 });
 
 describe('connect', () => {
-    // Ideally we should use a dummy director. For now, DE works.
     let topLevel = new Composite("topLevel");
     let composite = new Composite("composite");
     let component = new Component("component");
@@ -73,7 +103,7 @@ describe('connect', () => {
     topLevel.add(composite);
     composite.add(component);
 
-    let input = new InputPort("in"); // FIXME: move back to including the parent in the constructor
+    let input = new InputPort("in");
     let output = new OutputPort("out");
            
     it('composite to self', () => {
@@ -86,4 +116,6 @@ describe('connect', () => {
         expect(rel.name).toBe("in->out");
         expect(composite.findRelation(rel.name)).toBe(rel);
     });
+
+    // More to follow...
 });

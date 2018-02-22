@@ -128,8 +128,7 @@ export class InputPort<T> extends PortBase<T> {
     width: number;
 
     /** Construct a new input port given a name and a set of options. */
-    constructor(name: string, options?: ?{value?: T, isParameter?: boolean, 
-        visibility?: Visibility,width?: number}) {
+    constructor(name: string, options?: ?{value?: T, visibility?: Visibility, width?: number}, parent?: Actor) {
         super(name);
         this.width = 1;
         if (options != null) {
@@ -140,6 +139,10 @@ export class InputPort<T> extends PortBase<T> {
             if (options['visibility'] != null) {
                 this.visibility = options['visibility'];
             }
+        }
+        if (parent != null) {
+            this.parent = parent;
+            parent.add(this);
         }
         (this: Port<T>);
     }
@@ -153,32 +156,17 @@ export class Parameter<T> extends InputPort<T> {
     update: boolean;
 
     /** Construct a parameter. It must have a value. */
-    constructor(name: string, value: T, update?:boolean) {
+    constructor(name: string, value: T, update?:boolean, parent?: Actor) {
         var obj = {default: value};
-        super(name, obj);
+        super(name, obj, parent);
         if (update != null) {
             this.update = update;    
         } else {
             this.update = false;
         }
-        
+        (this: Port<T>);
     }
 }
-
-
-/**
- * Unlike normal input ports (...)
- */
-export class MultiPort<T> extends InputPort<T> {
-    
-    /** Construct a multiport. */
-    constructor(name: string, value: T, update?:boolean) {
-        var obj = {default: value};
-        super(name, obj);
-        // FIXME
-    }
-}
-
 
 /**
  * A collection of meta data that represents a port.
@@ -189,7 +177,7 @@ export class OutputPort<T> extends PortBase<T> {
     /**
      * Construct a new output port given a name and a set of options.
      */
-    constructor(name: string, options?: ?{spontaneous?: boolean, visibility?: Visibility}) {
+    constructor(name: string, options?: ?{spontaneous?: boolean, visibility?: Visibility}, parent?: Actor) {
         super(name);
         this.spontaneous = false;
         if (options != null) {
@@ -199,6 +187,10 @@ export class OutputPort<T> extends PortBase<T> {
             if (options['visibility'] != null) {
                 this.visibility = options['visibility'];
             }
+        }
+        if (parent != null) {
+            this.parent = parent;
+            parent.add(this);
         }
         (this: Port<T>);
     }
@@ -214,8 +206,12 @@ export class Component implements Containable<Composite>, Executable {
     name: string;
     parent: ?Composite;
 
-    constructor(name: string) {
+    constructor(name: string, parent?: ?Composite) {
         this.name = name;
+        if (parent != null) {
+            this.parent = parent;
+            parent.add(this);
+        }
         (this: Containable<Composite>);
         (this: Executable);
     }
@@ -283,7 +279,7 @@ export class Component implements Containable<Composite>, Executable {
     }
 }
 
-export class Actor extends Component implements Container<Port<mixed>> {
+export class Actor extends Component implements Container<Port<any>> {
 
     /** The input ports of this actor. */
     inputs: Map<string, InputPort<mixed>>;
@@ -294,8 +290,7 @@ export class Actor extends Component implements Container<Port<mixed>> {
      * Constructs a new Actor with a specific name.
      */
     constructor(name: string, parent?: ?Composite) {
-        super(name);
-        this.parent = parent;
+        super(name, parent);
         this.inputs = new Map();
         this.outputs = new Map();
         (this: Container<Port<mixed>>);
@@ -304,7 +299,7 @@ export class Actor extends Component implements Container<Port<mixed>> {
     /**
      * Add a new port by name; return false if the port already exists.
      */
-    add(port: Port<mixed>): boolean {
+    add(port: Port<any>): boolean {
         if (this.inputs.has(port.name) || this.outputs.has(port.name)) {
             return false;
         }
@@ -447,7 +442,7 @@ export class Relation<T> implements Containable<Composite> {
  * A composite is a container for other components, ports, and relations.
  */
 export class Composite extends Actor implements 
-        Container<Component|Port<mixed>|Relation<mixed>> {
+        Container<Component|Port<any>|Relation<any>> {
 
     director: ?Director;
     components: Map<string, Component>;
@@ -455,8 +450,8 @@ export class Composite extends Actor implements
     relations: Map<string, Relation<mixed>>;
     status: ExecutionStatus;
 
-    constructor(name: string) {
-        super(name);
+    constructor(name: string, parent?: ?Composite) {
+        super(name, parent);
         this.components = new Map();
         this.relations = new Map();
 
@@ -473,7 +468,7 @@ export class Composite extends Actor implements
     /**
      * Add a component to this composite. Return true if successful, false otherwise.
      */
-    add(obj: Component|Port<mixed>|Relation<mixed>): boolean {
+    add(obj: Component|Port<any>|Relation<any>): boolean {
         // components
         if (obj instanceof Component) {
             if (this.components.get(obj.name) != null) {
