@@ -2,7 +2,7 @@
 
 'use strict';
 
-import {Component, Composite, Containable} from './hierarchy';
+import {Component, Composite, Containable, Relation} from './hierarchy';
 import type {Port} from './hierarchy';
 
 /**
@@ -52,10 +52,10 @@ export interface Director extends Executable, Containable<Composite>, Scheduler 
     setInterval(timeout: Timeout): void;
     clearInterval(handle: Timeout): void;
 
-    send(port: Port<mixed>, value: any): void; // FIXME: types
-    get(port: Port<mixed>): any;
+    send(port: Port<mixed>, value: mixed): void;
+    get(port: Port<mixed>): mixed;
 
-    connect(source: Port<mixed>, destination: Port<mixed>): void;
+    connect(source: Port<mixed>, destination: Port<mixed>): Relation<mixed>; // FIXME: use * for inferred
 
     getExecutionPhase(): ExecutionPhase;
 }

@@ -89,7 +89,7 @@ export class Accessor extends Actor implements AccessorAPI {
      * Retrieve a value from an input/output port with a given name.
      */
     get(name: string): any {
-        var port = this.lookup(name);
+        var port = this.find(name, "ports");
 
         if (port == null) {
             throw "No port named: `" + name + "`."
@@ -102,7 +102,7 @@ export class Accessor extends Actor implements AccessorAPI {
      * Retrieve a parameter value.
      */
     getParameter(name: string): any {
-        var port = this.lookup(name);
+        var port = this.find(name, "ports");
         if (port != null && port instanceof Parameter) {
             return null; // FIXME: need to retrieve token from map
         } else {    
@@ -137,7 +137,7 @@ export class Accessor extends Actor implements AccessorAPI {
      * Send a value to an output port with a given name.
      */
     send(name: string, value: any) {
-        var port = this.lookup(name);
+        var port = this.find(name, "ports");
 
         if (port == null) {
             throw "No port named: `" + name + "`."
@@ -155,7 +155,7 @@ export class Accessor extends Actor implements AccessorAPI {
     setParameter(name: string, value: any):void {
         // only change the value if not executing, throw an exception otherwise
         if (this.parent == null || this.parent.getDirector().getExecutionPhase() == "setup") {
-            var port = this.lookup(name);
+            var port = this.find(name, "ports");
             if (port != null && port instanceof Parameter) {
                 //port.push(value); // FIXME
             } else {
@@ -192,7 +192,7 @@ export class Accessor extends Actor implements AccessorAPI {
         var keys = this.triggers.keys();
         for (let name of keys) {
             var index = this.triggers.get(name);
-            var port = this.lookup(name);
+            var port = this.find(name, "ports");
             if (index == null) {
                 throw "Unable to find handler."
             } else {

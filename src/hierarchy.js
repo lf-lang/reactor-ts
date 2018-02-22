@@ -12,6 +12,8 @@ export type Visibility = "full" | "none" | "expert" | "notEditable";
 
 export type Port<T> = InputPort<T>|OutputPort<T>;
 
+export type Namespace = "components" | "ports" | "relations"; 
+
 /**
  * An interface for named objects.
  */
@@ -50,8 +52,9 @@ export interface Container<T: Nameable> extends Nameable {
     /**
      * Get an element from this container.
      * @param {string} name
+     * @param {string} namespace
      */    
-    lookup(name: string): ?T;
+    find(name: string, namespace: Namespace): ?mixed;
 
     /**
      * Get an elements held by this container.
@@ -62,7 +65,7 @@ export interface Container<T: Nameable> extends Nameable {
      * Remove an element from this container.
      * @param {string} name
      */
-    remove(name: string): void;
+    remove(element: T): void;
 
     /**
      * Add an element to this container. If a component with the same name
@@ -76,9 +79,9 @@ export interface Container<T: Nameable> extends Nameable {
 /**
  * A base class for ports.
  */
-export class PortBase<T> implements Containable<Component> {
+export class PortBase<T> implements Containable<Actor> {
     /** The component this port is contained by. */
-    parent: ?Component;
+    parent: ?Actor;
     
     /** The name of this port. */
     name: string;
@@ -93,7 +96,7 @@ export class PortBase<T> implements Containable<Component> {
     constructor(name: string) {
         this.name = name;
         this.visibility = "full";
-        (this: Containable<Component>);
+        (this: Containable<Actor>);
     }
 
     /**
@@ -161,6 +164,21 @@ export class Parameter<T> extends InputPort<T> {
         
     }
 }
+
+
+/**
+ * Unlike normal input ports (...)
+ */
+export class MultiPort<T> extends InputPort<T> {
+    
+    /** Construct a multiport. */
+    constructor(name: string, value: T, update?:boolean) {
+        var obj = {default: value};
+        super(name, obj);
+        // FIXME
+    }
+}
+
 
 /**
  * A collection of meta data that represents a port.
@@ -283,7 +301,6 @@ export class Actor extends Component implements Container<Port<mixed>> {
         (this: Container<Port<mixed>>);
     }
 
-
     /**
      * Add a new port by name; return false if the port already exists.
      */
@@ -292,10 +309,17 @@ export class Actor extends Component implements Container<Port<mixed>> {
             return false;
         }
         if (port instanceof InputPort) {
+            // unlink
+            if (port.parent != null) {
+                port.parent.remove(port);
+            }
             port.parent = this;
             this.inputs.set(port.name, port);
         } 
         else if (port instanceof OutputPort) {
+            if (port.parent != null) {
+                port.parent.remove(port);
+            }
             port.parent = this;
             this.outputs.set(port.name, port);
         }
@@ -303,9 +327,9 @@ export class Actor extends Component implements Container<Port<mixed>> {
     }
 
     /**
-     * Return the port associated to given name. If no such port exists, return null.
+     * Return the port associated to given name. If no such port exists, return undefined.
      */
-    lookup(name: string): ?Port<mixed> {
+    find(name: string, namespace: Namespace): mixed {
         var port = this.inputs.get(name);
         if (port != null) {
             return port;
@@ -313,6 +337,28 @@ export class Actor extends Component implements Container<Port<mixed>> {
             return this.outputs.get(name);
         }
     }
+
+    findInput(name: string): ?InputPort<mixed> {
+        return this.inputs.get(name);
+    }
+
+    findOutput(name: string): ?OutputPort<mixed> {
+        return this.outputs.get(name);
+    }
+
+    findParameter(name: string): ?Parameter<mixed> {
+        var port = this.inputs.get(name); 
+        if (port instanceof Parameter) {
+            return port;
+        } else {
+            return undefined;
+        }
+    }
+
+    findPort(name: string): ?Port<mixed> {
+        return undefined;
+    }
+
 
     /** 
      * Return an array containing all the ports/parameters of this actor.
@@ -355,8 +401,8 @@ export class Actor extends Component implements Container<Port<mixed>> {
     /**
      * Remove a port by name, do nothing if the port does not exist.
      */
-    remove(name: string): void {
-        this.inputs.delete(name) && this.outputs.delete(name);
+    remove(element: Port<mixed>): void {
+        this.inputs.delete(element.name) && this.outputs.delete(element.name);
     }
 
     /**
@@ -365,7 +411,7 @@ export class Actor extends Component implements Container<Port<mixed>> {
      */
     substitute(port: Port<mixed>) {
         // Loop up the port.
-        var current = this.lookup(port.name);
+        var current = this.find(port.name, "ports");
         // FIXME.
     }
 }
@@ -381,6 +427,7 @@ export class Relation<T> implements Containable<Composite> {
         this.from = from;
         this.to = to;
         this.name = name;
+        (this:Containable<Composite>);
     }
 
     getFullyQualifiedName(): string {
@@ -405,12 +452,13 @@ export class Composite extends Actor implements
     director: ?Director;
     components: Map<string, Component>;
     ports: Map<string, Component>;
-    relations: Array<Relation<mixed>>;
+    relations: Map<string, Relation<mixed>>;
     status: ExecutionStatus;
 
     constructor(name: string) {
         super(name);
         this.components = new Map();
+        this.relations = new Map();
 
         (this: Executable);
         (this: Container<Component|Port<mixed>|Relation<mixed>>);
@@ -423,41 +471,80 @@ export class Composite extends Actor implements
         }
     }
     /**
-     * Add a component to this composite. This operation also updates
-     * the containment chain accordingly.
+     * Add a component to this composite. Return true if successful, false otherwise.
      */
     add(obj: Component|Port<mixed>|Relation<mixed>): boolean {
-        if (obj instanceof InputPort || obj instanceof OutputPort) {
-            return super.add(obj);
-        }
+        // components
         if (obj instanceof Component) {
-            // unlink
-            if (obj.parent != null) {
-                obj.parent.remove(obj.name);
-            }
             if (this.components.get(obj.name) != null) {
                 return false;
             } else {
+                // unlink
+                if (obj.parent != null) {
+                    obj.parent.remove(obj);
+                }
                 this.components.set(obj.name, obj);
                 obj.parent = this;
+                return true;
             }
         }
-        return true;
+        // ports or parameters
+        if (obj instanceof InputPort || obj instanceof OutputPort) {
+            return super.add(obj);
+        }
+        // relations
+        if (obj instanceof Relation) {
+            if (this.relations.get(obj.name) != null) {
+                return false;
+            } else {
+                // unlink
+                if (obj.parent != null) {
+                    obj.parent.remove(obj);
+                }
+                this.relations.set(obj.name, obj);
+                obj.parent = this;
+            }
+            return true;
+        }
+        return false;
     }
 
-    getAll(): Array<mixed> {
+    find(name: string, namespace: Namespace): mixed {
+        var result;
+
+        if (namespace == "components") {
+            result = this.findComponent(name);
+        } 
+        else if (namespace == "ports") {
+            result = super.find(name, "ports"); 
+        }
+        else if (namespace == "relations") {
+            result = this.findRelation(name);
+        }
+        return result;
+    }
+
+    findComponent(name: string): ?Component {
+        return this.components.get(name);
+    }
+
+    findRelation(name: string): ?Relation<mixed> {
+        return this.relations.get(name);
+    } 
+
+    getAll(): Array<mixed> { // FIXME: incomplete.
         return Array.from(this.inputs.values()).concat(Array.from(this.outputs.values()));
     }
 
     /**
      * Remove a containable identified by its name (string).
      */
-    remove(name: string) {
-        let component = this.components.get(name);
+    remove(element: Component|Port<mixed>|Relation<mixed>) {
+        let component = this.components.get(element.name);
         if (component != undefined) {
             component.parent == null;
         }
-        this.components.delete(name);
+        this.components.delete(element.name);
     }
 
     /**

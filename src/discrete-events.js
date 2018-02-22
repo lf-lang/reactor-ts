@@ -2,12 +2,18 @@
 
 'use strict';
 
-import {InputPort, OutputPort, Component, Relation, Composite} from './hierarchy';
-import type { Timeout, Immediate, Director } from './director';
-import type { Executable, ExecutionPhase, ExecutionStatus } from './director';
+import {InputPort, OutputPort, 
+    Component, Relation, Composite} from './hierarchy';
+import type {Timeout, Immediate, Director} from './director';
+import type {Executable, ExecutionPhase, ExecutionStatus} from './director';
 import type {Port} from './hierarchy';
 
 export class DiscreteEvents extends Component implements Director {
+    
+    constructor() {
+        super("DEDirector");
+    }
+
     // **************************************
     //
     // interface Director
@@ -33,17 +39,18 @@ export class DiscreteEvents extends Component implements Director {
     clearInterval(handle: Timeout): void {
     }
 
-    send(port: Port<mixed>, value: any): void {
-    } // FIXME: types
+    send(port: Port<mixed>, value: mixed): void {
+    }
 
-    get(port: Port<mixed>): any {
+    get(port: Port<mixed>): mixed {
     }
 
     /**
      * Connect a source port to sink port.
      * @todo: include checks for safety.
+     * @todo: move this into base class.
      */
-    connect(source: Port<mixed>, sink: Port<mixed>): void {
+    connect(source: Port<mixed>, sink: Port<mixed>): Relation<mixed> {
 
         var ssource: ?Component = source.parent;
         var ssink: ?Component = sink.parent;
@@ -57,21 +64,50 @@ export class DiscreteEvents extends Component implements Director {
         
         // The ports' parents are siblings.
         if (ssource.parent == ssink.parent) {
-            // output -> input
-            if(ssource.parent == null && ssource instanceof Composite) {
-                
-                if (source instanceof InputPort && source instanceof OutputPort) {
-                    // top-level composite input connecting to its own output
+            
+            // self-loop
+            if (ssource == ssink) {
+                // composite
+                if(ssource instanceof Composite) {
+                    // external self loop
+                    if (source instanceof OutputPort && 
+                        sink instanceof InputPort) {
+                        if(ssource.parent == null) {
+                            throw "Self-loops are not allowed in top-level.";
+                        }
+                    }
+                    // internal shortcut
+                    else if (!(source instanceof InputPort && 
+                        sink instanceof OutputPort)) {
+                        throw "Cannot connect inputs to inputs or outputs "
+                        + "to outputs if unnested.";
+                    }
                     container = ssource;
-                }
-                else if(source instanceof OutputPort && source instanceof InputPort) {
-                    throw "Cannot construct self-loop in top-level composite.";
                 } else {
-                    throw "Cannot connect top-level inputs to top-level inputs " +
-                    "or top-level outputs to top-level outputs.";
+                    // non-composite
+                    if (!(source instanceof OutputPort && 
+                        sink instanceof InputPort)) {
+                        throw "Cannot connect inputs to inputs or outputs "
+                        + "to outputs if unnested.";
+                    }
+                    if (ssource.parent == null) {
+                        throw "No composite available to store relation.";
+                    } else {
+                        container = ssource.parent; 
+                    }
                 }
             } else {
-                throw "No composite available to store relation."
+                // normal cascade
+                if (!(source instanceof OutputPort && 
+                        sink instanceof InputPort)) {
+                    throw "Cannot connect inputs to inputs or outputs "
+                    + "to outputs if unnested.";
+                }
+                if (ssource.parent == null) {
+                    throw "No composite available to store relation.";
+                } else {
+                    container = ssource.parent;    
+                }
             }
         }
         // The source's component is a parent of the sink's component.
@@ -86,7 +122,6 @@ export class DiscreteEvents extends Component implements Director {
                 "both ports must be inputs."
             }
         }
-
         // The sink's component is a parent of the source's component.
         else if (ssink == ssource.parent) {
             // output -> output
@@ -115,6 +150,7 @@ export class DiscreteEvents extends Component implements Director {
         while(!container.add(rel)) {
             rel.name = rel.name + "(" + ++index + ")";
         }
+        return rel;
     }
 
 
@@ -148,8 +184,6 @@ export class DiscreteEvents extends Component implements Director {
     // interface Descendant<Composite>
     //
     // **************************************
-    setParent(parent: ?Composite): void {}
-    getParent(): ?Composite {}
     getFullyQualifiedName(): string {
         throw new Error('Unimplemented');
     }
