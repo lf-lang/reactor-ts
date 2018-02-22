@@ -100,7 +100,7 @@ describe('connect', () => {
     let composite = new Composite("composite");
     let component = new Component("component");
     let director = new DiscreteEvents();
-    topLevel.setDirector(director);
+    topLevel.director = director;
     topLevel.add(composite);
     composite.add(component);
 

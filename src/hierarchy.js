@@ -576,4 +576,17 @@ export class Composite extends Actor implements
         return this.director != null;
     }
 
+    /**
+     * If this container is opaque, then return its director.
+     * Otherwise, search up the containment hierarchy to find
+     * the nearest director and return that.
+     */
+    getDirector(): Director {
+        if (this.director != null) {
+            return this.director;
+        } else {
+            return parent.getDirector();
+        }
+    }
+
 }
