@@ -4,7 +4,7 @@ import {DiscreteEvents} from "./discrete-events";
 
 describe('ports', () => {
     let actor = new Actor("component");
-    
+
     it('basic add and get', () => {
         actor.add(new InputPort("in"));
         actor.add(new OutputPort("out"));
@@ -25,7 +25,7 @@ describe('ports', () => {
     });
 
     actor = new Actor("component");
-    
+
     it('add using constructor', () => {
         new InputPort("in", actor);
         new OutputPort("out", actor);
@@ -49,7 +49,6 @@ describe('ports', () => {
         var port = actor.find("random");
         expect(port).toBe(undefined);
     });
-    
 });
 
 describe('composite', () => {
@@ -75,7 +74,8 @@ describe('composite', () => {
     });
 
     it('qualified names in hierarchy chain', () => {
-        expect(component.getFullyQualifiedName()).toBe("topLevel.composite.component");
+        expect(component.getFullyQualifiedName())
+            .toBe("topLevel.composite.component");
     });
 
     it('add/remove component', () => {

@@ -28,11 +28,11 @@
     ],
     "scripts": {
         "build": "rm -rf lib && babel -D src -d lib && npm run doc",
-        "doc": "documentation build src/*.js -f html -o docs",
+        "doc": "documentation build src/*.js -f html -o docs --sort-order alpha",
         "documentation": "documentation",
         "flow": "flow",
         "flow-typed": "flow-typed",
-	"jest": "jest",
+        "jest": "jest",
         "lint": "eslint src",
         "test": "flow && jest --coverage"
     },

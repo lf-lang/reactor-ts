@@ -7,18 +7,38 @@ import {Actor, InputPort, OutputPort, Parameter} from './hierarchy';
 import type {Port, Visibility} from './hierarchy'
 
 export type LegacyInputType = "boolean"|"int"|"number"|"string"|"JSON";
-export type LegacyInputSpec = {type?: LegacyInputType, value?: any, options?: any, visibility: Visibility};
+export type LegacyInputSpec = {type?: LegacyInputType, value?: any, options?: any, visibility?: Visibility};
 
+/**
+ * AccessorAPI provides the specifications for Accessor definition according to
+ * the spec on the wiki, link:
+ * https://wiki.eecs.berkeley.edu/accessors/Version1/AccessorSpecification
+ */
 export interface AccessorAPI {
+    /*
+     * Add a function to handle new inputs.
+     * @param {string} input
+     * @param {Function} handler
+     */
     addInputHandler(input: string, handler: Function): number;
+
+    /*
+     * Retrieve the value of a parameter.
+     */
     getParameter(name: string): any;
-    /**
+
+    /*
      * Set up this accessors actor interface prior to exection.
      * The base implementation only sets the status to "settingup."
      * Subclasses should override this method, call super() and, at
      * the end of the method, set the status to "idle."
      */
     setup(): void;
+
+    /*
+     * Provide to a named input the given value.
+     */
+    provideInput(name: string, value: any): void;
     //...
 }
 
@@ -74,8 +94,8 @@ export class Accessor extends Actor implements AccessorAPI {
                 options['visibility'] = spec.visibility;
             }
             if (spec.type != null) {
-                if (spec.value == null || 
-                    ((spec.type == "int" && typeof options.value === "number") 
+                if (spec.value == null ||
+                    ((spec.type == "int" && typeof options.value === "number")
                         || typeof options.value === spec.type)) {
                     this.add(new InputPort(name, options));
                 } else {
@@ -105,7 +125,7 @@ export class Accessor extends Actor implements AccessorAPI {
         var port = this.find(name, "ports");
         if (port != null && port instanceof Parameter) {
             return null; // FIXME: need to retrieve token from map
-        } else {    
+        } else {
             throw "No parameter named `" + name + "`.";
         }
     }
@@ -172,6 +192,18 @@ export class Accessor extends Actor implements AccessorAPI {
      */
     setup(): void {
         //
+    }
+
+    /**
+     * Provide to a named input the given value.
+     * @todo: implement provide input
+     */
+    provideInput(name: string, value: any): void {
+        var port = this.find(name, "ports");
+
+        if (port == null) {
+            throw "No port named: `" + name + "`."
+        }
     }
 
     /**

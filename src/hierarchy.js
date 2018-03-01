@@ -4,7 +4,7 @@
 
 import type {Executable, Director, ExecutionStatus} from './director'
 
-/** 
+/**
  * A hint to the host of whether this port should be made visible.
  * @todo: should also affect the connectability of the port?
  */
@@ -12,27 +12,26 @@ export type Visibility = "full" | "none" | "expert" | "notEditable";
 
 export type Port<T> = InputPort<T>|OutputPort<T>;
 
-export type Namespace = "components" | "ports" | "relations"; 
+export type Namespace = "components" | "ports" | "relations";
 
 /**
  * An interface for named objects.
  */
 export interface Nameable {
-    /** The name of this object. */
+    /* The name of this object. */
     name: string;
 
-    /** Return a globally unique identifier. */
+    /* Return a globally unique identifier. */
     getFullyQualifiedName(): string;
 }
 
 /**
- * An extension of the Nameable interface for objects that 
- * are part of a hierarchy. The type parameter denotes the 
+ * An extension of the Nameable interface for objects that
+ * are part of a hierarchy. The type parameter denotes the
  * type of object that it can be contained by.
  */
 export interface Containable<T> extends Nameable {
-    
-    /** The container of this object. */
+    /* The container of this object. */
     parent: ?T;
 }
 
@@ -41,34 +40,34 @@ export interface Containable<T> extends Nameable {
  * and it must have a name itself.
  */
 export interface Container<T: Nameable> extends Nameable {
-    
-    /**
-     * Add an element to this container. Return true if 
+
+    /*
+     * Add an element to this container. Return true if
      * the element was added successfully, false otherwise.
      * @param {T} element
      */
     add(element: T): boolean;
 
-    /**
+    /*
      * Get an element from this container.
      * @param {string} name
-     * @param {string} namespace
-     */    
+     * @param {Namespace} namespace
+     */
     find(name: string, namespace: Namespace): ?mixed;
 
-    /**
+    /*
      * Get an elements held by this container.
      * @todo: this might not be very useful. Remove it?
-     */    
+     */
     getAll(): Array<mixed>;
 
-    /**
+    /*
      * Remove an element from this container.
      * @param {string} name
      */
     remove(element: T): void;
 
-    /**
+    /*
      * Add an element to this container. If a component with the same name
      * already exists, replace it.
      * @param {T} element
@@ -83,13 +82,13 @@ export interface Container<T: Nameable> extends Nameable {
 export class PortBase<T> implements Containable<Actor> {
     /** The component this port is contained by. */
     parent: ?Actor;
-    
+
     /** The name of this port. */
     name: string;
 
     /** The visibility of this port. */
     visibility: Visibility;
-    
+
     /**
      * Construct a new port. Upon creation it will not be
      * associated to any component.
@@ -121,11 +120,11 @@ export class PortBase<T> implements Containable<Actor> {
  * of values that to pass through this port.
  */
 export class InputPort<T> extends PortBase<T> {
-    
+
     /** A default value that is used when input is absent. */
     default: ?T;
 
-    /** The width of this port. By default it is 1.*/
+    /** The width of this port. By default it is 1. */
     width: number;
 
     /** Construct a new input port given a name and a set of options. */
@@ -154,7 +153,7 @@ export class InputPort<T> extends PortBase<T> {
  * value may or may not be updated by inputs.
  */
 export class Parameter<T> extends InputPort<T> {
-    
+
     update: boolean;
 
     /** Construct a parameter. It must have a value. */
@@ -162,7 +161,7 @@ export class Parameter<T> extends InputPort<T> {
         var obj = {default: value};
         super(name, obj, parent);
         if (update != null) {
-            this.update = update;    
+            this.update = update;
         } else {
             this.update = false;
         }
@@ -175,7 +174,7 @@ export class Parameter<T> extends InputPort<T> {
  */
 export class OutputPort<T> extends PortBase<T> {
     spontaneous: boolean;
-    
+
     /**
      * Construct a new output port given a name and a set of options.
      */
@@ -199,7 +198,7 @@ export class OutputPort<T> extends PortBase<T> {
 }
 
 /**
- * A base class for executable components. Importantly, components can only 
+ * A base class for executable components. Importantly, components can only
  * be contained by a specific kind of component, namely a composite.
  * @todo: it might be a good idea to base this class of off EventEmitter.
  */
@@ -243,7 +242,7 @@ export class Component implements Containable<Composite>, Executable {
      * Initialize the component as the first phase of its execution.
      */
     initialize(): void {
-    
+
     }
 
     /**
@@ -254,7 +253,7 @@ export class Component implements Containable<Composite>, Executable {
     }
 
     /**
-     * @todo: we probably need this in order to let accessors fetch inputs 
+     * @todo: we probably need this in order to let accessors fetch inputs
      * prior to firing.
      */
     prefire() {
@@ -262,7 +261,7 @@ export class Component implements Containable<Composite>, Executable {
 
     /**
      * Only used in the context of SR where components need to fire multiple
-     * times before they commit to a new state. The fire method of such 
+     * times before they commit to a new state. The fire method of such
      * component must be side-effect-free.
      */
     postfire() {
@@ -281,6 +280,9 @@ export class Component implements Containable<Composite>, Executable {
     }
 }
 
+/**
+ * An actor is a component that contains ports and implements executable.
+ */
 export class Actor extends Component implements Container<Port<any>> {
 
     /** The input ports of this actor. */
@@ -312,7 +314,7 @@ export class Actor extends Component implements Container<Port<any>> {
             }
             port.parent = this;
             this.inputs.set(port.name, port);
-        } 
+        }
         else if (port instanceof OutputPort) {
             if (port.parent != null) {
                 port.parent.remove(port);
@@ -324,7 +326,8 @@ export class Actor extends Component implements Container<Port<any>> {
     }
 
     /**
-     * Return the port associated to given name. If no such port exists, return undefined.
+     * Return the port associated to given name. If no such port exists, return
+     * undefined.
      */
     find(name: string, namespace: Namespace): mixed {
         var port = this.inputs.get(name);
@@ -344,7 +347,7 @@ export class Actor extends Component implements Container<Port<any>> {
     }
 
     findParameter(name: string): ?Parameter<mixed> {
-        var port = this.inputs.get(name); 
+        var port = this.inputs.get(name);
         if (port instanceof Parameter) {
             return port;
         } else {
@@ -357,7 +360,7 @@ export class Actor extends Component implements Container<Port<any>> {
     }
 
 
-    /** 
+    /**
      * Return an array containing all the ports/parameters of this actor.
      */
     getAll(): Array<mixed> {
@@ -383,16 +386,16 @@ export class Actor extends Component implements Container<Port<any>> {
     /**
      * Return an array containing all the parameters of this actor,
      * including ones that are updateable.
-     */    
+     */
     getParameters(): Array<Parameter<mixed>> {
         var parms: Array<Parameter<mixed>> = [];
         for (var port in this.inputs.values()) {
             if (port instanceof Parameter)
                 parms.push(port);
         }
-       return parms;
-       // NOTE: flow can't hack this:
-       // return (Array.from(this.inputs.values()).filter(port => (port instanceof Parameter)): Array<Parameter<mixed>>);
+        return parms;
+        // NOTE: flow can't hack this:
+        // return (Array.from(this.inputs.values()).filter(port => (port instanceof Parameter)): Array<Parameter<mixed>>);
     }
 
     /**
@@ -448,8 +451,8 @@ export class Relation<T> implements Containable<Composite> {
 /**
  * A composite is a container for other components, ports, and relations.
  */
-export class Composite extends Actor implements 
-        Container<Component|Port<any>|Relation<any>> {
+export class Composite extends Actor implements
+Container<Component|Port<any>|Relation<any>> {
 
     director: ?Director;
     components: Map<string, Component>;
@@ -516,9 +519,9 @@ export class Composite extends Actor implements
 
         if (namespace == "components") {
             result = this.findComponent(name);
-        } 
+        }
         else if (namespace == "ports") {
-            result = super.find(name, "ports"); 
+            result = super.find(name, "ports");
         }
         else if (namespace == "relations") {
             result = this.findRelation(name);
@@ -532,7 +535,7 @@ export class Composite extends Actor implements
 
     findRelation(name: string): ?Relation<mixed> {
         return this.relations.get(name);
-    } 
+    }
 
     getAll(): Array<mixed> {
         return Array.from(this.inputs.values())

@@ -9,7 +9,7 @@ export class Adder extends Accessor {
     setup() {
         super.setup();
         this.input('in1');
-        this.input('in2')
+        this.input('in2');
         this.output('output');
     }
 
