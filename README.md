@@ -12,7 +12,7 @@ Make sure you have a recent version (such as 8.x) of NodeJS installed.
 To make sure all Node modules are installed, run:
 
 ```
-npm run install
+npm install
 ```
 
 To check types with [flow][flow] and run tests with [Jest][jest], run:
