@@ -53,7 +53,7 @@ export interface Container<T: Nameable> extends Nameable {
      * @param {string} name
      * @param {Namespace} namespace
      */
-    find(name: string, namespace: Namespace): ?mixed;
+    find(name: string, namespace: Namespace): mixed;
 
     /*
      * Get an elements held by this container.
@@ -73,7 +73,6 @@ export interface Container<T: Nameable> extends Nameable {
      * @param {T} element
      */
     substitute(element: T): void;
-
 }
 
 /**
@@ -330,6 +329,10 @@ export class Actor extends Component implements Container<Port<any>> {
      * undefined.
      */
     find(name: string, namespace: Namespace): mixed {
+        if (namespace != "ports") {
+            throw "Actors only support ports namespace.";
+        }
+
         var port = this.inputs.get(name);
         if (port != null) {
             return port;
