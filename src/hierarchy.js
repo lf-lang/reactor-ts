@@ -504,14 +504,14 @@ Container<Component|Port<any>|Relation<any>> {
         }
         // relations
         if (obj instanceof Relation) {
-            if (this.relations.get(obj.name) != null) {
+            if (!this.has(obj)) {
                 return false;
             } else {
                 // unlink
                 if (obj.parent != null) {
                     obj.parent.remove(obj);
                 }
-                this.relations.set(obj.name, obj);
+                this.relations.set(obj.from.name, obj);
                 obj.parent = this;
             }
             return true;
@@ -538,8 +538,11 @@ Container<Component|Port<any>|Relation<any>> {
         return this.components.get(name);
     }
 
-    findRelation(name: string): ?Relation<mixed> {
-        return this.relations.get(name);
+    /**
+     * Find a relation based on the name of its source port.
+     */
+    findRelation(source: string): ?Relation<mixed> {
+        return this.relations.get(source);
     }
 
     getAll(): Array<mixed> {
