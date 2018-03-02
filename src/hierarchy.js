@@ -48,6 +48,11 @@ export interface Container<T: Nameable> extends Nameable {
      */
     add(element: T): boolean;
 
+    /**
+     * Return whether or not the argument is present in the container.
+     */
+    has(element: T): boolean;
+
     /*
      * Get an element from this container.
      * @param {string} name
@@ -249,14 +254,6 @@ export class Component implements Containable<Composite>, Executable {
      * Fire this component.
      */
     fire(): void {
-        this.prefire();
-    }
-
-    /**
-     * @todo: we probably need this in order to let accessors fetch inputs
-     * prior to firing.
-     */
-    prefire() {
     }
 
     /**
@@ -356,7 +353,7 @@ export class Actor extends Component implements Container<Port<any>> {
     }
 
     findPort(name: string): ?Port<mixed> {
-        return undefined;
+        
     }
 
 
@@ -396,6 +393,14 @@ export class Actor extends Component implements Container<Port<any>> {
         return parms;
         // NOTE: flow can't hack this:
         // return (Array.from(this.inputs.values()).filter(port => (port instanceof Parameter)): Array<Parameter<mixed>>);
+    }
+
+    has(element: Port<any>): boolean {
+        if (this.ports.get(element.name) != null) {
+            return true
+        } else {
+            return false;
+        }
     }
 
     /**
