@@ -2,14 +2,16 @@
 
 'use strict';
 
-import {InputPort, OutputPort, 
-    Component, Relation, Composite} from './hierarchy';
+import {InputPort, OutputPort, Component, Relation, Composite} from './hierarchy';
 import type {Timeout, Immediate, Director} from './director';
 import type {Executable, ExecutionPhase, ExecutionStatus} from './director';
 import type {Port} from './hierarchy';
 
+/**
+ * DiscreteEvents directory.
+ */
 export class DiscreteEvents extends Component implements Director {
-    
+
     constructor() {
         super("DEDirector");
     }
@@ -47,6 +49,12 @@ export class DiscreteEvents extends Component implements Director {
 
     /**
      * Connect a source port to sink port.
+     *
+     * Connecting involves topology changes and semantics checks. The current
+     * implementation only handles topology changes and basic type checks, it
+     * does not support semantics check based on the director. See elaboration
+     * at {@link https://github.com/nebgnahz/accessor-flow/issues/12 Issue 12}.
+     *
      * @todo: include checks for safety.
      * @todo: move this into base class.
      */
@@ -61,23 +69,23 @@ export class DiscreteEvents extends Component implements Director {
             throw "Cannot connect unaffiliated ports; " +
                     "add them to a container first."
         }
-        
+
         // The ports' parents are siblings.
         if (ssource.parent == ssink.parent) {
-            
+
             // self-loop
             if (ssource == ssink) {
                 // composite
                 if(ssource instanceof Composite) {
                     // external self loop
-                    if (source instanceof OutputPort && 
+                    if (source instanceof OutputPort &&
                         sink instanceof InputPort) {
                         if(ssource.parent == null) {
                             throw "Self-loops are not allowed in top-level.";
                         }
                     }
                     // internal shortcut
-                    else if (!(source instanceof InputPort && 
+                    else if (!(source instanceof InputPort &&
                         sink instanceof OutputPort)) {
                         throw "Cannot connect inputs to inputs or outputs "
                         + "to outputs if unnested.";
@@ -85,15 +93,15 @@ export class DiscreteEvents extends Component implements Director {
                     container = ssource;
                 } else {
                     // non-composite
-                    if ((source instanceof InputPort && 
+                    if ((source instanceof InputPort &&
                         sink instanceof OutputPort)) {
                         throw "Cannot connect input to output on the same actor.";
                     }
-                    if ((source instanceof InputPort && 
+                    if ((source instanceof InputPort &&
                         sink instanceof InputPort)) {
                         throw "Cannot connect input to input on the same actor.";
                     }
-                    if ((source instanceof OutputPort && 
+                    if ((source instanceof OutputPort &&
                         sink instanceof OutputPort)) {
                         throw "Cannot connect output to output on the same actor.";
                     }
@@ -101,12 +109,12 @@ export class DiscreteEvents extends Component implements Director {
                     if (ssource.parent == null) {
                         throw "No composite available to store relation.";
                     } else {
-                        container = ssource.parent; 
+                        container = ssource.parent;
                     }
                 }
             } else {
                 // normal cascade
-                if (!(source instanceof OutputPort && 
+                if (!(source instanceof OutputPort &&
                         sink instanceof InputPort)) {
                     throw "Cannot connect inputs to inputs or outputs "
                     + "to outputs if unnested.";
@@ -114,15 +122,15 @@ export class DiscreteEvents extends Component implements Director {
                 if (ssource.parent == null) {
                     throw "No composite available to store relation.";
                 } else {
-                    container = ssource.parent;    
+                    container = ssource.parent;
                 }
             }
         }
         // The source's component is a parent of the sink's component.
         else if (ssource == ssink.parent) {
             // input -> input
-            if (ssource instanceof Composite && 
-                source instanceof InputPort && 
+            if (ssource instanceof Composite &&
+                source instanceof InputPort &&
                 sink instanceof InputPort) {
                 container = ssource;
             } else {
@@ -133,8 +141,8 @@ export class DiscreteEvents extends Component implements Director {
         // The sink's component is a parent of the source's component.
         else if (ssink == ssource.parent) {
             // output -> output
-            if (ssink instanceof Composite && 
-                source instanceof OutputPort && 
+            if (ssink instanceof Composite &&
+                source instanceof OutputPort &&
                 sink instanceof OutputPort) {
                 container = ssink;
             } else {
@@ -144,7 +152,7 @@ export class DiscreteEvents extends Component implements Director {
         }
         // Source and sink cannot be connected.
         else {
-            throw "Cannot connect port `" + source.name + "` to port `" 
+            throw "Cannot connect port `" + source.name + "` to port `"
             + sink.name + "` because there is no direct path between them.";
         }
 
