@@ -1,27 +1,56 @@
 //@flow
-import {Actor, InputPort, OutputPort, Component, Composite, Parameter} from "./hierarchy";
-import {DiscreteEvents} from "./discrete-events";
+import {PortBase, InputPort, OutputPort} from "./hierarchy"
+import {Actor, Component, Parameter, Composite} from "./hierarchy";
 
-describe('ports', () => {
+describe('portbase', () => {
+    it('constructor and names', () => {
+        let portbase = new PortBase("base");
+        expect(portbase.name).toBe("base");
+        expect(portbase.getFullyQualifiedName()).toBe("base");
+        expect(portbase.visibility).toBe("full");
+    });
+});
+
+describe('inputport', () => {
+    it('constructors with option', () => {
+        let option = { value: 1, visibility: "expert", width: 2 };
+        let input = new InputPort("in", option);
+        expect(input.default).toBe(1);
+        expect(input.width).toBe(2);
+        expect(input.visibility).toBe("expert");
+        (input.default: ?number);
+    });
+});
+
+describe('outputport', () => {
+    it('constructors with option', () => {
+        let option = { spontaneous: true, visibility: "expert" };
+        let output = new OutputPort("out", option);
+        expect(output.spontaneous).toBe(true);
+        expect(output.visibility).toBe("expert");
+        (output.default: number);
+    });
+});
+
+describe('ports and actors', () => {
     let actor = new Actor("component");
 
-    it('basic add and get', () => {
+    it('basic add and find', () => {
         actor.add(new InputPort("in"));
         actor.add(new OutputPort("out"));
         actor.add(new Parameter("parm"));
 
-        var port = actor.find("in");
+        var port = actor.find("in", "ports");
         expect(port != null).toBeTruthy();
         expect(port instanceof InputPort).toBeTruthy();
 
-        var port = actor.find("out");
+        var port = actor.find("out", "ports");
         expect(port != null).toBeTruthy();
         expect(port instanceof OutputPort).toBeTruthy();
 
-        var port = actor.find("parm");
+        var port = actor.find("parm", "ports");
         expect(port != null).toBeTruthy();
         expect(port instanceof Parameter).toBeTruthy();
-
     });
 
     actor = new Actor("component");
@@ -31,23 +60,43 @@ describe('ports', () => {
         new OutputPort("out", actor);
         new Parameter("parm", actor);
 
-        var port = actor.find("in");
+        var port = actor.find("in", "ports");
         expect(port != null).toBeTruthy();
         expect(port instanceof InputPort).toBeTruthy();
 
-        var port = actor.find("out");
+        var port = actor.find("out", "ports");
         expect(port != null).toBeTruthy();
         expect(port instanceof OutputPort).toBeTruthy();
 
-        var port = actor.find("parm");
+        var port = actor.find("parm", "ports");
         expect(port != null).toBeTruthy();
         expect(port instanceof Parameter).toBeTruthy();
-
     });
 
     it('no random port', () => {
-        var port = actor.find("random");
+        var port = actor.find("random", "ports");
         expect(port).toBe(undefined);
+    });
+
+    it('actors only have port namespace', () => {
+        expect(() => {
+            actor.find("random", "components");
+        }).toThrowError("Actors only support ports namespace");
+    });
+
+    it('unlink and relink', () => {
+        let actor = new Actor("component");
+        let input = new InputPort("in");
+        expect(actor.add(input)).toBe(true);
+
+        // Create a new actor and add the input port.
+        let actor2 = new Actor("component2");
+        expect(actor2.add(input)).toBe(true);
+
+        expect(actor.find("in", "ports")).toBe(undefined);
+        let port = actor2.find("in", "ports");
+        expect(port != null).toBeTruthy();
+        expect(port instanceof InputPort).toBeTruthy();
     });
 });
 
@@ -94,58 +143,3 @@ describe('composite', () => {
     });
 });
 
-// FIXME: this exercises director more than hierarchy; move these tests
-describe('connect', () => {
-    let topLevel = new Composite("topLevel");
-    let composite = new Composite("composite");
-    let component = new Component("component");
-    let director = new DiscreteEvents();
-    topLevel.director = director;
-    topLevel.add(composite);
-    composite.add(component);
-
-    let input = new InputPort("in");
-    let output = new OutputPort("out");
-
-    it('toplevel to self', () => {
-        topLevel.add(input);
-        topLevel.add(output);
-        expect(() => {director.connect(output, input)}).toThrowError("Self-loops are not allowed in top-level.");
-        let rel = director.connect(input, output);
-        expect(rel.name).toBe("in->out");
-        expect(topLevel.findRelation(rel.name)).toBe(rel);
-    });           
-
-    it('composite to self', () => {
-        composite.add(input);
-        composite.add(output);
-        let rel = director.connect(output, input);
-        expect(rel.name).toBe("out->in");
-        expect(composite.findRelation(rel.name)).toBe(rel);
-        rel = director.connect(input, output);
-        expect(rel.name).toBe("in->out");
-        expect(composite.findRelation(rel.name)).toBe(rel);
-    });
-
-    it('actor to self', () => {
-        let component = new Actor("component", composite);
-        component.add(input);
-        component.add(output);
-        let rel = director.connect(output, input);
-        expect(rel.name).toBe("out->in(1)");
-        expect(composite.findRelation(rel.name)).toBe(rel);
-        expect( () => {director.connect(input, output)}).toThrowError("Cannot connect input to output on the same actor.");
-        expect( () => {director.connect(output, output)}).toThrowError("Cannot connect output to output on the same actor.");
-        expect( () => {director.connect(input, input)}).toThrowError("Cannot connect input to input on the same actor.");
-    });
-
-    it('actor no parent', () => {
-        let component = new Actor("component");
-        component.add(input);
-        component.add(output);
-        expect(() => {director.connect(output, input)}).toThrowError("No composite available to store relation.");
-    });
-
-
-    // More to follow...
-});
