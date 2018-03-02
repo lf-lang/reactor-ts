@@ -397,11 +397,10 @@ export class Actor extends Component implements Container<Port<any>> {
     }
 
     has(element: Port<any>): boolean {
-        if (this.ports.get(element.name) != null) {
-            return true
-        } else {
-            return false;
+        if (this.findPort(element.name) != null) {
+            return true;
         }
+        return false;
     }
 
     /**
@@ -598,4 +597,23 @@ Container<Component|Port<any>|Relation<any>> {
         }
     }
 
+    /**
+     * Return whether or not this container has the argument element.
+     */
+    has(element: Component|Port<any>|Relation<any>): boolean {
+        if (element instanceof Component && this.find(element.name, "components") != null) {
+            return true;
+        }
+        if ((element instanceof InputPort || element instanceof OutputPort) && this.find(element.name, "ports") != null) {
+            return true;
+        }
+        if (element instanceof Relation) {
+            for (var val of this.relations.values()) {
+                if (element.name == val.name) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
