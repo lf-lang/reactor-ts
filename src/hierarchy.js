@@ -327,15 +327,9 @@ export class Actor extends Component implements Container<Port<any>> {
      */
     find(name: string, namespace: Namespace): mixed {
         if (namespace != "ports") {
-            throw "Actors only support ports namespace.";
+            throw "Actors only support the ``ports'' namespace.";
         }
-
-        var port = this.inputs.get(name);
-        if (port != null) {
-            return port;
-        } else {
-            return this.outputs.get(name);
-        }
+        return this.findPort(name);
     }
 
     findInput(name: string): ?InputPort<mixed> {
@@ -356,9 +350,13 @@ export class Actor extends Component implements Container<Port<any>> {
     }
 
     findPort(name: string): ?Port<mixed> {
-        
+        var port = this.inputs.get(name);
+        if (port != null) {
+            return port;
+        } else {
+            return this.outputs.get(name);
+        }
     }
-
 
     /**
      * Return an array containing all the ports/parameters of this actor.
