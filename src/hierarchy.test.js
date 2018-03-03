@@ -81,7 +81,7 @@ describe('ports and actors', () => {
     it('actors only have port namespace', () => {
         expect(() => {
             actor.find("random", "components");
-        }).toThrowError("Actors only support ports namespace");
+        }).toThrowError("Actors only support the ``ports'' namespace.");
     });
 
     it('unlink and relink', () => {
