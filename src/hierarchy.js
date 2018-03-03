@@ -41,7 +41,7 @@ export interface Containable<T> extends Nameable {
  */
 export interface Container<T: Nameable> extends Nameable {
 
-    /*
+    /**
      * Add an element to this container. Return true if
      * the element was added successfully, false otherwise.
      * @param {T} element
@@ -50,29 +50,29 @@ export interface Container<T: Nameable> extends Nameable {
 
     /**
      * Return whether or not the argument is present in the container.
+     * @param {T} element
      */
     has(element: T): boolean;
 
-    /*
+    /**
      * Get an element from this container.
      * @param {string} name
      * @param {Namespace} namespace
      */
     find(name: string, namespace: Namespace): mixed;
 
-    /*
+    /**
      * Get an elements held by this container.
-     * @todo: this might not be very useful. Remove it?
      */
     getAll(): Array<mixed>;
 
-    /*
+    /**
      * Remove an element from this container.
      * @param {string} name
      */
     remove(element: T): void;
 
-    /*
+    /**
      * Add an element to this container. If a component with the same name
      * already exists, replace it.
      * @param {T} element
@@ -94,8 +94,9 @@ export class PortBase<T> implements Containable<Actor> {
     visibility: Visibility;
 
     /**
-     * Construct a new port. Upon creation it will not be
-     * associated to any component.
+     * Construct a new port with a give name. Upon creation
+     * it will not be associated to any component.
+     * @param {string} name
      */
     constructor(name: string) {
         this.name = name;
@@ -128,17 +129,17 @@ export class InputPort<T> extends PortBase<T> {
     /** A default value that is used when input is absent. */
     default: ?T;
 
-    /** The width of this port. By default it is 1. */
-    width: number;
+    /** Whether or not this port allows multiple connections. By default it does not. */
+    multiplex: boolean;
 
     /** Construct a new input port given a name and a set of options. */
-    constructor(name: string, options?: ?{value?: T, visibility?: Visibility, width?: number}, parent?: Actor) {
+    constructor(name: string, options?: ?{value?: T, visibility?: Visibility, multiplex?: boolean}, parent?: Actor) {
         super(name);
-        this.width = 1;
+        this.multiplex = false;
         if (options != null) {
             this.default = options['value'];
-            if (options['width'] != null) {
-                this.width = options['width'];
+            if (options['multiplex'] != null) {
+                this.multiplex = options['multiplex'];
             }
             if (options['visibility'] != null) {
                 this.visibility = options['visibility'];
@@ -428,12 +429,15 @@ export class Actor extends Component implements Container<Port<any>> {
 
 export class Relation<T> implements Containable<Composite> {
 
-    from: Port<T>;
-    to: Port<T>;
+    /* Anything sent from src to dst goes through this buffer. */
+    buffer: Array<T>;
+    from: Port<T>; // FIXME: rename to "src"
+    to: Port<T>;   // FIXME: rename to "dst"
     parent: ?Composite;
     name: string;
 
     constructor(from: Port<T>, to:Port<T>, name: string) {
+        this.buffer = [];
         this.from = from;
         this.to = to;
         this.name = name;

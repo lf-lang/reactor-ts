@@ -52,8 +52,8 @@ export interface Director extends Executable, Containable<Composite>, Scheduler 
     setInterval(timeout: Timeout): void;
     clearInterval(handle: Timeout): void;
 
-    send(port: Port<mixed>, value: mixed): void;
-    get(port: Port<mixed>): mixed;
+    send<T>(port: Port<T>, value: T): void;
+    get<T>(port: Port<T>): Array<T>;
 
     connect(source: Port<mixed>, destination: Port<mixed>): Relation<mixed>; // FIXME: use * for inferred
 

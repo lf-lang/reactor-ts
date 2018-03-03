@@ -41,9 +41,9 @@ export class DiscreteEvents extends Component implements Director {
     clearInterval(handle: Timeout): void {
     }
 
-    send(port: Port<mixed>, value: mixed): void {
+    send<T>(port: Port<T>, value: T): void {
         if (port.parent == null) {
-            throw "Cannot connect unassociated port."
+            throw "Cannot send to an unassociated port."
         } else {
             if (port.parent instanceof Composite 
                 && port instanceof InputPort) {
@@ -51,7 +51,7 @@ export class DiscreteEvents extends Component implements Director {
                 var rels = port.parent.fanOut(port.name);
                 if (rels != null) {
                     for (let r of rels) {
-                        // FIXME: put token
+                        r.buffer.push(value);
                     }
                 }
             } else {
@@ -63,7 +63,7 @@ export class DiscreteEvents extends Component implements Director {
                     var rels = c.fanOut(port.name);
                     if (rels != null) {
                         for (let r of rels) {
-                            // FIXME: put token
+                            r.buffer.push(value);
                         }
                     }
                 }
@@ -71,8 +71,33 @@ export class DiscreteEvents extends Component implements Director {
         }
     }
 
-    get(port: Port<mixed>): mixed {
-    
+    get<T>(port: Port<T>, index: number): ?T {
+        if (port.parent == null) {
+            throw "Port is not associated with an actor."
+        } else {
+            if (port.parent.parent == null) {
+                return null;
+            } else {
+                return port.parent.parent.fanIn(port.name)[index];
+            }
+        }
+    }
+
+    get<T>(port: Port<T>): Array<T> {
+        var vals = [];
+        if (port.parent == null) {
+            throw "Port is not associated with an actor."
+        } else {
+            if (port.parent.parent != null) {
+             var rels = port.parent.parent.fanIn(port.name);
+                if (rels != null) {
+                   for (let v of rels.values()) {
+                        vals.concat(v);
+                    }
+                }
+            }
+            return vals;
+        }
     }
 
     /**
