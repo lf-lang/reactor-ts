@@ -42,9 +42,16 @@ export class DiscreteEvents extends Component implements Director {
     }
 
     send(port: Port<mixed>, value: mixed): void {
+        // look up relations
+        if (port.parent == null) {
+            throw "Cannot connect unassociated port."
+        } else {
+            port.parent.findRelation(port.name);
+        }
     }
 
     get(port: Port<mixed>): mixed {
+    
     }
 
     /**

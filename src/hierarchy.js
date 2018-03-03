@@ -462,7 +462,7 @@ Container<Component|Port<any>|Relation<any>> {
     director: ?Director;
     components: Map<string, Component>;
     ports: Map<string, Component>;
-    relations: Map<string, Relation<mixed>>;
+    relations: Map<string, Array<Relation<mixed>>>;
     status: ExecutionStatus;
 
     constructor(name: string, parent?: ?Composite) {
@@ -480,6 +480,7 @@ Container<Component|Port<any>|Relation<any>> {
             throw "Top-level container must have a director.";
         }
     }
+
     /**
      * Add a component to this composite. Return true if successful, false otherwise.
      */
@@ -504,14 +505,19 @@ Container<Component|Port<any>|Relation<any>> {
         }
         // relations
         if (obj instanceof Relation) {
-            if (!this.has(obj)) {
+            if (this.has(obj)) {
                 return false;
             } else {
                 // unlink
                 if (obj.parent != null) {
                     obj.parent.remove(obj);
                 }
-                this.relations.set(obj.from.name, obj);
+                var r = this.relations.get(obj.from.name);
+                if (Array.isArray(r)) {
+                    r.push(obj);
+                } else {
+                    this.relations.set(obj.from.name, [obj]);
+                }
                 obj.parent = this;
             }
             return true;
@@ -529,7 +535,14 @@ Container<Component|Port<any>|Relation<any>> {
             result = super.find(name, "ports");
         }
         else if (namespace == "relations") {
-            result = this.findRelation(name);
+            var rels = this.findRelations(name);
+            if (rels != null) {
+                for (var r in rels) {
+                    if (r == name) {
+                        result = r;
+                    }
+                }
+            }
         }
         return result;
     }
@@ -539,9 +552,9 @@ Container<Component|Port<any>|Relation<any>> {
     }
 
     /**
-     * Find a relation based on the name of its source port.
+     * Find the relations associated with the given source port.
      */
-    findRelation(source: string): ?Relation<mixed> {
+    findRelations(source: string): ?Array<Relation<mixed>> {
         return this.relations.get(source);
     }
 
