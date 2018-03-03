@@ -46,9 +46,12 @@ export class DiscreteEvents extends Component implements Director {
         if (port.parent == null) {
             throw "Cannot connect unassociated port."
         } else {
-            // where are the relevant relations stored?
+            if (port.parent instanceof Composite) {
+                port.parent.fanOut(port.name);
+            } else {
 
-            //port.parent.findRelations(port.name);
+            }
+
         }
     }
 
@@ -169,6 +172,7 @@ export class DiscreteEvents extends Component implements Director {
         // Generally: Do the types match? Check width.
         // In DE: Does the new topology introduce zero-delay feedback?
         // In SR: Does the new topology introduce consumption-rate mismatches?
+        // Also, check sink width
         var rel = new Relation(source, sink, source.name + "->" + sink.name);
         var index = 0;
 

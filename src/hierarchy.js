@@ -462,13 +462,15 @@ Container<Component|Port<any>|Relation<any>> {
     director: ?Director;
     components: Map<string, Component>;
     ports: Map<string, Component>;
-    relations: Map<string, Array<Relation<mixed>>>;
+    relsBySource: Map<string, Array<Relation<mixed>>>;
+    relsBySink: Map<string, Array<Relation<mixed>>>;
     status: ExecutionStatus;
 
     constructor(name: string, parent?: ?Composite) {
         super(name, parent);
         this.components = new Map();
-        this.relations = new Map();
+        this.relsBySink = new Map();
+        this.relsBySource = new Map();
 
         (this: Executable);
         (this: Container<Component|Port<mixed>|Relation<mixed>>);
@@ -512,17 +514,22 @@ Container<Component|Port<any>|Relation<any>> {
                 if (obj.parent != null) {
                     obj.parent.remove(obj);
                 }
-                var r = this.relations.get(obj.from.name);
-                if (Array.isArray(r)) {
-                    r.push(obj);
-                } else {
-                    this.relations.set(obj.from.name, [obj]);
-                }
+                this.relMap(obj.from.name, obj, this.relsBySource);
+                this.relMap(obj.to.name, obj, this.relsBySink);
                 obj.parent = this;
             }
             return true;
         }
         return false;
+    }
+
+    relMap(key: string, obj: Relation<mixed>, map: Map<string, Array<Relation<mixed>>>) {
+        var r = map.get(key);
+        if (Array.isArray(r)) {
+            r.push(obj);
+        } else {
+            map.set(key, [obj]);
+        }
     }
 
     find(name: string, namespace: Namespace): mixed {
@@ -535,14 +542,7 @@ Container<Component|Port<any>|Relation<any>> {
             result = super.find(name, "ports");
         }
         else if (namespace == "relations") {
-            var rels = this.findRelations(name);
-            if (rels != null) {
-                for (var r of rels) {
-                    if (r.name == name) {
-                        result = r;
-                    }
-                }
-            }
+            result = this.findRelation(name);
         }
         return result;
     }
@@ -551,22 +551,41 @@ Container<Component|Port<any>|Relation<any>> {
         return this.components.get(name);
     }
 
-    /**
-     * Find the relations associated with the given source port.
-     */
-    findRelations(source: string): ?Array<Relation<mixed>> {
-        return this.relations.get(source);
+    findRelation(name: string): ?Relation<mixed> {
+        for (var rels of this.relsBySource.values()) {
+            for (var rel of rels) {
+                if (rel.name == name) {
+                    return rel;
+                }
+            }
+        }
     }
 
+    /**
+     * Find the relations emenating from the given source port.
+     */
+    fanOut(source: string): ?Array<Relation<mixed>> {
+        return this.relsBySource.get(source);
+    }
+
+    /**
+     * Find the relations merging into the given sink port.
+     */
+    fanIn(sink: string): ?Array<Relation<mixed>> {
+        return this.relsBySink.get(sink);
+    }
+
+
     getAll(): Array<mixed> {
-        return Array.from(this.inputs.values())
-            .concat(Array.from(this.outputs.values()))
-            .concat(Array.from(this.components.values()))
-            .concat(Array.from(this.relations.values()));
+        var all = [].concat.apply([], Array.from(this.inputs.values()), 
+            Array.from(this.outputs.values()), Array.from(this.components.values()));
+        this.relsBySource.forEach(function(val) { all.concat(val) });
+        return all;
     }
 
     /**
      * Remove a containable identified by its name (string).
+     * @todo: handle the removal of port and relations.
      */
     remove(element: Component|Port<mixed>|Relation<mixed>) {
         let component = this.components.get(element.name);
@@ -574,6 +593,7 @@ Container<Component|Port<any>|Relation<any>> {
             component.parent == null;
         }
         this.components.delete(element.name);
+        //FIXME: handle port and relations!
     }
 
     /**
@@ -623,15 +643,8 @@ Container<Component|Port<any>|Relation<any>> {
         if ((element instanceof InputPort || element instanceof OutputPort) && this.find(element.name, "ports") != null) {
             return true;
         }
-        if (element instanceof Relation) {
-            var rels = this.findRelations(element.name);
-            if (rels != null) {
-                for (var r of rels) {
-                    if (element.name == r.name) {
-                        return true;
-                    }
-                }
-            }
+        if (element instanceof Relation && this.findRelation(element.name) != null) {
+            return true;
         }
         return false;
     }
