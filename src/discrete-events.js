@@ -42,16 +42,32 @@ export class DiscreteEvents extends Component implements Director {
     }
 
     send(port: Port<mixed>, value: mixed): void {
-        // look up relations
         if (port.parent == null) {
             throw "Cannot connect unassociated port."
         } else {
-            if (port.parent instanceof Composite) {
-                port.parent.fanOut(port.name);
+            if (port.parent instanceof Composite 
+                && port instanceof InputPort) {
+                // Composite sending from input port
+                var rels = port.parent.fanOut(port.name);
+                if (rels != null) {
+                    for (let r of rels) {
+                        // FIXME: put token
+                    }
+                }
             } else {
-
+                // Sending from output port
+                var c = port.parent.parent;
+                if (c == null) {
+                    // No container => no relations
+                } else {
+                    var rels = c.fanOut(port.name);
+                    if (rels != null) {
+                        for (let r of rels) {
+                            // FIXME: put token
+                        }
+                    }
+                }
             }
-
         }
     }
 
@@ -172,7 +188,7 @@ export class DiscreteEvents extends Component implements Director {
         // Generally: Do the types match? Check width.
         // In DE: Does the new topology introduce zero-delay feedback?
         // In SR: Does the new topology introduce consumption-rate mismatches?
-        // Also, check sink width
+        // use fanIn(sink) to check for existing relations and compare with width
         var rel = new Relation(source, sink, source.name + "->" + sink.name);
         var index = 0;
 
