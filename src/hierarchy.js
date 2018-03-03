@@ -537,8 +537,8 @@ Container<Component|Port<any>|Relation<any>> {
         else if (namespace == "relations") {
             var rels = this.findRelations(name);
             if (rels != null) {
-                for (var r in rels) {
-                    if (r == name) {
+                for (var r of rels) {
+                    if (r.name == name) {
                         result = r;
                     }
                 }
@@ -624,9 +624,12 @@ Container<Component|Port<any>|Relation<any>> {
             return true;
         }
         if (element instanceof Relation) {
-            for (var val of this.relations.values()) {
-                if (element.name == val.name) {
-                    return true;
+            var rels = this.findRelations(element.name);
+            if (rels != null) {
+                for (var r of rels) {
+                    if (element.name == r.name) {
+                        return true;
+                    }
                 }
             }
         }

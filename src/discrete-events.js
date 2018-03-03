@@ -46,7 +46,9 @@ export class DiscreteEvents extends Component implements Director {
         if (port.parent == null) {
             throw "Cannot connect unassociated port."
         } else {
-            port.parent.findRelation(port.name);
+            // where are the relevant relations stored?
+
+            //port.parent.findRelations(port.name);
         }
     }
 
