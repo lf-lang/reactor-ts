@@ -13,10 +13,10 @@ describe('portbase', () => {
 
 describe('inputport', () => {
     it('constructors with option', () => {
-        let option = { value: 1, visibility: "expert", width: 2 };
+        let option = { value: 1, visibility: "expert", multiplex: true };
         let input = new InputPort("in", option);
         expect(input.default).toBe(1);
-        expect(input.width).toBe(2);
+        expect(input.multiplex).toBe(true);
         expect(input.visibility).toBe("expert");
         (input.default: ?number);
     });
