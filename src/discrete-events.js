@@ -17,4 +17,9 @@ export class DiscreteEvents extends DirectorBase {
         super("DEDirector");
     }
 
+    canAddSafely(relation: Relation<*>): boolean {
+        // FIXME: check for zero-delay feedback 
+        return true;
+    }
+
 }

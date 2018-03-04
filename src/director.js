@@ -54,7 +54,8 @@ export interface Director extends Executable, Containable<Composite> {
     // poll<T>(port: Port<T>, index: number): ?T;
     // pollMulti<T>(port: Port<T>): Array<T>;
 
-    connect(source: Port<mixed>, destination: Port<mixed>): Relation<mixed>; // FIXME: use * for inferred
+    canAddSafely(relation: Relation<*>): boolean;
+    connect<T>(source: Port<T>, destination: Port<T>): Relation<T>; // FIXME: use * for inferred
 
 }
 
@@ -122,6 +123,13 @@ export class DirectorBase extends Component implements Director {
             }
             return vals;
         }
+    }
+
+    /**
+     * 
+     */
+    canAddSafely(r: Relation<*>): boolean {
+        return true;
     }
 
     /**
@@ -233,19 +241,18 @@ export class DirectorBase extends Component implements Director {
             + sink.name + "` because there is no direct path between them.";
         }
 
-        // FIXME: do some extra checks here.
-        // Generally: Do the types match? Check width.
-        // In DE: Does the new topology introduce zero-delay feedback?
-        // In SR: Does the new topology introduce consumption-rate mismatches?
+        
         // use fanIn(sink) to check for existing relations and compare with width
         var rel = new Relation(source, sink, ssource.name + "." + source.name 
             + "->" + ssink.name + "." + sink.name);
-        var index = 0;
+        
+        
+        //var index = 0;
 
         // while(!container.add(rel)) {
         //     rel.name = rel.name + "(" + ++index + ")";
         // }
-        if(!container.add(rel)) { // FIXME: Perhaps throw this in add?
+        if(this.canAddSafely(rel) && !container.add(rel)) { // FIXME: Perhaps throw this in add?
             throw "Cannot add relation that already exists.";
         }
         return rel;
