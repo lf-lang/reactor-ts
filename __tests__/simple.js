@@ -14,9 +14,27 @@ describe('simple two actors send/recv', () => {
     let p2: Port<number> = actor2.find("in", "ports");
     
     director.connect(p1, p2);
-    director.send(p1, 1);
-    
+    director.push(p1, 1);
+
     it('actor2 receives data', () => {
-        expect(director.get(p2, 0)).toBe(1);
+        expect(director.peek(p2, 0)).toBe(1);
     });
+
+    let actor3 = new Actor("actor3", root);
+    actor3.add(new OutputPort("out"));
+    let p3: Port<number> = actor3.find("out", "ports");
+    
+    director.connect(p3, p2);
+    director.push(p3, 2);
+
+    it('actor2 receives muliplexed data', () => {
+        expect(director.peek(p2, 0)).toBe(1);
+        expect(director.peek(p2, 1)).toBe(2);
+    });
+
+    it('actor2 receives muliplexed data at once', () => {
+        expect(director.peekMulti(p2)).toEqual([1, 2]);
+    });
+
+
 });

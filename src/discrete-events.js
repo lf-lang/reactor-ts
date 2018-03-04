@@ -41,7 +41,7 @@ export class DiscreteEvents extends Component implements Director {
     clearInterval(handle: Timeout): void {
     }
 
-    send<T>(port: Port<T>, value: T): void {
+    push<T>(port: Port<T>, value: T): void {
         if (port.parent == null) {
             throw "Cannot send to an unassociated port."
         } else {
@@ -71,44 +71,39 @@ export class DiscreteEvents extends Component implements Director {
         }
     }
 
-    get<T>(port: Port<T>, index: number): ?T {
+    peek<T>(port: Port<T>, index: number): ?T {
         if (port.parent == null) {
             throw "Port is not associated with an actor."
         } else {
             if (port.parent.parent == null) {
                 return null;
             } else {
-                //console.log(port.parent.parent.fanIn(port));
-                return port.parent.parent.fanIn(port)[index].buffer[0];
+                var rel = port.parent.parent.fanIn(port)[index];
+                if (rel != null) {
+                    return rel.buffer[0];
+                }
             }
         }
     }
 
-    // get<T>(port: Port<T>): Array<T> {
-    //     var vals = [];
-    //     if (port.parent == null) {
-    //         throw "Port is not associated with an actor."
-    //     } else {
-    //         if (port.parent.parent != null) {
-    //          var rels = port.parent.parent.fanIn(port);
-    //             if (rels != null) {
-    //                for (let r of rels.values()) {
-    //                     if (r.buffer instanceof Array) {
-    //                         // let val = r.buffer.values.next();
-    //                         // if (val instanceof T ) {
-    //                         //     vals.concat(val);
-    //                         // } else {
-    //                         //     throw "Token/port type mismatch."
-    //                         // }
-                            
-    //                     }
-                        
-    //                 }
-    //             }
-    //         }
-    //         return vals;
-    //     }
-    // }
+    peekMulti<T>(port: Port<T>): Array<T> {
+        
+        if (port.parent == null) {
+            throw "Port is not associated with an actor."
+        } else {
+            var vals = [];
+            if (port.parent.parent != null) {
+             var rels = port.parent.parent.fanIn(port);
+                if (rels != null) {
+                    var index = 0;
+                    for (let r of rels) {
+                        vals[index++] = r.buffer[0];                            
+                    }
+                }
+            }
+            return vals;
+        }
+    }
 
     /**
      * Connect a source port to sink port.

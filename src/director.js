@@ -52,8 +52,12 @@ export interface Director extends Executable, Containable<Composite>, Scheduler 
     setInterval(timeout: Timeout): void;
     clearInterval(handle: Timeout): void;
 
-    send<T>(port: Port<T>, value: T): void;
-    get<T>(port: Port<T>, index: number): ?T;
+    push<T>(port: Port<T>, value: T): void;
+    peek<T>(port: Port<T>, index: number): ?T;
+    peekMulti<T>(port: Port<T>): Array<T>;
+    // poll<T>(port: Port<T>, index: number): ?T;
+    // pollMulti<T>(port: Port<T>): Array<T>;
+
     //get<T>(port: Port<T>): Array<T>;
     
 
