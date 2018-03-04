@@ -1,9 +1,11 @@
 {
     "name": "accessor-flow",
     "version": "0.0.1",
-    "description": "Accessors enable composing heterogeneous devices and services.",
+    "description": "Accessors: A Composition Plaform for IoT.",
     "main": "lib/index.js",
-    "dependencies": {},
+    "dependencies": {
+        "flow": "^0.2.3"
+    },
     "devDependencies": {
         "babel-cli": "^6.26.0",
         "babel-eslint": "^8.2.1",

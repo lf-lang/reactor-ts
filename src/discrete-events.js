@@ -48,7 +48,7 @@ export class DiscreteEvents extends Component implements Director {
             if (port.parent instanceof Composite 
                 && port instanceof InputPort) {
                 // Composite sending from input port
-                var rels = port.parent.fanOut(port.name);
+                var rels = port.parent.fanOut(port);
                 if (rels != null) {
                     for (let r of rels) {
                         r.buffer.push(value);
@@ -60,7 +60,7 @@ export class DiscreteEvents extends Component implements Director {
                 if (c == null) {
                     // No container => no relations
                 } else {
-                    var rels = c.fanOut(port.name);
+                    var rels = c.fanOut(port);
                     if (rels != null) {
                         for (let r of rels) {
                             r.buffer.push(value);
@@ -78,27 +78,37 @@ export class DiscreteEvents extends Component implements Director {
             if (port.parent.parent == null) {
                 return null;
             } else {
-                return port.parent.parent.fanIn(port.name)[index];
+                //console.log(port.parent.parent.fanIn(port));
+                return port.parent.parent.fanIn(port)[index].buffer[0];
             }
         }
     }
 
-    get<T>(port: Port<T>): Array<T> {
-        var vals = [];
-        if (port.parent == null) {
-            throw "Port is not associated with an actor."
-        } else {
-            if (port.parent.parent != null) {
-             var rels = port.parent.parent.fanIn(port.name);
-                if (rels != null) {
-                   for (let v of rels.values()) {
-                        vals.concat(v);
-                    }
-                }
-            }
-            return vals;
-        }
-    }
+    // get<T>(port: Port<T>): Array<T> {
+    //     var vals = [];
+    //     if (port.parent == null) {
+    //         throw "Port is not associated with an actor."
+    //     } else {
+    //         if (port.parent.parent != null) {
+    //          var rels = port.parent.parent.fanIn(port);
+    //             if (rels != null) {
+    //                for (let r of rels.values()) {
+    //                     if (r.buffer instanceof Array) {
+    //                         // let val = r.buffer.values.next();
+    //                         // if (val instanceof T ) {
+    //                         //     vals.concat(val);
+    //                         // } else {
+    //                         //     throw "Token/port type mismatch."
+    //                         // }
+                            
+    //                     }
+                        
+    //                 }
+    //             }
+    //         }
+    //         return vals;
+    //     }
+    // }
 
     /**
      * Connect a source port to sink port.
@@ -111,7 +121,7 @@ export class DiscreteEvents extends Component implements Director {
      * @todo: include checks for safety.
      * @todo: move this into base class.
      */
-    connect(source: Port<mixed>, sink: Port<mixed>): Relation<mixed> {
+    connect<T>(source: Port<T>, sink: Port<T>): Relation<T> {
 
         var ssource: ?Component = source.parent;
         var ssink: ?Component = sink.parent;

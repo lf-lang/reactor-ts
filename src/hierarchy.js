@@ -466,8 +466,8 @@ Container<Component|Port<any>|Relation<any>> {
     director: ?Director;
     components: Map<string, Component>;
     ports: Map<string, Component>;
-    relsBySource: Map<string, Array<Relation<mixed>>>;
-    relsBySink: Map<string, Array<Relation<mixed>>>;
+    relsBySource: Map<Port<*>, Array<Relation<*>>>;
+    relsBySink: Map<Port<*>, Array<Relation<*>>>;
     status: ExecutionStatus;
 
     constructor(name: string, parent?: ?Composite) {
@@ -479,7 +479,6 @@ Container<Component|Port<any>|Relation<any>> {
         (this: Executable);
         (this: Container<Component|Port<mixed>|Relation<mixed>>);
     }
-
 
     initialize():void {
         if (this.parent == null && this.director == null) {
@@ -518,8 +517,8 @@ Container<Component|Port<any>|Relation<any>> {
                 if (obj.parent != null) {
                     obj.parent.remove(obj);
                 }
-                this.relMap(obj.from.name, obj, this.relsBySource);
-                this.relMap(obj.to.name, obj, this.relsBySink);
+                this.relMap(obj.from, obj, this.relsBySource);
+                this.relMap(obj.to, obj, this.relsBySink);
                 obj.parent = this;
             }
             return true;
@@ -527,7 +526,7 @@ Container<Component|Port<any>|Relation<any>> {
         return false;
     }
 
-    relMap(key: string, obj: Relation<mixed>, map: Map<string, Array<Relation<mixed>>>) {
+    relMap<T>(key: Port<T>, obj: Relation<T>, map: Map<Port<T>, Array<Relation<T>>>) {
         var r = map.get(key);
         if (Array.isArray(r)) {
             r.push(obj);
@@ -568,15 +567,24 @@ Container<Component|Port<any>|Relation<any>> {
     /**
      * Find the relations emenating from the given source port.
      */
-    fanOut(source: string): ?Array<Relation<mixed>> {
-        return this.relsBySource.get(source);
+    fanOut<T>(source: Port<T>): Array<Relation<T>> {
+        var rels = this.relsBySource.get(source);
+        if (rels != null) {
+            return rels;
+        }
+        return [];
+
     }
 
     /**
      * Find the relations merging into the given sink port.
      */
-    fanIn(sink: string): ?Array<Relation<mixed>> {
-        return this.relsBySink.get(sink);
+    fanIn<T>(sink: Port<T>): Array<Relation<T>> {
+        var rels = this.relsBySink.get(sink);
+        if (rels != null) {
+            return rels;
+        }
+        return [];
     }
 
 
