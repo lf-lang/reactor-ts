@@ -18,7 +18,7 @@ describe('connect', () => {
         topLevel.add(output);
         expect(() => {director.connect(output, input)}).toThrowError("Self-loops are not allowed in top-level.");
         let rel = director.connect(input, output);
-        expect(rel.name).toBe("in->out");
+        expect(rel.name).toBe("topLevel.in->topLevel.out");
         expect(topLevel.findRelation(rel.name)).toBe(rel);
     });
 
@@ -26,10 +26,10 @@ describe('connect', () => {
         composite.add(input);
         composite.add(output);
         let rel = director.connect(output, input);
-        expect(rel.name).toBe("out->in");
+        expect(rel.name).toBe("composite.out->composite.in");
         expect(composite.findRelation(rel.name)).toBe(rel);
         rel = director.connect(input, output);
-        expect(rel.name).toBe("in->out");
+        expect(rel.name).toBe("composite.in->composite.out");
         expect(composite.findRelation(rel.name)).toBe(rel);
     });
 
@@ -38,7 +38,7 @@ describe('connect', () => {
         component.add(input);
         component.add(output);
         let rel = director.connect(output, input);
-        expect(rel.name).toBe("out->in(1)");
+        expect(rel.name).toBe("component.out->component.in");
         expect(composite.findRelation(rel.name)).toBe(rel);
         expect( () => {director.connect(input, output)}).toThrowError("Cannot connect input to output on the same actor.");
         expect( () => {director.connect(output, output)}).toThrowError("Cannot connect output to output on the same actor.");

@@ -173,17 +173,17 @@ export class Accessor extends Actor implements AccessorAPI {
      * Set the value of a parameter.
      */
     setParameter(name: string, value: any):void {
-        // only change the value if not executing, throw an exception otherwise
-        if (this.parent == null || this.parent.getDirector().getExecutionPhase() == "setup") {
-            var port = this.find(name, "ports");
-            if (port != null && port instanceof Parameter) {
-                //port.push(value); // FIXME
+        var port = this.find(name, "ports");
+        if (port != null && port instanceof Parameter) {
+            if (port.update === true) {
+                port.default = value;
             } else {
-                throw "No parameter named `" + name + "`.";
+                throw "Parameter is immutable."
             }
         } else {
-            throw "Cannot reset parameter during execution. Use a port instead."
+            throw "No parameter named `" + name + "`.";
         }
+
 
     }
 
