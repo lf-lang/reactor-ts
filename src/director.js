@@ -139,7 +139,6 @@ export class DirectorBase extends Component implements Director {
      * at {@link https://github.com/nebgnahz/accessor-flow/issues/12 Issue 12}.
      *
      * @todo: include checks for safety.
-     * @todo: move this into base class.
      */
     connect<T>(source: Port<T>, sink: Port<T>): Relation<T> {
 
