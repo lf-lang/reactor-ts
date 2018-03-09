@@ -65,7 +65,7 @@ export class DirectorBase extends Component implements Director {
         if (port.parent == null) {
             throw "Cannot send to an unassociated port."
         } else {
-            if (port.parent instanceof Composite 
+            if (port.parent instanceof Composite
                 && port instanceof InputPort) {
                 // Composite sending from input port
                 var rels = port.parent.fanOut(port);
@@ -107,7 +107,6 @@ export class DirectorBase extends Component implements Director {
     }
 
     peekMulti<T>(port: Port<T>): Array<T> {
-        
         if (port.parent == null) {
             throw "Port is not associated with an actor."
         } else {
@@ -117,8 +116,7 @@ export class DirectorBase extends Component implements Director {
                 if (rels != null) {
                     var index = 0;
                     for (let r of rels) {
-                        vals[index++] = r.buffer[0];                            
-                    }
+                        vals[index++] = r.buffer[0];                    }
                 }
             }
             return vals;
@@ -126,7 +124,7 @@ export class DirectorBase extends Component implements Director {
     }
 
     /**
-     * 
+     *
      */
     canAddSafely(r: Relation<*>): boolean {
         return true;
@@ -241,12 +239,12 @@ export class DirectorBase extends Component implements Director {
             + sink.name + "` because there is no direct path between them.";
         }
 
-        
+
         // use fanIn(sink) to check for existing relations and compare with width
-        var rel = new Relation(source, sink, ssource.name + "." + source.name 
+        var rel = new Relation(source, sink, ssource.name + "." + source.name
             + "->" + ssink.name + "." + sink.name);
-        
-        
+
+
         //var index = 0;
 
         // while(!container.add(rel)) {

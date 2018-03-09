@@ -3,7 +3,7 @@ import {PortBase, InputPort, OutputPort} from "./hierarchy"
 import {Actor, Component, Parameter, Composite} from "./hierarchy";
 
 describe('portbase', () => {
-    it('constructor and names', () => {
+    test('constructor and names', () => {
         let portbase = new PortBase("base");
         expect(portbase.name).toBe("base");
         expect(portbase.getFullyQualifiedName()).toBe("base");
@@ -12,7 +12,7 @@ describe('portbase', () => {
 });
 
 describe('inputport', () => {
-    it('constructors with option', () => {
+    test('constructors with option', () => {
         let option = { value: 1, visibility: "expert", multiplex: true };
         let input = new InputPort("in", option);
         expect(input.default).toBe(1);
@@ -23,7 +23,7 @@ describe('inputport', () => {
 });
 
 describe('outputport', () => {
-    it('constructors with option', () => {
+    test('constructors with option', () => {
         let option = { spontaneous: true, visibility: "expert" };
         let output = new OutputPort("out", option);
         expect(output.spontaneous).toBe(true);
@@ -33,9 +33,13 @@ describe('outputport', () => {
 });
 
 describe('ports and actors', () => {
-    let actor = new Actor("component");
+    let actor;
 
-    it('basic add and find', () => {
+    beforeEach(() => {
+        actor = new Actor("component");
+    });
+
+    test('basic add and find', () => {
         actor.add(new InputPort("in"));
         actor.add(new OutputPort("out"));
         actor.add(new Parameter("parm"));
@@ -53,12 +57,11 @@ describe('ports and actors', () => {
         expect(port instanceof Parameter).toBeTruthy();
     });
 
-    actor = new Actor("component");
 
-    it('add using constructor', () => {
-        new InputPort("in", actor);
-        new OutputPort("out", actor);
-        new Parameter("parm", actor);
+    test('add using constructor', () => {
+        new InputPort("in", null, actor);
+        new OutputPort("out", null, actor);
+        new Parameter("parm", null, actor);
 
         var port = actor.find("in", "ports");
         expect(port != null).toBeTruthy();
@@ -73,18 +76,18 @@ describe('ports and actors', () => {
         expect(port instanceof Parameter).toBeTruthy();
     });
 
-    it('no random port', () => {
+    test('no random port', () => {
         var port = actor.find("random", "ports");
         expect(port).toBe(undefined);
     });
 
-    it('actors only have port namespace', () => {
+    test('actors only have port namespace', () => {
         expect(() => {
             actor.find("random", "components");
         }).toThrowError("Actors only support the ``ports'' namespace.");
     });
 
-    it('unlink and relink', () => {
+    test('unlink and relink', () => {
         let actor = new Actor("component");
         let input = new InputPort("in");
         expect(actor.add(input)).toBe(true);
@@ -105,14 +108,14 @@ describe('composite', () => {
     let composite = new Composite("composite");
     let component = new Component("component");
 
-    it('compose hierarchy', () => {
+    test('compose hierarchy', () => {
         topLevel.add(composite);
         composite.add(component);
         expect(composite.parent).toBe(topLevel);
         expect(component.parent).toBe(composite);
     });
 
-    it('compose hierarchy using constructor', () => {
+    test('compose hierarchy using constructor', () => {
         topLevel.remove("composite");
         composite.remove("component");
         let composite2 = new Composite("composite2", topLevel);
@@ -122,12 +125,12 @@ describe('composite', () => {
 
     });
 
-    it('qualified names in hierarchy chain', () => {
+    test('qualified names in hierarchy chain', () => {
         expect(component.getFullyQualifiedName())
             .toBe("topLevel.composite.component");
     });
 
-    it('add/remove component', () => {
+    test('add/remove component', () => {
         let component = new Component("new-component");
         topLevel.add(component);
         expect(component.getFullyQualifiedName()).toBe("topLevel.new-component");
@@ -136,7 +139,7 @@ describe('composite', () => {
         expect(topLevel.find(component.name)).toBeUndefined();
     });
 
-    it('director check', () => {
+    test('director check', () => {
         expect(() => {
             topLevel.initialize()
         }).toThrowError("Top-level container must have a director");
