@@ -162,7 +162,7 @@ export class Parameter<T> extends InputPort<T> {
     update: boolean;
 
     /** Construct a parameter. It must have a value. */
-    constructor(name: string, value: T, update?:boolean, parent?: Actor) {
+    constructor(name: string, value: T, parent?: Actor, update?: boolean) {
         var obj = {default: value};
         super(name, obj, parent);
         if (update != null) {

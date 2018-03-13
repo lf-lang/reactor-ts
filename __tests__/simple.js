@@ -12,7 +12,7 @@ describe('simple two actors send/recv', () => {
 
     let p1: Port<number> = actor1.find("out", "ports");
     let p2: Port<number> = actor2.find("in", "ports");
-    
+
     director.connect(p1, p2);
     director.push(p1, 1);
 
@@ -23,7 +23,7 @@ describe('simple two actors send/recv', () => {
     let actor3 = new Actor("actor3", root);
     actor3.add(new OutputPort("out"));
     let p3: Port<number> = actor3.find("out", "ports");
-    
+
     director.connect(p3, p2);
     director.push(p3, 2);
 
