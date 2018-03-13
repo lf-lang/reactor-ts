@@ -126,7 +126,7 @@ export class PortBase<T> implements Containable<Actor> {
  */
 export class InputPort<T> extends PortBase<T> {
 
-    /** A default value that is used when input is absent. */
+    /** A default value that is used when input is absent. */ // FIXME: Value until input is provided (stateful)
     default: ?T;
 
     /** Whether or not this port allows multiple connections. By default it does not. */
@@ -178,7 +178,8 @@ export class Parameter<T> extends InputPort<T> {
  * A collection of meta data that represents a port.
  */
 export class OutputPort<T> extends PortBase<T> {
-    spontaneous: boolean;
+    spontaneous: boolean; // Edward: assumed there were not going to be time delays
+    // If you want to do PTIDES, knowing what the time delays are is useful.
 
     /**
      * Construct a new output port given a name and a set of options.
@@ -430,7 +431,7 @@ export class Actor extends Component implements Container<Port<any>> {
 export class Relation<T> implements Containable<Composite> {
 
     /* Anything sent from src to dst goes through this buffer. */
-    buffer: Array<T>;
+buffer: Array<T>;
     from: Port<T>; // FIXME: rename to "src"
     to: Port<T>;   // FIXME: rename to "dst"
     parent: ?Composite;
