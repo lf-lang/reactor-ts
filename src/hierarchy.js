@@ -46,7 +46,14 @@ export interface Container<T: Nameable> extends Nameable {
      * the element was added successfully, false otherwise.
      * @param {T} element
      */
-    add(element: T): boolean;
+    //add(element: T): boolean;
+
+    /**
+     * Add a list of elements to this container. Return true if
+     * the element was added successfully, false otherwise.
+     * @param {T} element
+     */
+    add(...elements: Array<T>): void;
 
     /**
      * Return whether or not the argument is present in the container.
@@ -59,7 +66,7 @@ export interface Container<T: Nameable> extends Nameable {
      * @param {string} name
      * @param {Namespace} namespace
      */
-    find(name: string, namespace: Namespace): mixed;
+    find(name: string, namespace: Namespace): mixed; //FIXME: nullable
 
     /**
      * Get an elements held by this container.
@@ -133,7 +140,7 @@ export class InputPort<T> extends PortBase<T> {
     multiplex: boolean;
 
     /** Construct a new input port given a name and a set of options. */
-    constructor(name: string, options?: ?{value?: T, visibility?: Visibility, multiplex?: boolean}, parent?: Actor) {
+    constructor(name: string, options?: ?{value?: T, visibility?: Visibility, multiplex?: boolean}) {
         super(name);
         this.multiplex = false;
         if (options != null) {
@@ -144,10 +151,6 @@ export class InputPort<T> extends PortBase<T> {
             if (options['visibility'] != null) {
                 this.visibility = options['visibility'];
             }
-        }
-        if (parent != null) {
-            this.parent = parent;
-            parent.add(this);
         }
         (this: Port<T>);
     }
@@ -162,9 +165,9 @@ export class Parameter<T> extends InputPort<T> {
     update: boolean;
 
     /** Construct a parameter. It must have a value. */
-    constructor(name: string, value: T, parent?: Actor, update?: boolean) {
+    constructor(name: string, value: T, update?: boolean) {
         var obj = {default: value};
-        super(name, obj, parent);
+        super(name, obj);
         if (update != null) {
             this.update = update;
         } else {
@@ -184,7 +187,7 @@ export class OutputPort<T> extends PortBase<T> {
     /**
      * Construct a new output port given a name and a set of options.
      */
-    constructor(name: string, options?: ?{spontaneous?: boolean, visibility?: Visibility}, parent?: Actor) {
+    constructor(name: string, options?: ?{spontaneous?: boolean, visibility?: Visibility}) {
         super(name);
         this.spontaneous = false;
         if (options != null) {
@@ -194,10 +197,6 @@ export class OutputPort<T> extends PortBase<T> {
             if (options['visibility'] != null) {
                 this.visibility = options['visibility'];
             }
-        }
-        if (parent != null) {
-            this.parent = parent;
-            parent.add(this);
         }
         (this: Port<T>);
     }
@@ -213,12 +212,8 @@ export class Component implements Containable<Composite>, Executable {
     name: string;
     parent: ?Composite;
 
-    constructor(name: string, parent?: ?Composite) {
+    constructor(name: string) {
         this.name = name;
-        if (parent != null) {
-            this.parent = parent;
-            parent.add(this);
-        }
         (this: Containable<Composite>);
         (this: Executable);
     }
@@ -291,37 +286,45 @@ export class Actor extends Component implements Container<Port<any>> {
     /**
      * Constructs a new Actor with a specific name.
      */
-    constructor(name: string, parent?: ?Composite) {
-        super(name, parent);
+    constructor(name: string) {
+        super(name);
         this.inputs = new Map();
         this.outputs = new Map();
         (this: Container<Port<mixed>>);
     }
 
+    add(...ports: Array<Port<any>>): void {
+        
+        // FIXME: it would be nice is add were atomic, i.e., it would add
+        // all things in the given list, or none.
+        // It would have to run a name collision check prior to inserting
+        // the elements, as well as check for duplicates in the given list.        
+        for (var port of ports) {
+            if (this.inputs.has(port.name) || this.outputs.has(port.name)) {
+                throw "Port with name `" + port.name + "is already present in " 
+                    + this.getFullyQualifiedName() + ".";
+            }
+            if (port instanceof InputPort) {
+                // unlink
+                if (port.parent != null) {
+                    port.parent.remove(port);
+                }
+                port.parent = this;
+                this.inputs.set(port.name, port);
+            }
+            else if (port instanceof OutputPort) {
+                if (port.parent != null) {
+                    port.parent.remove(port);
+                }
+                port.parent = this;
+                this.outputs.set(port.name, port);
+            }
+        }
+    }
+
     /**
      * Add a new port by name; return false if the port already exists.
      */
-    add(port: Port<any>): boolean {
-        if (this.inputs.has(port.name) || this.outputs.has(port.name)) {
-            return false;
-        }
-        if (port instanceof InputPort) {
-            // unlink
-            if (port.parent != null) {
-                port.parent.remove(port);
-            }
-            port.parent = this;
-            this.inputs.set(port.name, port);
-        }
-        else if (port instanceof OutputPort) {
-            if (port.parent != null) {
-                port.parent.remove(port);
-            }
-            port.parent = this;
-            this.outputs.set(port.name, port);
-        }
-        return true;
-    }
 
     /**
      * Return the port associated to given name. If no such port exists, return
@@ -471,8 +474,8 @@ Container<Component|Port<any>|Relation<any>> {
     relsBySink: Map<Port<*>, Array<Relation<*>>>;
     status: ExecutionStatus;
 
-    constructor(name: string, parent?: ?Composite) {
-        super(name, parent);
+    constructor(name: string) {
+        super(name);
         this.components = new Map();
         this.relsBySink = new Map();
         this.relsBySource = new Map();
@@ -487,45 +490,51 @@ Container<Component|Port<any>|Relation<any>> {
         }
     }
 
+    add(...objs: Array<Component|Port<any>|Relation<any>>): void {
+        for (var obj of objs) {
+            // components
+            if (obj instanceof Component) {
+                if (this.components.get(obj.name) != null) {
+                    throw "Name collision ...";
+                } else {
+                    // unlink
+                    if (obj.parent != null) {
+                        obj.parent.remove(obj);
+                    }
+                    this.components.set(obj.name, obj);
+                    obj.parent = this;
+                    continue;
+                }
+            }
+            // ports or parameters
+            if (obj instanceof InputPort || obj instanceof OutputPort) {
+                super.add(obj);
+                continue;
+            }
+            // relations
+            if (obj instanceof Relation) {
+                if (this.has(obj)) {
+                    throw "Name collision...";
+                } else {
+                    // unlink
+                    if (obj.parent != null) {
+                        obj.parent.remove(obj);
+                    }
+                    this.relMap(obj.from, obj, this.relsBySource);
+                    this.relMap(obj.to, obj, this.relsBySink);
+                    obj.parent = this;
+                }
+                continue;
+            }
+        }
+    }
+
     /**
      * Add a component to this composite. Return true if successful, false otherwise.
      */
-    add(obj: Component|Port<any>|Relation<any>): boolean {
-        // components
-        if (obj instanceof Component) {
-            if (this.components.get(obj.name) != null) {
-                return false;
-            } else {
-                // unlink
-                if (obj.parent != null) {
-                    obj.parent.remove(obj);
-                }
-                this.components.set(obj.name, obj);
-                obj.parent = this;
-                return true;
-            }
-        }
-        // ports or parameters
-        if (obj instanceof InputPort || obj instanceof OutputPort) {
-            return super.add(obj);
-        }
-        // relations
-        if (obj instanceof Relation) {
-            if (this.has(obj)) {
-                return false;
-            } else {
-                // unlink
-                if (obj.parent != null) {
-                    obj.parent.remove(obj);
-                }
-                this.relMap(obj.from, obj, this.relsBySource);
-                this.relMap(obj.to, obj, this.relsBySink);
-                obj.parent = this;
-            }
-            return true;
-        }
-        return false;
-    }
+    // add(obj: Component|Port<any>|Relation<any>): boolean {
+        
+    // }
 
     relMap<T>(key: Port<T>, obj: Relation<T>, map: Map<Port<T>, Array<Relation<T>>>) {
         var r = map.get(key);
@@ -536,7 +545,7 @@ Container<Component|Port<any>|Relation<any>> {
         }
     }
 
-    find(name: string, namespace: Namespace): mixed {
+    find(name: string, namespace: Namespace): mixed { // FIXME: this could be null
         var result;
 
         if (namespace == "components") {

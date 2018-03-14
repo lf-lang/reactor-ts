@@ -34,11 +34,11 @@ describe('connect', () => {
     });
 
     it('actor to self', () => {
-        let component = new Actor("component", composite);
-        component.add(input);
-        component.add(output);
+        let component = new Actor("componentX");
+        composite.add(component);
+        component.add(input, output);
         let rel = director.connect(output, input);
-        expect(rel.name).toBe("component.out->component.in");
+        expect(rel.name).toBe("componentX.out->componentX.in");
         expect(composite.findRelation(rel.name)).toBe(rel);
         expect( () => {director.connect(input, output)}).toThrowError("Cannot connect input to output on the same actor.");
         expect( () => {director.connect(output, output)}).toThrowError("Cannot connect output to output on the same actor.");

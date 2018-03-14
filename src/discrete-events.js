@@ -14,7 +14,8 @@ import type {Port} from './hierarchy';
 export class DiscreteEvents extends DirectorBase {
 
     constructor() {
-        super("DEDirector");
+        super();
+        (this:Director);
     }
 
     canAddSafely(relation: Relation<*>): boolean {
@@ -22,4 +23,14 @@ export class DiscreteEvents extends DirectorBase {
         return true;
     }
 
+    fire() {
+        try {
+
+        } catch(error) {
+            // Ideas for error handling policies:
+            // - substitute with different component
+            // - suspend the actor's operation (cease future firings)
+            // - log the error
+        }
+    }
 }

@@ -61,6 +61,11 @@ export interface Director extends Executable, Containable<Composite> {
 
 export class DirectorBase extends Component implements Director {
 
+    constructor() {
+        super("director");
+        (this:Director);
+    }
+
     push<T>(port: Port<T>, value: T): void {
         if (port.parent == null) {
             throw "Cannot send to an unassociated port."
@@ -244,13 +249,10 @@ export class DirectorBase extends Component implements Director {
             + "->" + ssink.name + "." + sink.name);
 
 
-        //var index = 0;
-
-        // while(!container.add(rel)) {
-        //     rel.name = rel.name + "(" + ++index + ")";
-        // }
-        if(this.canAddSafely(rel) && !container.add(rel)) { // FIXME: Perhaps throw this in add?
-            throw "Cannot add relation that already exists.";
+        if(this.canAddSafely(rel)) {
+            container.add(rel);
+        } else {
+            throw "Unable to safely add relation: " + rel.name;
         }
         return rel;
     }

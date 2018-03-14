@@ -23,8 +23,10 @@ describe('directorbase', () => {
 
     it('push to input port', () => {
         let composite = new Composite("composite");
-        let input: InputPort<number> = new InputPort("in", null, composite);
-        let output: OutputPort<number> = new OutputPort("out", null, composite);
+        let input: InputPort<number> = new InputPort("in");
+        let output: OutputPort<number> = new OutputPort("out");
+        composite.add(input);
+        composite.add(output);
         let relation = director.connect(input, output);
         director.push(input, 1);
         expect(relation.buffer).toEqual([1]);

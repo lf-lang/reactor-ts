@@ -59,9 +59,9 @@ describe('ports and actors', () => {
 
 
     test('add using constructor', () => {
-        new InputPort("in", null, actor);
-        new OutputPort("out", null, actor);
-        new Parameter("parm", null, actor);
+        actor.add(new InputPort("in"));
+        actor.add(new OutputPort("out"));
+        actor.add(new Parameter("parm"));
 
         var port = actor.find("in", "ports");
         expect(port != null).toBeTruthy();
@@ -90,11 +90,11 @@ describe('ports and actors', () => {
     test('unlink and relink', () => {
         let actor = new Actor("component");
         let input = new InputPort("in");
-        expect(actor.add(input)).toBe(true);
+        actor.add(input);
 
         // Create a new actor and add the input port.
         let actor2 = new Actor("component2");
-        expect(actor2.add(input)).toBe(true);
+        actor2.add(input);
 
         expect(actor.find("in", "ports")).toBe(undefined);
         let port = actor2.find("in", "ports");
@@ -115,15 +115,7 @@ describe('composite', () => {
         expect(component.parent).toBe(composite);
     });
 
-    test('compose hierarchy using constructor', () => {
-        topLevel.remove("composite");
-        composite.remove("component");
-        let composite2 = new Composite("composite2", topLevel);
-        let component2 = new Component("component2", composite2);
-        expect(composite2.parent).toBe(topLevel);
-        expect(component2.parent).toBe(composite2);
-
-    });
+    // FIXME: add test that prevents a composite adding itself to itself.
 
     test('qualified names in hierarchy chain', () => {
         expect(component.getFullyQualifiedName())
