@@ -45,6 +45,7 @@ export interface Indexable {
 
 }
 
+
 /**
  * An interface for named objects.
  */
@@ -59,17 +60,38 @@ export interface Nameable {
 /**
  * An interface for reactive components.
  */
-export interface Reactive {
-    _init?:() => void;
-    _wrapup?: () => void;    
-    _reactions:$ReadOnlyArray<[Array<Guard>, () => void]>;
+export interface Actor { // FIXME: still tempted to call this Reactor
+    +_init?:() => void;
+    +_wrapup?: () => void;    
+    _reactions:$ReadOnlyArray<[Array<Guard>, Reaction<any, any>]>; // FIXME: how do we align this with Actor?    
+    // perhaps a separate definition for scheduled reactions? See discussion with Edward
+    // that means that ports would have to have a default value
+    // this would help with primitive values in a language like C
+
 }   
 
-class Trigger implements Guard {
-
+class Trigger<T> implements Guard {
+    value: T;
     _parent: Component;
     constructor(parent:Component) {
         this._parent = parent;
+    }
+
+        /**
+     * NOTE: Since each composite has its own clock domain, we cannot 
+     * depend on a global function like setTimeout or setInterval.
+     */
+    schedule(delay?:number, repeat?:boolean):number {
+        if (this._parent != null) {
+            //this._parent.trigger(trigger, delay, repeat);    
+        } else {
+            throw "Unable to schedule trigger; no parent."
+        }
+        return 0;   
+    }
+
+    unschedule(handle: number) {
+
     }
 }
 
@@ -202,7 +224,6 @@ export interface Port<T> extends Connectable<Port<$Supertype<T>>> {
 
     canConnect(sink: Port<$Supertype<T>>): boolean;
 
-    send(message: ?$Subtype<T>, delay?:number): void;
 }
 
 class CallerPort<A,R> implements Connectable<CalleePort<$Supertype<A>,$Subtype<R>>> {
@@ -222,11 +243,15 @@ class CallerPort<A,R> implements Connectable<CalleePort<$Supertype<A>,$Subtype<R
     canConnect(sink: CalleePort<$Supertype<A>,$Subtype<R>>):boolean {
         return true;
     }
+
+    invokeRPC: (arguments: A, delay?:number) => R;
+
 }
 
 class CalleePort<A,R> {
 
 }
+
 
 export class OutPort<T> extends PortBase implements Port<T> {
 
@@ -235,10 +260,24 @@ export class OutPort<T> extends PortBase implements Port<T> {
     canConnect: (sink: Port<$Supertype<T>>) => boolean
     connect: (sink: Port<$Supertype<T>>) => void;
     disconnect: (direction?:"upstream"|"downstream"|"both") => void;
+    send: (value: ?$Subtype<T>, delay?:number) => void;
+    get: (delay?:number) => ?$Subtype<T>;
 
     constructor(parent: Component) {
         super(parent);
         
+        var events: Map<number, T> = new Map();
+
+        Object.assign(this, {
+            send(value: ?$Subtype<T>, delay?:number): void {
+                
+                // 
+                // maintain a map in the composite that maps outputs to values at certain times
+                // upon reaching a time, propagate all outputs to the respective receivers
+                // FIXME: why not have get() pull values from upstream? They must have been generated.
+            }
+        });
+
         Object.assign(this, {
             canConnect(sink: Port<$Supertype<T>>): boolean {
                 var thisComponent = parent;
@@ -305,11 +344,9 @@ export class OutPort<T> extends PortBase implements Port<T> {
         
     // }
 
-    send(message: ?$Subtype<T>, delay?:number): void {
-
-    }
-
 }
+
+
 
 export class InPort<T> extends PortBase implements Port<T>, Guard {
 
@@ -317,15 +354,36 @@ export class InPort<T> extends PortBase implements Port<T>, Guard {
     canConnect:(sink: Port<$Supertype<T>>) => boolean;        
     connect: (sink: Port<$Supertype<T>>) => void;
     disconnect: (direction?:"upstream"|"downstream"|"both") => void;
+    send: (value: ?$Subtype<T>, delay?:number) => void;
+    get: () => ?$Subtype<T>;
+
+    //other ideas:
+    // lastValue()
+    // isPresent(), which may be part of the Guard interface
+    // isPresent() => lastValue == currentValue
 
     _value: ?T;
     _receivers: Set<Port<$Supertype<T>>>;
     //_parent: Component; // $ReadOnly ?
     _persist: boolean;
 
-    constructor(parent: Component, persist:boolean=false) {
+    constructor(parent: Component, persist:boolean=false) { // should all things that are not triggers be persistent?
         super(parent);
-        this._persist = persist;
+        var value:?$Subtype<T> = null;
+
+        Object.assign(this, {
+            get():?$Subtype<T> {
+                return value;
+            }
+        });
+
+        Object.assign(this, {
+            send(value: ?$Subtype<T>, delay?:number):void {
+                if (delay == null || delay == 0) {
+                    value = value;
+                }
+            }
+        });
 
         Object.assign(this, {
             canConnect(sink: Port<$Supertype<T>>): boolean {
@@ -379,39 +437,44 @@ export class InPort<T> extends PortBase implements Port<T>, Guard {
         });
     }
 
-    send(message: ?$Subtype<T>, delay?:number): void {
-
-    }
-
-    get():?T {
-        return this._value;
-    }
-    // FIXME: move this to the composite?
-
 }
 
 export class PureEvent {
 
 }
 
-
 // NOTE: composite IDLE or REACTING.
 // If IDLE, get real time, of REACTING use T+1
 
-export class Composite extends Component implements Reactive, Container<Component> {
+export class Composite extends Component implements Container<Component> {
 
-    _components: Set<Component> = new Set(); // should the type be Component or Reactive?
+    _components: Set<Component> = new Set();
     _indices: Map<string, number> = new Map();
-    _reactions = [
-        [[], this.react]
-    ];
 
     constructor(parent:?Composite, name?:string) {
         super(parent, name);
 
         /* Private variables */
-        var relations: Map<Port<any>, Set<Port<any>>> = new Map();//Set<[Port<any>, Port<any>]> = new Set();
-        // FIXME: change to Map<Port<any>, Set<Port<any>>>;
+        var relations: Map<Port<any>, Set<Port<any>>> = new Map();
+        
+        // queue for delayed triggers
+        var triggerQ: Map<number, [Map<Trigger<any>, any>]> = new Map();
+
+        // queue for delayed sends
+        var sendQ: Map<number, [Map<Port<any>, any>]> = new Map();
+
+        // An actor may have triggers, some of which are wired to upstream actors, while others are essentially wired to the the director (for self-scheduled events).
+        // The self-scheduled events must be handled before inputs are updated! (as per discussion with Edward)
+
+        // Sequence:
+        // - self triggers ==> this conflicts with the requirement that all inputs be known before any reactions occurs!
+        // - sends (including to self)
+        // - input reactions 
+
+        // we need to express dependencies between reactions, not between ports
+        var dependencies: Map<() => void, () => void> = new Map();
+
+        // upon the generation of an output, that output needs to be propagated; how do we know whether a downstream reaction may be invoke, or another reaction has to go first?
 
         Object.assign(this, {
             // FIXME: We may want to wrap this in a change request and 
@@ -473,7 +536,7 @@ export class Composite extends Component implements Reactive, Container<Componen
     
     react: () => void;
     
-    trigger(trigger:Trigger, delay?:number, repeat?:boolean):number {
+    trigger(trigger:Trigger<*>, delay?:number, repeat?:boolean):number {
         return 0; // handle
     }
 
@@ -523,36 +586,6 @@ export class Composite extends Component implements Reactive, Container<Componen
 
 }
 
-/**
- * A base implementation of an (atomic) actor.
- * Derived classes should declare ports as properties 
- * and implement the Reactive interface.
- */
-export class Actor extends Component {
-    
-    getCurrentTime() {
-        //Which other methods should be here?
-        // look at performance.now()
-    
-    }
-
-    /**
-     * NOTE: Since each composite has its own clock domain, we cannot 
-     * depend on a global function like setTimeout or setInterval.
-     */
-    schedule(trigger:Trigger, delay?:number, repeat?:boolean):number {
-        if (this._parent != null) {
-            this._parent.trigger(trigger, delay, repeat);    
-        } else {
-            throw "Unable to schedule trigger; no parent."
-        }
-        return 0;   
-    }
-
-    unschedule(handle: number) {
-
-    }
-}
 
 /**
  * A parameter is an input port that has a default value. 
@@ -565,69 +598,86 @@ export class Actor extends Component {
 class Parameter<T> extends InPort<T> {
 
     _default:T;
+    
+    getParameter: () => $Subtype<T>;
+    setDefault : ($Subtype<T>) => void;
 
     constructor(parent: Component, defaultValue:T, persist:boolean=true) {
         super(parent, persist);
-        this._default = defaultValue;
+        
+        Object.assign(this, {
+            send(value: ?$Subtype<T>, delay?:number): void {
+                if (value == null) {
+                    this.reset();
+                } else {
+                    this._default = value; // FIXME: default vs current value
+                }
+            }
+        });
+
+        Object.assign(this, {
+            getParameter(): $Subtype<T> {
+                //FIXME: only use default value when there's no input
+                return defaultValue;
+            }
+        });
     }
 
     reset() {
         this._value = this._default;
     }
 
-    get():T {
-        if (this._value == null) {
-            return this._default;
-        } else {
-            return this._value;
-        }
-    }
-
 }
 
-class Clock extends Actor implements Reactive {
-    trigger: Trigger = new Trigger(this);
-    output: OutPort<PureEvent> = new OutPort(this);
-    period: Parameter<number> = new Parameter(this, 1000);
+/**
+ * Base class for reactions that has two type parameter: 
+ * T, which describes a tuple of triggers/inputs/outputs;
+ * S, which describes an object that keeps shared state.
+ * The reaction can also maintain state locally.
+ */
+export class Reaction<T,S:?Object> {
 
-    handle: number;
-
-    _reactions = [
-        [[this.trigger], this.pulse],
-        [[this.period], this.adapt]
-    ];
-
-    init():void {
-        this.handle = this.schedule(this.trigger, this.period.get(), true);
+    io:T
+    shared:S;
+    
+    constructor(io:T, state:S) {
+        this.io = io;
+        this.shared = state;
     }
 
-    pulse():void {
-        this.output.send(new PureEvent());
-    }
-
-    adapt():void {
-        this.wrapup();
-        this.init();
-    }
-
-    wrapup() {
-        if (this.handle != null) {
-            this.unschedule(this.handle);    
-        }    
-    }
+    +react: (time:number) => void;
 }
+
+// class Add extends Reaction<{in1:InPort<number>, in2:InPort<number>, sum:OutPort<number>}, {}> {
+
+//     react() {
+//         this.io.sum.send(this.io.in1.get() + this.io.in2.get());
+//     }
+// }
+
+// class Test extends Component implements Actor {
+
+//     _reactions = [];
+
+//     in1:InPort<number> = new InPort(this);
+//     in2:InPort<number> = new InPort(this);
+//     sum: OutPort<number> = new OutPort(this);
+
+//  x = new Add({in1: this.in1, in2: this.in2, sum: this.sum}, {});
+
+// }
+
 
 /**
  * An actor implementation is a reactive component with ports as properties.
  */
- class MyActor extends Actor implements Reactive {
+ class MyActor extends Component implements Actor {
  
     a: InPort<{t: number}> = new InPort(this);
     out: OutPort<*> = new OutPort(this);
 
     _reactions = [
-        [[this.a], this.someFunc],
-        [[this.a], function() {}]
+        
     ];
 
     someFunc = function() {
@@ -639,21 +689,22 @@ class Clock extends Actor implements Reactive {
 
  }
  
- class MyActor2 extends Actor implements Reactive {
+ class MyActor2 extends Component implements Actor {
  
     a: InPort<{t: number}> = new InPort(this);
     b: OutPort<{t: number, y: string}> = new OutPort(this);
 
     _reactions = [
-        [[this.a], this.someFunc],
-        [[this.a], function() {}]
+       
     ];
 
-    someFunc = function() {
-
-    }
-
 }
+
+// export class Dummy extends Reaction<null, null> {
+//     react() {
+
+//     }
+// }
 
 // Eventually, this should become a worker/threaded composite
 // Also, check out https://github.com/laverdet/isolated-vm
@@ -684,11 +735,7 @@ class MyApp extends App {
         //this.connect(x.a, y.b); // Demonstrates type checking ability.
         this.connect(y.b, x.a);
         //y.b.connect(x.a);
-        //x.a.connect(y.b);
-        // what should the signature of conn() be? 
-        // NOTE: the composite could always search for the parent of the port. This is not very efficient, but connects don't happen frequently.
-        // How do we map connections to reactions? We need the meta data for that.      
-        //y.b.connect(x.a);
+        //x.a.connect(y.b); // Demonstrates type checking ability.
     }
 }
 
@@ -758,8 +805,8 @@ app.start();
 // - dataflow (from other actors)
 // *** what about RMI?
 // - the schedule must ensure that upon invocation all inputs are known
-// - the invocation itself must be a call similar to send(), except it has to function like a co-routine (we need two stacks)
-//   - before a remote procedure can yield, all of the inputs it uses must be known
+// - the invocation itself must be a call similar to send(), except it has to function like a procedure call (do we need two stacks?)
+//   - before a remote procedure can yield/return, all of the inputs it uses must be known
 //   - reactions within the same actor must be mutually atomic, across actors this need not be the case
 // *** how are reactions and RPCs different?
 //   - RPCs are reactions that are triggered by an event on a CalleePort<A,R>

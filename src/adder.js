@@ -2,20 +2,21 @@
 
 'use strict';
 
-import {Composite, Actor, Reactive, InPort, OutPort} from './actor';
+import {Component, Actor, InPort, OutPort, Reaction} from './actor';
 
-class Adder extends Actor implements Reactive {
+class Adder extends Component implements Actor {
  
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
 
     _reactions = [
-        [[this.in1, this.in2], this.add]
+        [[this.in1, this.in2], new AddTwo([this.in1, this.in2, this.out])]
     ];
+}
 
-    add = function() {
-        this.out.send(this.in1._value + this.in2._value); // FIXME: we should probably use get instead
+class AddTwo extends Reaction<[*, *, *], ?{}> {
+    react() {
+        this.io[2].send(this.io[0].get() + this.io[1].get());
     }
-
 }
