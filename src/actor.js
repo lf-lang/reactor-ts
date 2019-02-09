@@ -740,7 +740,7 @@ export class Reaction<T,S:?Object> {
         this.shared = state;
     }
 
-    +react: (time:number) => void;
+    +react: (time?:number) => void;
 }
 
 

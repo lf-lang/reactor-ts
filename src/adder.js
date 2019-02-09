@@ -19,7 +19,7 @@ class Adder extends Component implements Actor {
 }
 
 class AddTwo extends Reaction<[*, *, *], ?{}> {
-    react() {
+    react():void {
         this.io[2].send(this.io[0].get() + this.io[1].get());
     }
 }
