@@ -14,70 +14,78 @@ export interface Container<T: Component> {
      * not be kept.
      * @param {T} element
      */
-    add(...elements: Array<T>): void;
+    _add(...elements: Array<T>): void;
 
     /**
      * Return whether or not the argument is present in the container.
      * @param {T} element
      */
-    contains(element: T): boolean;
+    _contains(element: T): boolean;
 
     /**
      * Remove an element from this container.
      * @param {string} name
      */
-    remove(element: T): void;
+    _remove(element: T): void;
 
 }
 
+/**
+ * Interface to be implemented by a top-level composite.
+ */
 export interface Executable {
     start():void;
     stop():void;
 }
 
-export interface Guard {
-    // Potentially, we could state preconditions here
-}
-
-export interface Indexable {
-
-    _index:?number;
-
-}
-
-
 /**
- * An interface for named objects.
+ * Marker interface for guards.
  */
-export interface Nameable {
-    /* The name of this object. */
-    //_name: string; should not be part of the inteface
+export interface Guard {
 
-    /* Return a globally unique identifier. */
-    getFullyQualifiedName(): string;
 }
 
 /**
- * An interface for reactive components.
+ * Interface for named objects.
+ */
+export interface Named {
+    /* Return the fully qualified name of this object. */
+    _getFullyQualifiedName(): string;
+
+    /* Get the name of this object. */
+    _getName(): string;
+}
+
+/**
+ * Interface for (re)nameable objects.
+ */
+export interface Nameable extends Named {
+ 
+    /* Set the name of this object. */
+    _setName(name: string):void;
+}
+
+/**
+ * An interface for reactive components we refer to as (re)actors.
  */
 export interface Actor { // FIXME: still tempted to call this Reactor
-    +_init?:() => void;
-    +_wrapup?: () => void;    
-    _reactions:$ReadOnlyArray<[Array<Guard>, Reaction<any, any>]>; // FIXME: how do we align this with Actor?    
-    // perhaps a separate definition for scheduled reactions? See discussion with Edward
-    // that means that ports would have to have a default value
-    // this would help with primitive values in a language like C
-
+    +_init:() => void;
+    +_wrapup: () => void;    
+    _reactions:$ReadOnlyArray<[Array<Guard>, Reaction<any, any>]>;
 }   
 
-class Trigger<T> implements Guard {
-    value: T;
-    _parent: Component;
+export class Trigger<T> implements Guard {
+    value: ?T;
+    _parent: Component; // FIXME: move this to constructor scope.
     constructor(parent:Component) {
         this._parent = parent;
     }
 
-        /**
+    // isPresent():boolean {
+    //     return true; //FIXME: placeholder
+    // }
+
+    /**
      * NOTE: Since each composite has its own clock domain, we cannot 
      * depend on a global function like setTimeout or setInterval.
      */
@@ -104,82 +112,152 @@ class Trigger<T> implements Guard {
  */
 export class Component implements Nameable {
     
-    /* The name of this component. */
-    _name: string;      // FIXME: Maybe make these symbols to prevent collisions?
-    /* Index to be set by parent to ensure unique FQN. */
-    _index:?number;
-    /* The container this component has been added to. */
-    _parent:?Composite;
-    
+    _setName: (string) => void;
+
+    _adopt: (parent: Composite) => boolean;
+
+    _orphan: (parent: Composite) => boolean;
+
+    _getContainer: () => ?Composite;
+
+    _getName: () => string;
+
+    _hasGrandparent: (container:Composite) => boolean;
+
+    _hasParent: (component: Component) => boolean;
+
+    /**
+     * Return a string that identifies this component.
+     */
+    _getFullyQualifiedName: () => string;
+
     /**
      * Create a new component; use the constructor name
      * if no name is given.
      * @param {string=} name - Given name
      */
     constructor(parent:?Composite, name?:string) {
-        this._parent = parent;
-        if (name == null) {
-            this._name = this.constructor.name;
-        } else {
-            this._name = name;
+        var myName:string = this.constructor.name; // default
+        var myIndex:?number = null;
+        
+        if (name != null) {
+            myName = name;
         }
+
         if (parent != null) {
-            parent.add(this);
+            parent._add(this);
         }
+
+        Object.assign(this, {
+            _getFullyQualifiedName(): string {
+                var path = "";
+                if (parent != null) {
+                    path = parent._getFullyQualifiedName();
+                }
+                if (path != "") {
+                    path = path + "." + this._getName();
+                } else {
+                    path = this._getName();
+                }
+                return path;
+            }
+        });
+
+        Object.assign(this, {
+            _getName():string {
+                if (myIndex != null && myIndex != 0) {
+                    return myName + "(" + myIndex + ")";
+                } else {
+                    return myName;
+                }
+            }
+        });
+
+        Object.assign(this, {
+            _setName(name: string) {
+                if (parent != null && (name != myName || myIndex == null)) {
+                    myIndex = parent._getFreshIndex(name);
+                    myName = name;
+                }
+            }
+        });
+
+        Object.assign(this, {
+            _hasGrandparent(container:Composite): boolean {
+                if (parent != null) {
+                    return parent._hasParent(container);
+                } else {
+                    return false;
+                }
+            }
+        });
+
+        Object.assign(this, {
+            _hasParent(container:Component): boolean {
+                if (parent != null && parent == container) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        });
+
+        Object.assign(this, {
+            _getContainer(): ?Composite {
+                return parent;
+            }
+        });
+
+        Object.assign(this, {
+            _adopt(newParent: Composite): boolean {
+                if (parent == null) {
+                    parent = newParent;
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        });
+        
+        Object.assign(this, {
+            _orphan(oldParent: Composite): boolean {
+                if (parent == oldParent) {
+                    parent = null;
+                    myIndex = null
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        });
+
     }
-
-    hasGrandparent: (container:Composite) => boolean;
-
-    hasParent: (component: Component) => boolean;
-
-    /**
-     * Return a string that identifies this component.
-     */
-    getFullyQualifiedName(): string {
-        var path = "";
-        if (this._parent != null) {
-            path = this._parent.getFullyQualifiedName();
-        }
-        if (path != "") {
-            path = path + "." + this._name;
-
-        } else {
-            path = this._name;
-        }
-        if (this._index != null && this._index != 0) {
-            return path + "(" + this._index + ")";
-        } else {
-            return path;
-        }
-    }
+    
 }
 
 //See: http://exploringjs.com/es6/ch_classes.html#sec_private-data-for-classes
-export class PortBase implements Nameable {
+export class PortBase implements Named {
     
     /***** Priviledged functions *****/
 
     /* Return a globally unique identifier. */
-    getFullyQualifiedName: () => string;
-    
+    _getFullyQualifiedName: () => string;
+    _getName: () => string;
+
+
     hasGrandparent: (container:Composite) => boolean;
     hasParent: (component: Component) => boolean;
-
+    
     /* Construct a new port base. */
     constructor(parent: Component) {
         Object.assign(this, {
-            getFullyQualifiedName(): string {
-                var prefix = parent.getFullyQualifiedName();
-                for (let prop in parent) {
-                    if (parent.prop == this) {
-                        return prefix + `${prop}`;
-                    }
-                }
-                throw "This port is not a property of its parent."
+            _getFullyQualifiedName(): string {
+                return parent._getFullyQualifiedName() 
+                    + "." + this._getName();
             }
 
         });
-        
+
         Object.assign(this, {
             hasParent(component: Component): boolean {
                 if (component == parent) {
@@ -197,6 +275,17 @@ export class PortBase implements Nameable {
                 } else {
                     return false;
                 }
+            }
+        });
+
+        Object.assign(this, {
+            _getName(): string {
+                for (let prop in parent) {
+                    if (parent.prop == this) {
+                        return `${prop}`;
+                    }
+                }
+                return "anonymous port";
             }
         });
     }
@@ -279,9 +368,9 @@ export class OutPort<T> extends PortBase implements Port<T> {
         });
 
         Object.assign(this, {
-            canConnect(sink: Port<$Supertype<T>>): boolean {
+            canConnect(sink: Port<$Supertype<T>>): boolean { // solution: add Container here. Do tests prior to calling to verify it is the same
                 var thisComponent = parent;
-                var thisContainer = parent._parent;
+                var thisContainer = parent._getContainer();
 
                 if (sink instanceof InPort
                     && thisContainer != null
@@ -306,8 +395,9 @@ export class OutPort<T> extends PortBase implements Port<T> {
         
         Object.assign(this, {
             connect(sink: Port<$Supertype<T>>):void {
-                if (parent._parent != null) {
-                    parent._parent.connect(this, sink);
+                var container = parent._getContainer();
+                if (container != null) {
+                    container.connect(this, sink);
                 } else {
                     throw "Unable to connect: add the port's component to a container first.";
                 }
@@ -317,12 +407,12 @@ export class OutPort<T> extends PortBase implements Port<T> {
         Object.assign(this, {
             disconnect(direction?:"upstream"|"downstream"|"both"="both"): void {
                 var component = parent;
-                var container = component._parent;
+                var container = component._getContainer();
 
                 if (direction == "upstream" || direction == "both") {
                     if (component instanceof Composite) {    
                         // OUT to OUT
-                        component.disconnectContainedReceivers(this);
+                        component._disconnectContainedReceivers(this);
                     }
                 }
 
@@ -330,7 +420,7 @@ export class OutPort<T> extends PortBase implements Port<T> {
                     // OUT to IN
                     // OUT to OUT
                     if (container != null) {
-                        container.disconnectContainedSource(this);     
+                        container._disconnectContainedSource(this);     
                     }
                 }
             }
@@ -354,13 +444,9 @@ export class InPort<T> extends PortBase implements Port<T>, Guard {
     canConnect:(sink: Port<$Supertype<T>>) => boolean;        
     connect: (sink: Port<$Supertype<T>>) => void;
     disconnect: (direction?:"upstream"|"downstream"|"both") => void;
-    send: (value: ?$Subtype<T>, delay?:number) => void;
+    //send: (value: ?$Subtype<T>, delay?:number) => void;
+    // NOTE: sending to input ports no longer makes sense if we have triggers that carry values
     get: () => ?$Subtype<T>;
-
-    //other ideas:
-    // lastValue()
-    // isPresent(), which may be part of the Guard interface
-    // isPresent() => lastValue == currentValue
 
     _value: ?T;
     _receivers: Set<Port<$Supertype<T>>>;
@@ -377,18 +463,18 @@ export class InPort<T> extends PortBase implements Port<T>, Guard {
             }
         });
 
-        Object.assign(this, {
-            send(value: ?$Subtype<T>, delay?:number):void {
-                if (delay == null || delay == 0) {
-                    value = value;
-                }
-            }
-        });
+        // Object.assign(this, {
+        //     send(value: ?$Subtype<T>, delay?:number):void {
+        //         if (delay == null || delay == 0) {
+        //             value = value;
+        //         }
+        //     }
+        // });
 
         Object.assign(this, {
             canConnect(sink: Port<$Supertype<T>>): boolean {
                 var thisComponent = parent;
-                var thisContainer = parent._parent;
+                var thisContainer = parent._getContainer();
                 
                 // IN to IN
                 // - Source must be input port of composite that sink component is contained by.
@@ -404,8 +490,9 @@ export class InPort<T> extends PortBase implements Port<T>, Guard {
 
         Object.assign(this, {
             connect(sink: Port<$Supertype<T>>):void {
-                if (parent._parent != null) {
-                    parent._parent.connect(this, sink);
+                var container = parent._getContainer()
+                if (container != null) {
+                    container.connect(this, sink);
                 }
             }
         });
@@ -413,24 +500,24 @@ export class InPort<T> extends PortBase implements Port<T>, Guard {
         Object.assign(this, {
             disconnect(direction?:"upstream"|"downstream"|"both"="both"): void {
                 var component = parent;
-                var container = component._parent;
+                var container = component._getContainer();
 
                 if (direction == "upstream" || direction == "both") {
                     if (container != null) {
                         // OUT to IN
                         // IN to IN
-                        container.disconnectContainedReceivers(this);
+                        container._disconnectContainedReceivers(this);
                     }    
                 }
 
                 if (direction == "downstream" || direction == "both") {
                     if (component instanceof Composite) {
                         // IN to IN
-                        component.disconnectContainedSource(this);
+                        component._disconnectContainedSource(this);
                     }
                     if (container != null) {
                         // IN to OUT
-                        container.disconnectContainedSource(this);
+                        container._disconnectContainedSource(this);
                     }
                 }
             }
@@ -448,9 +535,6 @@ export class PureEvent {
 
 export class Composite extends Component implements Container<Component> {
 
-    _components: Set<Component> = new Set();
-    _indices: Map<string, number> = new Map();
-
     constructor(parent:?Composite, name?:string) {
         super(parent, name);
 
@@ -463,6 +547,10 @@ export class Composite extends Component implements Container<Component> {
         // queue for delayed sends
         var sendQ: Map<number, [Map<Port<any>, any>]> = new Map();
 
+        var indices: Map<string, number> = new Map();
+
+
+        var componentSet: Set<Component> = new Set();
         // An actor may have triggers, some of which are wired to upstream actors, while others are essentially wired to the the director (for self-scheduled events).
         // The self-scheduled events must be handled before inputs are updated! (as per discussion with Edward)
 
@@ -477,7 +565,7 @@ export class Composite extends Component implements Container<Component> {
         // upon the generation of an output, that output needs to be propagated; how do we know whether a downstream reaction may be invoke, or another reaction has to go first?
 
         Object.assign(this, {
-            // FIXME: We may want to wrap this in a change request and 
+            // FIXME: We may want to wrap this into something like a change request and 
             // let the composite handle it at the next microstep.
             connect<T>(source: Port<T>, sink: Port<$Supertype<T>>):void {
                 // bind T to constrain the type, check connection.
@@ -498,7 +586,20 @@ export class Composite extends Component implements Container<Component> {
         });
 
         Object.assign(this, {
-            react() {
+            _getFreshIndex(name: string): number {
+                var index = 0;
+                if (indices.has(name)) {
+                    index = this._indices.get(name)+1;
+                    this._indices.set(name, index);
+                } else {
+                    this._indices.set(name, index);
+                }
+                return index;
+            }
+        });
+
+        Object.assign(this, {
+            _react() {
                 for (var prop in this) {
                     if (prop instanceof InPort) {
                         console.log("port: " + prop.toString());
@@ -513,7 +614,7 @@ export class Composite extends Component implements Container<Component> {
         });
 
         Object.assign(this, {
-            disconnectContainedReceivers(port: Port<*>): void {
+            _disconnectContainedReceivers(port: Port<*>): void {
                 for (var receivers of relations.values()) {
                         receivers.delete(port);
                 }
@@ -522,21 +623,33 @@ export class Composite extends Component implements Container<Component> {
         });
 
         Object.assign(this, {
-            disconnectContainedSource(port: Port<*>): void {
+            _disconnectContainedSource(port: Port<*>): void {
                 relations.delete(port);
+            }
+        });
+    
+        Object.assign(this, {
+                _add(...components: Array<Component>): void {
+        
+                for (var c of components) {
+                    c._adopt(this);
+                    c._setName(c._getName()); // ensure proper indexing
+                    componentSet.add(c);
+                }
             }
         });
     }
 
-    disconnectContainedReceivers: (port: Port<*>) => void;
-    disconnectContainedSource: (port: Port<*>) => void;
+    _getFreshIndex: (string) => number;
+    _disconnectContainedReceivers: (port: Port<*>) => void;
+    _disconnectContainedSource: (port: Port<*>) => void;
 
     connect: <T>(source: Port<T>, sink:Port<$Supertype<T>>) => void;
     //disconnect: (port: Port<*>, direction?:"upstream"|"downstream"|"both") => void;
     
-    react: () => void;
+    _react: () => void;
     
-    trigger(trigger:Trigger<*>, delay?:number, repeat?:boolean):number {
+    _trigger(trigger:Trigger<*>, delay?:number, repeat?:boolean):number {
         return 0; // handle
     }
 
@@ -544,42 +657,22 @@ export class Composite extends Component implements Container<Component> {
      * Add a list of elements to this container.
      * @param {T} element
      */
-    add(...components: Array<Component>): void {
+    _add: (...components: Array<Component>) => void;
         
-        for (var c of components) {
-            var index = 0;
-            if (this._indices.has(c._name)) {
-                index = this._indices.get(c._name)+1;
-                this._indices.set(c._name, index);
-            } else {
-                this._indices.set(c._name, index);
-            }
-            c._index = index;
-            c._parent = this;
-            this._components.add(c);
-        }
-    }
 
     /**
      * Return whether or not the argument is present in the container.
      * @param {T} element
      */
-    contains(element: Component): boolean {
+    _contains(element: Component): boolean { // FIXME!
         return true; //this._components.includes(element);
-    }
-
-    /**
-     * Get an elements held by this container.
-     */
-    getAll(): Set<Component> {
-        return this._components;
     }
 
     /**
      * Remove an element from this container.
      * @param {string} name
      */
-    remove(element: Component): void {
+    _remove(element: Component): void {
         // check whether it is connected to anything
         // remove all connections
     }
@@ -595,36 +688,40 @@ export class Composite extends Component implements Container<Component> {
  * input becomes known _and present_ (i.e., the current value remains
  * unchanged until the next message arrives). 
  */
-class Parameter<T> extends InPort<T> {
+export class Parameter<T> extends InPort<T> {
 
-    _default:T;
+    default:T;
     
-    getParameter: () => $Subtype<T>;
-    setDefault : ($Subtype<T>) => void;
+    get: () => ?$Subtype<T>;
+    read: () => $Subtype<T>;
 
     constructor(parent: Component, defaultValue:T, persist:boolean=true) {
         super(parent, persist);
-        
-        Object.assign(this, {
-            send(value: ?$Subtype<T>, delay?:number): void {
-                if (value == null) {
-                    this.reset();
-                } else {
-                    this._default = value; // FIXME: default vs current value
-                }
-            }
-        });
+        this._value = defaultValue; // FIXME: probably put this in the constructor scope
+        // Object.assign(this, {
+        //     send(value: ?$Subtype<T>, delay?:number): void {
+        //         if (value == null) {
+        //             this.reset();
+        //         } else {
+        //             this._default = value; // FIXME: default vs current value
+        //         }
+        //     }
+        // });
 
         Object.assign(this, {
-            getParameter(): $Subtype<T> {
-                //FIXME: only use default value when there's no input
-                return defaultValue;
+            read(): $Subtype<T> {
+                let val = this.get();
+                if (val != null) {
+                    return val; 
+                } else {
+                    return this.default;
+                }
             }
         });
     }
 
     reset() {
-        this._value = this._default;
+        this._value = this.default;
     }
 
 }
@@ -648,24 +745,6 @@ export class Reaction<T,S:?Object> {
     +react: (time:number) => void;
 }
 
-// class Add extends Reaction<{in1:InPort<number>, in2:InPort<number>, sum:OutPort<number>}, {}> {
-
-//     react() {
-//         this.io.sum.send(this.io.in1.get() + this.io.in2.get());
-//     }
-// }
-
-// class Test extends Component implements Actor {
-
-//     _reactions = [];
-
-//     in1:InPort<number> = new InPort(this);
-//     in2:InPort<number> = new InPort(this);
-//     sum: OutPort<number> = new OutPort(this);
-
-//  x = new Add({in1: this.in1, in2: this.in2, sum: this.sum}, {});
-
-// }
 
 
 /**
@@ -679,6 +758,14 @@ export class Reaction<T,S:?Object> {
     _reactions = [
         
     ];
+
+    _init() {
+
+    }
+
+    _wrapup() {
+
+    }
 
     someFunc = function() {
 
@@ -698,6 +785,9 @@ export class Reaction<T,S:?Object> {
        
     ];
 
+    _init(){};
+    _wrapup(){};
+
 }
 
 // export class Dummy extends Reaction<null, null> {
@@ -710,7 +800,7 @@ export class Reaction<T,S:?Object> {
 // Also, check out https://github.com/laverdet/isolated-vm
 export class App extends Composite implements Executable {
     
-    // add some logging facility here
+    // FIXME: add some logging facility here
 
     constructor(name: string) {
         super(null, name);
@@ -792,6 +882,7 @@ app.start();
 
 // *** what if there is a delay?
 // - 
+
 
 // Scenario 2:
 // An actor spontaneously emits an event

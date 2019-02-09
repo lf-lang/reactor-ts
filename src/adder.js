@@ -10,6 +10,9 @@ class Adder extends Component implements Actor {
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
 
+    _init() {};
+    _wrapup() {};
+
     _reactions = [
         [[this.in1, this.in2], new AddTwo([this.in1, this.in2, this.out])]
     ];
