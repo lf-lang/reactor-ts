@@ -39,6 +39,11 @@
         "flow",
         "accessor"
     ],
-    "author": "Marten Lohstroh",
+    "author": {
+	"name" : "Marten Lohstroh",
+	"email" : "marten@berkeley.edu",
+	"url" : "http://people.eecs.berkeley.edu/~marten"
+    },
+    "contributors": [Ben Zhang, Andres Goens],
     "license": "MIT"
 }
