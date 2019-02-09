@@ -2,7 +2,7 @@
 
 'use strict';
 
-import {Component, Actor, InPort, OutPort, Reaction} from './actor';
+import {Component, Actor, InPort, Reaction} from './actor';
 
 export class Logger extends Component implements Actor {
  

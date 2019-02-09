@@ -352,18 +352,30 @@ export class OutPort<T> extends PortBase implements Port<T> {
 
     constructor(parent: Component) {
         super(parent);
-        
+        var myValue = null;
         var events: Map<number, T> = new Map();
 
         Object.assign(this, {
             send(value: ?$Subtype<T>, delay?:number): void {
-                
+                myValue = value; 
                 // 
                 // maintain a map in the composite that maps outputs to values at certain times
                 // upon reaching a time, propagate all outputs to the respective receivers
                 // FIXME: why not have get() pull values from upstream? They must have been generated.
             }
         });
+
+
+        Object.assign(this, {
+            get(delay?:number): ?$Subtype<T> {
+                return myValue;
+                // 
+                // maintain a map in the composite that maps outputs to values at certain times
+                // upon reaching a time, propagate all outputs to the respective receivers
+                // FIXME: why not have get() pull values from upstream? They must have been generated.
+            }
+        });
+        
 
         Object.assign(this, {
             canConnect(sink: Port<$Supertype<T>>): boolean { // solution: add Container here. Do tests prior to calling to verify it is the same

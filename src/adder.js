@@ -4,7 +4,7 @@
 
 import {Component, Actor, InPort, OutPort, Reaction} from './actor';
 
-class Adder extends Component implements Actor {
+export class Adder extends Component implements Actor {
  
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);
