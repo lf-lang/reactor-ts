@@ -28,6 +28,8 @@ export interface Container<T: Component> {
      */
     _remove(element: T): void;
 
+    //_move(element: T, destination: Container<T: Component>)
+
 }
 
 /**
@@ -80,10 +82,6 @@ export class Trigger<T> implements Guard {
     constructor(parent:Component) {
         this._parent = parent;
     }
-
-    // isPresent():boolean {
-    //     return true; //FIXME: placeholder
-    // }
 
     /**
      * NOTE: Since each composite has its own clock domain, we cannot 
@@ -459,7 +457,7 @@ export class InPort<T> extends PortBase implements Port<T>, Guard {
 
         Object.assign(this, {
             get():?$Subtype<T> {
-                return value;
+                return this._value;
             }
         });
 
@@ -815,22 +813,22 @@ export class App extends Composite implements Executable {
     }
 }
 
-class MyApp extends App {
-    port = new InPort(this);
-    constructor(name: string, someParam: string) {
-        super(name);
-        let x = new MyActor(this);
-        let y = new MyActor2(this);
-        //this.add(x, y);
-        //this.connect(x.a, y.b); // Demonstrates type checking ability.
-        this.connect(y.b, x.a);
-        //y.b.connect(x.a);
-        //x.a.connect(y.b); // Demonstrates type checking ability.
-    }
-}
+// class MyApp extends App {
+//     port = new InPort(this);
+//     constructor(name: string, someParam: string) {
+//         super(name);
+//         let x = new MyActor(this);
+//         let y = new MyActor2(this);
+//         //this.add(x, y);
+//         //this.connect(x.a, y.b); // Demonstrates type checking ability.
+//         this.connect(y.b, x.a);
+//         //y.b.connect(x.a);
+//         //x.a.connect(y.b); // Demonstrates type checking ability.
+//     }
+// }
 
-var app = new MyApp("Hello World", "!");
-app.start();
+// var app = new MyApp("Hello World", "!");
+// app.start();
 
 
 // class Countdown {

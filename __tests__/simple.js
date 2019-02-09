@@ -1,5 +1,5 @@
 //@flow
-import { Actor, OutPort, InPort, Component, Composite, App, Reactive, PureEvent} from "../src/actor.js";
+import {Actor, OutPort, InPort, Component, Composite, App, PureEvent} from "../src/actor.js";
 
 describe('simple two actors send/recv', () => {
     
@@ -8,7 +8,7 @@ describe('simple two actors send/recv', () => {
         out: OutPort<PureEvent> = new OutPort(this);
 
         _reactions = [
-            [[this.in], () => {this.out.send(this.in._value)}] // FIXME: use get instead
+            [[this.in], () => {this.out.send(this.in.get())}] // FIXME: use get instead
         ];
 
     } 
