@@ -44,6 +44,6 @@
 	"email" : "marten@berkeley.edu",
 	"url" : "http://people.eecs.berkeley.edu/~marten"
     },
-    "contributors": [Ben Zhang, Andres Goens],
+    "contributors": ["Ben Zhang", "Andres Goens"],
     "license": "MIT"
 }
