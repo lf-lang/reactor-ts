@@ -1,4 +1,4 @@
-Wirewrap: Wire Things Together
+Wirewrap: A Reactive Programming Framework for IoT
 ---
 
 [![Build Status][travis-image]](https://travis-ci.com/icyphy/accessor-flow)
