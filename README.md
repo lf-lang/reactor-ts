@@ -1,9 +1,9 @@
-Accessor in Flow (WIP)
+Wirewrap: A Reactive Programming Framework for IoT
 ---
 
-[![Build Status][travis-image]](https://travis-ci.com/nebgnahz/accessor-flow)
+[![Build Status][travis-image]](https://travis-ci.com/icyphy/accessor-flow)
 
-[Documentation](https://nebgnahz.github.io/accessor-flow/)
+[Documentation](https://lhstrh.github.io/accessor-flow/)
 
 ## Get Started
 
