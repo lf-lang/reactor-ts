@@ -1,30 +1,105 @@
 //@flow
-import {Actor, OutPort, InPort, Component, Composite, App, PureEvent} from "../src/actor.js";
+import {Actor, OutPort, InPort, Component, Composite, PureEvent, App, Executable} from "../src/actor.js";
 
-describe('simple two actors send/recv', () => {
+   /**
+     * An actor implementation is a reactive component with ports as properties.
+     */
+    class MyActor extends Component implements Actor {
+     
+        a: InPort<{t: number}> = new InPort(this);
+        out: OutPort<*> = new OutPort(this);
+
+        _reactions = [
+            
+        ];
+
+        _init() {
+
+        }
+
+        _wrapup() {
+
+        }
+
+        someFunc = function() {
+
+        }
+
+    }
+ 
+
+    class MyActor2 extends Component implements Actor {
+ 
+    a: InPort<{t: number}> = new InPort(this);
+    b: OutPort<{t: number, y: string}> = new OutPort(this);
+
+    _reactions = [
+       
+    ];
+
+    _init(){};
+    _wrapup(){};
+
+}
+
+describe('connecting/disconnecting actors', () => {
     
-    // class Forward extends Actor implements Reactive {
-    //     in: InPort<PureEvent> = new InPort(this);
-    //     out: OutPort<PureEvent> = new OutPort(this);
+    class MyApp extends App {
+        port = new InPort(this);
+        constructor(name: string, someParam: string) {
+            super(name);
+            let x = new MyActor(this);
+            let xx = new MyActor(); // Uncontained actor
+            let y = new MyActor2(this);
+            
+            // NOTE: the following line demonstrates type checking ability:
+            // this.connect(x.a, y.b);
+            this.connect(y.b, x.a);
 
-    //     _reactions = [
-    //         [[this.in], () => {this.out.send(this.in.get())}] // FIXME: use get instead
-    //     ];
+            it('contained actor name', () => {
+                expect(x._getName()).toBe("MyActor");
+            });
+            it('contained actor FQN', () => {
+                expect(x._getFullyQualifiedName()).toBe("Hello World/MyActor");
+            });
 
-    // } 
+            it('uncontained actor name', () => {
+                expect(xx._getFullyQualifiedName()).toBe("MyActor");
+            });
+            it('uncontained actor FQN', () => {
+                expect(xx._getFullyQualifiedName()).toBe("MyActor");
+            });
 
-    // let app = new App("Simple");
-    // let actor1 = new Forward(app);
-    // let actor2 = new Forward(app);
+            it('connect two actors, one of which uncontained', () => {
+                function connectDisjoint() {
+                    y.b.connect(xx.a);
+                }
+                expect(connectDisjoint).toThrowError(new Error("Unable to connect."));
+            });
+            it('connect two actors', () => {
+                this._add(xx);
+                y.b.connect(xx.a) // should not throw an error at this point
+            });
+            
+            it('auto-indexing of actor names', () => {
+               expect(xx._getFullyQualifiedName()).toBe("Hello World/MyActor(1)");
+            });
+            
+            it('graph before disconnect', () => {
+               expect(this._getGraph()).toBe("Hello World/MyActor2/MyActor2/b => [Hello World/MyActor/MyActor/a, Hello World/MyActor(1)/MyActor(1)/a]");
+            });
 
-    // it('connect two actors', () => {
-    //      expect(actor1.out.canConnect(actor2.in)).toBeTruthy();
-    // });
+            it('disconnect downstream', () => {
+               y.b.disconnect();
+            });
 
-    // actor1.out.connect(actor2.in);
+            it('graph after disconnect', () => {
+               expect(this._getGraph()).toBe("");
+            });
 
-    test('dummy', () => {
-        
-    });
+        }
+    }
+
+    var app = new MyApp("Hello World", "!");
 
 });

@@ -50,7 +50,7 @@ export interface Guard {
 /**
  * Interface for named objects.
  */
-export interface Named {
+export interface Named { // FIXME: have all implementors use toString as an alias of FQN
     /* Return the fully qualified name of this object. */
     _getFullyQualifiedName(): string;
 
@@ -112,9 +112,9 @@ export class Component implements Nameable {
     
     _setName: (string) => void;
 
-    _adopt: (parent: Composite) => boolean;
+    _acquire: (parent: Composite) => boolean;
 
-    _orphan: (parent: Composite) => boolean;
+    _release: (parent: Composite) => boolean;
 
     _getContainer: () => ?Composite;
 
@@ -138,12 +138,9 @@ export class Component implements Nameable {
         var myName:string = this.constructor.name; // default
         var myIndex:?number = null;
         
+        // Set this component's name if specified.
         if (name != null) {
             myName = name;
-        }
-
-        if (parent != null) {
-            parent._add(this);
         }
 
         Object.assign(this, {
@@ -153,7 +150,7 @@ export class Component implements Nameable {
                     path = parent._getFullyQualifiedName();
                 }
                 if (path != "") {
-                    path = path + "." + this._getName();
+                    path = path + "/" + this._getName();
                 } else {
                     path = this._getName();
                 }
@@ -207,7 +204,7 @@ export class Component implements Nameable {
         });
 
         Object.assign(this, {
-            _adopt(newParent: Composite): boolean {
+            _acquire(newParent: Composite): boolean {
                 if (parent == null) {
                     parent = newParent;
                     return true;
@@ -218,7 +215,7 @@ export class Component implements Nameable {
         });
         
         Object.assign(this, {
-            _orphan(oldParent: Composite): boolean {
+            _release(oldParent: Composite): boolean {
                 if (parent == oldParent) {
                     parent = null;
                     myIndex = null
@@ -229,6 +226,13 @@ export class Component implements Nameable {
             }
         });
 
+        // Add it to a container if one is specified.
+        // Note: the call to _add will invoke this._acquire,
+        // so this code must be executed _after_ assigning
+        // the _acquire function in the constructor.
+        if (parent != null) {
+            parent._add(this);
+        }
     }
     
 }
@@ -251,7 +255,7 @@ export class PortBase implements Named {
         Object.assign(this, {
             _getFullyQualifiedName(): string {
                 return parent._getFullyQualifiedName() 
-                    + "." + this._getName();
+                    + "/" + this._getName();
             }
 
         });
@@ -268,7 +272,7 @@ export class PortBase implements Named {
         
         Object.assign(this, {
             hasGrandparent(container:Composite):boolean {
-                if (container == parent._parent) {
+                if (container == parent._getContainer()) {
                     return true;
                 } else {
                     return false;
@@ -278,12 +282,14 @@ export class PortBase implements Named {
 
         Object.assign(this, {
             _getName(): string {
-                for (let prop in parent) {
-                    if (parent.prop == this) {
-                        return `${prop}`;
+                var alt = "";
+                for (const [key, value] of Object.entries(parent)) {
+
+                    if (value === this) { // do hasOwnProperty check too?
+                        return parent._getName() + "/" + `${key}`;
                     }
                 }
-                return "anonymous port";
+                return "anonymous";
             }
         });
     }
@@ -301,7 +307,7 @@ export interface Connectable<T> {
  * Messages can be sent via a port using send(). Message delivery is immediate
  * unless a delay is specified.
  */
-export interface Port<T> extends Connectable<Port<$Supertype<T>>> {
+export interface Port<T> extends Connectable<Port<$Supertype<T>>>, Named {
 
     hasGrandparent: (container:Composite) => boolean;
 
@@ -594,15 +600,19 @@ export class Composite extends Component implements Container<Component> {
             
             }
         });
+        // FIXME: persistent <=> default
+        // Comments from Stoyke. 1) What if you want non-determinism? Parameter store. Stores the parameters that you are learning.
+        // Fairly common strategy. Parallel processes. All updating the parm store asynchronously.
+        // 2) How to handle dynamic instantiation?
 
         Object.assign(this, {
             _getFreshIndex(name: string): number {
                 var index = 0;
                 if (indices.has(name)) {
-                    index = this._indices.get(name)+1;
-                    this._indices.set(name, index);
+                    index = indices.get(name)+1;
+                    indices.set(name, index);
                 } else {
-                    this._indices.set(name, index);
+                    indices.set(name, index);
                 }
                 return index;
             }
@@ -639,20 +649,36 @@ export class Composite extends Component implements Container<Component> {
         });
     
         Object.assign(this, {
-                _add(...components: Array<Component>): void {
-        
+            _add(...components: Array<Component>): void {
                 for (var c of components) {
-                    c._adopt(this);
-                    c._setName(c._getName()); // ensure proper indexing
+                    c._acquire(this);
+                    c._setName(c._getName()); // to ensure proper indexing
                     componentSet.add(c);
                 }
             }
         });
+
+        Object.assign(this, {
+            _getGraph(): string {
+                var str = "";
+                relations.forEach(function(val, key, map) {
+                    str += `${key._getFullyQualifiedName()} => ` + "[";
+                    for (var p of val) {
+                        str += p._getFullyQualifiedName() + ", ";
+                    }
+                    str = str.substring(0, str.length-2);
+                    str += "]"
+                });
+                return str;
+            }
+        });
     }
+
 
     _getFreshIndex: (string) => number;
     _disconnectContainedReceivers: (port: Port<*>) => void;
     _disconnectContainedSource: (port: Port<*>) => void;
+    _getGraph: () => string;
 
     connect: <T>(source: Port<T>, sink:Port<$Supertype<T>>) => void;
     //disconnect: (port: Port<*>, direction?:"upstream"|"downstream"|"both") => void;
@@ -755,59 +781,9 @@ export class Reaction<T,S:?Object> {
     +react: (time?:number) => void;
 }
 
-
-
-/**
- * An actor implementation is a reactive component with ports as properties.
- */
- class MyActor extends Component implements Actor {
- 
-    a: InPort<{t: number}> = new InPort(this);
-    out: OutPort<*> = new OutPort(this);
-
-    _reactions = [
-        
-    ];
-
-    _init() {
-
-    }
-
-    _wrapup() {
-
-    }
-
-    someFunc = function() {
-
-    }
- 
-    // idea: a preprocessing step could analyze the reactions and generate an actor type that's also inspectable during runtime...
-    // how do we prevent reactions from being added at runtime? We could define an array of reactions instead
-
- }
- 
- class MyActor2 extends Component implements Actor {
- 
-    a: InPort<{t: number}> = new InPort(this);
-    b: OutPort<{t: number, y: string}> = new OutPort(this);
-
-    _reactions = [
-       
-    ];
-
-    _init(){};
-    _wrapup(){};
-
-}
-
-// export class Dummy extends Reaction<null, null> {
-//     react() {
-
-//     }
-// }
-
 // Eventually, this should become a worker/threaded composite
 // Also, check out https://github.com/laverdet/isolated-vm
+
 export class App extends Composite implements Executable {
     
     // FIXME: add some logging facility here
@@ -825,22 +801,7 @@ export class App extends Composite implements Executable {
     }
 }
 
-// class MyApp extends App {
-//     port = new InPort(this);
-//     constructor(name: string, someParam: string) {
-//         super(name);
-//         let x = new MyActor(this);
-//         let y = new MyActor2(this);
-//         //this.add(x, y);
-//         //this.connect(x.a, y.b); // Demonstrates type checking ability.
-//         this.connect(y.b, x.a);
-//         //y.b.connect(x.a);
-//         //x.a.connect(y.b); // Demonstrates type checking ability.
-//     }
-// }
 
-// var app = new MyApp("Hello World", "!");
-// app.start();
 
 
 // class Countdown {
