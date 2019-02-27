@@ -9,7 +9,7 @@ export class Adder extends Component implements Actor {
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
-
+    
     _init() {};
     _wrapup() {};
 
@@ -20,6 +20,6 @@ export class Adder extends Component implements Actor {
 
 class AddTwo extends Reaction<[*, *, *], ?{}> {
     react():void {
-        this.io[2].send(this.io[0].get() + this.io[1].get());
+        this.io[2].set(this.io[0].get() + this.io[1].get());
     }
 }

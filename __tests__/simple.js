@@ -86,7 +86,7 @@ describe('connecting/disconnecting actors', () => {
             });
             
             it('graph before disconnect', () => {
-               expect(this._getGraph()).toBe("Hello World/MyActor2/MyActor2/b => [Hello World/MyActor/MyActor/a, Hello World/MyActor(1)/MyActor(1)/a]");
+               expect(this._getGraph()).toBe("Hello World/MyActor2/b => [Hello World/MyActor/a, Hello World/MyActor(1)/a]");
             });
 
             it('disconnect downstream', () => {

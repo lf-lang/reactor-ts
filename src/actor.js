@@ -150,7 +150,7 @@ export class Component implements Nameable {
                     path = parent._getFullyQualifiedName();
                 }
                 if (path != "") {
-                    path = path + "/" + this._getName();
+                    path += "/" + this._getName();
                 } else {
                     path = this._getName();
                 }
@@ -234,6 +234,26 @@ export class Component implements Nameable {
             parent._add(this);
         }
     }
+
+    _getInputs(): Set<InPort<mixed>> {
+        var inputs = new Set();
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof InPort) {
+                inputs.add(value);
+            }
+        }
+        return inputs;
+    }
+
+    _getOutputs(): Set<OutPort<mixed>> {
+        var outputs = new Set();
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof OutPort) {
+                outputs.add(value);
+            }
+        }
+        return outputs;
+    }
     
 }
 
@@ -286,12 +306,16 @@ export class PortBase implements Named {
                 for (const [key, value] of Object.entries(parent)) {
 
                     if (value === this) { // do hasOwnProperty check too?
-                        return parent._getName() + "/" + `${key}`;
+                        return `${key}`;
                     }
                 }
                 return "anonymous";
             }
         });
+    }
+
+    toString(): string {
+        return this._getFullyQualifiedName();
     }
 }
 
@@ -353,7 +377,7 @@ export class OutPort<T> extends PortBase implements Port<T> {
     canConnect: (sink: Port<$Supertype<T>>) => boolean
     connect: (sink: Port<$Supertype<T>>) => void;
     disconnect: (direction?:"upstream"|"downstream"|"both") => void;
-    send: (value: ?$Subtype<T>, delay?:number) => void;
+    set: (value: ?$Subtype<T>, delay?:number) => void;
     get: (delay?:number) => ?$Subtype<T>;
 
     constructor(parent: Component) {
@@ -362,7 +386,7 @@ export class OutPort<T> extends PortBase implements Port<T> {
         var events: Map<number, T> = new Map();
 
         Object.assign(this, {
-            send(value: ?$Subtype<T>, delay?:number): void {
+            set(value: ?$Subtype<T>, delay?:number): void {
                 myValue = value; 
                 // 
                 // maintain a map in the composite that maps outputs to values at certain times
@@ -762,23 +786,66 @@ export class Parameter<T> extends InPort<T> {
 
 }
 
+
+
 /**
  * Base class for reactions that has two type parameter: 
  * T, which describes a tuple of triggers/inputs/outputs;
  * S, which describes an object that keeps shared state.
  * The reaction can also maintain state locally.
  */
-export class Reaction<T,S:?Object> {
+export class Reaction<T,S:?Object> { // FIXME: where to put the delay?
 
     io:T
     shared:S;
     
+    portsInScope: () => [Set<InPort<mixed>>, Set<OutPort<mixed>>];
+
+    +react: (time?:number) => void;
+
     constructor(io:T, state:S) {
         this.io = io;
         this.shared = state;
-    }
 
-    +react: (time?:number) => void;
+        /**
+         * Given some datastructure, recursively find all references
+         * to any input and output ports.
+         */
+        function collect(inputs: Set<InPort<mixed>>, 
+            outputs: Set<OutPort<mixed>>, data:any) {
+            if (data instanceof InPort) {
+                inputs.add(data);
+            } 
+            else if (data instanceof OutPort) {
+                outputs.add(data);
+            }
+            else if (data != null && data === Object(data)) {
+                if (typeof data[Symbol.iterator] === 'function') {
+                    // Iterate if iterable
+                    for (let elem of data) {
+                        collect(inputs, outputs, elem);
+                    }
+                } else {
+                    // Loop over object entries otherwise
+                    for (const [key, value] of Object.entries(data)) {
+                        collect(inputs, outputs, value);
+                    }            
+                }
+            } else {
+                console.log(data)
+            }
+        }
+
+        Object.assign(this, {
+            portsInScope() {
+                var inputs = new Set<InPort<mixed>>();
+                var outputs = new Set<OutPort<mixed>>();
+                collect(inputs, outputs, this);
+                return [inputs, outputs];
+            }
+        });
+
+    }
 }
 
 // Eventually, this should become a worker/threaded composite
@@ -861,6 +928,8 @@ export class App extends Composite implements Executable {
 
 // datastructures:
 // - dependency graph
+
+
 // - calendarQ t -> [], where events are sorted by priority/index
 // types of events:
 // - self-scheduled
