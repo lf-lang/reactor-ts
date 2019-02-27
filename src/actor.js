@@ -812,7 +812,7 @@ export class Reaction<T,S:?Object> { // FIXME: where to put the delay?
          * to any input and output ports.
          */
         function collect(inputs: Set<InPort<mixed>>, 
-            outputs: Set<OutPort<mixed>>, data:any) {
+            outputs: Set<OutPort<mixed>>, visited: Set<Object>, data:any) {
             if (data instanceof InPort) {
                 inputs.add(data);
             } 
@@ -820,15 +820,18 @@ export class Reaction<T,S:?Object> { // FIXME: where to put the delay?
                 outputs.add(data);
             }
             else if (data != null && data === Object(data)) {
+                visited.add(data);
                 if (typeof data[Symbol.iterator] === 'function') {
                     // Iterate if iterable
                     for (let elem of data) {
-                        collect(inputs, outputs, elem);
+                        if (!visited.has(elem))
+                            collect(inputs, outputs, visited, elem);
                     }
                 } else {
                     // Loop over object entries otherwise
                     for (const [key, value] of Object.entries(data)) {
-                        collect(inputs, outputs, value);
+                        if (!visited.has(value))
+                            collect(inputs, outputs, visited, value);
                     }            
                 }
             } else {
@@ -840,7 +843,7 @@ export class Reaction<T,S:?Object> { // FIXME: where to put the delay?
             portsInScope() {
                 var inputs = new Set<InPort<mixed>>();
                 var outputs = new Set<OutPort<mixed>>();
-                collect(inputs, outputs, this);
+                collect(inputs, outputs, new Set<Object>(), this);
                 return [inputs, outputs];
             }
         });
