@@ -11,4 +11,4 @@ actor Delay {
    reaction(trig) -> out {=
       set(out, trig);
    =};
-}
+};

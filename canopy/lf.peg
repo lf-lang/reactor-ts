@@ -9,21 +9,32 @@
 grammar LinguaFranca
   Grammar <- Spacing Expression+
 
-  Expression <- Statement ";" Spacing / "{" Expression "}" Spacing / EmbeddedStatement Spacing
+  Expression <- Statement ";" Spacing /  EmbeddedStatement Spacing 
   
-  EmbeddedStatement <- "{=" ( !"=" / "=" !"}" )* "=}"
+  EmbeddedStatement <- "{=" ( !"=" . / "=" !"}" .)* "=}"
+  #EmbeddedStatement <- "{=" ([a-zA-Z0-9] / [\s] / ";" / '(' / ')' / ',' )* "=}"
   
-  Statement <- TargetStatement / Declaration
+  Statement <- Declaration #only statements (for now?)
+  
+  Declaration <- Target / Actor / Reaction / InOutParamTrig  # is this right?
 
-  TargetStatement <- "target" Spacing id
-  
-  Declaration <- Actor / Reaction / Header / Param / Type  # is this right?
+  Target <- "target" Spacing id
 
   Actor  <- "actor" _ Header _ Body
 
   Header <- id _ Args / id
   
   Args <- "(" _ Param* _ ")"
+  
+  InOutParamTrig <- Input / Output / Parameter / Trigger
+
+  Input <- 'input' _ Param
+
+  Output <- 'output' _ Param
+
+  Parameter <- 'parameter' _ Param
+
+  Trigger <- 'trigger' _ Param
 
   Param <- id (":" Type)? Def?
 
@@ -31,7 +42,7 @@ grammar LinguaFranca
 
   Def <- "(1000)"
 
-  Body <- "{" (!"}" .)* "}"
+  Body <- "{" Spacing Expression* "}"
 
   id <- [a-zA-Z]+
   
