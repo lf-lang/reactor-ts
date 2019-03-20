@@ -1,0 +1,26 @@
+# A grammar file to be used with Canopy:
+# https://www.npmjs.com/package/canopy
+#
+# Explanation and syntax reference: http://canopy.jcoglan.com/
+#
+# To build:
+# `npm install -g canopy`
+# `canopy lf.peg --lang javascript` (or java | python | ruby)
+grammar Actor
+  actor  <- 'actor' _ header _ body
+
+  header <- id _ '(' _ param* _ ')'
+
+  param <- id ':' type def?
+
+  type <- id
+
+  def <- '(1000)'
+
+  body <- '{' (!'}' .)* '}'
+
+  id <- [a-zA-Z]+
+
+  _ <- [\s]*
+
+  __ <- [\s]+
