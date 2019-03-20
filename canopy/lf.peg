@@ -6,20 +6,44 @@
 # To build:
 # `npm install -g canopy`
 # `canopy lf.peg --lang javascript` (or java | python | ruby)
-grammar Actor
-  actor  <- 'actor' _ header _ body
+grammar LinguaFranca
+  Grammar <- Spacing Expression+
 
-  header <- id _ '(' _ param* _ ')'
+  Expression <- Statement ";" Spacing / "{" Expression "}" Spacing / EmbeddedStatement Spacing
+  
+  EmbeddedStatement <- "{=" ( !"=" / "=" !"}" )* "=}"
+  
+  Statement <- TargetStatement / Declaration
 
-  param <- id ':' type def?
+  TargetStatement <- "target" Spacing id
+  
+  Declaration <- Actor / Reaction / Header / Param / Type  # is this right?
 
-  type <- id
+  Actor  <- "actor" _ Header _ Body
 
-  def <- '(1000)'
+  Header <- id _ Args / id
+  
+  Args <- "(" _ Param* _ ")"
 
-  body <- '{' (!'}' .)* '}'
+  Param <- id (":" Type)? Def?
+
+  Type <- id
+
+  Def <- "(1000)"
+
+  Body <- "{" (!"}" .)* "}"
 
   id <- [a-zA-Z]+
+  
+  Reaction <- "reaction" Args (_ "->" _ ( Args / id ) )? Spacing EmbeddedStatement
+
+  Spacing  <- ([\s] / Comment)*
+
+  Comment  <- '//' (!EndOfLine .)* EndOfLine
+
+  EndOfLine  <- '\r\n' / '\n' / '\r'
+
+  EndOfFile  <- !.
 
   _ <- [\s]*
 
