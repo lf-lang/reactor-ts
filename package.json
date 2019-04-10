@@ -33,6 +33,9 @@
         "lint": "eslint src",
         "test": "node_modules/.bin/flow  && node_modules/.bin/jest --coverage"
     },
+    "jest": {
+        "testPathIgnorePatterns": ["canopy"]
+    },
     "repository": {
         "type": "git",
         "url": "git@github.com:icyphy/accessor-flow.git"
