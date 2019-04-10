@@ -1,7 +1,7 @@
 Wirewrap: A Reactive Programming Framework for IoT
 ---
 
-[![Build Status][travis-image]](https://travis-ci.com/lhstrh/wirewrap)
+[![Build Status](https://travis-ci.org/lhstrh/wirewrap.png)](https://travis-ci.com/lhstrh/wirewrap)
 
 [Documentation](https://lhstrh.github.io/accessor-flow/)
 
