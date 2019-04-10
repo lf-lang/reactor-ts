@@ -7,20 +7,28 @@
 # `npm install -g canopy`
 # `canopy lf.peg --lang javascript` (or java | python | ruby)
 grammar LinguaFranca
-  Grammar <- Spacing Expression+
+  Grammar <- Spacing Stament+
 
-  Expression <- Statement ";" Spacing /  EmbeddedStatement Spacing 
+  Stament <- Declaration ";" Spacing /  EmbeddedStatement Spacing 
   
   EmbeddedStatement <- "{=" ( !"=" . / "=" !"}" .)* "=}"
   #EmbeddedStatement <- "{=" ([a-zA-Z0-9] / [\s] / ";" / '(' / ')' / ',' )* "=}"
   
-  Statement <- Declaration #only statements (for now?)
-  
-  Declaration <- Target / Actor / Reaction / InOutParamTrig  # is this right?
+  Declaration <- Target / Reactor / Reaction / Clock / Constructor / Composite / Port / InOutParamTrig  # is this right?
 
   Target <- "target" Spacing id
+  
+  Expression <- id / Literal
 
-  Actor  <- "actor" _ Header _ Body
+  Port <- id "->" id
+
+  Reactor  <- "reactor" _ Header _ Body
+
+  Composite  <- "comoposite" _ Header _ Body
+
+  Constructor  <- "constructor" _ EmbeddedStatement
+
+  Clock  <- "clock" _ Header _ 
 
   Header <- id _ Args / id
   
@@ -36,16 +44,21 @@ grammar LinguaFranca
 
   Trigger <- 'trigger' _ Param
 
-  Param <- id (":" Type)? Def?
+  Param <- id ((":" Type _ "(" Expression ")") / (":" Type) )? 
 
   Type <- id
 
-  Def <- "(1000)"
+  Body <- "{" Spacing Stament* "}"
 
-  Body <- "{" Spacing Expression* "}"
-
-  id <- [a-zA-Z]+
+  id <- [a-zA-Z]+ [a-zA-Z.]*
   
+  Literal <- NumLiteral / StringLiteral
+
+#  NumLiteral <- [0-9]* "."? [0-9]+ ("f" / "d")? 
+  NumLiteral <- [0-9]* 
+
+  StringLiteral <- "'" [^\'\"]+ "'" /  "\"" [^\"]+ "\"" #this is perhaps too simple, but for now
+
   Reaction <- "reaction" Args (_ "->" _ ( Args / id ) )? Spacing EmbeddedStatement
 
   Spacing  <- ([\s] / Comment)*

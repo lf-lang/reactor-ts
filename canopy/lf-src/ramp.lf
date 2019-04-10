@@ -1,0 +1,29 @@
+reactor Ramp(p:int (10)) {
+  input set:int;
+  output out:int;
+  clock c(p);
+  constructor {=
+    int  count = 0;
+  =}; //this ; should go
+  reaction(c) -> out {=
+    count ++;
+    set(out , count);
+  =}; //this ; should go
+  reaction(set) {=
+    count = set;
+  =}; //this ; should go
+}; //this ; should go?
+
+reactor Print {
+  input in:int;
+  reaction(in) {=
+     printf("%d\n", in);
+  =}; //this ; should go
+}; //this ; should go?
+
+
+composite App {
+  a = new Ramp(p=100);
+  b = new Print ();
+  a.out  -> b.in;
+}; //this ; should go?
