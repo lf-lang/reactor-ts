@@ -41,7 +41,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git@github.com:icyphy/accessor-flow.git"
+        "url": "git@github.com:lhstrh/wirewrap.git"
     },
     "keywords": [
         "IoT",
