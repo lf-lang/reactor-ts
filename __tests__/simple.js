@@ -1,10 +1,10 @@
 //@flow
-import {Actor, OutPort, InPort, Component, Composite, PureEvent, App, Executable} from "../src/actor.js";
+import {ReActor, OutPort, InPort, Component, Composite, PureEvent, App, Executable} from "../src/reactor.js";
 
    /**
      * An actor implementation is a reactive component with ports as properties.
      */
-    class MyActor extends Component implements Actor {
+    class MyActor extends Component implements ReActor {
      
         a: InPort<{t: number}> = new InPort(this);
         out: OutPort<*> = new OutPort(this);
@@ -28,7 +28,7 @@ import {Actor, OutPort, InPort, Component, Composite, PureEvent, App, Executable
     }
  
 
-    class MyActor2 extends Component implements Actor {
+    class MyActor2 extends Component implements ReActor {
  
     a: InPort<{t: number}> = new InPort(this);
     b: OutPort<{t: number, y: string}> = new OutPort(this);
