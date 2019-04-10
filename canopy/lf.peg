@@ -9,22 +9,32 @@
 grammar LinguaFranca
   Grammar <- Spacing Stament+
 
-  Stament <- Declaration ";" Spacing /  EmbeddedStatement Spacing 
+  Stament <- Spacing Assignment Spacing / Spacing Declaration Spacing /  Spacing EmbeddedStatement Spacing 
   
   EmbeddedStatement <- "{=" ( !"=" . / "=" !"}" .)* "=}"
   #EmbeddedStatement <- "{=" ([a-zA-Z0-9] / [\s] / ";" / '(' / ')' / ',' )* "=}"
   
-  Declaration <- Target / Reactor / Reaction / Clock / Constructor / Composite / Port / InOutParamTrig  # is this right?
+  Assignment <- id _ "=" _ Expression _ ";"
+  
+  Declaration <- EntityDeclaration / PropertyDeclaration _ ";"
+
+  EntityDeclaration <- Target / Reactor / Reaction / Constructor / Composite 
+
+  PropertyDeclaration <- Clock / Port / ReactorPrimitive  # is this right?
 
   Target <- "target" Spacing id
   
-  Expression <- id / Literal
+  Expression <-  New / Call / id / Literal 
+  
+  New <- _ "new" _ Call 
+  
+  Call <- id "(" _ Expression (_ "=" Literal)? _ ")"
 
-  Port <- id "->" id
+  Port <- id _ "->" _ id
 
   Reactor  <- "reactor" _ Header _ Body
 
-  Composite  <- "comoposite" _ Header _ Body
+  Composite  <- "composite" _ Header _ Body #What should composites be allowed precisely? #Just ids or also args?
 
   Constructor  <- "constructor" _ EmbeddedStatement
 
@@ -34,7 +44,7 @@ grammar LinguaFranca
   
   Args <- "(" _ Param* _ ")"
   
-  InOutParamTrig <- Input / Output / Parameter / Trigger
+  ReactorPrimitive <- Input / Output / Parameter / Trigger / Action
 
   Input <- 'input' _ Param
 
@@ -43,6 +53,8 @@ grammar LinguaFranca
   Parameter <- 'parameter' _ Param
 
   Trigger <- 'trigger' _ Param
+  
+  Action <- 'action' _ Param
 
   Param <- id ((":" Type _ "(" Expression ")") / (":" Type) )? 
 

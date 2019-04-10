@@ -18,7 +18,7 @@ function printChildren(parentName, node){
     }
 }
 
-var src_file = './lf-src/Delay.lf';
+var src_file = './lf-src/async.lf'; //'./lf-src/ramp.lf';
 fs.readFile(src_file, 'utf8', function (err,data) {
   if (err) {
     return console.log(err);
