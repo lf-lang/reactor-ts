@@ -4,6 +4,19 @@
 // Interfaces                                                          //
 //---------------------------------------------------------------------//
 
+// FIXME: what time unit do we choose?
+
+
+export type LogicalTime = [number, number]; // unfortunately, process.hrtime()
+// also returns an array with second + nanoseconds
+// https://www.npmjs.com/package/hirestime but on NodeJS we can assume process.hrtime() works
+
+export type PhysicalTime = number;
+
+//---------------------------------------------------------------------//
+// Interfaces                                                          //
+//---------------------------------------------------------------------//
+
 /**
  * A generic container for components.
  */
@@ -33,7 +46,7 @@ export interface Container<T: Component> {
 }
 
 /**
- * Interface to be implemented by a top-level composite.
+ * To be implemented by a top-level composite.
  */
 export interface Executable {
     start():void;
@@ -41,14 +54,14 @@ export interface Executable {
 }
 
 /**
- * Marker interface for guards.
+ * May be used to trigger a reaction.
  */
-export interface Guard {
+export interface Trigger<T> {
 
 }
 
 /**
- * Interface for named objects.
+ * For objects that have a name.
  */
 export interface Named { // FIXME: have all implementors use toString as an alias of FQN
     /* Return the fully qualified name of this object. */
@@ -59,7 +72,7 @@ export interface Named { // FIXME: have all implementors use toString as an alia
 }
 
 /**
- * Interface for (re)nameable objects.
+ * For (re)nameable objects
  */
 export interface Nameable extends Named {
  
@@ -68,18 +81,26 @@ export interface Nameable extends Named {
 }
 
 /**
- * An interface for reactive components we refer to as (re)actors.
+ * For reactive components we refer to as reactors.
  */
-export interface Actor { // FIXME: still tempted to call this Reactor
+export interface ReActor {
     +_init:() => void;
     +_wrapup: () => void;    
-    _reactions:$ReadOnlyArray<[Array<Guard>, Reaction<any, any>]>;
+    _reactions:$ReadOnlyArray<[Array<Trigger<*>>, Reaction<any, any>]>;
 }   
 
-export class Trigger<T> implements Guard {
+
+export class Action<T> implements Trigger<T> {
     value: ?T;
     _parent: Component; // FIXME: move this to constructor scope.
-    constructor(parent:Component) {
+    constructor(parent:Component, delay?:number) { // FIXME: we may need to create a (parameterized) type for time related stuff
+        // Back to the delay question. Let's assume an action is parameterized with a delay. How can we enable a variable delay?
+        // Edward cares about this. We should be able to support it.
+
+        // if no delay is given, schedule may be called with a delay.
+        //   - if it is called without a delay, the delay is said to be indeterminate
+        // if a delay is given and schedule is called with a delay, it will be ignored. (a warning might be useful)
+        // - the delay will always be the same
         this._parent = parent;
     }
 
@@ -87,7 +108,7 @@ export class Trigger<T> implements Guard {
      * NOTE: Since each composite has its own clock domain, we cannot 
      * depend on a global function like setTimeout or setInterval.
      */
-    schedule(delay?:number, repeat?:boolean):number {
+    schedule(repeat?:boolean, delay?:number):number {
         if (this._parent != null) {
             //this._parent.trigger(trigger, delay, repeat);    
         } else {
@@ -96,7 +117,7 @@ export class Trigger<T> implements Guard {
         return 0;   
     }
 
-    unschedule(handle: number) {
+    unschedule() {
 
     }
 }
@@ -478,7 +499,7 @@ export class OutPort<T> extends PortBase implements Port<T> {
 
 
 
-export class InPort<T> extends PortBase implements Port<T>, Guard {
+export class InPort<T> extends PortBase implements Port<T>, Trigger<T> {
 
     /***** Priviledged functions *****/
     canConnect:(sink: Port<$Supertype<T>>) => boolean;        
@@ -573,7 +594,20 @@ export class PureEvent {
 // NOTE: composite IDLE or REACTING.
 // If IDLE, get real time, of REACTING use T+1
 
-export class Composite extends Component implements Container<Component> {
+export class Composite extends Component implements Container<Component>, ReActor {
+
+    _getFreshIndex: (string) => number;
+    _disconnectContainedReceivers: (port: Port<*>) => void;
+    _disconnectContainedSource: (port: Port<*>) => void;
+    _getGraph: () => string;
+
+    connect: <T>(source: Port<T>, sink:Port<$Supertype<T>>) => void;
+    //disconnect: (port: Port<*>, direction?:"upstream"|"downstream"|"both") => void;
+    
+    _init:() => void;
+    _wrapup: () => void;
+    _react:() => void;  
+    _reactions:$ReadOnlyArray<[Array<Trigger<*>>, Reaction<any, any>]>;
 
     constructor(parent:?Composite, name?:string) {
         super(parent, name);
@@ -581,28 +615,45 @@ export class Composite extends Component implements Container<Component> {
         /* Private variables */
         var relations: Map<Port<any>, Set<Port<any>>> = new Map();
         
+        //var eventQ: Map<Time, Map<*>, *> = new Map();
+
+
+
         // queue for delayed triggers
-        var triggerQ: Map<number, [Map<Trigger<any>, any>]> = new Map();
+        var triggerQ: Map<number, [Map<Action<any>, any>]> = new Map();
 
         // queue for delayed sends
         var sendQ: Map<number, [Map<Port<any>, any>]> = new Map();
 
         var indices: Map<string, number> = new Map();
 
-
-        var componentSet: Set<Component> = new Set();
-        // An actor may have triggers, some of which are wired to upstream actors, while others are essentially wired to the the director (for self-scheduled events).
-        // The self-scheduled events must be handled before inputs are updated! (as per discussion with Edward)
-
-        // Sequence:
-        // - self triggers ==> this conflicts with the requirement that all inputs be known before any reactions occurs!
-        // - sends (including to self)
-        // - input reactions 
+        var actors: Set<ReActor> = new Set();
 
         // we need to express dependencies between reactions, not between ports
-        var dependencies: Map<() => void, () => void> = new Map();
+        var dependencies: Map<Reaction<mixed>, Reaction<mixed>> = new Map();
 
-        // upon the generation of an output, that output needs to be propagated; how do we know whether a downstream reaction may be invoke, or another reaction has to go first?
+        Object.assign(this, {
+            _init() {
+                for (let a of actors) {
+                    for (let r of a._reactions) {
+
+                    }
+                }
+            }
+        });
+        // We don't want to run ahead of realtime, because actors can produce spontaneous events that need to be stamped with 
+        // wallclock time, and we don't want these timestamps to be "in the past".
+        // DAC Properties A1-9.
+        // Simple examples. Which should those be?
+        // First one to start with: sensor computation actuator
+        // Introduce notion of a deadline
+        // Why on the local platform, model should not get ahead.
+        // Example 1: Synchronization to real time and deadlines
+        // Example 2: Why delay has to wait
+        // Example 3: shut off the lights some time after the switch has been flipped.
+        // Reason to have the deadline definition as stated: detectability. Suppose the start deadline cannot be met; the
+        // reaction should not be carried out (and then the violation be reported on).
+        
 
         Object.assign(this, {
             // FIXME: We may want to wrap this into something like a change request and 
@@ -677,7 +728,8 @@ export class Composite extends Component implements Container<Component> {
                 for (var c of components) {
                     c._acquire(this);
                     c._setName(c._getName()); // to ensure proper indexing
-                    componentSet.add(c);
+                    
+                    // FIXME: is actor, not component actors.add(c);
                 }
             }
         });
@@ -698,20 +750,6 @@ export class Composite extends Component implements Container<Component> {
         });
     }
 
-
-    _getFreshIndex: (string) => number;
-    _disconnectContainedReceivers: (port: Port<*>) => void;
-    _disconnectContainedSource: (port: Port<*>) => void;
-    _getGraph: () => string;
-
-    connect: <T>(source: Port<T>, sink:Port<$Supertype<T>>) => void;
-    //disconnect: (port: Port<*>, direction?:"upstream"|"downstream"|"both") => void;
-    
-    _react: () => void;
-    
-    _trigger(trigger:Trigger<*>, delay?:number, repeat?:boolean):number {
-        return 0; // handle
-    }
 
     /**
      * Add a list of elements to this container.
@@ -790,7 +828,7 @@ export class Parameter<T> extends InPort<T> {
 
 /**
  * Base class for reactions that has two type parameter: 
- * T, which describes a tuple of triggers/inputs/outputs;
+ * T, which describes a tuple of inputs/outputs/actions it may use;
  * S, which describes an object that keeps shared state.
  * The reaction can also maintain state locally.
  */
@@ -840,15 +878,23 @@ export class Reaction<T,S:?Object> { // FIXME: where to put the delay?
         }
 
         Object.assign(this, {
-            portsInScope() {
+            portsInScope(): [Set<InPort<mixed>>, Set<OutPort<mixed>>] {
                 var inputs = new Set<InPort<mixed>>();
                 var outputs = new Set<OutPort<mixed>>();
                 collect(inputs, outputs, new Set<Object>(), this);
                 return [inputs, outputs];
             }
         });
-
     }
+}
+
+class OrderedAsyncReaction<T, S, R:Action<*>> extends Reaction<T, S> { // May not need this; we can lump actions together with triggers
+    trigger = 0;
+    constructor(io:T, state:S, trigger:R) {
+        super(io, state);
+        this.trigger = trigger;
+    }
+
 }
 
 // Eventually, this should become a worker/threaded composite
@@ -870,8 +916,6 @@ export class App extends Composite implements Executable {
 
     }
 }
-
-
 
 
 // class Countdown {

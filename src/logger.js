@@ -2,9 +2,9 @@
 
 'use strict';
 
-import {Component, Actor, InPort, Reaction} from './actor';
+import {Component, ReActor, InPort, Reaction} from './reactor';
 
-export class Logger extends Component implements Actor {
+export class Logger extends Component implements ReActor {
  
     in: InPort<*> = new InPort(this);
 
