@@ -4,6 +4,7 @@
     "description": "A Reactive Framework for IoT",
     "main": "lib/index.js",
     "dependencies": {
+        "documentation": "^9.3.1",
         "flow": "^0.2.3",
         "got": "^9.6.0"
     },
@@ -34,7 +35,9 @@
         "test": "node_modules/.bin/flow  && node_modules/.bin/jest --coverage"
     },
     "jest": {
-        "testPathIgnorePatterns": ["canopy"]
+        "testPathIgnorePatterns": [
+            "canopy"
+        ]
     },
     "repository": {
         "type": "git",
