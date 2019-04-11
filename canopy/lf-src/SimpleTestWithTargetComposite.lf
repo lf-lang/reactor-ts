@@ -1,7 +1,7 @@
 target JavaScript;
 
 // Periodically produce an output consisting of a count.
-actor Source(period:int(1000)) {
+reactor Source(period:int(1000)) {
     language JavaScript;
     trigger t(period, PERIODIC);
     output y:int;
@@ -18,7 +18,7 @@ actor Source(period:int(1000)) {
 }
 // Test input for match to expected sequence.
 // Stop executing when the expected sequence has been matched.
-actor Test(expected:JSON([])) {
+reactor Test(expected:JSON([])) {
     language JavaScript;
     input x:int(0);
     preamble {=

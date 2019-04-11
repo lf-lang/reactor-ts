@@ -1,6 +1,6 @@
 // Test the lexer with various supported syntaxes.
 target JavaScript;
-actor TestLexer(
+reactor TestLexer(
         period:int(1000),
         foo:string("hello"),
         bar:foreignType({= @#$% =})

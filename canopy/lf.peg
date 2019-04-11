@@ -19,19 +19,23 @@ grammar LinguaFranca
   Stament <- Spacing Assignment Spacing / Spacing Declaration Spacing /  Spacing EmbeddedStatement Spacing 
   EmbeddedStatement <- "{=" ( !"=" . / "=" !"}" .)* "=}"
   Declaration <- EntityDeclaration / PropertyDeclaration _ ";"
-  EntityDeclaration <-  Reactor / Reaction / Constructor / Composite 
-  PropertyDeclaration <- Target / Clock / Port / ReactorPrimitive  # is this right?
-  Assignment <- id _ "=" _ Expression _ ";"
-  Expression <-  New / Call / id / Literal #Not sure if new fits best here
+  EntityDeclaration <-  Reactor / Reaction / Constructor / Composite / Preamble / Initialize
+  PropertyDeclaration <- Target / Import / Clock / Port / ReactorPrimitive / Instance / Language
+  Assignment <- AssignmentExpression _ ";"
+  Expression <-  EmbeddedStatement / New / Call / id / Literal  #Not sure if "new" fits best here
 
   #Reactor specific constructs
-  Target <- "target" Spacing id
+  Target <- "target" _ id
+  Language <- "language" _ id #Added for old srcs from other repo
+  Import <- "import" _ id
   New <- _ "new" _ Call 
   Call <- id Arguments
   Port <- id _ "->" _ id
   Reactor  <- "reactor" _ Header _ Body
   Composite  <- "composite" _ Header _ Body #What should composites be allowed precisely? #Just ids or also args?
   Constructor  <- "constructor" _ EmbeddedStatement
+  Preamble  <- "preamble" _ EmbeddedStatement #Added for old srcs from other repo
+  Initialize  <- "initialize" _ EmbeddedStatement #Added for old srcs from other repo
   Clock  <- "clock" _ Header _ 
   Header <- id _ DeclarationArgs / id
   ReactorPrimitive <- Input / Output / Parameter / Trigger / Action
@@ -40,12 +44,14 @@ grammar LinguaFranca
   Input <- 'input' _ DeclarationParam
   Output <- 'output' _ DeclarationParam
   Parameter <- 'parameter' _ DeclarationParam
-  Trigger <- 'trigger' _ DeclarationParam
+  Trigger <-  'trigger' _ Header / 'trigger' _ DeclarationParam 
   Action <- 'action' _ DeclarationParam
   DeclarationParam <- id ((":" Type _ "(" Expression ")") / (":" Type) )? 
   Reaction <- "reaction" DeclarationArgs (_ "->" _ ( DeclarationArgs / id ) )? Spacing EmbeddedStatement
+  Instance <- 'instance' _ AssignmentExpression #Added for old srcs from other repo
 
   #General/auxiliary definitions
+  AssignmentExpression <- id _ "=" _ Expression 
   DeclarationArgs <- "(" _ DeclarationParamList _ ")"
   Arguments <- "(" _ ParamList _ ")"
   DeclarationParamList <- (DeclarationParam _ "," _)+ DeclarationParam / DeclarationParam? 
@@ -55,7 +61,7 @@ grammar LinguaFranca
   Type <- id
   Body <- "{" Spacing Stament* "}"
   id <- [a-zA-Z]+ [a-zA-Z.]*
-  Literal <- NumLiteral / StringLiteral
+  Literal <- NumLiteral / StringLiteral 
   #NumLiteral <- [0-9]* 
   NumLiteral <- "-"? ([0-9]*)? "."? [0-9]+ / [0-9]+
   StringLiteral <- "'" [^\'\"]+ "'" /  "\"" [^\"]+ "\"" #this is perhaps too simple, but for now

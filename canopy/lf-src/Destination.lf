@@ -1,7 +1,7 @@
 // Actor that displays an input string.
 target JavaScript;
-actor Destination {
-    inputs x:string;
+reactor Destination {
+    input x:string;
     preamble {=
         var textDisplay = require('@accessors-modules/text-display');
         var display = null;

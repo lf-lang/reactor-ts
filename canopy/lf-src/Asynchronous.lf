@@ -2,7 +2,7 @@
 // that URL and asynchronously produces on its output the
 // response.
 target JavaScript;
-actor Asynchronous() {
+reactor Asynchronous() {
     input url:string;
     output response:string;
     preamble {=

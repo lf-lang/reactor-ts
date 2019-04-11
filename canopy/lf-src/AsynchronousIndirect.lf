@@ -4,7 +4,7 @@
 // where the response to the http request causes a trigger
 // to be scheduled.
 target JavaScript;
-actor Asynchronous() {
+reactor Asynchronous() {
     input url:string;
     output response:string;
     trigger t:object;

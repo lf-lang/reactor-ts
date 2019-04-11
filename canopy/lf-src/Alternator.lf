@@ -3,12 +3,12 @@ composite Alternator() {
     input x:int;
     output y:int;
     instance a = ElementA();
-    x => a.x;
-    a.y => y;
+    x -> a.x;
+    a.y -> y;
         
     mutation(actor) {
         instance b = instantiate(actor);
-        x => b.x;
-        b.y => y;
+        x -> b.x;
+        b.y -> y;
     }
 }
