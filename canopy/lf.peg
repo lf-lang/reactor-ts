@@ -6,81 +6,63 @@
 # To build:
 # `npm install -g canopy`
 # `canopy lf.peg --lang javascript` (or java | python | ruby)
+#
+# Copyright 2019 (see license)
+# Authors: Marten Lohstroh, Andres Goens 
+#
+
 grammar LinguaFranca
+
   Grammar <- Spacing Stament+
 
+  #Core of the language
   Stament <- Spacing Assignment Spacing / Spacing Declaration Spacing /  Spacing EmbeddedStatement Spacing 
-  
   EmbeddedStatement <- "{=" ( !"=" . / "=" !"}" .)* "=}"
-  #EmbeddedStatement <- "{=" ([a-zA-Z0-9] / [\s] / ";" / '(' / ')' / ',' )* "=}"
-  
-  Assignment <- id _ "=" _ Expression _ ";"
-  
   Declaration <- EntityDeclaration / PropertyDeclaration _ ";"
-
   EntityDeclaration <- Target / Reactor / Reaction / Constructor / Composite 
-
   PropertyDeclaration <- Clock / Port / ReactorPrimitive  # is this right?
+  Assignment <- id _ "=" _ Expression _ ";"
+  Expression <-  New / Call / id / Literal #Not sure if new fits best here
 
+  #Reactor specific constructs
   Target <- "target" Spacing id
-  
-  Expression <-  New / Call / id / Literal 
-  
   New <- _ "new" _ Call 
-  
-  Call <- id "(" _ Expression (_ "=" Literal)? _ ")"
-
+  Call <- id Arguments
   Port <- id _ "->" _ id
-
   Reactor  <- "reactor" _ Header _ Body
-
   Composite  <- "composite" _ Header _ Body #What should composites be allowed precisely? #Just ids or also args?
-
   Constructor  <- "constructor" _ EmbeddedStatement
-
   Clock  <- "clock" _ Header _ 
-
-  Header <- id _ Args / id
-  
-  Args <- "(" _ Param* _ ")"
-  
+  Header <- id _ DeclarationArgs / id
   ReactorPrimitive <- Input / Output / Parameter / Trigger / Action
 
-  Input <- 'input' _ Param
+  #Reactor primitives
+  Input <- 'input' _ DeclarationParam
+  Output <- 'output' _ DeclarationParam
+  Parameter <- 'parameter' _ DeclarationParam
+  Trigger <- 'trigger' _ DeclarationParam
+  Action <- 'action' _ DeclarationParam
+  DeclarationParam <- id ((":" Type _ "(" Expression ")") / (":" Type) )? 
+  Reaction <- "reaction" DeclarationArgs (_ "->" _ ( DeclarationArgs / id ) )? Spacing EmbeddedStatement
 
-  Output <- 'output' _ Param
-
-  Parameter <- 'parameter' _ Param
-
-  Trigger <- 'trigger' _ Param
-  
-  Action <- 'action' _ Param
-
-  Param <- id ((":" Type _ "(" Expression ")") / (":" Type) )? 
-
+  #General/auxiliary definitions
+  DeclarationArgs <- "(" _ DeclarationParamList _ ")"
+  Arguments <- "(" _ ParamList _ ")"
+  DeclarationParamList <- (DeclarationParam _ "," _)+ DeclarationParam / DeclarationParam? 
+  ParamList <- (Param _ "," _)+ Param / Param? 
+  DeclarationParam <- id ((":" Type _ "(" Expression ")") / (":" Type) )? 
+  Param <-  _ Expression (_ "=" Literal)? _ 
   Type <- id
-
   Body <- "{" Spacing Stament* "}"
-
   id <- [a-zA-Z]+ [a-zA-Z.]*
-  
   Literal <- NumLiteral / StringLiteral
-
-#  NumLiteral <- [0-9]* "."? [0-9]+ ("f" / "d")? 
-  NumLiteral <- [0-9]* 
-
+  #NumLiteral <- [0-9]* 
+  NumLiteral <- "-"? ([0-9]*)? "."? [0-9]+ / [0-9]+
   StringLiteral <- "'" [^\'\"]+ "'" /  "\"" [^\"]+ "\"" #this is perhaps too simple, but for now
-
-  Reaction <- "reaction" Args (_ "->" _ ( Args / id ) )? Spacing EmbeddedStatement
-
   Spacing  <- ([\s] / Comment)*
-
   Comment  <- '//' (!EndOfLine .)* EndOfLine
-
+  _ <- [\s]*
+  __ <- [\s]+
   EndOfLine  <- '\r\n' / '\n' / '\r'
-
   EndOfFile  <- !.
 
-  _ <- [\s]*
-
-  __ <- [\s]+
