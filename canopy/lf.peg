@@ -57,12 +57,13 @@ grammar LinguaFranca
   DeclarationParamList <- (DeclarationParam _ "," _)+ DeclarationParam / DeclarationParam? 
   ParamList <- (Param _ "," _)+ Param / Param? 
   DeclarationParam <- id ((":" Type _ "(" Expression ")") / (":" Type) )? 
-  Param <-  _ Expression (_ "=" Literal)? _ 
+  Param <-  _ Expression (_ "=" _ Literal)? _ 
   Type <- id
   Body <- "{" Spacing Stament* "}"
   id <- [a-zA-Z]+ [a-zA-Z.]*
-  Literal <- NumLiteral / StringLiteral 
+  Literal <- NumLiteral / StringLiteral / EmbeddedLiteral
   #NumLiteral <- [0-9]* 
+  EmbeddedLiteral <- EmbeddedStatement
   NumLiteral <- "-"? ([0-9]*)? "."? [0-9]+ / [0-9]+
   StringLiteral <- "'" [^\'\"]+ "'" /  "\"" [^\"]+ "\"" #this is perhaps too simple, but for now
   Spacing  <- ([\s] / Comment)*
