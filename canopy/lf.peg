@@ -19,8 +19,8 @@ grammar LinguaFranca
   Stament <- Spacing Assignment Spacing / Spacing Declaration Spacing /  Spacing EmbeddedStatement Spacing 
   EmbeddedStatement <- "{=" ( !"=" . / "=" !"}" .)* "=}"
   Declaration <- EntityDeclaration / PropertyDeclaration _ ";"
-  EntityDeclaration <- Target / Reactor / Reaction / Constructor / Composite 
-  PropertyDeclaration <- Clock / Port / ReactorPrimitive  # is this right?
+  EntityDeclaration <-  Reactor / Reaction / Constructor / Composite 
+  PropertyDeclaration <- Target / Clock / Port / ReactorPrimitive  # is this right?
   Assignment <- id _ "=" _ Expression _ ";"
   Expression <-  New / Call / id / Literal #Not sure if new fits best here
 

@@ -1,31 +1,16 @@
 var lf = require('./lf');
 var fs = require('fs');
+var src_folder = './lf-src/'; 
 
-function asDOT(tree){
-    console.log("digraph {");
-    tree.elements.forEach(function(node) {
-        printChildren('"ROOT"',node);
-    });
-    console.log("}");
-}
-
-function printChildren(parentName, node){
-    var name = '"' + node.text.replace(/\s|!([a-zA-Z\200-\377]|[0-9]|_)/g, "") + '"';
-    //console.log(name);
-    if(name.length > 3){
-    console.log(parentName + " -> " + name + ";");
-    node.elements.forEach(function(n) { printChildren(name, n);});
-    }
-}
-
-var src_file = './lf-src/async.lf'; 
-//var src_file = './lf-src/ramp.lf';
-fs.readFile(src_file, 'utf8', function (err,data) {
-  if (err) {
-    return console.log(err);
-  }
-	 var tree = lf.parse(data);
-    asDOT(tree);
-
+fs.readdir(src_folder, (err, files) => {
+  files.forEach(src_file => {
+   fs.readFile(src_folder + src_file, 'utf8', function (err,data) {
+     if (err) {
+       return console.log(err);
+     }
+       console.log("Parsing: " + src_file);
+   	 var tree = lf.parse(data);
+   });
+  });
 });
 
