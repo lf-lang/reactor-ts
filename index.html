@@ -36,6 +36,16 @@
               
                 
                 <li><a
+                  href='#_add'
+                  class="">
+                  _add
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
                   href='#_contains'
                   class="">
                   _contains
@@ -49,16 +59,6 @@
                   href='#_remove'
                   class="">
                   _remove
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
-                  href='#_add'
-                  class="">
-                  _add
                   
                 </a>
                 
@@ -109,6 +109,34 @@
                   _remove
                   
                 </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#action'
+                  class=" toggle-sibling">
+                  Action
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#actionschedule'
+                        class='regular pre-open'>
+                        #schedule
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                  
+                </div>
                 
                 </li>
               
@@ -204,9 +232,19 @@
               
                 
                 <li><a
-                  href='#schedule'
+                  href='#timeinterval'
                   class="">
-                  schedule
+                  timeInterval
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#timeunit'
+                  class="">
+                  timeUnit
                   
                 </a>
                 
@@ -230,6 +268,68 @@
         </div>
       </div>
       <div id='split-right' class='relative overflow-auto height-viewport-100'>
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='_add'>
+      _add
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Add a list of elements to this container. Duplicate entries will
+not be kept.</p>
+
+    <div class='pre p1 fill-light mt0'>_add</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>element</span> <code class='quiet'>(T)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
         
           
           <section class='p2 mb2 clearfix bg-white minishadow'>
@@ -420,68 +520,6 @@
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code>void</code>
     
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='_add'>
-      _add
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>Add a list of elements to this container. Duplicate entries will
-not be kept.</p>
-
-    <div class='pre p1 fill-light mt0'>_add</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>element</span> <code class='quiet'>(T)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
   
 
   
@@ -759,6 +797,142 @@ that it is uniquely indexed within that container.</p>
   
   <div class='clearfix'>
     
+    <h3 class='fl m0' id='action'>
+      Action
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>An action denotes a self-scheduled event. If an action is instantiated
+without a delay, then the time interval between the moment of scheduling
+this action (cause), and a resulting reaction (effect) will be determined
+upon the call to schedule. If a delay <em>is</em> specified, it is considered
+constant and cannot be overridden using the delay argument in a call to
+schedule().</p>
+
+    <div class='pre p1 fill-light mt0'>new Action(parent: <a href="#component">Component</a>, delay: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#component">Component</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>delay</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='actionschedule'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>schedule</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Schedule this action, periodically if the repeat argument is set to
+true. If the delay is 0 or unspecified, the action will be raised at
+the current time (at the next micro step of the discrete event
+schedule). A handle is returned in case multiple actions are "in
+flight" and a particular one needs to be canceled.</p>
+
+    <div class='pre p1 fill-light mt0'>schedule</div>
+  
+    <p>
+      Type:
+      function (value: T, delay: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, repeat: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
     <h3 class='fl m0' id='collect'>
       collect
     </h3>
@@ -989,7 +1163,7 @@ to any input and output ports.</p>
   </div>
   
 
-  <p>For (re)nameable objects</p>
+  <p>For (re)nameable objects.</p>
 
     <div class='pre p1 fill-light mt0'>Nameable</div>
   
@@ -1298,7 +1472,7 @@ unless a delay is specified.</p>
   </div>
   
 
-  <p>Base class for reactions that has two type parameter:
+  <p>Base class for reactions that has two type parameters:
 T, which describes a tuple of inputs/outputs/actions it may use;
 S, which describes an object that keeps shared state.
 The reaction can also maintain state locally.</p>
@@ -1433,58 +1607,89 @@ The reaction can also maintain state locally.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='schedule'>
-      schedule
+    <h3 class='fl m0' id='timeinterval'>
+      timeInterval
     </h3>
     
     
   </div>
   
 
-  <p>NOTE: Since each composite has its own clock domain, we cannot
-depend on a global function like setTimeout or setInterval.</p>
+  <p>A time interval must be accompanied by a time unit. Decimals are ignored.</p>
 
-    <div class='pre p1 fill-light mt0'>schedule(repeat: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>, delay: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></div>
+    <div class='pre p1 fill-light mt0'>timeInterval</div>
   
-  
-
-  
-  
-  
-  
+    <p>
+      Type:
+      [<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a href="#timeunit">timeUnit</a>]
+    </p>
   
   
 
   
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>repeat</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
-	    
-          </div>
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
           
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>delay</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code>
-	    
-          </div>
+        
           
-        </div>
-      
-    </div>
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='timeunit'>
+      timeUnit
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Units ranging from femtoseconds to years.</p>
+
+    <div class='pre p1 fill-light mt0'>timeUnit</div>
+  
+    <p>
+      Type:
+      (<code>"fs"</code> | <code>"ps"</code> | <code>"ns"</code> | <code>"us"</code> | <code>"ms"</code> | <code>"sec"</code> | <code>"min"</code> | <code>"hour"</code> | <code>"day"</code> | <code>"week"</code> | <code>"month"</code> | <code>"year"</code>)
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
   
 
   
 
   
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></code>
-    
+
   
 
   
