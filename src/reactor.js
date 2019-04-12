@@ -1,17 +1,19 @@
 // @flow
 
+import {PriorityQueue} from './util';
+
 //---------------------------------------------------------------------//
-// Interfaces                                                          //
+// Types                                                               //
 //---------------------------------------------------------------------//
 
-// FIXME: what time unit do we choose?
+/** Units ranging from femtoseconds to years. */
+export type timeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" | 
+              "min" | "hour" | "day" | "week" | "month" | "year";
 
-
-export type LogicalTime = [number, number]; // unfortunately, process.hrtime()
-// also returns an array with second + nanoseconds
-// https://www.npmjs.com/package/hirestime but on NodeJS we can assume process.hrtime() works
-
-export type PhysicalTime = number;
+/** 
+ * A time interval must be accompanied by a time unit. Decimals are ignored.
+ */
+export type timeInterval = [number, timeUnit];
 
 //---------------------------------------------------------------------//
 // Interfaces                                                          //
@@ -63,7 +65,7 @@ export interface Trigger<T> {
 /**
  * For objects that have a name.
  */
-export interface Named { // FIXME: have all implementors use toString as an alias of FQN
+export interface Named {
     /* Return the fully qualified name of this object. */
     _getFullyQualifiedName(): string;
 
@@ -72,7 +74,7 @@ export interface Named { // FIXME: have all implementors use toString as an alia
 }
 
 /**
- * For (re)nameable objects
+ * For (re)nameable objects.
  */
 export interface Nameable extends Named {
  
@@ -89,36 +91,44 @@ export interface ReActor {
     _reactions:$ReadOnlyArray<[Array<Trigger<*>>, Reaction<any, any>]>;
 }   
 
+/**
+ * An action denotes a self-scheduled event. If an action is instantiated
+ * without a delay, then the time interval between the moment of scheduling
+ * this action (cause), and a resulting reaction (effect) will be determined
+ * upon the call to schedule. If a delay _is_ specified, it is considered
+ * constant and cannot be overridden using the delay argument in a call to 
+ * schedule().
+ */
+export class Action<T> implements Trigger<T> { // FIXME: maybe it's better to make a subclass for clocks?
+    value: T;
 
-export class Action<T> implements Trigger<T> {
-    value: ?T;
-    _parent: Component; // FIXME: move this to constructor scope.
-    constructor(parent:Component, delay?:number) { // FIXME: we may need to create a (parameterized) type for time related stuff
-        // Back to the delay question. Let's assume an action is parameterized with a delay. How can we enable a variable delay?
-        // Edward cares about this. We should be able to support it.
-
-        // if no delay is given, schedule may be called with a delay.
-        //   - if it is called without a delay, the delay is said to be indeterminate
-        // if a delay is given and schedule is called with a delay, it will be ignored. (a warning might be useful)
-        // - the delay will always be the same
-        this._parent = parent;
+    get() : T {
+        return this.value;
     }
-
     /**
-     * NOTE: Since each composite has its own clock domain, we cannot 
-     * depend on a global function like setTimeout or setInterval.
+     * Schedule this action, periodically if the repeat argument is set to 
+     * true. If the delay is 0 or unspecified, the action will be raised at 
+     * the current time (at the next micro step of the discrete event 
+     * schedule). A handle is returned in case multiple actions are "in 
+     * flight" and a particular one needs to be canceled.
      */
-    schedule(repeat?:boolean, delay?:number):number {
-        if (this._parent != null) {
-            //this._parent.trigger(trigger, delay, repeat);    
-        } else {
-            throw "Unable to schedule trigger; no parent."
-        }
-        return 0;   
+    schedule: (value:T, delay?:number, repeat?:boolean) => number;
+
+    constructor(parent:Component, delay?:number) { 
+
+        Object.assign(this, {
+            schedule(value:T, delay?:number, repeat?:boolean=false): number {
+                if (parent != null) {
+                    return parent._schedule(this, value, delay, repeat);
+                } else {
+                    throw "Unable to schedule event; no parent."
+                }
+            }
+        });
     }
 
-    unschedule() {
-
+    unschedule(handle: number) {
+        // if no handle is given, remove all 
     }
 }
 
@@ -136,6 +146,8 @@ export class Component implements Nameable {
     _acquire: (parent: Composite) => boolean;
 
     _release: (parent: Composite) => boolean;
+
+    _schedule: <T>(action:Action<T>, value:any, delay?:number, repeat?:boolean) => number;
 
     _getContainer: () => ?Composite;
 
@@ -194,6 +206,16 @@ export class Component implements Nameable {
                 if (parent != null && (name != myName || myIndex == null)) {
                     myIndex = parent._getFreshIndex(name);
                     myName = name;
+                }
+            }
+        });
+
+        Object.assign(this, {
+            _schedule<T>(action:Action<T>, value:any, delay?:number, repeat?:boolean):number {
+                if (parent != null) {
+                    return parent.schedule(action, value, delay, repeat);
+                } else {
+                    throw Error("...........");
                 }
             }
         });
@@ -278,7 +300,6 @@ export class Component implements Nameable {
     
 }
 
-//See: http://exploringjs.com/es6/ch_classes.html#sec_private-data-for-classes
 export class PortBase implements Named {
     
     /***** Priviledged functions *****/
@@ -495,8 +516,11 @@ export class OutPort<T> extends PortBase implements Port<T> {
         
     // }
 
-}
+    toString(): string {
+        return this._getFullyQualifiedName();
+    }
 
+}
 
 
 export class InPort<T> extends PortBase implements Port<T>, Trigger<T> {
@@ -585,6 +609,10 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger<T> {
         });
     }
 
+    toString(): string {
+        return this._getFullyQualifiedName();
+    }
+
 }
 
 export class PureEvent {
@@ -603,7 +631,8 @@ export class Composite extends Component implements Container<Component>, ReActo
 
     connect: <T>(source: Port<T>, sink:Port<$Supertype<T>>) => void;
     //disconnect: (port: Port<*>, direction?:"upstream"|"downstream"|"both") => void;
-    
+    schedule: <T>(action:Action<T>, value:any, delay?:number, repeat?:boolean) => number;
+
     _init:() => void;
     _wrapup: () => void;
     _react:() => void;  
@@ -827,7 +856,7 @@ export class Parameter<T> extends InPort<T> {
 
 
 /**
- * Base class for reactions that has two type parameter: 
+ * Base class for reactions that has two type parameters: 
  * T, which describes a tuple of inputs/outputs/actions it may use;
  * S, which describes an object that keeps shared state.
  * The reaction can also maintain state locally.
@@ -888,14 +917,71 @@ export class Reaction<T,S:?Object> { // FIXME: where to put the delay?
     }
 }
 
-class OrderedAsyncReaction<T, S, R:Action<*>> extends Reaction<T, S> { // May not need this; we can lump actions together with triggers
-    trigger = 0;
-    constructor(io:T, state:S, trigger:R) {
+export class OrderedAsyncReaction<T, S, R:Action<*>, E:Action<*>> extends Reaction<T, S> {
+
+    reqID = -1;
+    queue: PriorityQueue<?*> = new PriorityQueue();
+    response: *;
+    error: *;
+
+    constructor(io:T, state:S, response:R, error:E) {
         super(io, state);
-        this.trigger = trigger;
+        this.response = response;
+        this.error = error;
+    }
+
+    react(time?: number):void {
+        
+        let myID = this.reqID++;
+        this.queue.push(null, myID);
+        (async () => {
+            try {
+                const response = await this.doAsync();
+                var firstInLine = this.queue.first();
+                
+                // schedule reactions to preceeding replies
+                while(firstInLine.value != null && firstInLine.priority < myID) {
+                    this.response.schedule(this.queue.pop()); // NOTE: schedule must pile these up in superdense time!
+                    firstInLine = this.queue.first();
+                }
+
+                // schedule a reaction to the current reply
+                this.response.schedule(response);
+                if (firstInLine.priority == myID) {
+                    this.queue.pop();
+                }
+
+                // further empty the queue as much as possible
+                while(firstInLine.value != null) {
+                    this.response.schedule(this.queue.pop());
+                    firstInLine = this.queue.first();
+                }
+                
+            } catch (err) {
+                
+                // remove corresponding entry from the queue
+                this.queue.remove(myID);
+
+                // schedule a reaction to the error
+                this.error.schedule(err);
+
+                var firstInLine = this.queue.first();
+                // further empty the queue as much as possible
+                while(firstInLine.value != null) {
+                    this.response.schedule(this.queue.pop());
+                    firstInLine = this.queue.first();
+                }
+            }
+        })();
+    }
+
+    doAsync(): Promise<R> {
+        return new Promise(function(resolve, reject) {});
     }
 
 }
+
+
 
 // Eventually, this should become a worker/threaded composite
 // Also, check out https://github.com/laverdet/isolated-vm
