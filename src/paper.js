@@ -9,7 +9,7 @@ type int = number;
 class Ramp extends Component implements ReActor {
 
     p: int;
-    input: InPort<int>;
+    set: InPort<int>;
     output: OutPort<int>;
     clock: Clock = new Clock(this.p);
     count = 0;
@@ -19,7 +19,8 @@ class Ramp extends Component implements ReActor {
     }
 
     _reactions = [
-        [[this.clock], new Incr([this.output], {count: this.count})]
+        [[this.clock], new Incr([this.output], {count: this.count})],
+        [[this.set], new Reset([this.set], {count: this.count})]
     ];
 }
 
@@ -29,6 +30,11 @@ class Incr extends Reaction<[*], {count: number}> {
     }
 }
 
+class Reset extends Reaction<[*], {count: number}> {
+    react():void {
+        this.shared.count = this.io[0].get();
+    }
+}
 
 class Print extends Component implements ReActor {
     input: InPort<int>;
