@@ -36,16 +36,6 @@
               
                 
                 <li><a
-                  href='#_add'
-                  class="">
-                  _add
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
                   href='#_contains'
                   class="">
                   _contains
@@ -56,29 +46,9 @@
               
                 
                 <li><a
-                  href='#_remove'
-                  class="">
-                  _remove
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
-                  href='#_contains'
-                  class="">
-                  _contains
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
-                  href='#component'
+                  href='#reactor'
                   class=" toggle-sibling">
-                  Component
+                  Reactor
                   <span class='icon'>▸</span>
                 </a>
                 
@@ -89,7 +59,7 @@
                       <li class='h5'><span>Instance members</span></li>
                       
                       <li><a
-                        href='#component_getfullyqualifiedname'
+                        href='#reactor_getfullyqualifiedname'
                         class='regular pre-open'>
                         #_getFullyQualifiedName
                       </a></li>
@@ -142,9 +112,37 @@
               
                 
                 <li><a
-                  href='#collect'
+                  href='#action'
+                  class=" toggle-sibling">
+                  Action
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#actionschedule'
+                        class='regular pre-open'>
+                        #schedule
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#app'
                   class="">
-                  collect
+                  App
                   
                 </a>
                 
@@ -212,29 +210,9 @@
               
                 
                 <li><a
-                  href='#reaction'
-                  class="">
-                  Reaction
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
-                  href='#reactor'
-                  class="">
-                  ReActor
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
                   href='#timeinterval'
                   class="">
-                  timeInterval
+                  TimeInterval
                   
                 </a>
                 
@@ -244,7 +222,7 @@
                 <li><a
                   href='#timeunit'
                   class="">
-                  timeUnit
+                  TimeUnit
                   
                 </a>
                 
@@ -255,6 +233,16 @@
                   href='#trigger'
                   class="">
                   Trigger
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#triggers'
+                  class="">
+                  triggers
                   
                 </a>
                 
@@ -314,212 +302,6 @@ not be kept.</p>
 
   
 
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='_add'>
-      _add
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>Add a list of elements to this container.</p>
-
-    <div class='pre p1 fill-light mt0'>_add</div>
-  
-    <p>
-      Type:
-      function (): void
-    </p>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>element</span> <code class='quiet'>(T)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='_contains'>
-      _contains
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>Return whether or not the argument is present in the container.</p>
-
-    <div class='pre p1 fill-light mt0'>_contains(element: T): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>element</span> <code class='quiet'>(T)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code>
-    
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='_remove'>
-      _remove
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>Remove an element from this container.</p>
-
-    <div class='pre p1 fill-light mt0'>_remove(element: <a href="#component">Component</a>, name: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>): void</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>element</span> <code class='quiet'>(<a href="#component">Component</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>name</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code>void</code>
-    
   
 
   
@@ -604,8 +386,8 @@ not be kept.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='component'>
-      Component
+    <h3 class='fl m0' id='reactor'>
+      Reactor
     </h3>
     
     
@@ -618,7 +400,7 @@ is set/unset once a component is added to or removed from a
 container. Adding a component to a container will also ensure
 that it is uniquely indexed within that container.</p>
 
-    <div class='pre p1 fill-light mt0'>new Component(parent: Composite?, name: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>?)</div>
+    <div class='pre p1 fill-light mt0'>new Reactor(parent: <a href="#reactor">Reactor</a>?, name: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>?)</div>
   
   
 
@@ -635,7 +417,7 @@ that it is uniquely indexed within that container.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>parent</span> <code class='quiet'>(Composite?)</code>
+            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>?)</code>
 	    
           </div>
           
@@ -667,7 +449,7 @@ that it is uniquely indexed within that container.</p>
     <div class='py1 quiet mt1 prose-big'>Instance Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='component_getfullyqualifiedname'>
+    <div class='border-bottom' id='reactor_getfullyqualifiedname'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -812,7 +594,7 @@ upon the call to schedule. If a delay <em>is</em> specified, it is considered
 constant and cannot be overridden using the delay argument in a call to
 schedule().</p>
 
-    <div class='pre p1 fill-light mt0'>new Action(parent: <a href="#component">Component</a>, delay: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</div>
+    <div class='pre p1 fill-light mt0'>new Action(parent: <a href="#reactor">Reactor</a>, delay: <a href="#timeinterval">TimeInterval</a>)</div>
   
   
 
@@ -829,7 +611,7 @@ schedule().</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#component">Component</a>)</code>
+            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>)</code>
 	    
           </div>
           
@@ -837,7 +619,7 @@ schedule().</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>delay</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code>
+            <span class='code bold'>delay</span> <code class='quiet'>(<a href="#timeinterval">TimeInterval</a>)</code>
 	    
           </div>
           
@@ -872,17 +654,14 @@ schedule().</p>
 
   
 
-  <p>Schedule this action, periodically if the repeat argument is set to
-true. If the delay is 0 or unspecified, the action will be raised at
-the current time (at the next micro step of the discrete event
-schedule). A handle is returned in case multiple actions are "in
-flight" and a particular one needs to be canceled.</p>
+  <p>Schedule this action. If additionalDelay is 0 or unspecified, the action
+will occur at the current logical time plus one micro step.</p>
 
     <div class='pre p1 fill-light mt0'>schedule</div>
   
     <p>
       Type:
-      function (value: T, delay: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, repeat: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>
+      function (additionalDelay: <a href="#timeinterval">TimeInterval</a>?, value: T): TimeInstant
     </p>
   
   
@@ -933,18 +712,18 @@ flight" and a particular one needs to be canceled.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='collect'>
-      collect
+    <h3 class='fl m0' id='action'>
+      Action
     </h3>
     
     
   </div>
   
 
-  <p>Given some datastructure, recursively find all references
-to any input and output ports.</p>
+  <p>For reactive components we refer to as reactors.
+//</p>
 
-    <div class='pre p1 fill-light mt0'>collect(inputs: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Set">Set</a>&#x3C;InPort&#x3C;any>>, outputs: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Set">Set</a>&#x3C;OutPort&#x3C;any>>, visited: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Set">Set</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>>, data: any)</div>
+    <div class='pre p1 fill-light mt0'>new Action(parent: <a href="#reactor">Reactor</a>, delay: <a href="#timeinterval">TimeInterval</a>)</div>
   
   
 
@@ -961,7 +740,7 @@ to any input and output ports.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>inputs</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Set">Set</a>&#x3C;InPort&#x3C;any>>)</code>
+            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>)</code>
 	    
           </div>
           
@@ -969,23 +748,137 @@ to any input and output ports.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>outputs</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Set">Set</a>&#x3C;OutPort&#x3C;any>>)</code>
+            <span class='code bold'>delay</span> <code class='quiet'>(<a href="#timeinterval">TimeInterval</a>)</code>
 	    
           </div>
           
         </div>
       
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>visited</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Set">Set</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>>)</code>
-	    
-          </div>
-          
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='actionschedule'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>schedule</span>
         </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Schedule this action. If additionalDelay is 0 or unspecified, the action
+will occur at the current logical time plus one micro step.</p>
+
+    <div class='pre p1 fill-light mt0'>schedule</div>
+  
+    <p>
+      Type:
+      function (additionalDelay: <a href="#timeinterval">TimeInterval</a>?, value: T): TimeInstant
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='app'>
+      App
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Base class for reactions that has two type parameters:
+T, which describes a tuple of inputs/outputs/actions it may use;
+S, which describes an object that keeps shared state.
+The reaction can also maintain state locally.</p>
+
+    <div class='pre p1 fill-light mt0'>new App(name: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
+  
+  
+    <p>
+      Extends
+      
+        <a href="#reactor">Reactor</a>
+      
+    </p>
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>data</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>name</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
 	    
           </div>
           
@@ -1301,7 +1194,7 @@ which means that their current value only changes when an new
 input becomes known <em>and present</em> (i.e., the current value remains
 unchanged until the next message arrives).</p>
 
-    <div class='pre p1 fill-light mt0'>new Parameter(parent: <a href="#component">Component</a>, defaultValue: T, persist: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</div>
+    <div class='pre p1 fill-light mt0'>new Parameter(parent: <a href="#reactor">Reactor</a>, defaultValue: T, persist: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</div>
   
   
     <p>
@@ -1325,7 +1218,7 @@ unchanged until the next message arrives).</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#component">Component</a>)</code>
+            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>)</code>
 	    
           </div>
           
@@ -1396,7 +1289,7 @@ unless a delay is specified.</p>
     <p>
       Extends
       
-        Connectable&#x3C;Port&#x3C;$Supertype&#x3C;T>>>, <a href="#named">Named</a>
+        Connectable&#x3C;Port&#x3C;T>>, <a href="#named">Named</a>
       
     </p>
   
@@ -1415,168 +1308,25 @@ unless a delay is specified.</p>
     <div>
       
         <div class='space-bottom0'>
-          <span class='code bold'>hasGrandparent</span> <code class='quiet'>(function (container: Composite): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
+          <span class='code bold'>hasGrandparent</span> <code class='quiet'>(function (container: <a href="#reactor">Reactor</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
           
           
         </div>
       
         <div class='space-bottom0'>
-          <span class='code bold'>hasParent</span> <code class='quiet'>(function (component: <a href="#component">Component</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
+          <span class='code bold'>hasParent</span> <code class='quiet'>(function (component: <a href="#reactor">Reactor</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
           
           
         </div>
       
         <div class='space-bottom0'>
-          <span class='code bold'>connect</span> <code class='quiet'>(function (sink: <a href="#port">Port</a>&#x3C;$Supertype&#x3C;T>>): void)</code>
+          <span class='code bold'>connect</span> <code class='quiet'>(function (sink: <a href="#port">Port</a>&#x3C;T>): void)</code>
           
           
         </div>
       
         <div class='space-bottom0'>
-          <span class='code bold'>canConnect</span> <code class='quiet'>(function (sink: <a href="#port">Port</a>&#x3C;$Supertype&#x3C;T>>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
-          
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='reaction'>
-      Reaction
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>Base class for reactions that has two type parameters:
-T, which describes a tuple of inputs/outputs/actions it may use;
-S, which describes an object that keeps shared state.
-The reaction can also maintain state locally.</p>
-
-    <div class='pre p1 fill-light mt0'>new Reaction(io: T, state: S)</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>io</span> <code class='quiet'>(T)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>state</span> <code class='quiet'>(S)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='reactor'>
-      ReActor
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>For reactive components we refer to as reactors.</p>
-
-    <div class='pre p1 fill-light mt0'>ReActor</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Properties</div>
-    <div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>_init</span> <code class='quiet'>(function (): void)</code>
-          
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>_wrapup</span> <code class='quiet'>(function (): void)</code>
-          
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>_reactions</span> <code class='quiet'>($ReadOnlyArray&#x3C;[<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="#trigger">Trigger</a>&#x3C;any>>, <a href="#reaction">Reaction</a>&#x3C;any, any>]>)</code>
+          <span class='code bold'>canConnect</span> <code class='quiet'>(function (sink: <a href="#port">Port</a>&#x3C;T>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
           
           
         </div>
@@ -1608,7 +1358,7 @@ The reaction can also maintain state locally.</p>
   <div class='clearfix'>
     
     <h3 class='fl m0' id='timeinterval'>
-      timeInterval
+      TimeInterval
     </h3>
     
     
@@ -1617,11 +1367,11 @@ The reaction can also maintain state locally.</p>
 
   <p>A time interval must be accompanied by a time unit. Decimals are ignored.</p>
 
-    <div class='pre p1 fill-light mt0'>timeInterval</div>
+    <div class='pre p1 fill-light mt0'>TimeInterval</div>
   
     <p>
       Type:
-      [<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a href="#timeunit">timeUnit</a>]
+      ([<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a href="#timeunit">TimeUnit</a>]? | <code>0</code>)
     </p>
   
   
@@ -1661,7 +1411,7 @@ The reaction can also maintain state locally.</p>
   <div class='clearfix'>
     
     <h3 class='fl m0' id='timeunit'>
-      timeUnit
+      TimeUnit
     </h3>
     
     
@@ -1670,7 +1420,7 @@ The reaction can also maintain state locally.</p>
 
   <p>Units ranging from femtoseconds to years.</p>
 
-    <div class='pre p1 fill-light mt0'>timeUnit</div>
+    <div class='pre p1 fill-light mt0'>TimeUnit</div>
   
     <p>
       Type:
@@ -1724,6 +1474,54 @@ The reaction can also maintain state locally.</p>
   <p>May be used to trigger a reaction.</p>
 
     <div class='pre p1 fill-light mt0'>Trigger</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='triggers'>
+      triggers
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Type checking</p>
+
+    <div class='pre p1 fill-light mt0'>triggers</div>
   
   
 
