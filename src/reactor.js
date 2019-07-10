@@ -18,10 +18,13 @@ export type TimeInterval = ?[number, TimeUnit] | 0;
 
 export type TimeInstant = [number, number] | 0;
 
+export type Trigger<T> = Readable<T>;
+
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
 //---------------------------------------------------------------------//
-export function _schedule<T>(action:Action<T>, additionalDelay:TimeInterval, value:?T): TimeInstant {
+export function _schedule<T>(action:Action<T>, 
+        additionalDelay:TimeInterval, value:?T): TimeInstant {
     return [0,0]
 }
 
@@ -74,13 +77,6 @@ export interface Executable {
 }
 
 /**
- * May be used to trigger a reaction.
- */
-export interface Trigger<T> extends Readable<T> {
-    
-}
-
-/**
  * For objects that have a name.
  */
 export interface Named {
@@ -121,21 +117,10 @@ export interface UnorderedReaction {
     +react:(...args:*) => void;
 }
 
-/**
- * For reactive components we refer to as reactors.
-//  */
-// export interface Reactive {
-//     _transformations?:Array<
-//             [   // triggers, transformation, transformation arguments
-//                 Array<Trigger<any>>, Transformation, *
-//             ]
-//     >;
-//     _reactions:Array<
-//             [   // triggers, reaction, reaction arguments
-//                 Array<Trigger<any>>, UnorderedReaction, *
-//             ]
-//     >;
-// }
+export interface Schedulable<T> {
+    schedule: (additionalDelay?:?TimeInterval, value?:T) => TimeInstant;
+    unschedule(handle: TimeInstant):void;
+}
 
 /**
  * An action denotes a self-scheduled event. If an action is instantiated
@@ -182,6 +167,28 @@ export class Action<T> implements Trigger<T> {
     unschedule(handle: TimeInstant):void {
         // FIXME
     }
+}
+
+export class Timer implements Readable<TimeInstant> {
+    
+    get:() => ?TimeInstant;
+
+    constructor(period:TimeInterval) {
+
+    }
+
+    adjustPeriod(period: TimeInterval):void {
+        
+        
+        // FIXME
+    }
+    
+    // get():TimeInstant {
+    //     // return current time
+    //     return [0, 0];
+    // }
+
+    // 
 }
 
 /**
@@ -1130,11 +1137,7 @@ export class App extends Reactor implements Executable {
     }
 }
 
-export class Timer<T> extends Action<T> {
-    constructor(period:number) {
 
-    }
-}
 // class Countdown {
 //     constructor(counter, action) {
 //         Object.assign(this, {

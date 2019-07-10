@@ -1,17 +1,17 @@
 // @flow
 
 'use strict';
-
+import type {TimeInterval} from './reactor';
 import {Reactor, InPort, OutPort, Timer, Reaction, App, UnorderedReaction} from './reactor';
 
 class Ramp extends Reactor {
 
-    p: number;
+    p: TimeInterval;
     set: InPort<number>;
     output: OutPort<number>;
-    timer: Timer<any> = new Timer(this.p);
+    timer: Timer = new Timer(this.p);
     count = 0;
-    constructor(p:number=10) {
+    constructor(p:TimeInterval=[10, "ms"]) {
         super();
         this.p = p;
     }
@@ -62,7 +62,7 @@ class Prt implements UnorderedReaction {
 class MyApp extends App {
     
     constructor() {
-        var a = new Ramp(1000);
+        var a = new Ramp([1000, "ms"]);
         var b = new Print();
         a.output.connect(b.input);
     }
