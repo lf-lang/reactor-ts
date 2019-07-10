@@ -208,7 +208,7 @@ function _printChildren(elem){
 
 var src_file = process.argv[2];
 if(src_file == null){
-    return console.log("usage: " + process.argv[1] + " <file>");
+    console.log("usage: " + process.argv[1] + " <file>");
 }
 fs.readFile(src_file, 'utf8', function (err,data) {
     if (err) {

@@ -1,5 +1,5 @@
 //@flow
-import {ReActor, OutPort, InPort, Component, Composite, App, PureEvent} from './reactor.js';
+import {Reactor, OutPort, InPort, App, PureEvent} from './reactor.js';
 
 describe('containment', () => {
     test('constructor and names', () => {

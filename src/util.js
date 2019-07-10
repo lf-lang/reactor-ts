@@ -1,9 +1,13 @@
 // @flow
 'use strict'
 
+// var Heap = require('heap');
+// FIXME: use heap
+
 export type Priority = number;
 
 export class PriorityQueue<T> {
+  
   data:Array<{value:T, priority:Priority}>;
 
   constructor() {
@@ -22,7 +26,6 @@ export class PriorityQueue<T> {
     }
     return index;
   }
-
 
   remove(priority:Priority) {
     for (let i = 0; i < this.data.length; i++) {
@@ -43,7 +46,7 @@ export class PriorityQueue<T> {
     return this.data[this._first()];
   }
 
-  pop() {
+  pop(): T {
     return this.data.splice(this._first(), 1)[0].value;
   }
 

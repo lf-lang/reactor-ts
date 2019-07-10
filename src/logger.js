@@ -2,22 +2,19 @@
 
 'use strict';
 
-import {Component, ReActor, InPort, Reaction} from './reactor';
+import {Reactor, InPort, UnorderedReaction} from './reactor';
 
-export class Logger extends Component implements ReActor {
+export class Logger extends Reactor {
  
-    in: InPort<*> = new InPort(this);
-
-    _init() {};
-    _wrapup() {};
+    inp: InPort<*> = new InPort(this);
 
     _reactions = [
-        [[this.in], new Print(this.in)]
+        [[this.inp], new Print(), [this.inp]]
     ];
 }
 
-class Print extends Reaction<*, ?{}> {
-    react() {
-        console.log(this.io.get());
+class Print implements UnorderedReaction {
+    react(inp: InPort<*>) {
+        console.log(inp.get());
     }
 }

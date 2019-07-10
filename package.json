@@ -6,7 +6,8 @@
     "dependencies": {
         "documentation": "^9.3.1",
         "flow": "^0.2.3",
-        "got": "^9.6.0"
+        "got": "^9.6.0",
+        "heap": "^0.2.6"
     },
     "devDependencies": {
         "@babel/cli": "^7.4.3",
@@ -17,7 +18,7 @@
         "babel-cli": "^6.26.0",
         "babel-core": "^6.26.3",
         "babel-plugin-transform-class-properties": "^6.24.1",
-        "flow-bin": "^0.93.0",
+        "flow-bin": "^0.102.0",
         "jest": "^24.7.1"
     },
     "files": [

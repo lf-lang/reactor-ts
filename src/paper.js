@@ -2,51 +2,60 @@
 
 'use strict';
 
-import {Component, ReActor, InPort, OutPort, Clock, Reaction, App} from './reactor';
+import {Reactor, InPort, OutPort, Timer, Reaction, App, UnorderedReaction} from './reactor';
 
-type int = number;
+class Ramp extends Reactor {
 
-class Ramp extends Component implements ReActor {
-
-    p: int;
-    set: InPort<int>;
-    output: OutPort<int>;
-    clock: Clock = new Clock(this.p);
+    p: number;
+    set: InPort<number>;
+    output: OutPort<number>;
+    timer: Timer = new Timer(this.p);
     count = 0;
-    constructor(p:int=10) {
+    constructor(p:number=10) {
         super();
         this.p = p;
     }
 
     _reactions = [
-        [[this.clock], new Incr([this.output], {count: this.count})],
-        [[this.set], new Reset([this.set], {count: this.count})]
+        [[this.timer], new Incr({count: this.count}), [this.output]],
+        [[this.set], new Reset({count: this.count}), [this.set]]
     ];
+
+
 }
 
-class Incr extends Reaction<[*], {count: number}> {
-    react():void {
-        this.io[0].set(this.shared.count++);
+class Incr implements Reaction {
+    state;
+    constructor(state: {count: number}) {
+        this.state = state;
+    }
+    react(output: OutPort<number>):void {
+        output.set(this.state.count++);
     }
 }
 
-class Reset extends Reaction<[*], {count: number}> {
-    react():void {
-        this.shared.count = this.io[0].get();
+class Reset implements Reaction {
+    state;
+    constructor(state:{count:number}) {
+        this.state = state;
+    }
+    react(set: InPort<number>):void {
+        let val = set.get();
+        if (val != null)
+            this.state.count = val;
     }
 }
 
-class Print extends Component implements ReActor {
-    input: InPort<int>;
-
+class Print extends Reactor {
+    input: InPort<number>;
      _reactions = [
-        [[this.input], new Prt([this.input])]
+        [[this.input], new Prt(), [this.input]]
     ];   
 }
 
-class Prt extends Reaction<[*], ?{}> {
-    react():void {
-        console.log(this.io[0].get());
+class Prt implements UnorderedReaction {
+    react(input: InPort<number>):void {
+        console.log(input.get());
     }
 }
 

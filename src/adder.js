@@ -2,24 +2,36 @@
 
 'use strict';
 
-import {Component, ReActor, InPort, OutPort, Reaction} from './reactor';
+import {Reactor, InPort, OutPort, UnorderedReaction} from './reactor';
 
-export class Adder extends Component implements ReActor {
+export class Adder extends Reactor {
  
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
     
-    _init() {};
-    _wrapup() {};
-
     _reactions = [
-        [[this.in1, this.in2], new AddTwo([this.in1, this.in2, this.out])]
+        [[this.in1, this.in2], new AddTwo(), [this.in1, this.in2, this.out]]
     ];
+
+    constructor() {
+        super();
+        /** Type checking */
+        let triggers = this._reactions[0][0];
+        let reaction = this._reactions[0][1];
+        let args = this._reactions[0][2];
+        (undefined:
+            $Call<typeof reaction.react, 
+                $ElementType<typeof args, 0>, 
+                $ElementType<typeof args, 1>, 
+                $ElementType<typeof args, 2>
+            >
+        );
+    }
 }
 
-class AddTwo extends Reaction<[*, *, *], ?{}> {
-    react():void {
-        this.io[2].set(this.io[0].get() + this.io[1].get());
+class AddTwo implements UnorderedReaction {
+    react(in1: InPort<number>, in2: InPort<number>, out:OutPort<number>):void {
+        out.set(in1.get() + in2.get());
     }
 }
