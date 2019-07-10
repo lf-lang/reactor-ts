@@ -26,26 +26,6 @@
               
                 
                 <li><a
-                  href='#_add'
-                  class="">
-                  _add
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
-                  href='#_contains'
-                  class="">
-                  _contains
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
                   href='#reactor'
                   class=" toggle-sibling">
                   Reactor
@@ -69,16 +49,6 @@
                   
                   
                 </div>
-                
-                </li>
-              
-                
-                <li><a
-                  href='#_remove'
-                  class="">
-                  _remove
-                  
-                </a>
                 
                 </li>
               
@@ -150,9 +120,9 @@
               
                 
                 <li><a
-                  href='#container'
+                  href='#constructor'
                   class="">
-                  Container
+                  constructor
                   
                 </a>
                 
@@ -183,16 +153,6 @@
                   href='#named'
                   class="">
                   Named
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
-                  href='#parameter'
-                  class="">
-                  Parameter
                   
                 </a>
                 
@@ -248,6 +208,16 @@
                 
                 </li>
               
+                
+                <li><a
+                  href='#writable'
+                  class="">
+                  Writable
+                  
+                </a>
+                
+                </li>
+              
             </ul>
           </div>
           <div class='mt1 h6 quiet'>
@@ -256,129 +226,6 @@
         </div>
       </div>
       <div id='split-right' class='relative overflow-auto height-viewport-100'>
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='_add'>
-      _add
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>Add a list of elements to this container. Duplicate entries will
-not be kept.</p>
-
-    <div class='pre p1 fill-light mt0'>_add</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>element</span> <code class='quiet'>(T)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='_contains'>
-      _contains
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>Return whether or not the argument is present in the container.</p>
-
-    <div class='pre p1 fill-light mt0'>_contains</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>element</span> <code class='quiet'>(T)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
         
           
           <section class='p2 mb2 clearfix bg-white minishadow'>
@@ -518,67 +365,6 @@ that it is uniquely indexed within that container.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='_remove'>
-      _remove
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>Remove an element from this container.</p>
-
-    <div class='pre p1 fill-light mt0'>_remove</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>name</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
     <h3 class='fl m0' id='action'>
       Action
     </h3>
@@ -587,12 +373,8 @@ that it is uniquely indexed within that container.</p>
   </div>
   
 
-  <p>An action denotes a self-scheduled event. If an action is instantiated
-without a delay, then the time interval between the moment of scheduling
-this action (cause), and a resulting reaction (effect) will be determined
-upon the call to schedule. If a delay <em>is</em> specified, it is considered
-constant and cannot be overridden using the delay argument in a call to
-schedule().</p>
+  <p>For reactive components we refer to as reactors.
+//</p>
 
     <div class='pre p1 fill-light mt0'>new Action(parent: <a href="#reactor">Reactor</a>, delay: <a href="#timeinterval">TimeInterval</a>)</div>
   
@@ -720,8 +502,12 @@ will occur at the current logical time plus one micro step.</p>
   </div>
   
 
-  <p>For reactive components we refer to as reactors.
-//</p>
+  <p>An action denotes a self-scheduled event. If an action is instantiated
+without a delay, then the time interval between the moment of scheduling
+this action (cause), and a resulting reaction (effect) will be determined
+upon the call to schedule. If a delay <em>is</em> specified, it is considered
+constant and cannot be overridden using the delay argument in a call to
+schedule().</p>
 
     <div class='pre p1 fill-light mt0'>new Action(parent: <a href="#reactor">Reactor</a>, delay: <a href="#timeinterval">TimeInterval</a>)</div>
   
@@ -912,52 +698,50 @@ The reaction can also maintain state locally.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='container'>
-      Container
+    <h3 class='fl m0' id='constructor'>
+      constructor
     </h3>
     
     
   </div>
   
 
-  <p>A generic container for components.</p>
+  <p>InPorts that are constructed with an initial value will be persistent</p>
 
-    <div class='pre p1 fill-light mt0'>Container</div>
-  
-  
-
-  
-  
-  
-  
+    <div class='pre p1 fill-light mt0'>constructor(parent: <a href="#reactor">Reactor</a>, initialValue: T?)</div>
   
   
 
   
+  
+  
+  
+  
+  
 
   
-    <div class='py1 quiet mt1 prose-big'>Properties</div>
-    <div>
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
       
         <div class='space-bottom0'>
-          <span class='code bold'>_add</span> <code class='quiet'>(function (): void)</code>
-          
+          <div>
+            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>)</code>
+	    
+          </div>
           
         </div>
       
         <div class='space-bottom0'>
-          <span class='code bold'>_contains</span> <code class='quiet'>(function (element: T): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
-          
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>_remove</span> <code class='quiet'>(function (element: T): void)</code>
-          
+          <div>
+            <span class='code bold'>initialValue</span> <code class='quiet'>(T?)</code>
+	    
+          </div>
           
         </div>
       
     </div>
+  
+
   
 
   
@@ -991,7 +775,7 @@ The reaction can also maintain state locally.</p>
   </div>
   
 
-  <p>To be implemented by a top-level composite.</p>
+  <p>To be implemented by a top-level composite.  // FIXME: not sure that we need this</p>
 
     <div class='pre p1 fill-light mt0'>Executable</div>
   
@@ -1154,96 +938,6 @@ The reaction can also maintain state locally.</p>
         </div>
       
     </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='parameter'>
-      Parameter
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>A parameter is an input port that has a default value.
-If no current value is present, get() returns the default value.
-Unlike regular input ports, parameters are persisent by default,
-which means that their current value only changes when an new
-input becomes known <em>and present</em> (i.e., the current value remains
-unchanged until the next message arrives).</p>
-
-    <div class='pre p1 fill-light mt0'>new Parameter(parent: <a href="#reactor">Reactor</a>, defaultValue: T, persist: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</div>
-  
-  
-    <p>
-      Extends
-      
-        InPort
-      
-    </p>
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>defaultValue</span> <code class='quiet'>(T)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>persist</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>
-            = <code>true</code>)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
   
 
   
@@ -1476,6 +1170,13 @@ unless a delay is specified.</p>
     <div class='pre p1 fill-light mt0'>Trigger</div>
   
   
+    <p>
+      Extends
+      
+        Readable&#x3C;T>
+      
+    </p>
+  
 
   
   
@@ -1534,6 +1235,65 @@ unless a delay is specified.</p>
 
   
 
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='writable'>
+      Writable
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>A generic container for components.</p>
+
+    <div class='pre p1 fill-light mt0'>Writable</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Properties</div>
+    <div>
+      
+        <div class='space-bottom0'>
+          <span class='code bold'>set</span> <code class='quiet'>(function (value: T?): void)</code>
+          
+          
+        </div>
+      
+    </div>
   
 
   
