@@ -32,33 +32,41 @@ export function _schedule<T>(action:Action<T>, additionalDelay:TimeInterval, val
 /**
  * A generic container for components.
  */
-export interface Container<T: Reactor> {
+// export interface Container<T: Reactor> {
 
-    /**
-     * Add a list of elements to this container. Duplicate entries will
-     * not be kept.
-     * @param {T} element
-     */
-    _add(...elements: Array<T>): void;
+//     /**
+//      * Add a list of elements to this container. Duplicate entries will
+//      * not be kept.
+//      * @param {T} element
+//      */
+//     _add(...elements: Array<T>): void;
 
-    /**
-     * Return whether or not the argument is present in the container.
-     * @param {T} element
-     */
-    _contains(element: T): boolean;
+//     /**
+//      * Return whether or not the argument is present in the container.
+//      * @param {T} element
+//      */
+//     _contains(element: T): boolean;
 
-    /**
-     * Remove an element from this container.
-     * @param {string} name
-     */
-    _remove(element: T): void;
+//     /**
+//      * Remove an element from this container.
+//      * @param {string} name
+//      */
+//     _remove(element: T): void;
 
-    //_move(element: T, destination: Container<T: Component>)
+//     //_move(element: T, destination: Container<T: Component>)
 
+// }
+
+export interface Writable<T> {
+    set: (value: ?T) => void;
+}
+
+export interface Readable<T> {
+    get: () => ?T;
 }
 
 /**
- * To be implemented by a top-level composite.
+ * To be implemented by a top-level composite.  // FIXME: not sure that we need this
  */
 export interface Executable {
     start():void;
@@ -68,8 +76,8 @@ export interface Executable {
 /**
  * May be used to trigger a reaction.
  */
-export interface Trigger<T> {
-
+export interface Trigger<T> extends Readable<T> {
+    
 }
 
 /**
@@ -137,12 +145,8 @@ export interface UnorderedReaction {
  * constant and cannot be overridden using the delay argument in a call to 
  * schedule().
  */
-export class Action<T> implements Trigger<T> { // FIXME: maybe it's better to make a subclass for clocks?
-    value: ?T;
-
-    get() : ?T {
-        return this.value;
-    }
+export class Action<T> implements Trigger<T> {
+    get: () => ?T;
 
     /**
      * Schedule this action. If additionalDelay is 0 or unspecified, the action 
@@ -151,6 +155,14 @@ export class Action<T> implements Trigger<T> { // FIXME: maybe it's better to ma
     schedule: (additionalDelay?:?TimeInterval, value?:T) => TimeInstant;
 
     constructor(parent:Reactor, delay?:TimeInterval) { 
+        var _value;
+
+        Object.assign({
+            get(): ?T {
+                return _value;
+            }
+            // FIXME: add writeValue
+        });
 
         Object.assign(this, {
             schedule(additionalDelay:?TimeInterval, value?:T): TimeInstant {
@@ -473,7 +485,7 @@ class CalleePort<A,R> {
 }
 
 
-export class OutPort<T> extends PortBase implements Port<T> {
+export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
 
     /***** Priviledged functions *****/
 
@@ -574,8 +586,55 @@ export class OutPort<T> extends PortBase implements Port<T> {
 
 }
 
+class ContainedInput<T> implements Writable<T> {
+    
+    set: (value: ?T) => void;
 
-export class InPort<T> extends PortBase implements Port<T>, Trigger<T> {
+    constructor(reactor:Reactor, port:InPort<T>) {
+        var valid = true;
+        if (!port.hasParent(reactor)) {
+            console.log("WARNING: port " + port._getFullyQualifiedName()
+                + "is improperly used as a contained port; "
+                + "set() will have no effect.");
+            valid = false;
+        }
+
+        Object.assign(this, {
+            set(value:?T): void {
+                if (valid) {
+                    return port.writeValue(reactor, value);
+                }
+            }
+        });
+    }
+}
+
+class ContainedOutput<T> implements Readable<T> {
+    get: () => ?T; // FIXME: remove readable from output!!
+    
+    constructor(reactor:Reactor, port:OutPort<T>) {
+        var valid = true;
+        if (!port.hasParent(reactor)) {
+            console.log("WARNING: port " + port._getFullyQualifiedName()
+                + "is improperly used as a contained port; "
+                + "get() will always return null.");
+            valid = false;
+        }
+
+        Object.assign(this, {
+            get(): ?T {
+                if (!valid) {
+                    return null;
+                } else {
+                    return port.get();
+                }
+            }
+        });
+    }
+}
+
+
+export class InPort<T> extends PortBase implements Port<T>, Trigger<T>, Readable<T> {
 
     /***** Priviledged functions *****/
     canConnect:(sink: Port<T>) => boolean;        
@@ -584,15 +643,19 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger<T> {
     //send: (value: ?$Subtype<T>, delay?:number) => void;
     // NOTE: sending to input ports no longer makes sense if we have triggers that carry values
     get: () => ?T;
+    writeValue: (container: Reactor, value: ?T) => void;
 
     _value: ?T;
     _receivers: Set<Port<T>>;
     //_parent: Component; // $ReadOnly ?
     _persist: boolean;
 
-    constructor(parent: Reactor, persist:boolean=false) { // should all things that are not triggers be persistent?
+    /**
+     * InPorts that are constructed with an initial value will be persistent
+     */
+    constructor(parent:Reactor, initialValue?:?T) {
         super(parent);
-        var value:?T = null;
+        this._value = initialValue;
 
         Object.assign(this, {
             get():?T {
@@ -600,13 +663,11 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger<T> {
             }
         });
 
-        // Object.assign(this, {
-        //     send(value: ?$Subtype<T>, delay?:number):void {
-        //         if (delay == null || delay == 0) {
-        //             value = value;
-        //         }
-        //     }
-        // });
+        Object.assign(this, {
+            writeValue(container:Reactor, value:?T):void {
+                this._value = value; // FIXME: move _value inside constructor
+            }
+        });
 
         Object.assign(this, {
             canConnect(sink: Port<T>): boolean {
@@ -865,51 +926,51 @@ export class PureEvent {
 
 // }
 
-/**
- * A parameter is an input port that has a default value. 
- * If no current value is present, get() returns the default value.
- * Unlike regular input ports, parameters are persisent by default,
- * which means that their current value only changes when an new
- * input becomes known _and present_ (i.e., the current value remains
- * unchanged until the next message arrives). 
- */
-export class Parameter<T> extends InPort<T> {
+// /**
+//  * A parameter is an input port that has a default value. 
+//  * If no current value is present, get() returns the default value.
+//  * Unlike regular input ports, parameters are persisent by default,
+//  * which means that their current value only changes when an new
+//  * input becomes known _and present_ (i.e., the current value remains
+//  * unchanged until the next message arrives). 
+//  */
+// export class Parameter<T> extends InPort<T> {
 
-    default:T;
+//     default:T;
     
-    get: () => ?T;
-    read: () => T;
+//     get: () => ?T;
+//     read: () => T;
 
-    constructor(parent: Reactor, defaultValue:T, persist:boolean=true) {
-        super(parent, persist);
-        this._value = defaultValue; // FIXME: probably put this in the constructor scope
-        // Object.assign(this, {
-        //     send(value: ?$Subtype<T>, delay?:number): void {
-        //         if (value == null) {
-        //             this.reset();
-        //         } else {
-        //             this._default = value; // FIXME: default vs current value
-        //         }
-        //     }
-        // });
+//     constructor(parent: Reactor, defaultValue:T, persist:boolean=true) {
+//         super(parent, persist);
+//         this._value = defaultValue; // FIXME: probably put this in the constructor scope
+//         // Object.assign(this, {
+//         //     send(value: ?$Subtype<T>, delay?:number): void {
+//         //         if (value == null) {
+//         //             this.reset();
+//         //         } else {
+//         //             this._default = value; // FIXME: default vs current value
+//         //         }
+//         //     }
+//         // });
 
-        Object.assign(this, {
-            read(): T {
-                let val = this.get();
-                if (val != null) {
-                    return val; 
-                } else {
-                    return this.default;
-                }
-            }
-        });
-    }
+//         Object.assign(this, {
+//             read(): T {
+//                 let val = this.get();
+//                 if (val != null) {
+//                     return val; 
+//                 } else {
+//                     return this.default;
+//                 }
+//             }
+//         });
+//     }
 
-    reset() {
-        this._value = this.default;
-    }
+//     reset() {
+//         this._value = this.default;
+//     }
 
-}
+// }
 
 
 
@@ -1069,7 +1130,7 @@ export class App extends Reactor implements Executable {
     }
 }
 
-export class Timer {
+export class Timer<T> extends Action<T> {
     constructor(period:number) {
 
     }
@@ -1154,3 +1215,12 @@ export class Timer {
 // *** should RPC's be allowed to modify state?
 //   - not sure, but if we disallow it, how can we enforce it? Compile error?
 // RPC: pull, other than reactive, which is push
+
+
+class TransferValue<T> implements UnorderedReaction {
+    
+    react(from:Readable<T>, to:Writable<T>) {
+        to.set(from.get());
+    }
+
+}

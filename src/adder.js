@@ -35,3 +35,13 @@ class AddTwo implements UnorderedReaction {
         out.set(in1.get() + in2.get());
     }
 }
+
+// class AddN<T> implements UnorderedReaction {
+//     react(src:Array<Readable<T>>, dst:Writeable<T>) {
+//         var sum;
+//         for (let i of src) {
+//             sum += i;
+//         }
+//         dst.set(sum);
+//     }
+// }

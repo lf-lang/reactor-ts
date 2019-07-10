@@ -9,7 +9,7 @@ class Ramp extends Reactor {
     p: number;
     set: InPort<number>;
     output: OutPort<number>;
-    timer: Timer = new Timer(this.p);
+    timer: Timer<any> = new Timer(this.p);
     count = 0;
     constructor(p:number=10) {
         super();

@@ -2,12 +2,12 @@
 
 'use strict';
 import type {TimeInterval, TimeInstant} from './reactor';
-import {Action, Reactor, Reaction, InPort, OutPort, Trigger, Parameter, PureEvent, UnorderedReaction} from './reactor';
+import {Action, Reactor, Reaction, InPort, OutPort, PureEvent, UnorderedReaction} from './reactor';
 
 export class Clock extends Reactor {
     tick: Action<boolean> = new Action(this);
     output: OutPort<PureEvent> = new OutPort(this);
-    period: Parameter<number> = new Parameter(this, 1000); // FIXME: maybe turn this back into a persistent port?
+    period: InPort<number> = new InPort(this, 1000); // persistent port
     shared = {handle:0};
 
     _reactions = [
