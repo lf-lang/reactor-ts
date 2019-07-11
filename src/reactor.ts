@@ -101,13 +101,12 @@ export interface Transformation {
     container:Set<Reactor>;
     reactions:Array<Reaction>;
 
-    constructor(container: Set<Reactor>, reactions:Array<Reaction>):void;
-
+    new(container: Set<Reactor>, reactions:Array<Reaction>):Transformation;
 }
 
 export interface Reaction extends UnorderedReaction {
     state: Object;
-    constructor(state:Object):void;
+    new(state:Object):Reaction;
 }
 
 // The arguments of a reaction can be of *any* type.

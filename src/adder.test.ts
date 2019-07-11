@@ -1,13 +1,22 @@
 'use strict';
 
-import {Adder} from './adder';
+import {Adder, AddTwo} from './adder';
 import {InPort} from './reactor';
 
-var adder = new Adder();
-        
+
 describe('adder', function () {
+    var adder = new Adder(null, "Adder");
+
     it('2 + 1 = 3', function () {
         
+        expect(expect(adder).toBeInstanceOf(Adder));
+
+        console.log(adder);
+        console.log(adder._reactions[0].reaction);
+
+        var addRe = new AddTwo();
+        console.log(addRe);
+
         // adder.provideInput("in2", 2);
         // adder.provideInput("in1", 1);
         adder.in1._value = 2;
@@ -16,7 +25,7 @@ describe('adder', function () {
         //var output_before_fire = adder.out.;
         // expect(output_before_fire).toBe(undefined);
 
-        adder._reactions[0][1].react(adder.in1, adder.in2, adder.out);
+        expect(adder._foo()).toBeUndefined();
 
         expect(adder.out.get()).toBe(3);
     });
