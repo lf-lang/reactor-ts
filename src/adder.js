@@ -22,7 +22,7 @@ var Adder = /** @class */ (function (_super) {
         _this.in2 = new reactor_1.InPort(_this);
         _this.out = new reactor_1.OutPort(_this);
         _this._reactions = [
-            [[_this.in1, _this.in2], new AddTwo(), [_this.in1, _this.in2, _this.out]]
+            { triggers: [_this.in1, _this.in2], reaction: new AddTwo(), args: [_this.in1, _this.in2, _this.out] }
         ];
         /** Type checking */
         var triggers = _this._reactions[0][0];
