@@ -26,57 +26,31 @@
               
                 
                 <li><a
-                  href='#reactor'
-                  class=" toggle-sibling">
-                  Reactor
-                  <span class='icon'>▸</span>
+                  href='#action'
+                  class="">
+                  Action
+                  
                 </a>
-                
-                <div class='toggle-target display-none'>
-                  
-                  
-                    <ul class='list-reset py1-ul pl1'>
-                      <li class='h5'><span>Instance members</span></li>
-                      
-                      <li><a
-                        href='#reactor_getfullyqualifiedname'
-                        class='regular pre-open'>
-                        #_getFullyQualifiedName
-                      </a></li>
-                      
-                    </ul>
-                  
-                  
-                  
-                </div>
                 
                 </li>
               
                 
                 <li><a
                   href='#action'
-                  class=" toggle-sibling">
+                  class="">
                   Action
-                  <span class='icon'>▸</span>
+                  
                 </a>
                 
-                <div class='toggle-target display-none'>
+                </li>
+              
+                
+                <li><a
+                  href='#addtwo'
+                  class="">
+                  AddTwo
                   
-                  
-                    <ul class='list-reset py1-ul pl1'>
-                      <li class='h5'><span>Instance members</span></li>
-                      
-                      <li><a
-                        href='#actionschedule'
-                        class='regular pre-open'>
-                        #schedule
-                      </a></li>
-                      
-                    </ul>
-                  
-                  
-                  
-                </div>
+                </a>
                 
                 </li>
               
@@ -92,9 +66,9 @@
               
                 
                 <li><a
-                  href='#constructor'
+                  href='#containedinput'
                   class="">
-                  constructor
+                  ContainedInput
                   
                 </a>
                 
@@ -102,9 +76,9 @@
               
                 
                 <li><a
-                  href='#executable'
+                  href='#containedoutput'
                   class="">
-                  Executable
+                  ContainedOutput
                   
                 </a>
                 
@@ -112,9 +86,9 @@
               
                 
                 <li><a
-                  href='#nameable'
+                  href='#inport'
                   class="">
-                  Nameable
+                  InPort
                   
                 </a>
                 
@@ -122,9 +96,9 @@
               
                 
                 <li><a
-                  href='#named'
+                  href='#portbase'
                   class="">
-                  Named
+                  PortBase
                   
                 </a>
                 
@@ -132,9 +106,9 @@
               
                 
                 <li><a
-                  href='#port'
+                  href='#portbase'
                   class="">
-                  Port
+                  PortBase
                   
                 </a>
                 
@@ -142,9 +116,9 @@
               
                 
                 <li><a
-                  href='#timeinterval'
+                  href='#portbase'
                   class="">
-                  TimeInterval
+                  PortBase
                   
                 </a>
                 
@@ -152,9 +126,79 @@
               
                 
                 <li><a
-                  href='#timeunit'
+                  href='#pureevent'
                   class="">
-                  TimeUnit
+                  PureEvent
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#reactor'
+                  class="">
+                  Reactor
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#reactor'
+                  class="">
+                  Reactor
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#reactor'
+                  class="">
+                  Reactor
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#reactor'
+                  class="">
+                  Reactor
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#reactor'
+                  class="">
+                  Reactor
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#timer'
+                  class="">
+                  Timer
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#transfervalue'
+                  class="">
+                  TransferValue
                   
                 </a>
                 
@@ -165,16 +209,6 @@
                   href='#triggers'
                   class="">
                   triggers
-                  
-                </a>
-                
-                </li>
-              
-                
-                <li><a
-                  href='#writable'
-                  class="">
-                  Writable
                   
                 </a>
                 
@@ -195,89 +229,22 @@
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='reactor'>
-      Reactor
+    <h3 class='fl m0' id='action'>
+      Action
     </h3>
     
     
   </div>
   
 
-  <p>Each component has a name. It will typically also acquire a
-parent, unless it is a top-level composite. The parent property
-is set/unset once a component is added to or removed from a
-container. Adding a component to a container will also ensure
-that it is uniquely indexed within that container.</p>
+  <p>An action denotes a self-scheduled event. If an action is instantiated
+without a delay, then the time interval between the moment of scheduling
+this action (cause), and a resulting reaction (effect) will be determined
+upon the call to schedule. If a delay <em>is</em> specified, it is considered
+constant and cannot be overridden using the delay argument in a call to
+schedule().</p>
 
-    <div class='pre p1 fill-light mt0'>new Reactor(parent: <a href="#reactor">Reactor</a>?, name: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>?)</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>?)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>name</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>?)</code>
-	    Given name
-
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
-    <div class="clearfix">
-  
-    <div class='border-bottom' id='reactor_getfullyqualifiedname'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>_getFullyQualifiedName</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  <p>Return a string that identifies this component.</p>
-
-    <div class='pre p1 fill-light mt0'>_getFullyQualifiedName</div>
-  
-    <p>
-      Type:
-      function (): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>
-    </p>
+    <div class='pre p1 fill-light mt0'>Action</div>
   
   
 
@@ -299,18 +266,6 @@ that it is uniquely indexed within that container.</p>
   
 
   
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-</div>
 
   
 
@@ -335,82 +290,8 @@ that it is uniquely indexed within that container.</p>
   </div>
   
 
-  <p>An action denotes a self-scheduled event. If an action is instantiated
-without a delay, then the time interval between the moment of scheduling
-this action (cause), and a resulting reaction (effect) will be determined
-upon the call to schedule. If a delay <em>is</em> specified, it is considered
-constant and cannot be overridden using the delay argument in a call to
-schedule().</p>
-
-    <div class='pre p1 fill-light mt0'>new Action(parent: <a href="#reactor">Reactor</a>, delay: <a href="#timeinterval">TimeInterval</a>)</div>
   
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>delay</span> <code class='quiet'>(<a href="#timeinterval">TimeInterval</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
-    <div class="clearfix">
-  
-    <div class='border-bottom' id='actionschedule'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>schedule</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  <p>Schedule this action. If additionalDelay is 0 or unspecified, the action
-will occur at the current logical time plus one micro step.</p>
-
-    <div class='pre p1 fill-light mt0'>schedule</div>
-  
-    <p>
-      Type:
-      function (additionalDelay: <a href="#timeinterval">TimeInterval</a>?, value: T): TimeInstant
-    </p>
+    <div class='pre p1 fill-light mt0'>new Action()</div>
   
   
 
@@ -440,10 +321,45 @@ will occur at the current logical time plus one micro step.</p>
   
 </section>
 
-      </div>
-    </div>
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
   
-</div>
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='addtwo'>
+      AddTwo
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new AddTwo()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
 
   
 
@@ -473,15 +389,8 @@ T, which describes a tuple of inputs/outputs/actions it may use;
 S, which describes an object that keeps shared state.
 The reaction can also maintain state locally.</p>
 
-    <div class='pre p1 fill-light mt0'>new App(name: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
+    <div class='pre p1 fill-light mt0'>App</div>
   
-  
-    <p>
-      Extends
-      
-        <a href="#reactor">Reactor</a>
-      
-    </p>
   
 
   
@@ -491,19 +400,6 @@ The reaction can also maintain state locally.</p>
   
   
 
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>name</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
   
 
   
@@ -531,8 +427,102 @@ The reaction can also maintain state locally.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='constructor'>
-      constructor
+    <h3 class='fl m0' id='containedinput'>
+      ContainedInput
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new ContainedInput()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='containedoutput'>
+      ContainedOutput
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new ContainedOutput()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='inport'>
+      InPort
     </h3>
     
     
@@ -541,7 +531,7 @@ The reaction can also maintain state locally.</p>
 
   <p>InPorts that are constructed with an initial value will be persistent</p>
 
-    <div class='pre p1 fill-light mt0'>constructor(parent: <a href="#reactor">Reactor</a>, initialValue: T?)</div>
+    <div class='pre p1 fill-light mt0'>new InPort(parent: any, initialValue: any)</div>
   
   
 
@@ -558,7 +548,7 @@ The reaction can also maintain state locally.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>parent</span> <code class='quiet'>(<a href="#reactor">Reactor</a>)</code>
+            <span class='code bold'>parent</span> <code class='quiet'>(any)</code>
 	    
           </div>
           
@@ -566,7 +556,7 @@ The reaction can also maintain state locally.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>initialValue</span> <code class='quiet'>(T?)</code>
+            <span class='code bold'>initialValue</span> <code class='quiet'>(any)</code>
 	    
           </div>
           
@@ -600,17 +590,16 @@ The reaction can also maintain state locally.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='executable'>
-      Executable
+    <h3 class='fl m0' id='portbase'>
+      PortBase
     </h3>
     
     
   </div>
   
 
-  <p>To be implemented by a top-level composite.  // FIXME: not sure that we need this</p>
-
-    <div class='pre p1 fill-light mt0'>Executable</div>
+  
+    <div class='pre p1 fill-light mt0'>new PortBase()</div>
   
   
 
@@ -624,18 +613,404 @@ The reaction can also maintain state locally.</p>
   
 
   
-    <div class='py1 quiet mt1 prose-big'>Properties</div>
-    <div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='portbase'>
+      PortBase
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new PortBase()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='portbase'>
+      PortBase
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new PortBase()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='pureevent'>
+      PureEvent
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new PureEvent()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='reactor'>
+      Reactor
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new Reactor()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='reactor'>
+      Reactor
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new Reactor()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='reactor'>
+      Reactor
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Each component has a name. It will typically also acquire a
+parent, unless it is a top-level composite. The parent property
+is set/unset once a component is added to or removed from a
+container. Adding a component to a container will also ensure
+that it is uniquely indexed within that container.</p>
+
+    <div class='pre p1 fill-light mt0'>Reactor</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='reactor'>
+      Reactor
+    </h3>
+    
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>new Reactor()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='reactor'>
+      Reactor
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Create a new component; use the constructor name
+if no name is given.</p>
+
+    <div class='pre p1 fill-light mt0'>new Reactor(parent: any, name: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>?)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
       
         <div class='space-bottom0'>
-          <span class='code bold'>start</span> <code class='quiet'>(function (): void)</code>
-          
+          <div>
+            <span class='code bold'>parent</span> <code class='quiet'>(any)</code>
+	    
+          </div>
           
         </div>
       
         <div class='space-bottom0'>
-          <span class='code bold'>stop</span> <code class='quiet'>(function (): void)</code>
-          
+          <div>
+            <span class='code bold'>name</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>?)</code>
+	    Given name
+
+          </div>
           
         </div>
       
@@ -655,70 +1030,6 @@ The reaction can also maintain state locally.</p>
   
 
   
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='nameable'>
-      Nameable
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>For (re)nameable objects.</p>
-
-    <div class='pre p1 fill-light mt0'>Nameable</div>
-  
-  
-    <p>
-      Extends
-      
-        <a href="#named">Named</a>
-      
-    </p>
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Properties</div>
-    <div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>_setName</span> <code class='quiet'>(function (name: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>): void)</code>
-          
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
 
   
 </section>
@@ -731,175 +1042,16 @@ The reaction can also maintain state locally.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='named'>
-      Named
+    <h3 class='fl m0' id='timer'>
+      Timer
     </h3>
     
     
   </div>
   
 
-  <p>For objects that have a name.</p>
-
-    <div class='pre p1 fill-light mt0'>Named</div>
   
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Properties</div>
-    <div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>_getFullyQualifiedName</span> <code class='quiet'>(function (): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
-          
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>_getName</span> <code class='quiet'>(function (): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
-          
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='port'>
-      Port
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>An interface for ports. Each port is associated with a parent component.
-Ports may be connected to downstream ports using connect().
-Connections between ports can be destroyed using disconnect().
-Messages can be sent via a port using send(). Message delivery is immediate
-unless a delay is specified.</p>
-
-    <div class='pre p1 fill-light mt0'>Port</div>
-  
-  
-    <p>
-      Extends
-      
-        <a href="#named">Named</a>
-      
-    </p>
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Properties</div>
-    <div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>hasGrandparent</span> <code class='quiet'>(function (container: <a href="#reactor">Reactor</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
-          
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>hasParent</span> <code class='quiet'>(function (component: <a href="#reactor">Reactor</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
-          
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>connect</span> <code class='quiet'>(function (source: <a href="#port">Port</a>&#x3C;T>): void)</code>
-          
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>canConnect</span> <code class='quiet'>(function (source: <a href="#port">Port</a>&#x3C;T>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
-          
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='timeinterval'>
-      TimeInterval
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>A time interval must be accompanied by a time unit. Decimals are ignored.</p>
-
-    <div class='pre p1 fill-light mt0'>TimeInterval</div>
-  
-    <p>
-      Type:
-      ([<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a href="#timeunit">TimeUnit</a>]? | <code>0</code>)
-    </p>
+    <div class='pre p1 fill-light mt0'>new Timer()</div>
   
   
 
@@ -937,22 +1089,16 @@ unless a delay is specified.</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='timeunit'>
-      TimeUnit
+    <h3 class='fl m0' id='transfervalue'>
+      TransferValue
     </h3>
     
     
   </div>
   
 
-  <p>Units ranging from femtoseconds to years.</p>
-
-    <div class='pre p1 fill-light mt0'>TimeUnit</div>
   
-    <p>
-      Type:
-      (<code>"fs"</code> | <code>"ps"</code> | <code>"ns"</code> | <code>"us"</code> | <code>"ms"</code> | <code>"sec"</code> | <code>"min"</code> | <code>"hour"</code> | <code>"day"</code> | <code>"week"</code> | <code>"month"</code> | <code>"year"</code>)
-    </p>
+    <div class='pre p1 fill-light mt0'>new TransferValue()</div>
   
   
 
@@ -1013,65 +1159,6 @@ unless a delay is specified.</p>
 
   
 
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-          
-        
-          
-          <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-  <div class='clearfix'>
-    
-    <h3 class='fl m0' id='writable'>
-      Writable
-    </h3>
-    
-    
-  </div>
-  
-
-  <p>A generic container for components.</p>
-
-    <div class='pre p1 fill-light mt0'>Writable</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Properties</div>
-    <div>
-      
-        <div class='space-bottom0'>
-          <span class='code bold'>set</span> <code class='quiet'>(function (value: T?): void)</code>
-          
-          
-        </div>
-      
-    </div>
   
 
   
