@@ -191,6 +191,8 @@ export class Timer implements Readable<TimeInstant> {
     // 
 }
 
+//type Port<+T> = Port<T>;
+
 /**
  * Each component has a name. It will typically also acquire a 
  * parent, unless it is a top-level composite. The parent property
@@ -211,6 +213,8 @@ export class Reactor implements Nameable {
             ]
     >;
 
+    getTimers: () => Set<Timer>; // FIXME: implements this
+
     _setName: (string) => void;
 
     _acquire: (parent: Reactor) => boolean;
@@ -230,8 +234,8 @@ export class Reactor implements Nameable {
      */
     _getFullyQualifiedName: () => string;
 
-    connect: <T>(source: Port<T>, sink:Port<T>) => void;
-
+    //connect: <T>(source: Port<T>, sink:Port<T>) => void;
+    // FIXME: connections mus be done sink to source so that we leverage contravariance of functions!!!
     /**
      * Create a new component; use the constructor name
      * if no name is given.
@@ -330,24 +334,24 @@ export class Reactor implements Nameable {
             }
         });
 
-        Object.assign(this, {
-            connect<T>(source: Port<T>, sink: Port<T>):void {
-                // bind T to constrain the type, check connection.
-                if (source.canConnect(sink)) {
-                    var sinks = relations.get(source); 
-                    if (sinks == null) {
-                        sinks = new Set();
-                    }
-                    sinks.add(sink);
-                    relations.set(source, sinks);
-                } else {
-                    throw "Unable to connect."; // FIXME: elaborate error reporting.
-                    //throw "Cannot connect " + source.getFullyQualifiedName() + " to " + sink.getFullyQualifiedName() + ".";
-                }
-            // FIXME: check the graph for cycles, etc.
+        // Object.assign(this, {
+        //     connect<T>(source: Port<T>, sink: Port<T>):void {
+        //         // bind T to constrain the type, check connection.
+        //         if (source.canConnect(sink)) {
+        //             var sinks = relations.get(source); 
+        //             if (sinks == null) {
+        //                 sinks = new Set();
+        //             }
+        //             sinks.add(sink);
+        //             relations.set(source, sinks);
+        //         } else {
+        //             throw "Unable to connect."; // FIXME: elaborate error reporting.
+        //             //throw "Cannot connect " + source.getFullyQualifiedName() + " to " + sink.getFullyQualifiedName() + ".";
+        //         }
+        //     // FIXME: check the graph for cycles, etc.
             
-            }
-        });
+        //     }
+        // });
 
         // Add it to a container if one is specified.
         // Note: the call to _add will invoke this._acquire,
@@ -441,10 +445,10 @@ export class PortBase implements Named {
     }
 }
 
-export interface Connectable<T> {
-    +connect: (sink: T) => void;
-    +canConnect: (sink: T) => boolean;
-}
+// export interface Connectable<T> {
+//     +connect: (source: T) => void;
+//     +canConnect: (source: T) => boolean;
+// }
 
 /**
  * An interface for ports. Each port is associated with a parent component.
@@ -453,51 +457,51 @@ export interface Connectable<T> {
  * Messages can be sent via a port using send(). Message delivery is immediate
  * unless a delay is specified.
  */
-export interface Port<T> extends Connectable<Port<T>>, Named {
+export interface Port<T> extends  Named {
 
     hasGrandparent: (container:Reactor) => boolean;
 
     hasParent: (component: Reactor) => boolean;
     
-    connect: (sink: Port<T>) => void;
+    connect: (source: Port<T>) => void;
 
-    canConnect(sink: Port<T>): boolean;
-
-}
-
-class CallerPort<A,R> implements Connectable<CalleePort<A,R>> {
-
-    constructor() {
-
-    }
-
-    call() {
-
-    }
-
-    connect(sink: CalleePort<A,R>):void {
-        return;
-    }
-
-    canConnect(sink: CalleePort<A,R>):boolean {
-        return true;
-    }
-
-    invokeRPC: (arguments: A, delay?:number) => R;
+    canConnect(source: Port<T>): boolean;
 
 }
 
-class CalleePort<A,R> {
+// class CallerPort<A,R> implements Connectable<CalleePort<A,R>> {
 
-}
+//     constructor() {
+
+//     }
+
+//     call() {
+
+//     }
+
+//     connect(sink: CalleePort<A,R>):void {
+//         return;
+//     }
+
+//     canConnect(sink: CalleePort<A,R>):boolean {
+//         return true;
+//     }
+
+//     invokeRPC: (arguments: A, delay?:number) => R;
+
+// }
+
+// class CalleePort<A,R> {
+
+// }
 
 
 export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
 
     /***** Priviledged functions *****/
 
-    canConnect: (sink: Port<T>) => boolean
-    connect: (sink: Port<T>) => void;
+    canConnect: (source: Port<T>) => boolean
+    connect: (source: Port<T>) => void;
     disconnect: (direction?:"upstream"|"downstream"|"both") => void;
     set: (value: ?T) => void;
     get: () => ?T;
@@ -521,39 +525,40 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
         
 
         Object.assign(this, {
-            canConnect(sink: Port<T>): boolean { // solution: add Container here. Do tests prior to calling to verify it is the same
-                var thisComponent = parent;
-                var thisContainer = parent._getContainer();
+            canConnect(source: Port<T>): boolean { // solution: add Container here. Do tests prior to calling to verify it is the same
+                // var thisComponent = parent;
+                // var thisContainer = parent._getContainer();
 
-                if (sink instanceof InPort
-                    && thisContainer != null
-                    && sink.hasGrandparent(thisContainer) //
-                    && !sink.hasParent(thisComponent)) {
-                    // OUT to IN
-                    // - Component must be in the same container.
-                    // - Self-loops are not permitted.
-                    return true;
-                } else if (sink instanceof OutPort 
-                    && thisContainer instanceof Reactor 
-                    && sink.hasParent(thisContainer)) {
-                    // OUT to OUT
-                    // - Sink must be output port of composite that source component is contained by.
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                // if (sink instanceof InPort
+                //     && thisContainer != null
+                //     && sink.hasGrandparent(thisContainer) //
+                //     && !sink.hasParent(thisComponent)) {
+                //     // OUT to IN
+                //     // - Component must be in the same container.
+                //     // - Self-loops are not permitted.
+                //     return true;
+                // } else if (sink instanceof OutPort 
+                //     && thisContainer instanceof Reactor 
+                //     && sink.hasParent(thisContainer)) {
+                //     // OUT to OUT
+                //     // - Sink must be output port of composite that source component is contained by.
+                //     return true;
+                // }
+                // else {
+                //     return false;
+                // }
+                return true;
             }
         });
         
         Object.assign(this, {
-            connect(sink: Port<T>):void {
-                var container = parent._getContainer();
-                if (container != null) {
-                    container.connect(this, sink);
-                } else {
-                    throw "Unable to connect: add the port's component to a container first.";
-                }
+            connect(source: Port<T>):void {
+                // var container = parent._getContainer();
+                // if (container != null) {
+                //     container.connect(this, sink);
+                // } else {
+                //     throw "Unable to connect: add the port's component to a container first.";
+                // }
             }
         });
 
@@ -644,8 +649,8 @@ class ContainedOutput<T> implements Readable<T> {
 export class InPort<T> extends PortBase implements Port<T>, Trigger<T>, Readable<T> {
 
     /***** Priviledged functions *****/
-    canConnect:(sink: Port<T>) => boolean;        
-    connect: (sink: Port<T>) => void;
+    canConnect:(source: Port<T>) => boolean;        
+    connect: (source: Port<T>) => void;
     disconnect: (direction?:"upstream"|"downstream"|"both") => void;
     //send: (value: ?$Subtype<T>, delay?:number) => void;
     // NOTE: sending to input ports no longer makes sense if we have triggers that carry values
@@ -677,28 +682,29 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger<T>, Readable
         });
 
         Object.assign(this, {
-            canConnect(sink: Port<T>): boolean {
-                var thisComponent = parent;
-                var thisContainer = parent._getContainer();
+            canConnect(source: Port<T>): boolean {
+            //     var thisComponent = parent;
+            //     var thisContainer = parent._getContainer();
                 
-                // IN to IN
-                // - Source must be input port of composite that sink component is contained by.
-                if (thisComponent instanceof Reactor 
-                    && sink instanceof InPort 
-                    && sink.hasGrandparent(thisComponent)) {
-                    return true;
-                } else {
-                    return false;
-                }
+            //     // IN to IN
+            //     // - Source must be input port of composite that sink component is contained by.
+            //     if (thisComponent instanceof Reactor 
+            //         && sink instanceof InPort 
+            //         && sink.hasGrandparent(thisComponent)) {
+            //         return true;
+            //     } else {
+            //         return false;
+            //     }
+            return true;
             }
         });
 
         Object.assign(this, {
-            connect(sink: Port<T>):void {
-                var container = parent._getContainer()
-                if (container != null) {
-                    container.connect(this, sink);
-                }
+            connect(source: Port<T>):void {
+                // var container = parent._getContainer()
+                // if (container != null) {
+                //     container.connect(this, sink);
+                // }
             }
         });
 

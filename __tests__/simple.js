@@ -1,5 +1,5 @@
 // @flow
-import {Reactor, OutPort, InPort, Component, Composite, PureEvent, App, Executable} from "../src/reactor.js";
+import {Reactor, OutPort, InPort, PureEvent, App, Executable} from "../src/reactor.js";
 
    /**
      * An actor implementation is a reactive component with ports as properties.
@@ -14,10 +14,10 @@ import {Reactor, OutPort, InPort, Component, Composite, PureEvent, App, Executab
 
     class MyActor2 extends Reactor {
  
-    a: InPort<{t: number}> = new InPort(this);
-    b: OutPort<{t: number, y: string}> = new OutPort(this);
+        a: InPort<{t: number}> = new InPort(this);
+        b: OutPort<{t: number, y: string}> = new OutPort(this);
 
-}
+    }
 
 describe('connecting/disconnecting actors', () => {
     
@@ -31,8 +31,11 @@ describe('connecting/disconnecting actors', () => {
             
             // NOTE: the following line demonstrates type checking ability:
             // this.connect(x.a, y.b);
-            this.connect(y.b, x.a);
+            //y.b.connect(x.a);
 
+           // x.a.connect(y.b);
+            //this.connect(y.b, x.a);
+            // this.connect(y.a, y.b);
             it('contained actor name', () => {
                 expect(x._getName()).toBe("MyActor");
             });
