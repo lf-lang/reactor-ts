@@ -1,4 +1,6 @@
-//import {PriorityQueue} from './util';
+// @flow
+
+import {PriorityQueue} from './util';
 
 //---------------------------------------------------------------------//
 // Types                                                               //
@@ -12,7 +14,7 @@ export type TimeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" |
 /** 
  * A time interval must be accompanied by a time unit. Decimals are ignored.
  */
-export type TimeInterval = null | [number, TimeUnit] | 0;
+export type TimeInterval = ?[number, TimeUnit] | 0;
 
 export type TimeInstant = [number, number] | 0;
 
@@ -22,7 +24,7 @@ export type Trigger<T> = Readable<T>;
 // Runtime Functions                                                   //
 //---------------------------------------------------------------------//
 export function _schedule<T>(action:Action<T>, 
-        additionalDelay:TimeInterval, value:T | null): TimeInstant {
+        additionalDelay:TimeInterval, value:?T): TimeInstant {
     return [0,0]
 }
 
@@ -59,11 +61,11 @@ export function _schedule<T>(action:Action<T>,
 // }
 
 export interface Writable<T> {
-    set: (value: T | null) => void;
+    set: (value: ?T) => void;
 }
 
 export interface Readable<T> {
-    get: () => T | null;
+    get: () => ?T;
 }
 
 /**
@@ -112,11 +114,11 @@ export interface Reaction extends UnorderedReaction {
 // Extra type annotations must be used to ensure that inputs,
 // outputs, and actions map correctly to reaction arguments.
 export interface UnorderedReaction {
-    react:(...args) => void;
+    +react:(...args:*) => void;
 }
 
 export interface Schedulable<T> {
-    schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
+    schedule: (additionalDelay?:?TimeInterval, value?:T) => TimeInstant;
     unschedule(handle: TimeInstant):void;
 }
 
@@ -129,26 +131,26 @@ export interface Schedulable<T> {
  * schedule().
  */
 export class Action<T> implements Trigger<T> {
-    get: () => T | null;
+    get: () => ?T;
 
     /**
      * Schedule this action. If additionalDelay is 0 or unspecified, the action 
      * will occur at the current logical time plus one micro step.
      */
-    schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
+    schedule: (additionalDelay?:?TimeInterval, value?:T) => TimeInstant;
 
     constructor(parent:Reactor, delay?:TimeInterval) { 
         var _value;
 
         Object.assign({
-            get(): T | null {
+            get(): ?T {
                 return _value;
             }
             // FIXME: add writeValue
         });
 
         Object.assign(this, {
-            schedule(additionalDelay:TimeInterval, value?:T): TimeInstant {
+            schedule(additionalDelay:?TimeInterval, value?:T): TimeInstant {
                 
                 if (delay == null || delay === 0) {
                     delay = additionalDelay;
@@ -169,7 +171,7 @@ export class Action<T> implements Trigger<T> {
 
 export class Timer implements Readable<TimeInstant> {
     
-    get:() => TimeInstant;
+    get:() => ?TimeInstant;
 
     constructor(period:TimeInterval) {
 
@@ -200,14 +202,14 @@ export class Timer implements Readable<TimeInstant> {
  */
 export class Reactor implements Nameable {
 
-    _transformations:Array<
+    _transformations:?Array<
             [   // triggers, transformation, transformation arguments
-                Array<Trigger<any>>, Transformation, Partial<any>
+                Array<Trigger<any>>, Transformation, *
             ]
     >;
     _reactions:Array<
             [   // triggers, reaction, reaction arguments
-                Array<Trigger<any>>, UnorderedReaction, Partial<any>
+                Array<Trigger<any>>, UnorderedReaction, *
             ]
     >;
 
@@ -219,7 +221,7 @@ export class Reactor implements Nameable {
 
     _release: (parent: Reactor) => boolean;
 
-    _getContainer: () => Reactor | null;
+    _getContainer: () => ?Reactor;
 
     _getName: () => string;
 
@@ -239,9 +241,9 @@ export class Reactor implements Nameable {
      * if no name is given.
      * @param {string=} name - Given name
      */
-    constructor(parent:Reactor | null, name?:string) {
+    constructor(parent:?Reactor, name?:string) {
         var myName:string = this.constructor.name; // default
-        var myIndex:number | null = null;
+        var myIndex:?number = null;
         var relations: Map<Port<any>, Set<Port<any>>> = new Map();
 
         // Set this component's name if specified.
@@ -304,7 +306,7 @@ export class Reactor implements Nameable {
         });
 
         Object.assign(this, {
-            _getContainer(): Reactor | null {
+            _getContainer(): ?Reactor {
                 return parent;
             }
         });
@@ -360,8 +362,8 @@ export class Reactor implements Nameable {
         }
     }
 
-    _getInputs(): Set<InPort<any>> {
-        var inputs = new Set<InPort<any>>();
+    _getInputs(): Set<InPort<mixed>> {
+        var inputs = new Set();
         for (const [key, value] of Object.entries(this)) {
             if (value instanceof InPort) {
                 inputs.add(value);
@@ -370,8 +372,8 @@ export class Reactor implements Nameable {
         return inputs;
     }
 
-    _getOutputs(): Set<OutPort<any>> {
-        var outputs = new Set<OutPort<any>>();
+    _getOutputs(): Set<OutPort<mixed>> {
+        var outputs = new Set();
         for (const [key, value] of Object.entries(this)) {
             if (value instanceof OutPort) {
                 outputs.add(value);
@@ -501,22 +503,22 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
     canConnect: (source: Port<T>) => boolean
     connect: (source: Port<T>) => void;
     disconnect: (direction?:"upstream"|"downstream"|"both") => void;
-    set: (value: T | null) => void;
-    get: () => T | null;
+    set: (value: ?T) => void;
+    get: () => ?T;
 
     constructor(parent: Reactor) {
         super(parent);
-        var myValue: T | null = null;
+        var myValue = null;
         var events: Map<number, T> = new Map();
 
         Object.assign(this, {
-            set(value: T | null): void {
+            set(value: ?T): void {
                 myValue = value; 
             }
         });
 
         Object.assign(this, {
-            get(): T | null {
+            get(): ?T {
                 return myValue;
             }
         });
@@ -561,7 +563,7 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
         });
 
         Object.assign(this, {
-            disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
+            disconnect(direction?:"upstream"|"downstream"|"both"="both"): void {
                 var component = parent;
                 var container = component._getContainer();
 
@@ -598,7 +600,7 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
 
 class ContainedInput<T> implements Writable<T> {
     
-    set: (value: T | null) => void;
+    set: (value: ?T) => void;
 
     constructor(reactor:Reactor, port:InPort<T>) {
         var valid = true;
@@ -610,7 +612,7 @@ class ContainedInput<T> implements Writable<T> {
         }
 
         Object.assign(this, {
-            set(value:T | null): void {
+            set(value:?T): void {
                 if (valid) {
                     return port.writeValue(reactor, value);
                 }
@@ -620,7 +622,7 @@ class ContainedInput<T> implements Writable<T> {
 }
 
 class ContainedOutput<T> implements Readable<T> {
-    get: () => T | null; // FIXME: remove readable from output!!
+    get: () => ?T; // FIXME: remove readable from output!!
     
     constructor(reactor:Reactor, port:OutPort<T>) {
         var valid = true;
@@ -632,7 +634,7 @@ class ContainedOutput<T> implements Readable<T> {
         }
 
         Object.assign(this, {
-            get(): T | null {
+            get(): ?T {
                 if (!valid) {
                     return null;
                 } else {
@@ -652,10 +654,10 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger<T>, Readable
     disconnect: (direction?:"upstream"|"downstream"|"both") => void;
     //send: (value: ?$Subtype<T>, delay?:number) => void;
     // NOTE: sending to input ports no longer makes sense if we have triggers that carry values
-    get: () => T | null;
-    writeValue: (container: Reactor, value: T | null) => void;
+    get: () => ?T;
+    writeValue: (container: Reactor, value: ?T) => void;
 
-    _value: T | null;
+    _value: ?T;
     _receivers: Set<Port<T>>;
     //_parent: Component; // $ReadOnly ?
     _persist: boolean;
@@ -663,19 +665,18 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger<T>, Readable
     /**
      * InPorts that are constructed with an initial value will be persistent
      */
-    constructor(parent:Reactor, initialValue?:T | null) {
+    constructor(parent:Reactor, initialValue?:?T) {
         super(parent);
-        if (initialValue)
-            this._value = initialValue;
+        this._value = initialValue;
 
         Object.assign(this, {
-            get():T | null {
+            get():?T {
                 return this._value;
             }
         });
 
         Object.assign(this, {
-            writeValue(container:Reactor, value:T | null):void {
+            writeValue(container:Reactor, value:?T):void {
                 this._value = value; // FIXME: move _value inside constructor
             }
         });
@@ -708,7 +709,7 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger<T>, Readable
         });
 
         Object.assign(this, {
-            disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
+            disconnect(direction?:"upstream"|"downstream"|"both"="both"): void {
                 var component = parent;
                 var container = component._getContainer();
 
@@ -950,7 +951,7 @@ export class PureEvent {
 
 //     default:T;
     
-//     get: () => T | null;
+//     get: () => ?T;
 //     read: () => T;
 
 //     constructor(parent: Reactor, defaultValue:T, persist:boolean=true) {

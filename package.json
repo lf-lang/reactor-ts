@@ -15,11 +15,14 @@
         "@babel/node": "^7.2.2",
         "@babel/preset-env": "^7.4.3",
         "@babel/preset-flow": "^7.0.0",
+        "@types/jest": "^24.0.15",
         "babel-cli": "^6.26.0",
         "babel-core": "^6.26.3",
         "babel-plugin-transform-class-properties": "^6.24.1",
         "flow-bin": "^0.102.0",
-        "jest": "^24.7.1"
+        "jest": "^24.8.0",
+        "ts-jest": "^24.0.2",
+        "typescript": "^3.5.3"
     },
     "files": [
         "lib"
@@ -33,7 +36,7 @@
         "flow-typed": "flow-typed",
         "jest": "jest",
         "lint": "eslint src",
-        "test": "node_modules/.bin/flow  && node_modules/.bin/jest --coverage"
+        "test": "tsc  && node_modules/.bin/jest --coverage"
     },
     "jest": {
         "testPathIgnorePatterns": [

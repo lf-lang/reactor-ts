@@ -1,160 +1,49 @@
-// @flow
-
-import {PriorityQueue} from './util';
-
-//---------------------------------------------------------------------//
-// Types                                                               //
-//---------------------------------------------------------------------//
-
-/** Units ranging from femtoseconds to years. */
-export type TimeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" | 
-              "min" | "hour" | "day" | "week" | "month" | "year";
-// FIXME: align this with LF compiler
-
-/** 
- * A time interval must be accompanied by a time unit. Decimals are ignored.
- */
-export type TimeInterval = ?[number, TimeUnit] | 0;
-
-export type TimeInstant = [number, number] | 0;
-
-export type Trigger<T> = Readable<T>;
-
+"use strict";
+//import {PriorityQueue} from './util';
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
 //---------------------------------------------------------------------//
-export function _schedule<T>(action:Action<T>, 
-        additionalDelay:TimeInterval, value:?T): TimeInstant {
-    return [0,0]
+function _schedule(action, additionalDelay, value) {
+    return [0, 0];
 }
-
-//---------------------------------------------------------------------//
-// Interfaces                                                          //
-//---------------------------------------------------------------------//
-
-/**
- * A generic container for components.
- */
-// export interface Container<T: Reactor> {
-
-//     /**
-//      * Add a list of elements to this container. Duplicate entries will
-//      * not be kept.
-//      * @param {T} element
-//      */
-//     _add(...elements: Array<T>): void;
-
-//     /**
-//      * Return whether or not the argument is present in the container.
-//      * @param {T} element
-//      */
-//     _contains(element: T): boolean;
-
-//     /**
-//      * Remove an element from this container.
-//      * @param {string} name
-//      */
-//     _remove(element: T): void;
-
-//     //_move(element: T, destination: Container<T: Component>)
-
-// }
-
-export interface Writable<T> {
-    set: (value: ?T) => void;
-}
-
-export interface Readable<T> {
-    get: () => ?T;
-}
-
-/**
- * To be implemented by a top-level composite.  // FIXME: not sure that we need this
- */
-export interface Executable {
-    start():void;
-    stop():void;
-}
-
-/**
- * For objects that have a name.
- */
-export interface Named {
-    /* Return the fully qualified name of this object. */
-    _getFullyQualifiedName(): string;
-
-    /* Get the name of this object. */
-    _getName(): string;
-}
-
-/**
- * For (re)nameable objects.
- */
-export interface Nameable extends Named {
- 
-    /* Set the name of this object. */
-    _setName(name: string):void;
-}
-
-export interface Transformation {
-    
-    container:Set<Reactor>;
-    reactions:Array<Reaction>;
-
-    constructor(container: Set<Reactor>, reactions:Array<Reaction>):void;
-
-}
-
-export interface Reaction extends UnorderedReaction {
-    state: Object;
-    constructor(state:Object):void;
-}
-
-// The arguments of a reaction can be of *any* type.
-// Extra type annotations must be used to ensure that inputs,
-// outputs, and actions map correctly to reaction arguments.
-export interface UnorderedReaction {
-    +react:(...args:*) => void;
-}
-
-export interface Schedulable<T> {
-    schedule: (additionalDelay?:?TimeInterval, value?:T) => TimeInstant;
-    unschedule(handle: TimeInstant):void;
-}
-
+exports._schedule = _schedule;
 /**
  * An action denotes a self-scheduled event. If an action is instantiated
  * without a delay, then the time interval between the moment of scheduling
  * this action (cause), and a resulting reaction (effect) will be determined
  * upon the call to schedule. If a delay _is_ specified, it is considered
- * constant and cannot be overridden using the delay argument in a call to 
+ * constant and cannot be overridden using the delay argument in a call to
  * schedule().
  */
-export class Action<T> implements Trigger<T> {
-    get: () => ?T;
-
-    /**
-     * Schedule this action. If additionalDelay is 0 or unspecified, the action 
-     * will occur at the current logical time plus one micro step.
-     */
-    schedule: (additionalDelay?:?TimeInterval, value?:T) => TimeInstant;
-
-    constructor(parent:Reactor, delay?:TimeInterval) { 
+var Action = /** @class */ (function () {
+    function Action(parent, delay) {
         var _value;
-
         Object.assign({
-            get(): ?T {
+            get: function () {
                 return _value;
             }
             // FIXME: add writeValue
         });
-
         Object.assign(this, {
-            schedule(additionalDelay:?TimeInterval, value?:T): TimeInstant {
-                
+            schedule: function (additionalDelay, value) {
                 if (delay == null || delay === 0) {
                     delay = additionalDelay;
-                } else {
+                }
+                else {
                     if (additionalDelay != null && additionalDelay !== 0) {
                         delay[0] += additionalDelay[0];
                     }
@@ -163,77 +52,30 @@ export class Action<T> implements Trigger<T> {
             }
         });
     }
-
-    unschedule(handle: TimeInstant):void {
+    Action.prototype.unschedule = function (handle) {
         // FIXME
+    };
+    return Action;
+}());
+exports.Action = Action;
+var Timer = /** @class */ (function () {
+    function Timer(period) {
     }
-}
-
-export class Timer implements Readable<TimeInstant> {
-    
-    get:() => ?TimeInstant;
-
-    constructor(period:TimeInterval) {
-
-    }
-
-    adjustPeriod(period: TimeInterval):void {
-        
-        
+    Timer.prototype.adjustPeriod = function (period) {
         // FIXME
-    }
-    
-    // get():TimeInstant {
-    //     // return current time
-    //     return [0, 0];
-    // }
-
-    // 
-}
-
+    };
+    return Timer;
+}());
+exports.Timer = Timer;
 //type Port<+T> = Port<T>;
-
 /**
- * Each component has a name. It will typically also acquire a 
+ * Each component has a name. It will typically also acquire a
  * parent, unless it is a top-level composite. The parent property
- * is set/unset once a component is added to or removed from a 
- * container. Adding a component to a container will also ensure 
+ * is set/unset once a component is added to or removed from a
+ * container. Adding a component to a container will also ensure
  * that it is uniquely indexed within that container.
  */
-export class Reactor implements Nameable {
-
-    _transformations:?Array<
-            [   // triggers, transformation, transformation arguments
-                Array<Trigger<any>>, Transformation, *
-            ]
-    >;
-    _reactions:Array<
-            [   // triggers, reaction, reaction arguments
-                Array<Trigger<any>>, UnorderedReaction, *
-            ]
-    >;
-
-    getTimers: () => Set<Timer>; // FIXME: implements this
-
-    _setName: (string) => void;
-
-    _acquire: (parent: Reactor) => boolean;
-
-    _release: (parent: Reactor) => boolean;
-
-    _getContainer: () => ?Reactor;
-
-    _getName: () => string;
-
-    _hasGrandparent: (container:Reactor) => boolean;
-
-    _hasParent: (component: Reactor) => boolean;
-
-    /**
-     * Return a string that identifies this component.
-     */
-    _getFullyQualifiedName: () => string;
-
+var Reactor = /** @class */ (function () {
     //connect: <T>(source: Port<T>, sink:Port<T>) => void;
     // FIXME: connections mus be done sink to source so that we leverage contravariance of functions!!!
     /**
@@ -241,99 +83,95 @@ export class Reactor implements Nameable {
      * if no name is given.
      * @param {string=} name - Given name
      */
-    constructor(parent:?Reactor, name?:string) {
-        var myName:string = this.constructor.name; // default
-        var myIndex:?number = null;
-        var relations: Map<Port<any>, Set<Port<any>>> = new Map();
-
+    function Reactor(parent, name) {
+        var myName = this.constructor.name; // default
+        var myIndex = null;
+        var relations = new Map();
         // Set this component's name if specified.
         if (name != null) {
             myName = name;
         }
-
         Object.assign(this, {
-            _getFullyQualifiedName(): string {
+            _getFullyQualifiedName: function () {
                 var path = "";
                 if (parent != null) {
                     path = parent._getFullyQualifiedName();
                 }
                 if (path != "") {
                     path += "/" + this._getName();
-                } else {
+                }
+                else {
                     path = this._getName();
                 }
                 return path;
             }
         });
-
         Object.assign(this, {
-            _getName():string {
+            _getName: function () {
                 if (myIndex != null && myIndex != 0) {
                     return myName + "(" + myIndex + ")";
-                } else {
+                }
+                else {
                     return myName;
                 }
             }
         });
-
         Object.assign(this, {
-            _setName(name: string) {
+            _setName: function (name) {
                 if (parent != null && (name != myName || myIndex == null)) {
                     //myIndex = parent._getFreshIndex(name); //FIXME: look at former composite
                     myName = name;
                 }
             }
         });
-
         Object.assign(this, {
-            _hasGrandparent(container:Reactor): boolean {
+            _hasGrandparent: function (container) {
                 if (parent != null) {
                     return parent._hasParent(container);
-                } else {
+                }
+                else {
                     return false;
                 }
             }
         });
-
         Object.assign(this, {
-            _hasParent(container:Reactor): boolean {
+            _hasParent: function (container) {
                 if (parent != null && parent == container) {
                     return true;
-                } else {
+                }
+                else {
                     return false;
                 }
             }
         });
-
         Object.assign(this, {
-            _getContainer(): ?Reactor {
+            _getContainer: function () {
                 return parent;
             }
         });
-
         Object.assign(this, {
-            _acquire(newParent: Reactor): boolean {
+            _acquire: function (newParent) {
                 if (parent == null) {
                     parent = newParent;
                     return true;
-                } else {
+                }
+                else {
                     return false;
                 }
             }
         });
-        
         Object.assign(this, {
-            _release(oldParent: Reactor): boolean {
+            _release: function (oldParent) {
                 if (parent == oldParent) {
                     parent = null;
-                    myIndex = null
+                    myIndex = null;
                     return true;
-                } else {
+                }
+                else {
                     return false;
                 }
             }
         });
-
         // Object.assign(this, {
         //     connect<T>(source: Port<T>, sink: Port<T>):void {
         //         // bind T to constrain the type, check connection.
@@ -349,10 +187,8 @@ export class Reactor implements Nameable {
         //             //throw "Cannot connect " + source.getFullyQualifiedName() + " to " + sink.getFullyQualifiedName() + ".";
         //         }
         //     // FIXME: check the graph for cycles, etc.
-            
         //     }
         // });
-
         // Add it to a container if one is specified.
         // Note: the call to _add will invoke this._acquire,
         // so this code must be executed _after_ assigning
@@ -361,174 +197,112 @@ export class Reactor implements Nameable {
             //parent._add(this); // FIXME: add container capability to Reactor
         }
     }
-
-    _getInputs(): Set<InPort<mixed>> {
+    Reactor.prototype._getInputs = function () {
         var inputs = new Set();
-        for (const [key, value] of Object.entries(this)) {
+        for (var _i = 0, _a = Object.entries(this); _i < _a.length; _i++) {
+            var _b = _a[_i], key = _b[0], value = _b[1];
             if (value instanceof InPort) {
                 inputs.add(value);
             }
         }
         return inputs;
-    }
-
-    _getOutputs(): Set<OutPort<mixed>> {
+    };
+    Reactor.prototype._getOutputs = function () {
         var outputs = new Set();
-        for (const [key, value] of Object.entries(this)) {
+        for (var _i = 0, _a = Object.entries(this); _i < _a.length; _i++) {
+            var _b = _a[_i], key = _b[0], value = _b[1];
             if (value instanceof OutPort) {
                 outputs.add(value);
             }
         }
         return outputs;
-    }
-    
-}
-
-export class PortBase implements Named {
-    
-    /***** Priviledged functions *****/
-
-    /* Return a globally unique identifier. */
-    _getFullyQualifiedName: () => string;
-    _getName: () => string;
-
-
-    hasGrandparent: (container:Reactor) => boolean;
-    hasParent: (component: Reactor) => boolean;
-    
+    };
+    return Reactor;
+}());
+exports.Reactor = Reactor;
+var PortBase = /** @class */ (function () {
     /* Construct a new port base. */
-    constructor(parent: Reactor) {
+    function PortBase(parent) {
         Object.assign(this, {
-            _getFullyQualifiedName(): string {
-                return parent._getFullyQualifiedName() 
+            _getFullyQualifiedName: function () {
+                return parent._getFullyQualifiedName()
                     + "/" + this._getName();
             }
-
         });
-
         Object.assign(this, {
-            hasParent(component: Reactor): boolean {
+            hasParent: function (component) {
                 if (component == parent) {
                     return true;
-                } else {
+                }
+                else {
                     return false;
                 }
             }
         });
-        
         Object.assign(this, {
-            hasGrandparent(container:Reactor):boolean {
+            hasGrandparent: function (container) {
                 if (container == parent._getContainer()) {
                     return true;
-                } else {
+                }
+                else {
                     return false;
                 }
             }
         });
-
         Object.assign(this, {
-            _getName(): string {
+            _getName: function () {
                 var alt = "";
-                for (const [key, value] of Object.entries(parent)) {
-
+                for (var _i = 0, _a = Object.entries(parent); _i < _a.length; _i++) {
+                    var _b = _a[_i], key = _b[0], value = _b[1];
                     if (value === this) { // do hasOwnProperty check too?
-                        return `${key}`;
+                        return "" + key;
                     }
                 }
                 return "anonymous";
             }
         });
     }
-
-    toString(): string {
+    PortBase.prototype.toString = function () {
         return this._getFullyQualifiedName();
-    }
-}
-
-// export interface Connectable<T> {
-//     +connect: (source: T) => void;
-//     +canConnect: (source: T) => boolean;
-// }
-
-/**
- * An interface for ports. Each port is associated with a parent component.
- * Ports may be connected to downstream ports using connect(). 
- * Connections between ports can be destroyed using disconnect().
- * Messages can be sent via a port using send(). Message delivery is immediate
- * unless a delay is specified.
- */
-export interface Port<T> extends  Named {
-
-    hasGrandparent: (container:Reactor) => boolean;
-
-    hasParent: (component: Reactor) => boolean;
-    
-    connect: (source: Port<T>) => void;
-
-    canConnect(source: Port<T>): boolean;
-
-}
-
+    };
+    return PortBase;
+}());
+exports.PortBase = PortBase;
 // class CallerPort<A,R> implements Connectable<CalleePort<A,R>> {
-
 //     constructor() {
-
 //     }
-
 //     call() {
-
 //     }
-
 //     connect(sink: CalleePort<A,R>):void {
 //         return;
 //     }
-
 //     canConnect(sink: CalleePort<A,R>):boolean {
 //         return true;
 //     }
-
 //     invokeRPC: (arguments: A, delay?:number) => R;
-
 // }
-
 // class CalleePort<A,R> {
-
 // }
-
-
-export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
-
-    /***** Priviledged functions *****/
-
-    canConnect: (source: Port<T>) => boolean
-    connect: (source: Port<T>) => void;
-    disconnect: (direction?:"upstream"|"downstream"|"both") => void;
-    set: (value: ?T) => void;
-    get: () => ?T;
-
-    constructor(parent: Reactor) {
-        super(parent);
+var OutPort = /** @class */ (function (_super) {
+    __extends(OutPort, _super);
+    function OutPort(parent) {
+        var _this = _super.call(this, parent) || this;
         var myValue = null;
-        var events: Map<number, T> = new Map();
-
-        Object.assign(this, {
-            set(value: ?T): void {
-                myValue = value; 
+        var events = new Map();
+        Object.assign(_this, {
+            set: function (value) {
+                myValue = value;
             }
         });
-
-        Object.assign(this, {
-            get(): ?T {
+        Object.assign(_this, {
+            get: function () {
                 return myValue;
             }
         });
-        
-
-        Object.assign(this, {
-            canConnect(source: Port<T>): boolean { // solution: add Container here. Do tests prior to calling to verify it is the same
+        Object.assign(_this, {
+            canConnect: function (source) {
                 // var thisComponent = parent;
                 // var thisContainer = parent._getContainer();
-
                 // if (sink instanceof InPort
                 //     && thisContainer != null
                 //     && sink.hasGrandparent(thisContainer) //
@@ -550,9 +324,8 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
                 return true;
             }
         });
-        
-        Object.assign(this, {
-            connect(source: Port<T>):void {
+        Object.assign(_this, {
+            connect: function (source) {
                 // var container = parent._getContainer();
                 // if (container != null) {
                 //     container.connect(this, sink);
@@ -561,19 +334,17 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
                 // }
             }
         });
-
-        Object.assign(this, {
-            disconnect(direction?:"upstream"|"downstream"|"both"="both"): void {
+        Object.assign(_this, {
+            disconnect: function (direction) {
+                if (direction === void 0) { direction = "both"; }
                 var component = parent;
                 var container = component._getContainer();
-
                 if (direction == "upstream" || direction == "both") {
-                    if (component instanceof Reactor) {    
+                    if (component instanceof Reactor) {
                         // OUT to OUT
                         //component._disconnectContainedReceivers(this); //FIXME: add a transfer reaction
                     }
                 }
-
                 if (direction == "downstream" || direction == "both") {
                     // OUT to IN
                     // OUT to OUT
@@ -583,26 +354,21 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
                 }
             }
         });
+        return _this;
     }
-
     // NOTE: Due to assymmetry (subtyping) we cannot allow connecting 
     // sinks to sources. It must always be source to sink. Disconnect 
     // does not have this problem.
     // connect(sink: Port<$Supertype<T>>): void {
-        
     // }
-
-    toString(): string {
+    OutPort.prototype.toString = function () {
         return this._getFullyQualifiedName();
-    }
-
-}
-
-class ContainedInput<T> implements Writable<T> {
-    
-    set: (value: ?T) => void;
-
-    constructor(reactor:Reactor, port:InPort<T>) {
+    };
+    return OutPort;
+}(PortBase));
+exports.OutPort = OutPort;
+var ContainedInput = /** @class */ (function () {
+    function ContainedInput(reactor, port) {
         var valid = true;
         if (!port.hasParent(reactor)) {
             console.log("WARNING: port " + port._getFullyQualifiedName()
@@ -610,21 +376,18 @@ class ContainedInput<T> implements Writable<T> {
                 + "set() will have no effect.");
             valid = false;
         }
-
         Object.assign(this, {
-            set(value:?T): void {
+            set: function (value) {
                 if (valid) {
                     return port.writeValue(reactor, value);
                 }
             }
         });
     }
-}
-
-class ContainedOutput<T> implements Readable<T> {
-    get: () => ?T; // FIXME: remove readable from output!!
-    
-    constructor(reactor:Reactor, port:OutPort<T>) {
+    return ContainedInput;
+}());
+var ContainedOutput = /** @class */ (function () {
+    function ContainedOutput(reactor, port) {
         var valid = true;
         if (!port.hasParent(reactor)) {
             console.log("WARNING: port " + port._getFullyQualifiedName()
@@ -632,95 +395,74 @@ class ContainedOutput<T> implements Readable<T> {
                 + "get() will always return null.");
             valid = false;
         }
-
         Object.assign(this, {
-            get(): ?T {
+            get: function () {
                 if (!valid) {
                     return null;
-                } else {
+                }
+                else {
                     return port.get();
                 }
             }
         });
     }
-}
-
-
-export class InPort<T> extends PortBase implements Port<T>, Trigger<T>, Readable<T> {
-
-    /***** Priviledged functions *****/
-    canConnect:(source: Port<T>) => boolean;        
-    connect: (source: Port<T>) => void;
-    disconnect: (direction?:"upstream"|"downstream"|"both") => void;
-    //send: (value: ?$Subtype<T>, delay?:number) => void;
-    // NOTE: sending to input ports no longer makes sense if we have triggers that carry values
-    get: () => ?T;
-    writeValue: (container: Reactor, value: ?T) => void;
-
-    _value: ?T;
-    _receivers: Set<Port<T>>;
-    //_parent: Component; // $ReadOnly ?
-    _persist: boolean;
-
+    return ContainedOutput;
+}());
+var InPort = /** @class */ (function (_super) {
+    __extends(InPort, _super);
     /**
      * InPorts that are constructed with an initial value will be persistent
      */
-    constructor(parent:Reactor, initialValue?:?T) {
-        super(parent);
-        this._value = initialValue;
-
-        Object.assign(this, {
-            get():?T {
+    function InPort(parent, initialValue) {
+        var _this = _super.call(this, parent) || this;
+        if (initialValue)
+            _this._value = initialValue;
+        Object.assign(_this, {
+            get: function () {
                 return this._value;
             }
         });
-
-        Object.assign(this, {
-            writeValue(container:Reactor, value:?T):void {
+        Object.assign(_this, {
+            writeValue: function (container, value) {
                 this._value = value; // FIXME: move _value inside constructor
             }
         });
-
-        Object.assign(this, {
-            canConnect(source: Port<T>): boolean {
-            //     var thisComponent = parent;
-            //     var thisContainer = parent._getContainer();
-                
-            //     // IN to IN
-            //     // - Source must be input port of composite that sink component is contained by.
-            //     if (thisComponent instanceof Reactor 
-            //         && sink instanceof InPort 
-            //         && sink.hasGrandparent(thisComponent)) {
-            //         return true;
-            //     } else {
-            //         return false;
-            //     }
-            return true;
+        Object.assign(_this, {
+            canConnect: function (source) {
+                //     var thisComponent = parent;
+                //     var thisContainer = parent._getContainer();
+                //     // IN to IN
+                //     // - Source must be input port of composite that sink component is contained by.
+                //     if (thisComponent instanceof Reactor 
+                //         && sink instanceof InPort 
+                //         && sink.hasGrandparent(thisComponent)) {
+                //         return true;
+                //     } else {
+                //         return false;
+                //     }
+                return true;
             }
         });
-
-        Object.assign(this, {
-            connect(source: Port<T>):void {
+        Object.assign(_this, {
+            connect: function (source) {
                 // var container = parent._getContainer()
                 // if (container != null) {
                 //     container.connect(this, sink);
                 // }
             }
         });
-
-        Object.assign(this, {
-            disconnect(direction?:"upstream"|"downstream"|"both"="both"): void {
+        Object.assign(_this, {
+            disconnect: function (direction) {
+                if (direction === void 0) { direction = "both"; }
                 var component = parent;
                 var container = component._getContainer();
-
                 if (direction == "upstream" || direction == "both") {
                     if (container != null) {
                         // OUT to IN
                         // IN to IN
                         //container._disconnectContainedReceivers(this); // FIXME: this should result in the removal of a transfer reactions
-                    }    
+                    }
                 }
-
                 if (direction == "downstream" || direction == "both") {
                     if (component instanceof Reactor) {
                         // IN to IN
@@ -733,73 +475,58 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger<T>, Readable
                 }
             }
         });
+        return _this;
     }
-
-    toString(): string {
+    InPort.prototype.toString = function () {
         return this._getFullyQualifiedName();
+    };
+    return InPort;
+}(PortBase));
+exports.InPort = InPort;
+var PureEvent = /** @class */ (function () {
+    function PureEvent() {
     }
-
-}
-
-export class PureEvent {
-
-}
-
+    return PureEvent;
+}());
+exports.PureEvent = PureEvent;
 // NOTE: composite IDLE or REACTING.
 // If IDLE, get real time, of REACTING use T+1
-
 // export class Composite extends Component implements Container<Component>, Reactor {
-
 //     _getFreshIndex: (string) => number;
 //     _disconnectContainedReceivers: (port: Port<*>) => void;
 //     _disconnectContainedSource: (port: Port<*>) => void;
 //     _getGraph: () => string;
-
 //     connect: <T>(source: Port<T>, sink:Port<T>) => void;
 //     //disconnect: (port: Port<*>, direction?:"upstream"|"downstream"|"both") => void;
 //     schedule: <T>(action:Action<T>, value:any, repeat?:boolean) => number;
 //     getCurrentTime: () => Time;
-
 //     _init:() => void;
 //     _wrapup: () => void;
 //     _react:() => void;  
 //     _reactions:$ReadOnlyArray<[Array<Trigger<*>>, Reaction<any, any>]>;
-
 //     constructor(parent:?Composite, name?:string) {
 //         super(parent, name);
-
 //         /* Private variables */
 //         var relations: Map<Port<any>, Set<Port<any>>> = new Map();
-        
 //         //var eventQ: Map<Time, Map<*>, *> = new Map();
-
 //         // queue for delayed triggers
 //         var triggerQ: Map<number, [Map<Action<any>, any>]> = new Map();
-
 //         // queue for delayed sends
 //         var sendQ: Map<number, [Map<Port<any>, any>]> = new Map();
-
 //         var indices: Map<string, number> = new Map();
-
 //         var actors: Set<ReActor> = new Set();
-
 //         // we need to express dependencies between reactions, not between ports
 //         var dependencies: Map<Reaction<mixed>, Reaction<mixed>> = new Map();
-
 //         Object.assign(this, {
 //             _init() {
 //                 for (let a of actors) {
 //                     for (let r of a._reactions) {
-
 //                     }
 //                 }
 //             }
 //         });
-        
-
 //         Object.assign(this, {
 //             schedule<T>(action:Action<T>, value:any, repeat?:boolean): number {
-                
 //                 return 0;
 //             }
 //         });
@@ -815,8 +542,6 @@ export class PureEvent {
 //         // Example 3: shut off the lights some time after the switch has been flipped.
 //         // Reason to have the deadline definition as stated: detectability. Suppose the start deadline cannot be met; the
 //         // reaction should not be carried out (and then the violation be reported on).
-        
-
 //         Object.assign(this, {
 //             // FIXME: We may want to wrap this into something like a change request and 
 //             // let the composite handle it at the next microstep.
@@ -834,14 +559,12 @@ export class PureEvent {
 //                     //throw "Cannot connect " + source.getFullyQualifiedName() + " to " + sink.getFullyQualifiedName() + ".";
 //                 }
 //             // FIXME: check the graph for cycles, etc.
-            
 //             }
 //         });
 //         // FIXME: persistent <=> default
 //         // Comments from Stoyke. 1) What if you want non-determinism? Parameter store. Stores the parameters that you are learning.
 //         // Fairly common strategy. Parallel processes. All updating the parm store asynchronously.
 //         // 2) How to handle dynamic instantiation?
-
 //         Object.assign(this, {
 //             _getFreshIndex(name: string): number {
 //                 var index = 0;
@@ -854,14 +577,12 @@ export class PureEvent {
 //                 return index;
 //             }
 //         });
-
 //         Object.assign(this, {
 //             _react() {
 //                 for (var prop in this) {
 //                     if (prop instanceof InPort) {
 //                         console.log("port: " + prop.toString());
 //                     }
-
 //                     if (prop instanceof OutPort) {
 //                         console.log("output: " + prop.toString());
 //                     }
@@ -869,33 +590,27 @@ export class PureEvent {
 //                 }
 //             }
 //         });
-
 //         Object.assign(this, {
 //             _disconnectContainedReceivers(port: Port<*>): void {
 //                 for (var receivers of relations.values()) {
 //                         receivers.delete(port);
 //                 }
 //             }
-
 //         });
-
 //         Object.assign(this, {
 //             _disconnectContainedSource(port: Port<*>): void {
 //                 relations.delete(port);
 //             }
 //         });
-    
 //         Object.assign(this, {
 //             _add(...components: Array<Component>): void {
 //                 for (var c of components) {
 //                     c._acquire(this);
 //                     c._setName(c._getName()); // to ensure proper indexing
-                    
 //                     // FIXME: is actor, not component actors.add(c);
 //                 }
 //             }
 //         });
-
 //         Object.assign(this, {
 //             _getGraph(): string {
 //                 var str = "";
@@ -911,15 +626,11 @@ export class PureEvent {
 //             }
 //         });
 //     }
-
-
 //     /**
 //      * Add a list of elements to this container.
 //      * @param {T} element
 //      */
 //     _add: (...components: Array<Component>) => void;
-        
-
 //     /**
 //      * Return whether or not the argument is present in the container.
 //      * @param {T} element
@@ -927,7 +638,6 @@ export class PureEvent {
 //     _contains(element: Component): boolean { // FIXME!
 //         return true; //this._components.includes(element);
 //     }
-
 //     /**
 //      * Remove an element from this container.
 //      * @param {string} name
@@ -936,9 +646,7 @@ export class PureEvent {
 //         // check whether it is connected to anything
 //         // remove all connections
 //     }
-
 // }
-
 // /**
 //  * A parameter is an input port that has a default value. 
 //  * If no current value is present, get() returns the default value.
@@ -948,12 +656,9 @@ export class PureEvent {
 //  * unchanged until the next message arrives). 
 //  */
 // export class Parameter<T> extends InPort<T> {
-
 //     default:T;
-    
-//     get: () => ?T;
+//     get: () => T | null;
 //     read: () => T;
-
 //     constructor(parent: Reactor, defaultValue:T, persist:boolean=true) {
 //         super(parent, persist);
 //         this._value = defaultValue; // FIXME: probably put this in the constructor scope
@@ -966,7 +671,6 @@ export class PureEvent {
 //         //         }
 //         //     }
 //         // });
-
 //         Object.assign(this, {
 //             read(): T {
 //                 let val = this.get();
@@ -978,40 +682,26 @@ export class PureEvent {
 //             }
 //         });
 //     }
-
 //     reset() {
 //         this._value = this.default;
 //     }
-
 // }
-
-
-
 /**
- * Base class for reactions that has two type parameters: 
+ * Base class for reactions that has two type parameters:
  * T, which describes a tuple of inputs/outputs/actions it may use;
  * S, which describes an object that keeps shared state.
  * The reaction can also maintain state locally.
  */
-
- // triggeredby/uses/produces
+// triggeredby/uses/produces
 // export class Reaction<T,S:?Object> {
-
 //     io:T
 //     shared:S;
-    
-
-
 // // FIXME: need a get/set/schedule here to shadow the global one
-
 //     portsInScope: () => [Set<InPort<mixed>>, Set<OutPort<mixed>>];
-
 //     +react: (time?:number) => void;
-
 //     constructor(io:T, state:S) {
 //         this.io = io;
 //         this.shared = state;
-
 //         /**
 //          * Given some data structure, recursively find all references
 //          * to any input and output ports.
@@ -1043,7 +733,6 @@ export class PureEvent {
 //                 console.log(data)
 //             }
 //         }
-
 //         Object.assign(this, {
 //             portsInScope(): [Set<InPort<mixed>>, Set<OutPort<mixed>>] {
 //                 var inputs = new Set<InPort<mixed>>();
@@ -1054,35 +743,28 @@ export class PureEvent {
 //         });
 //     }
 // }
-
 // export class OrderedAsyncReaction<T, S, R, E> extends Reaction<T, S> {
-
 //     reqID = -1;
 //     queue: PriorityQueue<R> = new PriorityQueue();
 //     response: Action<R>;
 //     error: Action<E>;
-
 //     constructor(io:T, state:S, response:Action<R>, error:Action<E>) {
 //         super(io, state);
 //         this.response = response;
 //         this.error = error;
 //     }
-
 //     react(time?: number):void {
-        
 //         let myID = this.reqID++;
 //         // this.queue.push(null, myID); FIXME: find another way to do this
 //         (async () => {
 //             try {
 //                 const response = await this.doAsync();
 //                 var firstInLine = this.queue.first();
-                
 //                 // schedule reactions to preceeding replies
 //                 while(firstInLine.value != null && firstInLine.priority < myID) {
 //                     this.response.schedule(this.queue.pop()); // NOTE: schedule must pile these up in superdense time!
 //                     firstInLine = this.queue.first();
 //                 }
-
 //                 if (firstInLine.priority == myID) {
 //                     // schedule a reaction to the current reply
 //                     this.response.schedule(response);
@@ -1090,21 +772,16 @@ export class PureEvent {
 //                 } else {
 //                     //this.queue.update(response, myID); FIXME
 //                 }
-                
 //                 // further empty the queue as much as possible
 //                 while(firstInLine.value != null) {
 //                     this.response.schedule(this.queue.pop());
 //                     firstInLine = this.queue.first();
 //                 }
-                
 //             } catch (err) {
-                
 //                 // remove corresponding entry from the queue
 //                 this.queue.remove(myID);
-
 //                 // schedule a reaction to the error
 //                 this.error.schedule(err);
-
 //                 var firstInLine = this.queue.first();
 //                 // further empty the queue as much as possible
 //                 while(firstInLine.value != null) {
@@ -1114,36 +791,25 @@ export class PureEvent {
 //             }
 //         })();
 //     }
-
 //     doAsync(): Promise<R> {
 //         return new Promise(function(resolve, reject) {});
 //     }
-
 // }
-
-
-
 // Eventually, this should become a worker/threaded composite
 // Also, check out https://github.com/laverdet/isolated-vm
-
-export class App extends Reactor implements Executable {
-    
+var App = /** @class */ (function (_super) {
+    __extends(App, _super);
     // FIXME: add some logging facility here
-
-    constructor(name: string) {
-        super(null, name);
+    function App(name) {
+        return _super.call(this, null, name) || this;
     }
-
-    start():void {
-
-    }
-
-    stop():void {
-
-    }
-}
-
-
+    App.prototype.start = function () {
+    };
+    App.prototype.stop = function () {
+    };
+    return App;
+}(Reactor));
+exports.App = App;
 // class Countdown {
 //     constructor(counter, action) {
 //         Object.assign(this, {
@@ -1152,16 +818,11 @@ export class App extends Reactor implements Executable {
 //             }
 //         });
 //     }
-    
 //     dec: () => boolean
 // }
-
-
 // const c = new Countdown(2, () => console.log('DONE'));
 // c.dec();
 // c.dec();
-
-
 // class FinalClass {
 //     constructor(secret) {
 //     if (this.constructor !== FinalClass) {
@@ -1169,40 +830,23 @@ export class App extends Reactor implements Executable {
 //     }
 //   }
 // }
-
 // class Extension extends FinalClass {
-
 // }
-
 // let y = new Extension();
-
 // var oldProto = FinalClass.prototype;
 // FinalClass = function(secret) { console.log(secret)};
 // FinalClass.prototype = oldProto;
-
 // let z = new FinalClass("do not read this");
-
-
-
-
-
 // Scenario 1:
 // The composite reacts to inputs.
 // - set the inputs of the receivers
 // - let them react in dependency order
-
 // *** what if there is a delay?
 // - 
-
-
 // Scenario 2:
 // An actor spontaneously emits an event
-
-
 // datastructures:
 // - dependency graph
-
-
 // - calendarQ t -> [], where events are sorted by priority/index
 // types of events:
 // - self-scheduled
@@ -1224,12 +868,12 @@ export class App extends Reactor implements Executable {
 // *** should RPC's be allowed to modify state?
 //   - not sure, but if we disallow it, how can we enforce it? Compile error?
 // RPC: pull, other than reactive, which is push
-
-
-class TransferValue<T> implements UnorderedReaction {
-    
-    react(from:Readable<T>, to:Writable<T>) {
-        to.set(from.get());
+var TransferValue = /** @class */ (function () {
+    function TransferValue() {
     }
-
-}
+    TransferValue.prototype.react = function (from, to) {
+        to.set(from.get());
+    };
+    return TransferValue;
+}());
+//# sourceMappingURL=reactor.js.map
