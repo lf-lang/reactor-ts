@@ -1,5 +1,4 @@
-// @flow
-import {Reactor, OutPort, InPort, PureEvent, App, Executable} from "../src/reactor.js";
+import {Reactor, OutPort, InPort, PureEvent, App, Executable} from "../src/reactor";
 
    /**
      * An actor implementation is a reactive component with ports as properties.
@@ -7,7 +6,7 @@ import {Reactor, OutPort, InPort, PureEvent, App, Executable} from "../src/react
     class MyActor extends Reactor {
      
         a: InPort<{t: number}> = new InPort(this);
-        out: OutPort<*> = new OutPort(this);
+        out: OutPort<any> = new OutPort(this);
 
     }
  
@@ -26,7 +25,7 @@ describe('connecting/disconnecting actors', () => {
         constructor(name: string, someParam: string) {
             super(name);
             let x = new MyActor(this);
-            let xx = new MyActor(); // Uncontained actor
+            let xx = new MyActor(null, "MyActor"); // Uncontained actor
             let y = new MyActor2(this);
             
             // NOTE: the following line demonstrates type checking ability:
