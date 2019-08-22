@@ -17,45 +17,48 @@ export interface PrecedenceGraphNode {
 
 export class PrioritySet<T,S> {
 
-  elements: Map<T, PrioritySetNode<T,S>>;
+  elements: Map<T, PrioritySetNode<T,S>> = new Map();
   head: PrioritySetNode<T,S>|null;
 
   push(element: PrioritySetNode<T,S>) {
     let duplicate = this.elements.get(element._id);
-    this.elements.set(element._id, element);
+    this.elements.set(element._id, element); // overwrites if duplicate
     if (duplicate == null) {
       // add node to list
-      if (this.head == null || element.hasPrecedenceOver(this.head)) {
-        // prepend if list is empty or element has highest precedence
-        element._next = this.head;
+      if (this.head == null) {
+        element._next = null;
         this.head = element;
       } else {
+        // prepend
+        if (element.hasPrecedenceOver(this.head)) {
+          element._next = this.head;
+          this.head = element;
+          return;
+        }
         // insert
         var curr = this.head;
-        var prev;
         while (curr._next != null) {
-          if (element.hasPrecedenceOver(curr)) {
+          if (element.hasPrecedenceOver(curr._next)) {
             break;
           } else {
-            prev = curr;
             curr = curr._next;
           }
         }
-        prev._next = element;
-        element._next = curr;
+        element._next = curr._next; // null if last
+        curr._next = element; 
       }
     }
   }
 
   pop():PrioritySetNode<T,S>|undefined {
-    if (this.head != null) {
       if (this.head != null) {
         let node = this.head;
         this.elements.delete(this.head._id);
         this.head = this.head._next;
+        node._next = null; // unhook from linked list
         return node;
       }
-    }
+
   }
 
   peek(): PrioritySetNode<T,S>|undefined {
@@ -175,5 +178,9 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode> {
     } else {
       return true;
     }
+  }
+
+  nodes() {
+    return this.graph.keys();
   }
 }

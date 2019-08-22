@@ -1,5 +1,5 @@
 import {TimeInstant} from '../src/reactor';
-import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode} from '../src/util';
+import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
 
 
 class Reaction implements PrecedenceGraphNode, PrioritySetNode<number,number> {
@@ -29,31 +29,49 @@ class Event implements PrioritySetNode<number,TimeInstant> {
 
 }
 
-var graph:PrecedenceGraph<Reaction> = new PrecedenceGraph();
-
-var nodes = [new Reaction(1), new Reaction(2), new Reaction(3), 
-    new Reaction(4), new Reaction(5), new Reaction(6)];
-
-var r7 = new Reaction(7);
-
-graph.addEdge(nodes[3], nodes[5]);
-graph.addEdge(nodes[4], nodes[3]);
-graph.addEdge(nodes[2], nodes[3]);
-graph.addEdge(nodes[1], nodes[2]);
-graph.addEdge(nodes[1], nodes[4]);
-graph.addEdge(nodes[0], nodes[1]);
-graph.addEdge(nodes[0], nodes[4]);
-
-graph.updatePriorities();
-
 describe('Precedence Graph', () => {
-    
-    it('precedence of node 3', () => {
+
+    var nodes = [new Reaction(1), new Reaction(2), new Reaction(3), 
+        new Reaction(4), new Reaction(5), new Reaction(6)];
+
+    var r7 = new Reaction(7);
+
+    var graph:PrecedenceGraph<Reaction> = new PrecedenceGraph();
+
+
+
+    graph.addEdge(nodes[3], nodes[5]);
+    graph.addEdge(nodes[4], nodes[3]);
+    graph.addEdge(nodes[2], nodes[3]);
+    graph.addEdge(nodes[1], nodes[2]);
+    graph.addEdge(nodes[1], nodes[4]);
+    graph.addEdge(nodes[0], nodes[1]);
+    graph.addEdge(nodes[0], nodes[4]);
+
+    graph.updatePriorities();
+
+    it('priority of node 6', () => {
+        expect(nodes[5]).toEqual({_id: 6, _priority: 0});
+    });
+
+    it('priority of node 4', () => {
+        expect(nodes[3]).toEqual({_id: 4, _priority: 100});
+    });
+
+    it('priority of node 5', () => {
+        expect(nodes[4]).toEqual({_id: 5, _priority: 200});
+    });    
+
+    it('priority of node 3', () => {
          expect(nodes[2]).toEqual({_id: 3, _priority: 300});
     });
 
-    it('precedence of node 2', () => {
+    it('priority of node 2', () => {
         expect(nodes[1]).toEqual({_id: 2, _priority: 400});
+    });
+
+    it('priority of node 1', () => {
+        expect(nodes[0]).toEqual({_id: 1, _priority: 500});
     });
 
     it('remove dependency 5 -> 4', () => {
@@ -89,6 +107,53 @@ describe('Precedence Graph', () => {
     it('introduce a cycle', () => {
         graph.addEdge(nodes[5], nodes[2]);
         expect(graph.updatePriorities()).toBeFalsy();
+    });
+
+});
+
+
+describe('Priority Set', () => {
+    var nodes = [new Reaction(1), new Reaction(2), new Reaction(3), 
+        new Reaction(4), new Reaction(5), new Reaction(6)];
+    
+    var graph:PrecedenceGraph<Reaction> = new PrecedenceGraph();
+    graph.addEdge(nodes[3], nodes[5]);
+    graph.addEdge(nodes[4], nodes[3]);
+    graph.addEdge(nodes[2], nodes[3]);
+    graph.addEdge(nodes[1], nodes[2]);
+    graph.addEdge(nodes[1], nodes[4]);
+    graph.addEdge(nodes[0], nodes[1]);
+    graph.addEdge(nodes[0], nodes[4]);
+    graph.updatePriorities();
+    
+    var reactionQ = new PrioritySet<number, number>();
+    
+    for (let r of graph.nodes()) {
+        reactionQ.push(r);
+    }
+    
+    it('first pop', () => {
+         expect(reactionQ.pop()).toEqual({_id: 6, _next: null, _priority: 0});
+    });
+
+    it('second pop', () => {
+        expect(reactionQ.pop()).toEqual({_id: 4, _next: null, _priority: 100});
+    });
+
+    it('third pop', () => {
+        expect(reactionQ.pop()).toEqual({_id: 5, _next: null, _priority: 200});
+    });
+
+    it('fourth pop', () => {
+        expect(reactionQ.pop()).toEqual({_id: 3, _next: null, _priority: 300});
+    });
+
+    it('fifth pop', () => {
+        expect(reactionQ.pop()).toEqual({_id: 2, _next: null, _priority: 400});
+    });
+
+    it('sixth pop', () => {
+        expect(reactionQ.pop()).toEqual({_id: 1, _next: null, _priority: 500});
     });
 
 });
