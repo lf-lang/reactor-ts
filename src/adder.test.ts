@@ -1,11 +1,11 @@
 'use strict';
 
 import {Adder, AddTwo} from './adder';
-import {InPort} from './reactor';
-
+import {Reactor} from './reactor';
+import * as globals from './globals';
 
 describe('adder', function () {
-    var adder = new Adder(null, "Adder");
+    var adder = new Adder();
 
     it('2 + 1 = 3', function () {
         
@@ -19,15 +19,20 @@ describe('adder', function () {
 
         // adder.provideInput("in2", 2);
         // adder.provideInput("in1", 1);
-        adder.in1._value = 2;
-        adder.in2._value = 1;
+        //adder.in1.writeValue(this, 2);
+        //adder.in2.writeValue(this, 1)
+
+        // FIXME: change this to writeValue, and have writeValue take care of invocation.
 
         //var output_before_fire = adder.out.;
         // expect(output_before_fire).toBe(undefined);
 
-        expect(adder._foo()).toBeUndefined();
+        //expect().toBeUndefined();
+        console.log(JSON.stringify(globals.reactionQ));
+        
+        //expect(adder.out.get()).toBe(3);
 
-        expect(adder.out.get()).toBe(3);
+        //expect(adder._triggerMap()).toBe("bla");
     });
     // it('find ports in scope', () => {
     //     // var ports = new Set(adder._reactions[0][1].io);

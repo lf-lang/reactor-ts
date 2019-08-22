@@ -1,5 +1,7 @@
 //import {PriorityQueue} from './util';
 
+import * as globals from './globals'
+
 //---------------------------------------------------------------------//
 // Types                                                               //
 //---------------------------------------------------------------------//
@@ -8,6 +10,7 @@
 export type TimeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" | 
               "min" | "hour" | "day" | "week" | "month" | "year";
 // FIXME: align this with LF compiler, maybe use an enum instead
+
 
 /** 
  * A time interval must be accompanied by a time unit. Decimals are ignored.
@@ -116,6 +119,12 @@ export interface UnorderedReaction {
     react:(...args) => void;
 }
 
+export interface Reaction2 {
+    
+    //new(...args):Reaction2;
+
+    react:(...args) => void;
+}
 export interface Schedulable<T> {
     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
     unschedule(handle: TimeInstant):void;
@@ -199,7 +208,7 @@ export class Timer implements Readable<TimeInstant> {
  * container. Adding a component to a container will also ensure 
  * that it is uniquely indexed within that container.
  */
-export class Reactor implements Nameable {
+export abstract class Reactor implements Nameable {
 
     _transformations:Array<
             [   // triggers, transformation, transformation arguments
@@ -207,12 +216,14 @@ export class Reactor implements Nameable {
             ]
     >;
 
-    _reactions:ArrayLike<{triggers: Array<Trigger>, reaction: UnorderedReaction, args:ArrayLike<any>}>;
+    _reactions:Array<{triggers: Array<Trigger>, reaction: UnorderedReaction, args:Array<any>}>;
     // _reactions:Array<
     //         [   // triggers, reaction, reaction arguments
     //             Array<Trigger<any>>, UnorderedReaction, any
     //         ]
     // >;
+
+    //abstract _checkTypes();
 
     getTimers: () => Set<Timer>; // FIXME: implements this
 
@@ -243,6 +254,7 @@ export class Reactor implements Nameable {
      * @param {string=} name - Given name
      */
     constructor(parent:Reactor | null, name?:string) {
+        
         var myName:string = this.constructor.name; // default
         var myIndex:number | null = null;
         var relations: Map<Port<any>, Set<Port<any>>> = new Map();
@@ -679,7 +691,13 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
 
         Object.assign(this, {
             writeValue(container:Reactor, value:T | null):void {
-                this._value = value; // FIXME: move _value inside constructor
+                this._value = value;
+                
+                for (let r of parent._reactions) {
+                    if (r.triggers.includes(this)) {
+                        globals.reactionQ.push([r.reaction, r.triggers]);
+                    }
+                }
             }
         });
 
@@ -1143,6 +1161,10 @@ export class App extends Reactor implements Executable {
     stop():void {
 
     }
+
+    // _checkTypes() {
+
+    // }
 }
 
 
@@ -1234,4 +1256,13 @@ class TransferValue<T> implements UnorderedReaction {
         to.set(from.get());
     }
 
+}
+
+class ActivationRecord<R extends Reaction,A> {
+    reaction:R;
+    args:A;
+    constructor(reaction:R, args:A) {
+        this.reaction = reaction;
+        this.args = args;
+    }
 }

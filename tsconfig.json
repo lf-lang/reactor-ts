@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "target": "es2018",
+        "esModuleInterop": true,
         "lib": ["esnext", "dom"],
         "sourceMap": true,
         "alwaysStrict": true,

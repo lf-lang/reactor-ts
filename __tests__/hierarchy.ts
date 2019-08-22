@@ -8,6 +8,10 @@ class Container extends Reactor {
     a: InPort<string> = new InPort(this);
     b: OutPort<string> = new OutPort(this);
 
+    _checkTypes() {
+        
+    }
+
 }
 
 
@@ -15,6 +19,10 @@ class Contained extends Reactor {
 
     a: InPort<string> = new InPort(this);
     b: OutPort<string> = new OutPort(this);
+
+    _checkTypes() {
+
+    }
 }
 
 var container = new Container(null);
@@ -23,6 +31,10 @@ var contained = new Contained(null);
 // */__tests__/.*
 describe('Container to Contained', () => {
     
+    var x: bigint = BigInt("0b11");
+
+    console.log("My big int: " + x);
+
     it('contained actor name', () => {
          expect(contained._getName()).toBe("Contained");
     });

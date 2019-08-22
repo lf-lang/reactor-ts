@@ -2,90 +2,88 @@
 
 import { _schedule } from "./reactor";
 
-// var Heap = require('heap');
-// FIXME: use heap
-
 export type Priority = number;
 
-export class PriorityQueue<T> {
-  
-  data:Array<{value:T, priority:Priority}>;
+export interface PrioritySetNode<T,S> {
+  _id:T;
+  _priority:S;
+  _next:PrioritySetNode<T,S>|null;
+  hasPrecedenceOver(node:PrioritySetNode<T,S>);
+}
 
-  constructor() {
-    this.data = [];
-  }
+export interface PrecedenceGraphNode {
+  _priority: number;
+}
 
-  _first() {
-    let index = 0;
-    let min = Infinity;
-    for (let i = 0; i < this.data.length; i++) {
-      let priority = this.data[i].priority;
-      if (Math.min(min, priority) === priority) {
-        min = priority;
-        index = i;
+export class PrioritySet<T,S> {
+
+  elements: Map<T, PrioritySetNode<T,S>>;
+  head: PrioritySetNode<T,S>|null;
+
+  push(element: PrioritySetNode<T,S>) {
+    let duplicate = this.elements.get(element._id);
+    this.elements.set(element._id, element);
+    if (duplicate == null) {
+      // add node to list
+      if (this.head == null || element.hasPrecedenceOver(this.head)) {
+        // prepend if list is empty or element has highest precedence
+        element._next = this.head;
+        this.head = element;
+      } else {
+        // insert
+        var curr = this.head;
+        var prev;
+        while (curr._next != null) {
+          if (element.hasPrecedenceOver(curr)) {
+            break;
+          } else {
+            prev = curr;
+            curr = curr._next;
+          }
+        }
+        prev._next = element;
+        element._next = curr;
       }
     }
-    return index;
   }
 
-  remove(priority:Priority) {
-    for (let i = 0; i < this.data.length; i++) {
-      if (this.data[i].priority == priority) {
-        delete this.data[i];
+  pop():PrioritySetNode<T,S>|undefined {
+    if (this.head != null) {
+      if (this.head != null) {
+        let node = this.head;
+        this.elements.delete(this.head._id);
+        this.head = this.head._next;
+        return node;
       }
     }
   }
 
-  push(value:T, priority:Priority = 0) {
-    return this.data.push({
-      value: value,
-      priority: priority
-    });
-  }
-
-  first() {
-    return this.data[this._first()];
-  }
-
-  pop(): T {
-    return this.data.splice(this._first(), 1)[0].value;
-  }
-
-  size() {
-    return this.data.length;
+  peek(): PrioritySetNode<T,S>|undefined {
+    if (this.head != null) {
+      return this.head;
+    }
   }
 }
 
-/* // only need these when using threads
-interface Vertex {
-  depth: number;
-  branchID: bigint;
-}
-*/
-
-export interface Vertex {
-  precedence: number;
-}
-
-export class PrecedenceGraph<T extends Vertex> {
+export class PrecedenceGraph<T extends PrecedenceGraphNode> {
 
   private graph:Map<T, Set<T>> = new Map(); // Map vertices to set of dependencies
   private numberOfEdges = 0;
 
-  addVertex(vertex:T) {
-    if (!this.graph.has(vertex)){
-      this.graph.set(vertex, new Set());
+  addNode(node:T) {
+    if (!this.graph.has(node)){
+      this.graph.set(node, new Set());
     }
   }
 
-  removeVertex(vertex:T) {
+  removeNode(node:T) {
     let deps:Set<T>|undefined;
-    if (deps = this.graph.get(vertex)) {
+    if (deps = this.graph.get(node)) {
       this.numberOfEdges -= deps.size;
-      this.graph.delete(vertex);
+      this.graph.delete(node);
       for (const [v, e] of this.graph) {
-        if (e.has(vertex)) {
-          e.delete(vertex);
+        if (e.has(node)) {
+          e.delete(node);
           this.numberOfEdges--;
         }
       }
@@ -139,7 +137,7 @@ export class PrecedenceGraph<T extends Vertex> {
     return [this.graph.size, this.numberOfEdges];
   }
 
-  orderVertices(spacing:number=100) {
+  updatePriorities(spacing:number=100) {
     var start: Array<T> = new Array();
     var clone = new Map();
     var count = 0;
@@ -159,7 +157,7 @@ export class PrecedenceGraph<T extends Vertex> {
   
     /* Sort reactions */
     for (var n:T|undefined; (n = start.shift()) != null; count += spacing) {
-      n.precedence = count;
+      n._priority = count;
 
       // for each node v with an edge e from n to v do
       for (const [v,e] of clone) {
