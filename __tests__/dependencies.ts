@@ -132,6 +132,9 @@ describe('Priority Set', () => {
         reactionQ.push(r);
     }
     
+    // duplicate insertion
+    reactionQ.push(nodes[5]);
+
     it('first pop', () => {
          expect(reactionQ.pop()).toEqual({_id: 6, _next: null, _priority: 0});
     });
@@ -151,9 +154,11 @@ describe('Priority Set', () => {
     it('fifth pop', () => {
         expect(reactionQ.pop()).toEqual({_id: 2, _next: null, _priority: 400});
     });
-
+    
     it('sixth pop', () => {
         expect(reactionQ.pop()).toEqual({_id: 1, _next: null, _priority: 500});
     });
+
+
 
 });

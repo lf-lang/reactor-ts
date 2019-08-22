@@ -21,32 +21,45 @@ export class PrioritySet<T,S> {
   head: PrioritySetNode<T,S>|null;
 
   push(element: PrioritySetNode<T,S>) {
-    let duplicate = this.elements.get(element._id);
+    // find duplicate
+    var duplicate = this.elements.get(element._id); // FIXME: maybe not use a map at all?
+    // update map
     this.elements.set(element._id, element); // overwrites if duplicate
-    if (duplicate == null) {
-      // add node to list
-      if (this.head == null) {
-        element._next = null;
+    // update linked list
+    if (this.head == null) {
+      // create head
+      element._next = null;
+      this.head = element;
+    } else if (this.head == duplicate) {
+      // replace head
+      element._next = this.head._next;
+      this.head = element;
+      //duplicate._next = null; // FIXME: not sure why this is problematic
+    } else {
+      // prepend
+      if (element.hasPrecedenceOver(this.head)) {
+        element._next = this.head;
         this.head = element;
-      } else {
-        // prepend
-        if (element.hasPrecedenceOver(this.head)) {
-          element._next = this.head;
-          this.head = element;
+        return;
+      } 
+      // seek
+      var curr = this.head;
+      while (curr._next != null) {
+        if (duplicate != null && curr._next == duplicate) {
+          // replace duplicate
+          curr._next = element;
+          element._next = duplicate._next;
+          duplicate._next = null;
           return;
+        } else if (element.hasPrecedenceOver(curr._next)) {
+          break;
+        } else {
+          curr = curr._next;
         }
-        // insert
-        var curr = this.head;
-        while (curr._next != null) {
-          if (element.hasPrecedenceOver(curr._next)) {
-            break;
-          } else {
-            curr = curr._next;
-          }
-        }
-        element._next = curr._next; // null if last
-        curr._next = element; 
       }
+      // insert
+      element._next = curr._next; // null if last
+      curr._next = element;
     }
   }
 
