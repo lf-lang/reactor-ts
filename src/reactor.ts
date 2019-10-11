@@ -149,12 +149,12 @@ export class Reaction extends UnorderedReaction implements PrecedenceGraphNode,
 
 
 //FIXME: delete Reaction2 once we have verfified it's never used anywhere.
-// export interface Reaction2 {
+export interface Reaction2 {
     
-//     //new(...args):Reaction2;
+    //new(...args):Reaction2;
 
-//     react:(...args) => void;
-// }
+    react:(...args) => void;
+}
 
 //end of Reaction2 code to delete.
 

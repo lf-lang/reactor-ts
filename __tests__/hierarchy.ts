@@ -31,11 +31,12 @@ var contained = new Contained(null);
 // */__tests__/.*
 describe('Container to Contained', () => {
     
-    var x: bigint = BigInt("0b11");
 
-    console.log("My big int: " + x);
 
     it('contained actor name', () => {
+        var x: bigint = BigInt("0b11");
+
+        console.log("My big int: " + x);
          expect(contained._getName()).toBe("Contained");
     });
 
