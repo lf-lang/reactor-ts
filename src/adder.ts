@@ -60,7 +60,7 @@ class AddN<T> implements UnorderedReaction {
     }
 }
 
-
+//FIXME: reaction2 has been deleted from reactor.ts
 export class AddTwo2 implements Reaction2 {
 
     args;

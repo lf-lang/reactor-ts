@@ -1,5 +1,6 @@
 //import {PriorityQueue} from './util';
 
+import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
 import * as globals from './globals'
 
 //---------------------------------------------------------------------//
@@ -107,24 +108,56 @@ export interface Transformation {
     new(container: Set<Reactor>, reactions:Array<Reaction>):Transformation;
 }
 
-export interface Reaction extends UnorderedReaction {
-    state: Object;
-    new(state:Object):Reaction;
-}
-
-// The arguments of a reaction can be of *any* type.
+// The arguments of a reaction's react function can be of *any* type.
 // Extra type annotations must be used to ensure that inputs,
 // outputs, and actions map correctly to reaction arguments.
-export interface UnorderedReaction {
+export abstract class UnorderedReaction {
     react:(...args) => void;
+
+    constructor(react: (...args) => void){
+        this.react = react;
+    }
 }
 
-export interface Reaction2 {
+export class Reaction extends UnorderedReaction implements PrecedenceGraphNode,
+ PrioritySetNode<number,number>{
+
+    state: Object;
+
+    //Precedence graph node attributes
+    _id: number;
+    _next: Reaction;
+    _priority: number;
+
+    constructor(state: Object, id: number, react: (...args) => void) {
+        super(react);
+        this._id = id;
+        this.state = Object.assign(this.state, state);
+        //Note Object.assign copies the values of all enumerable own properties,
+        //but does not perform a deep copy.
+    }
     
-    //new(...args):Reaction2;
-
-    react:(...args) => void;
+    hasPrecedenceOver(node: PrioritySetNode<number,number>) {
+        if (this._priority < node._priority) {
+            return true;
+        } else {
+            return false;
+        }
+    }    
 }
+
+
+
+//FIXME: delete Reaction2 once we have verfified it's never used anywhere.
+// export interface Reaction2 {
+    
+//     //new(...args):Reaction2;
+
+//     react:(...args) => void;
+// }
+
+//end of Reaction2 code to delete.
+
 export interface Schedulable<T> {
     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
     unschedule(handle: TimeInstant):void;
@@ -216,7 +249,8 @@ export abstract class Reactor implements Nameable {
             ]
     >;
 
-    _reactions:Array<{triggers: Array<Trigger>, reaction: UnorderedReaction, args:Array<any>}>;
+    //FIXME: reaction should probably be an UnorderedReaction instead of Reaction.
+    _reactions:Array<{triggers: Array<Trigger>, reaction: Reaction, args:Array<any>}>;
     // _reactions:Array<
     //         [   // triggers, reaction, reaction arguments
     //             Array<Trigger<any>>, UnorderedReaction, any
@@ -695,7 +729,11 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
                 
                 for (let r of parent._reactions) {
                     if (r.triggers.includes(this)) {
-                        globals.reactionQ.push([r.reaction, r.triggers]);
+
+                        //Create a PrioritySetNode for this reaction and push
+                        //the node to the reaction queue
+                        globals.reactionQ.push(r.reaction);
+                        //globals.reactionQ.push([r.reaction, r.triggers]);
                     }
                 }
             }

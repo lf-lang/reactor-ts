@@ -8,7 +8,7 @@ export interface PrioritySetNode<T,S> {
   _id:T;
   _priority:S;
   _next:PrioritySetNode<T,S>|null;
-  hasPrecedenceOver(node:PrioritySetNode<T,S>);
+  hasPrecedenceOver:(node:PrioritySetNode<T,S>) => boolean;
 }
 
 export interface PrecedenceGraphNode {
