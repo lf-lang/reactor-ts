@@ -111,30 +111,43 @@ export interface Transformation {
 // The arguments of a reaction's react function can be of *any* type.
 // Extra type annotations must be used to ensure that inputs,
 // outputs, and actions map correctly to reaction arguments.
-export abstract class UnorderedReaction {
+export abstract class Reaction {
+
+    state: Object;
+    triggers: Array<Trigger>;
     react:(...args) => void;
 
-    constructor(react: (...args) => void){
-        this.react = react;
+    constructor(state: Object, triggers: Array<Trigger>, ){
+        this.triggers = triggers;
+        this.state = state;
     }
 }
 
-export class Reaction extends UnorderedReaction implements PrecedenceGraphNode,
- PrioritySetNode<number,number>{
 
+//A prioritized reaction wraps a Reaction with a priority and may be inserted into the reaction queue.
+//The priority of a reaction depends on the priority of its reactor, which is
+//determined by a topological sort of reactors.
+export class PrioritizedReaction implements PrecedenceGraphNode,
+ PrioritySetNode<number,number>, Reaction{
+
+    //Reaction attributes
+    triggers: Array<Trigger>;
+    react:(...args) => void;
     state: Object;
 
     //Precedence graph node attributes
     _id: number;
-    _next: Reaction;
+    _next: PrioritySetNode<number,number> | null;
     _priority: number;
 
-    constructor(state: Object, id: number, react: (...args) => void) {
-        super(react);
+    constructor(reaction: Reaction, id: number,
+        next: PrioritySetNode<number,number>|null, priority: number) {
+        this.triggers = reaction.triggers;
+        this.react = reaction.react;
+        this.state = reaction.state;
         this._id = id;
-        this.state = Object.assign(this.state, state);
-        //Note Object.assign copies the values of all enumerable own properties,
-        //but does not perform a deep copy.
+        this._next = next;
+        this._priority = priority;
     }
     
     hasPrecedenceOver(node: PrioritySetNode<number,number>) {
@@ -248,9 +261,10 @@ export abstract class Reactor implements Nameable {
                 Array<Trigger>, Transformation, any
             ]
     >;
-
-    //FIXME: reaction should probably be an UnorderedReaction instead of Reaction.
-    _reactions:Array<{triggers: Array<Trigger>, reaction: Reaction, args:Array<any>}>;
+    
+    _reactions:Array<Reaction>;
+    // _reactions:Array<{triggers: Array<Trigger>, reaction: Reaction, args:Array<any>}>;
+    
     // _reactions:Array<
     //         [   // triggers, reaction, reaction arguments
     //             Array<Trigger<any>>, UnorderedReaction, any
@@ -274,6 +288,18 @@ export abstract class Reactor implements Nameable {
     _hasGrandparent: (container:Reactor) => boolean;
 
     _hasParent: (component: Reactor) => boolean;
+
+    //A reactor's priority represents its order in the topological sort.
+    //The default value of -1 indicates a priority has not been set.
+    _priority: number = -1;
+
+    getPriority(){
+        return this._priority;
+    }
+
+    setPriority(priority: number){
+        this._priority = priority;
+    }
 
     /**
      * Return a string that identifies this component.
@@ -727,12 +753,14 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
             writeValue(container:Reactor, value:T | null):void {
                 this._value = value;
                 
+                //FIXME: parent.getPriority needs to be set somewhere
                 for (let r of parent._reactions) {
                     if (r.triggers.includes(this)) {
 
-                        //Create a PrioritySetNode for this reaction and push
-                        //the node to the reaction queue
-                        globals.reactionQ.push(r.reaction);
+                        //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+                        let prioritizedReaction = new PrioritizedReaction(r ,
+                             globals.getReactionID(), null, parent.getPriority());
+                        globals.reactionQ.push(prioritizedReaction);
                         //globals.reactionQ.push([r.reaction, r.triggers]);
                     }
                 }

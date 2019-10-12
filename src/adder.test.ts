@@ -12,11 +12,13 @@ describe('adder', function () {
         expect(expect(adder).toBeInstanceOf(Adder));
 
         console.log(adder);
-        console.log(adder._reactions[0].reaction);
+        console.log(adder._reactions[0]);
 
-        var addRe = new AddTwo();
-        console.log(addRe);
+        //Unecessary now the adder defines its own reactions.
+        //var addRe = new AddTwo();
+        //console.log(addRe);
 
+        
         // adder.provideInput("in2", 2);
         // adder.provideInput("in1", 1);
         //adder.in1.writeValue(this, 2);
