@@ -1,6 +1,6 @@
 'use strict'
 
-import { _schedule } from "./reactor";
+// import { _schedule } from "./reactor";
 
 export type Priority = number;
 

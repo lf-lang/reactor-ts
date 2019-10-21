@@ -23,15 +23,4 @@ export class Clock extends Reactor {
         this.addTimer(t2);
         //new AddTwo2([this.in1, this.in2, this.in1]);
     }
-
-    //FIXME: the if statement never runs.
-    _checkTypes() {
-        // Do not invoke any reactions; only show the 
-        // type checker how it _would_ be done
-        if (false) {
-            for (let r of this._reactions) {
-                //r.react.apply(undefined, r.args);
-            }
-        }
-    }
 }

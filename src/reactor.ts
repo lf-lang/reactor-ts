@@ -12,8 +12,10 @@ import * as globals from './globals'
 //---------------------------------------------------------------------//
 
 /** Units ranging from femtoseconds to years. */
-export type TimeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" | 
-              "min" | "hour" | "day" | "week" | "month" | "year";
+export type TimeUnit = "nsec" | "usec" | "msec" | "sec" | 
+              "minute" | "hour" | "day" | "week";
+// export type TimeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" | 
+//               "min" | "hour" | "day" | "week" | "month" | "year";
 // FIXME: align this with LF compiler, maybe use an enum instead
 
 
@@ -22,15 +24,93 @@ export type TimeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" |
  */
 export type TimeInterval = null | [number, TimeUnit] | 0;
 
+/** 
+ * A superdense time moment.
+ * If not 0, the first array element represents time instants from the beginning of
+ * execution in nanoseconds and the second element represents microsteps
+ * starting from 0.
+ */ 
 export type TimeInstant = [number, number] | 0;
+
+//---------------------------------------------------------------------//
+// Helper Functions for Types                                                   //
+//---------------------------------------------------------------------//
+
+//Return true if t0 < t1, otherwise return false.
+export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant){
+    if(t0 === 0){
+        return true;
+    }
+    if(t1 === 0){
+        return false;
+    }
+    if(t0[0] < t1[0]){
+        return true;
+    }
+    if(t0[0] == t1[0] &&
+            t0[1] < t1[1]){
+        return true;
+    }
+    return false;
+}
+
+//Convert a time interval to a number. This is helpful for TimeInstants.
+export function timeIntervalToNumber(timeInt: TimeInterval){
+    if(timeInt === null){
+        throw new Error('timeIntervalToNumber cannot convert a null TimeInterval to a number');
+    }
+
+    let conversionFactor: number = -1;
+
+    switch(timeInt[1]){
+        case "nsec" : {
+            conversionFactor = 1;
+            break;
+        }
+        case "usec" : {
+            conversionFactor = 1000;
+            break;
+        }
+        case "msec" : {
+            conversionFactor = 1000000;
+            break;
+        }
+        case "sec" : {
+            conversionFactor = 1000000000;
+            break;
+        }
+        case "minute" : {
+            conversionFactor = 60000000000;
+            break;
+        }
+        case "hour" : {
+            conversionFactor = 3600000000000;
+            break;
+        }
+        case "day" : {
+            conversionFactor = 86400000000000;
+            break;
+        }
+        case "week" : {
+            conversionFactor = 604800000000000;
+            break;
+        }
+    }
+
+    return timeInt[0] * conversionFactor;
+};
 
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
 //---------------------------------------------------------------------//
-export function _schedule<T>(action:Action<T>, 
-        additionalDelay:TimeInterval, value:T | null): TimeInstant {
-    return [0,0]
-}
+// export function _schedule<T>(action:Action<T>, scheduleTime: TimeInstant) {
+//     //FIXME
+// }
+
+// export function _schedule<T>(action:Action<T>, 
+//     additionalDelay:TimeInterval, value:T | null): TimeInstant {
+// return [0,0]
+// }
 
 //---------------------------------------------------------------------//
 // Interfaces                                                          //
@@ -156,11 +236,10 @@ export class PrioritizedReactable implements PrecedenceGraphNode,
     _next: PrioritySetNode<number,number> | null;
     _priority: number;
 
-    constructor(r: Reactable, id: number,
-        next: PrioritySetNode<number,number>|null, priority: number) {
+    constructor(r: Reactable, id: number, priority: number) {
         this.r = r;
         this._id = id;
-        this._next = next;
+        this._next = null;
         this._priority = priority;
     }
     // constructor(reaction: Reaction, id: number,
@@ -185,19 +264,69 @@ export class PrioritizedReactable implements PrecedenceGraphNode,
 
 
 //FIXME: delete Reaction2 once we have verfified it's never used anywhere.
-export interface Reaction2 {
+// export interface Reaction2 {
     
-    //new(...args):Reaction2;
+//     //new(...args):Reaction2;
 
-    react:(...args) => void;
-}
+//     react:(...args) => void;
+// }
 
 //end of Reaction2 code to delete.
+
+//
+//In the C implementation an event has a time, trigger, and payload
+//There are three kinds of events: Timer, Input, and Internal.
+//They all have the same properties.
+export class Event {
+    time: TimeInstant;
+    trigger: Trigger;
+    payload: any;
+
+    constructor(time: TimeInstant, trigger: Trigger, payload: any){
+        this.time = time;
+        this.trigger = trigger;
+        this.payload = payload;
+    }
+}
+
+//A prioritized reaction wraps an Event with a priority and precedence
+//and may be inserted into the reaction queue.
+//The priority of an Event is determined by its time. An Event with an earlier time
+//than another has precedence.
+export class PrioritizedEvent implements 
+ PrioritySetNode<number,TimeInstant>{
+
+    e: Event;
+
+    //Precedence graph node attributes
+    _id: number;
+    _next: PrioritySetNode<number,TimeInstant> | null;
+    _priority: TimeInstant;
+
+    constructor(e: Event, id: number ){
+        this.e = e;
+        this._id = id;
+
+        this._next = null;
+        this._priority = e.time;
+    }
+
+    //TODO: remove leading underscore from _priority variable because it's not used
+    //privately in cases like this?
+    hasPrecedenceOver(node: PrioritySetNode<number,TimeInstant>) {
+        return compareTimeInstants(this._priority, node._priority);
+    }    
+
+ }
 
 export interface Schedulable<T> {
     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
     unschedule(handle: TimeInstant):void;
 }
+
+//Matt: An action is an internal event so I think there's a lot of overlap with
+//that class and the below code.
+//BEGIN COMMENTED OUT ACTION CLASS
 
 /**
  * An action denotes a self-scheduled event. If an action is instantiated
@@ -207,44 +336,54 @@ export interface Schedulable<T> {
  * constant and cannot be overridden using the delay argument in a call to 
  * schedule().
  */
-export class Action<T> implements Trigger {
-    get: () => T | null;
+// export class Action<T> implements Trigger {
+//     get: () => T | null;
 
-    /**
-     * Schedule this action. If additionalDelay is 0 or unspecified, the action 
-     * will occur at the current logical time plus one micro step.
-     */
-    schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
+//     /**
+//      * Schedule this action. If additionalDelay is 0 or unspecified, the action 
+//      * will occur at the current logical time plus one micro step.
+//      */
+//     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
 
-    constructor(parent:Reactor, delay?:TimeInterval) { 
-        var _value;
+//     constructor(parent:Reactor, delay?:TimeInterval) { 
+//         var _value: T;
 
-        Object.assign({
-            get(): T | null {
-                return _value;
-            }
-            // FIXME: add writeValue
-        });
+//         Object.assign({
+//             get(): T | null {
+//                 return _value;
+//             }
+//             // FIXME: add writeValue
+//         });
 
-        Object.assign(this, {
-            schedule(additionalDelay:TimeInterval, value?:T): TimeInstant {
+//         Object.assign(this, {
+//             schedule(additionalDelay:TimeInterval, value?:T): TimeInstant {
+//                 let numericDelay: number;
                 
-                if (delay == null || delay === 0) {
-                    delay = additionalDelay;
-                } else {
-                    if (additionalDelay != null && additionalDelay !== 0) {
-                        delay[0] += additionalDelay[0];
-                    }
-                }
-                return _schedule(this, delay, value);
-            }
-        });
-    }
+//                 //FIXME
+//                 // if(additionalDelay == null || additionalDelay == 0
+//                 //      || additionalDelay[0] == 0){
 
-    unschedule(handle: TimeInstant):void {
-        // FIXME
-    }
-}
+
+//                 // }
+
+//                 // if ( (delay == null || delay === 0) &&  ) {
+//                 //     numericDelay = timeIntervalToNumber(additionalDelay);
+//                 // } else {
+//                 //     if (additionalDelay != null && additionalDelay !== 0) {
+//                 //         delay[0] += timeIntervalToNumber(additionalDelay);
+//                 //     }
+//                 // }
+//                 // return _schedule(this, delay, value);
+//             }
+//         });
+//     }
+
+//     unschedule(handle: TimeInstant):void {
+//         // FIXME
+//     }
+// }
+
+//END COMMENTED OUT ACTION CLASS
 
 
 //Matt: I don't understand why this should be readable,
@@ -263,9 +402,13 @@ export class Timer implements Reactable{
     //The setup function should be used to start the timer using the offset
     setup(){
         if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
+            let timerInitInstant: TimeInstant = [timeIntervalToNumber(this.offset), 0];
+            let timerInitEvent: Event = new Event(timerInitInstant, this, null);
+            let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, globals.getEventID());
+            globals.scheduleEvent(timerInitPriEvent);
+
             //FIXME
-            console.log("FIXME: react does not yet schedule timer with offset " 
-            + this.offset[0] + " " + this.offset[1]);
+            console.log("Scheduled timer init at " + timerInitInstant);
         }
     }
 
@@ -339,7 +482,7 @@ export abstract class Reactor implements Nameable {
     //addTimer: (timer: Timer) => void;
     
     //FIXME: assign in constructor?
-    //FIXME: don't return the timer set, return a copy
+    //FIXME: don't return the timer set, return a copy.
     getTimers(){
         return this._timers
     }
@@ -831,7 +974,7 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
 
                         //Create a PrioritySetNode for this reaction and push the node to the reaction queue
                         let prioritizedReactable = new PrioritizedReactable(r ,
-                             globals.getReactionID(), null, parent.getPriority());
+                             globals.getReactionID(), parent.getPriority());
                         globals.reactionQ.push(prioritizedReactable);
                         //globals.reactionQ.push([r.reaction, r.triggers]);
                     }

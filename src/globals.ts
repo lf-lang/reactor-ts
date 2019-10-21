@@ -1,10 +1,14 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Timer, Reaction, Trigger } from "./reactor";
+import { Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent } from "./reactor";
 
 export var reactionQ = new PrioritySet();
 export var eventQ = new PrioritySet();
+
+//The current time, made available so actions may be scheduled relative
+//to it. We'll see if this should be moved somewhere else.
+export var currentLogicalTime: TimeInstant = [0,0];
 
 //Array of timers used to start all timers when the runtime begins.
 //_timers are registered here in their constructor.
@@ -20,8 +24,16 @@ export function getReactionID(){
     return _reactionIDCount++;
 }
 
-export function schedule(){
-    //FIXME
+//Use BigInt instead of number?
+var _eventIDCount = 0;
+export function getEventID(){
+    return _eventIDCount++;
+}
+
+//FIXME. This should be done in a more object oriented way.
+//See the commented out action class in reactor.
+export function scheduleEvent(e: PrioritizedEvent){
+    eventQ.push(e);
 }
 
 //Call this 
@@ -46,9 +58,10 @@ var _startTimers = function(){
 };
 
 
-//FIXME: Move queues, schedule, into Runtime class or delete this class.
+//FIXME: Move queues, schedule, into Runtime class, or make them properties of reactors,
+//and delete this class. I like the idea of calling startRuntime() directly on the top
+//level Reactor.
 export class Runtime {
-
 
 
     // Wait until physical time matches or exceeds the time of the least tag
