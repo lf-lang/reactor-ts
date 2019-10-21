@@ -31,8 +31,6 @@ var contained = new Contained(null);
 // */__tests__/.*
 describe('Container to Contained', () => {
     
-
-
     it('contained actor name', () => {
         var x: bigint = BigInt("0b11");
 

@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, PrioritizedReaction, Trigger, Reaction, Reaction2} from './reactor';
+import {Reactor, InPort, OutPort, Trigger, Reaction} from './reactor';
 
 export class Adder extends Reactor {
  
@@ -47,7 +47,7 @@ export class AddTwo extends Reaction {
     //     this.triggers = triggers;
     // }
 
-    react = (in1: InPort<number>, in2: InPort<number>, out:OutPort<number>):void {
+    react = function (in1: InPort<number>, in2: InPort<number>, out:OutPort<number>) {
         let a = in1.get();
         let b = in2.get(); // FIXME: this looks a little clumsy
         if (a == null) {
@@ -60,8 +60,8 @@ export class AddTwo extends Reaction {
     }
 }
 
-class AddN<T> implements extends Reaction {
-    react = (src:Array<InPort<T>>, dst:OutPort<T>) {
+class AddN<T> extends Reaction {
+    react = function (src:Array<InPort<T>>, dst:OutPort<T>) {
         var sum;
         for (let i of src) {
             sum += i;

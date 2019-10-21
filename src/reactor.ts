@@ -1,3 +1,7 @@
+/*
+ FIXME: License, copyright, authors.
+ */
+
 //import {PriorityQueue} from './util';
 
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
@@ -33,7 +37,7 @@ export function _schedule<T>(action:Action<T>,
 //---------------------------------------------------------------------//
 
 export interface Trigger {
-
+    //FIXME: A trigger is a timer, an input, or an action.
 }
 
 /**
@@ -108,10 +112,18 @@ export interface Transformation {
     new(container: Set<Reactor>, reactions:Array<Reaction>):Transformation;
 }
 
+//An interface for classes implementing a react function.
+//Both reactions and timers react to events on the event queue
+export interface Reactable {
+    react:(...args) => void;
+    triggers: Array<Trigger>;
+}
+
+// A Reaction is a reactable with state.
 // The arguments of a reaction's react function can be of *any* type.
 // Extra type annotations must be used to ensure that inputs,
 // outputs, and actions map correctly to reaction arguments.
-export abstract class Reaction {
+export abstract class Reaction implements Reactable{
 
     state: Object;
     triggers: Array<Trigger>;
@@ -124,31 +136,42 @@ export abstract class Reaction {
 }
 
 
-//A prioritized reaction wraps a Reaction with a priority and may be inserted into the reaction queue.
+//A prioritized reaction wraps a Reactable with a priority and precedence
+//and may be inserted into the reaction queue.
 //The priority of a reaction depends on the priority of its reactor, which is
 //determined by a topological sort of reactors.
-export class PrioritizedReaction implements PrecedenceGraphNode,
- PrioritySetNode<number,number>, Reaction{
+export class PrioritizedReactable implements PrecedenceGraphNode,
+ PrioritySetNode<number,number>{
+
+
+    r: Reactable;
 
     //Reaction attributes
-    triggers: Array<Trigger>;
-    react:(...args) => void;
-    state: Object;
+    // triggers: Array<Trigger>;
+    // react:(...args) => void;
+    // state: Object;
 
     //Precedence graph node attributes
     _id: number;
     _next: PrioritySetNode<number,number> | null;
     _priority: number;
 
-    constructor(reaction: Reaction, id: number,
+    constructor(r: Reactable, id: number,
         next: PrioritySetNode<number,number>|null, priority: number) {
-        this.triggers = reaction.triggers;
-        this.react = reaction.react;
-        this.state = reaction.state;
+        this.r = r;
         this._id = id;
         this._next = next;
         this._priority = priority;
     }
+    // constructor(reaction: Reaction, id: number,
+    //     next: PrioritySetNode<number,number>|null, priority: number) {
+    //     this.triggers = reaction.triggers;
+    //     this.react = reaction.react;
+    //     this.state = reaction.state;
+    //     this._id = id;
+    //     this._next = next;
+    //     this._priority = priority;
+    // }
     
     hasPrecedenceOver(node: PrioritySetNode<number,number>) {
         if (this._priority < node._priority) {
@@ -223,17 +246,51 @@ export class Action<T> implements Trigger {
     }
 }
 
-export class Timer implements Readable<TimeInstant> {
+
+//Matt: I don't understand why this should be readable,
+//so I'm removing the Readable interface for now
+//implements Readable<TimeInstant>
+export class Timer implements Reactable{
     
-    get:() => TimeInstant;
+    //For reference, the type of a TimeInterval is defined as:
+    //TimeInterval = null | [number, TimeUnit] | 0;
+    period: TimeInterval;
+    offset: TimeInterval;
 
-    constructor(period:TimeInterval) {
+    //A timer's only trigger is itself.
+    triggers: Array<Trigger> = new Array();;
 
+    //The setup function should be used to start the timer using the offset
+    setup(){
+        if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
+            //FIXME
+            console.log("FIXME: react does not yet schedule timer with offset " 
+            + this.offset[0] + " " + this.offset[1]);
+        }
     }
 
-    adjustPeriod(period: TimeInterval):void {
+    //The react function for a timer schedules the next timer event using the period
+    //FIXME: How should a period of 0 be handled? For now it causes the timer to not be scheduled again.
+    react() {
+        if(this.period && this.period[0] && this.period[0] > 0 && this.period[1]){
+            //FIXME
+            console.log("FIXME: react does not yet schedule timer with period " +
+            this.period[0] + " " + this.period[1]);
+        }
+    };
+
+    constructor(period:TimeInterval, offset:TimeInterval) {
+        this.period = period;
+        this.offset = offset;
         
-        
+        //Register this timer as its own trigger.
+        this.triggers.push(this);
+
+        //Register this timer so it can be started when the runtime begins.
+        globals.timers.push(this);
+    }
+
+    adjustPeriod(period: TimeInterval):void {   
         // FIXME
     }
     
@@ -273,7 +330,21 @@ export abstract class Reactor implements Nameable {
 
     //abstract _checkTypes();
 
-    getTimers: () => Set<Timer>; // FIXME: implements this
+    _timers:Set<Timer> = new Set<Timer>();
+
+    //FIXME: assign in constructor?
+    addTimer(timer: Timer){
+        this._timers.add(timer);
+    }
+    //addTimer: (timer: Timer) => void;
+    
+    //FIXME: assign in constructor?
+    //FIXME: don't return the timer set, return a copy
+    getTimers(){
+        return this._timers
+    }
+    //getTimers: () => Set<Timer>;
+
 
     _setName: (string) => void;
 
@@ -293,6 +364,7 @@ export abstract class Reactor implements Nameable {
     //The default value of -1 indicates a priority has not been set.
     _priority: number = -1;
 
+    //FIXME: assign in constructor?
     getPriority(){
         return this._priority;
     }
@@ -758,9 +830,9 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
                     if (r.triggers.includes(this)) {
 
                         //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                        let prioritizedReaction = new PrioritizedReaction(r ,
+                        let prioritizedReactable = new PrioritizedReactable(r ,
                              globals.getReactionID(), null, parent.getPriority());
-                        globals.reactionQ.push(prioritizedReaction);
+                        globals.reactionQ.push(prioritizedReactable);
                         //globals.reactionQ.push([r.reaction, r.triggers]);
                     }
                 }
@@ -827,6 +899,8 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
 
 }
 
+
+//An Event consists of a tag and and an action
 export class PureEvent {
 
 }
@@ -1316,19 +1390,23 @@ export class App extends Reactor implements Executable {
 // RPC: pull, other than reactive, which is push
 
 
-class TransferValue<T> implements UnorderedReaction {
+
+
+
+
+// class TransferValue<T> implements UnorderedReaction {
     
-    react(from:Readable<T>, to:Writable<T>) {
-        to.set(from.get());
-    }
+//     react(from:Readable<T>, to:Writable<T>) {
+//         to.set(from.get());
+//     }
 
-}
+// }
 
-class ActivationRecord<R extends Reaction,A> {
-    reaction:R;
-    args:A;
-    constructor(reaction:R, args:A) {
-        this.reaction = reaction;
-        this.args = args;
-    }
-}
+// class ActivationRecord<R extends Reaction,A> {
+//     reaction:R;
+//     args:A;
+//     constructor(reaction:R, args:A) {
+//         this.reaction = reaction;
+//         this.args = args;
+//     }
+// }
