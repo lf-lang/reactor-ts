@@ -116,9 +116,12 @@ export function timeIntervalToNumber(timeInt: TimeInterval){
 // Interfaces                                                          //
 //---------------------------------------------------------------------//
 
-export interface Trigger {
-    //FIXME: A trigger is a timer, an input, or an action.
-}
+/**
+ * A Trigger is something which can cause an Event: a Timer, an input, or an action.
+ * Reactables may register themselves as triggered by a Trigger. 
+ */
+
+export interface Trigger{}
 
 /**
  * A generic container for components.
@@ -273,18 +276,27 @@ export class PrioritizedReactable implements PrecedenceGraphNode,
 
 //end of Reaction2 code to delete.
 
-//
-//In the C implementation an event has a time, trigger, and payload
-//There are three kinds of events: Timer, Input, and Internal.
-//They all have the same properties.
+
+/**
+ * 
+ * An event is caused by a timer, caused by an input, or caused by an internal event
+ * It occurs at a particular time instant and carries an arbitrary data type as payload.
+ * There are three kinds of events: Timer, Input, and Internal.
+ * They all have the same properties.
+ */
+//In the C implementation an event has a time, trigger, and payload.
+
+//FIXME: Rename this class because it conflicts with a built in
+//class in typescript 
 export class Event {
     time: TimeInstant;
-    trigger: Trigger;
+    cause: Trigger;
     payload: any;
 
-    constructor(time: TimeInstant, trigger: Trigger, payload: any){
+    //FIXME: make payload optional
+    constructor(cause: Trigger, time: TimeInstant, payload: any){
         this.time = time;
-        this.trigger = trigger;
+        this.cause = cause;
         this.payload = payload;
     }
 }
@@ -396,15 +408,16 @@ export class Timer implements Reactable{
     period: TimeInterval;
     offset: TimeInterval;
 
-    //A timer's only trigger is itself.
-    triggers: Array<Trigger> = new Array();;
+    //A timer is only triggered by itself.
+    triggers: Array<Trigger> = new Array();
 
     //The setup function should be used to start the timer using the offset
     setup(){
         if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
             let timerInitInstant: TimeInstant = [timeIntervalToNumber(this.offset), 0];
-            let timerInitEvent: Event = new Event(timerInitInstant, this, null);
+            let timerInitEvent: Event = new Event(this, timerInitInstant, null);
             let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, globals.getEventID());
+            //FIXME: address the triggerMap
             globals.scheduleEvent(timerInitPriEvent);
 
             //FIXME
@@ -428,6 +441,7 @@ export class Timer implements Reactable{
         
         //Register this timer as its own trigger.
         this.triggers.push(this);
+        globals.triggerMap.registerReactable(this);
 
         //Register this timer so it can be started when the runtime begins.
         globals.timers.push(this);

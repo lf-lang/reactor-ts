@@ -31,6 +31,7 @@ describe('clock', function () {
 
         //expect().toBeUndefined();
         console.log(JSON.stringify(globals.reactionQ));
+        console.log(globals.triggerMap);
         
         //expect(adder.out.get()).toBe(3);
 

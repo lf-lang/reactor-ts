@@ -12,7 +12,8 @@ export class Clock extends Reactor {
     //     {triggers: [<Trigger>this.in1, <Trigger>this.in2], reaction: new AddN<number>(), args: [[this.in1, this.in2], this.out]},
     // ];
 
-    _triggerMap:Map<Trigger, Set<[Reaction, Array<any>]>>;
+    //FIXME: Remove this when global triggerMap is implemented
+    //_triggerMap:Map<Trigger, Set<[Reaction, Array<any>]>>;
 
     constructor() {
         super(null, "Clock");

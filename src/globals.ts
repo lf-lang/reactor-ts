@@ -1,7 +1,7 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent } from "./reactor";
+import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, Reactable } from "./reactor";
 
 export var reactionQ = new PrioritySet();
 export var eventQ = new PrioritySet();
@@ -14,9 +14,55 @@ export var currentLogicalTime: TimeInstant = [0,0];
 //_timers are registered here in their constructor.
 export var timers: Array<Timer> = [];
 
+/**
+ * This class matches a Trigger to the Reactables it triggers.
+ * When an event caused by a Trigger comes off the event queue, its
+ * matching reactables should be put on the the reaction queue 
+ */
+export class TriggerMap{
+    _tMap: Map<Trigger, Set<Reactable>> = new Map<Trigger, Set<Reactable>>();
+
+    /**
+     * Establish the mapping for a Reactable.
+     */
+    registerReactable(r: Reactable){
+        for(let trigger of r.triggers){
+            let reactableSet = this._tMap.get(trigger);
+            if(reactableSet){
+                if(! reactableSet.has(r)){
+                    reactableSet.add(r);
+                    this._tMap.set(trigger, reactableSet);
+                }
+                //If this reactable is already mapped to the trigger,
+                //do nothing.
+            } else {
+                //This is the first reactable mapped to this trigger,
+                //so create a new reactable set for it.
+                reactableSet = new Set<Reactable>();
+                this._tMap.set(trigger, reactableSet);
+            }
+        }
+    }
+
+    /**
+     * Get the set of reactables for a trigger.
+     */
+    getReactables(t: Trigger){
+        return this._tMap.get(t);
+    }
+
+    /**
+     */
+    deregisterReactable(e: Event){
+        //FIXME
+    }
+
+}
+
 //FIXME: Triggers must be inserted into this map somewhere.
-//Map triggers coming off the event queue to their dependent reactions. 
-export var triggerMap: Map<Trigger,Array<Reaction>> = new Map();
+//Map triggers coming off the event queue to the reactables they trigger. 
+export var triggerMap: TriggerMap = new TriggerMap();
+
 
 //Use BigInt instead of number?
 var _reactionIDCount = 0;
@@ -33,10 +79,11 @@ export function getEventID(){
 //FIXME. This should be done in a more object oriented way.
 //See the commented out action class in reactor.
 export function scheduleEvent(e: PrioritizedEvent){
+
+    //FIXME to use the triggerMap    
     eventQ.push(e);
 }
 
-//Call this 
 export function startRuntime() {
     _startTimers();
     //Main from C host:
@@ -57,14 +104,7 @@ var _startTimers = function(){
     }
 };
 
-
-//FIXME: Move queues, schedule, into Runtime class, or make them properties of reactors,
-//and delete this class. I like the idea of calling startRuntime() directly on the top
-//level Reactor.
-export class Runtime {
-
-
-    // Wait until physical time matches or exceeds the time of the least tag
+// Wait until physical time matches or exceeds the time of the least tag
     // on the event queue. If there is no event in the queue, return false.
     // After this wait, advance current_time to match
     // this tag. Then pop the next event(s) from the
@@ -79,9 +119,17 @@ export class Runtime {
     // Also return false if there are no more events in the queue and
     // the keepalive command-line option has not been given.
     // Otherwise, return true.
-    next = function() {
+export function next(){
+        let currentHead = eventQ.peek();
         //Fixme
     }
+
+
+//FIXME: Move queues, schedule, into Runtime class, or make them properties of reactors,
+//and delete this class. I like the idea of calling startRuntime() directly on the top
+//level Reactor.
+export class Runtime {
+
 
     //The C hosts's start_timers function contains the line
     //__schedule(&" + triggerStructName + ", 0LL, NULL);
