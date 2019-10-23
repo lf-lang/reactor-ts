@@ -1,14 +1,21 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, Reactable } from "./reactor";
+import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, Reactable, PrioritizedReactable } from "./reactor";
 
-export var reactionQ = new PrioritySet();
-export var eventQ = new PrioritySet();
+//FIXME: Move all of this into a singleton class named Runtime
+
+export var reactionQ = new PrioritySet<number,number>();
+export var eventQ = new PrioritySet<number,TimeInstant>();
 
 //The current time, made available so actions may be scheduled relative
 //to it. We'll see if this should be moved somewhere else.
 export var currentLogicalTime: TimeInstant = [0,0];
+
+//The physical time when execution began expressed as
+//the number of milliseconds elapsed since January 1, 1970 00:00:00 UTC.
+//Initialized in startRuntime
+export var startingWallTime: number = -1;
 
 //Array of timers used to start all timers when the runtime begins.
 //_timers are registered here in their constructor.
@@ -39,6 +46,7 @@ export class TriggerMap{
                 //This is the first reactable mapped to this trigger,
                 //so create a new reactable set for it.
                 reactableSet = new Set<Reactable>();
+                reactableSet.add(r);
                 this._tMap.set(trigger, reactableSet);
             }
         }
@@ -78,14 +86,14 @@ export function getEventID(){
 
 //FIXME. This should be done in a more object oriented way.
 //See the commented out action class in reactor.
-export function scheduleEvent(e: PrioritizedEvent){
-
-    //FIXME to use the triggerMap    
+export function scheduleEvent(e: PrioritizedEvent){  
     eventQ.push(e);
 }
 
-export function startRuntime() {
+export function startRuntime(successCallback: () => void , failureCallback: () => void ) {
+    startingWallTime = Date.now();
     _startTimers();
+    _next(successCallback, failureCallback);
     //Main from C host:
     // if (process_args(argc, argv)) {
     //     initialize();
@@ -119,15 +127,78 @@ var _startTimers = function(){
     // Also return false if there are no more events in the queue and
     // the keepalive command-line option has not been given.
     // Otherwise, return true.
-export function next(){
+
+    ///FIXME, give callbacks a way to return status info.
+export function _next(successCallback: ()=> void, failureCallback: () => void){
         let currentHead = eventQ.peek();
-        //Fixme
+        while(currentHead){
+            let currentPhysicalTime = Date.now() - startingWallTime;
+            let physicalTimeGap = currentHead._priority[0] - currentPhysicalTime;
+            if(physicalTimeGap > 0){
+                //Physical time is behind logical time.
+                //Wait and try again.
+                console.log("I set a timeout.");
+                console.log("currentPhysicalTime: " + currentPhysicalTime);
+                console.log("next logical time: " + currentHead._priority[0]);
+                console.log("physicalTimeGap was " + physicalTimeGap);
+                setTimeout(  ()=>{
+                    _next(successCallback, failureCallback);
+                    return;
+                }, physicalTimeGap);
+                return;
+            } else {
+                //Physical time has caught up to logical time so remove the
+                //event from the queue, advance logical time,
+                //and put the reactions it triggers on
+                //the reaction queue.
+                currentLogicalTime = currentHead._priority[0];
+
+                console.log("Starting reaction loop.");
+                console.log("currentPhysicalTime: " + currentPhysicalTime);
+                console.log("advanced logical time to: " + currentHead._priority[0]);
+                console.log("physicalTimeGap was " + physicalTimeGap);
+                
+                //An explicit type assertion is needed because we know the
+                //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
+                let trigger: Trigger = (currentHead as PrioritizedEvent).e.cause;
+                let toTrigger = triggerMap.getReactables(trigger);
+                if(toTrigger){
+                    console.log("Something was triggered");
+                    console.log(toTrigger);
+                    for(let reactable of toTrigger){
+                        console.log("Pushing new reactable onto queue");
+                        let prioritizedReactable = new PrioritizedReactable(reactable, getReactionID());
+                        reactionQ.push(prioritizedReactable);
+                    }
+                }
+                let headReaction = reactionQ.pop();
+                while(headReaction){
+                    //Explicit annotation because reactionQ contains PrioritizedReactables.
+                    console.log("reacting...");
+                    (headReaction as PrioritizedReactable).r.react();
+                    headReaction = reactionQ.pop();
+                }
+            }
+            //set up next iteration of outer loop for the next event
+            eventQ.pop();
+            currentHead = eventQ.peek();
+            
+        }
+        //Falling out of the while loop means the eventQ is empty.
+        console.log("returning _next I fell out of the while loop.");
+        successCallback();
+        return;
+        //FIXME: test if the -timeout option has been given and call the correct
+        //callback 
+        //FIXME: keep going if the keepalive command-line option has been given
     }
 
 
 //FIXME: Move queues, schedule, into Runtime class, or make them properties of reactors,
 //and delete this class. I like the idea of calling startRuntime() directly on the top
 //level Reactor.
+
+//Idea: make runtime a singleton class?
 export class Runtime {
 
 

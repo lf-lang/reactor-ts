@@ -9,8 +9,9 @@ export class Adder extends Reactor {
     out: OutPort<number> = new OutPort(this);
     
     _reactions = [
-        new AddTwo(this, [this.in1, this.in2]),
-        new AddN<number>(this, [this.in1, this.in2])
+        //FIXME: use real priorities that aren't magic numbers.
+        new AddTwo(this, [this.in1, this.in2], 3),
+        new AddN<number>(this, [this.in1, this.in2], 4)
     ];
     //     new Reaction(this,[<Trigger>this.in1, <Trigger>this.in2], this.reactionID1, ),
     //      new Reaction(this,[<Trigger>this.in1, <Trigger>this.in2], )

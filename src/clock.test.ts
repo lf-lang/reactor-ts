@@ -38,8 +38,14 @@ describe('clock', function () {
         //expect(adder._triggerMap()).toBe("bla");
     });
 
-    it('start runtime', function(){
-        globals.startRuntime();
+    it('start runtime', done => {
+
+        function fail(){
+            throw new Error("Runtime has failed.");
+        };
+
+        globals.startRuntime(done, fail);
+
     })
     // it('find ports in scope', () => {
     //     // var ports = new Set(adder._reactions[0][1].io);

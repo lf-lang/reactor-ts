@@ -11,13 +11,12 @@ import * as globals from './globals'
 // Types                                                               //
 //---------------------------------------------------------------------//
 
-/** Units ranging from femtoseconds to years. */
+/** Units for time. */
 export type TimeUnit = "nsec" | "usec" | "msec" | "sec" | 
               "minute" | "hour" | "day" | "week";
 // export type TimeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" | 
 //               "min" | "hour" | "day" | "week" | "month" | "year";
 // FIXME: align this with LF compiler, maybe use an enum instead
-
 
 /** 
  * A time interval must be accompanied by a time unit. Decimals are ignored.
@@ -62,37 +61,39 @@ export function timeIntervalToNumber(timeInt: TimeInterval){
 
     let conversionFactor: number = -1;
 
+    //Representation of time is normalized to msecs because javascript timing functions
+    //work in msecs.
     switch(timeInt[1]){
         case "nsec" : {
-            conversionFactor = 1;
+            conversionFactor = 0.000001;
             break;
         }
         case "usec" : {
-            conversionFactor = 1000;
+            conversionFactor = 0.001;
             break;
         }
         case "msec" : {
-            conversionFactor = 1000000;
+            conversionFactor = 1;
             break;
         }
         case "sec" : {
-            conversionFactor = 1000000000;
+            conversionFactor = 1000;
             break;
         }
         case "minute" : {
-            conversionFactor = 60000000000;
+            conversionFactor = 60000;
             break;
         }
         case "hour" : {
-            conversionFactor = 3600000000000;
+            conversionFactor = 3600000;
             break;
         }
         case "day" : {
-            conversionFactor = 86400000000000;
+            conversionFactor = 86400000;
             break;
         }
         case "week" : {
-            conversionFactor = 604800000000000;
+            conversionFactor = 604800000;
             break;
         }
     }
@@ -198,8 +199,9 @@ export interface Transformation {
 //An interface for classes implementing a react function.
 //Both reactions and timers react to events on the event queue
 export interface Reactable {
-    react:(...args) => void;
+    react:() => void;
     triggers: Array<Trigger>;
+    priority: number;
 }
 
 // A Reaction is a reactable with state.
@@ -211,10 +213,12 @@ export abstract class Reaction implements Reactable{
     state: Object;
     triggers: Array<Trigger>;
     react:(...args) => void;
+    priority: number;
 
-    constructor(state: Object, triggers: Array<Trigger>, ){
+    constructor(state: Object, triggers: Array<Trigger>, priority: number ){
         this.triggers = triggers;
         this.state = state;
+        this.priority = priority;
     }
 }
 
@@ -239,11 +243,11 @@ export class PrioritizedReactable implements PrecedenceGraphNode,
     _next: PrioritySetNode<number,number> | null;
     _priority: number;
 
-    constructor(r: Reactable, id: number, priority: number) {
+    constructor(r: Reactable, id: number) {
         this.r = r;
         this._id = id;
         this._next = null;
-        this._priority = priority;
+        this._priority = r.priority;
     }
     // constructor(reaction: Reaction, id: number,
     //     next: PrioritySetNode<number,number>|null, priority: number) {
@@ -407,17 +411,23 @@ export class Timer implements Reactable{
     //TimeInterval = null | [number, TimeUnit] | 0;
     period: TimeInterval;
     offset: TimeInterval;
+    
+    //Timers always have top priority.
+    priority = 0;
 
     //A timer is only triggered by itself.
     triggers: Array<Trigger> = new Array();
 
+    _timerFirings: number = 0;
+
+
     //The setup function should be used to start the timer using the offset
     setup(){
         if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
+            console.log("Triggers length of timer is: " + this.triggers.length);
             let timerInitInstant: TimeInstant = [timeIntervalToNumber(this.offset), 0];
             let timerInitEvent: Event = new Event(this, timerInitInstant, null);
             let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, globals.getEventID());
-            //FIXME: address the triggerMap
             globals.scheduleEvent(timerInitPriEvent);
 
             //FIXME
@@ -428,10 +438,21 @@ export class Timer implements Reactable{
     //The react function for a timer schedules the next timer event using the period
     //FIXME: How should a period of 0 be handled? For now it causes the timer to not be scheduled again.
     react() {
+        this._timerFirings++;
         if(this.period && this.period[0] && this.period[0] > 0 && this.period[1]){
-            //FIXME
-            console.log("FIXME: react does not yet schedule timer with period " +
-            this.period[0] + " " + this.period[1]);
+            if(this.period[0] > 0){
+                let nextLogicalTime: number =  timeIntervalToNumber(this.offset) + 
+                    timeIntervalToNumber(this.period) * this._timerFirings;
+                let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
+                let nextTimerEvent: Event = new Event(this, nextTimerInstant, null);
+                let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, globals.getEventID());
+                globals.scheduleEvent(nextTimerPriEvent);
+
+
+                console.log("Scheduling next event for timer with period " +
+                this.period[0] + " " + this.period[1]);
+            }
+
         }
     };
 
@@ -983,12 +1004,13 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
                 this._value = value;
                 
                 //FIXME: parent.getPriority needs to be set somewhere
+                //and it should allow different priorities for different reactions
+                //in the same reactor.
                 for (let r of parent._reactions) {
                     if (r.triggers.includes(this)) {
 
                         //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                        let prioritizedReactable = new PrioritizedReactable(r ,
-                             globals.getReactionID(), parent.getPriority());
+                        let prioritizedReactable = new PrioritizedReactable(r, globals.getReactionID());
                         globals.reactionQ.push(prioritizedReactable);
                         //globals.reactionQ.push([r.reaction, r.triggers]);
                     }
