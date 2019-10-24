@@ -24,6 +24,17 @@ export class Tock extends Reaction{
     }
 }
 
+export class Cuckoo extends Reaction{
+
+    /**
+     * Print cuckoo.
+     * @override
+     */
+    react(){
+        console.log("Cuckoo");
+    }
+}
+
 
 export class Clock extends Reactor {
 
@@ -43,7 +54,16 @@ export class Clock extends Reactor {
         tockTriggers.push(t2);
         const r2 = new Tock(this, tockTriggers, 0);
 
+        //At time 5 seconds, this reaction should be triggered
+        //simultaneosly by both timers, "Cuckoo" should only
+        //print once.
+        const cuckooTriggers = new Array();
+        cuckooTriggers.push(t1);
+        cuckooTriggers.push(t2);
+        const r3 = new Cuckoo(this, cuckooTriggers, 0);
+
         this._reactions.push(r1);
         this._reactions.push(r2);
+        this._reactions.push(r3);
     }
 }

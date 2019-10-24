@@ -173,33 +173,49 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 }, timeout);
                 return;
             } else {
-                //Physical time has caught up to logical time so remove the
-                //event from the queue, reschedule it if it's a timer, advance logical time,
-                //and put the reactions it triggers on
-                //the reaction queue.
-                currentLogicalTime = currentHead._priority[0];
-
-                console.log("Starting reaction loop.");
-                console.log("currentPhysicalTime: " + currentPhysicalTime);
+                //Physical time has caught up, so advance logical time
+                currentLogicalTime = currentHead._priority;
+                console.log("At least one event is ready to be processed")
                 console.log("advanced logical time to: " + currentHead._priority[0]);
+                console.log("currentPhysicalTime: " + currentPhysicalTime);
                 console.log("physicalTimeGap was " + physicalTimeGap);
-                
-                //An explicit type assertion is needed because we know the
-                //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
-                let trigger: Trigger = (currentHead as PrioritizedEvent).e.cause;
-                if(trigger instanceof Timer){
-                    trigger.reschedule();
-                }
-                let toTrigger = triggerMap.getReactions(trigger);
-                if(toTrigger){
-                    console.log("Something was triggered");
-                    console.log(toTrigger);
-                    for(let reaction of toTrigger){
-                        console.log("Pushing new reaction onto queue");
-                        let prioritizedReaction = new PrioritizedReaction(reaction, getReactionID());
-                        reactionQ.push(prioritizedReaction);
+
+                //Remove all simultaneous events from the queue.
+                //Reschedule timers, and put the triggered reactions on
+                //the reaction queue.
+
+                //Using a Set ensures a reaction triggered by multiple events at the same
+                //logical time will only react once.
+                let triggersNow = new Set<Reaction>();
+
+                //This loop should always execute at least once.
+                while(currentHead && currentHead._priority[0] == currentLogicalTime[0] &&
+                    currentHead._priority[1] == currentLogicalTime[1] ){
+
+                    //An explicit type assertion is needed because we know the
+                    //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
+                    let trigger: Trigger = (currentHead as PrioritizedEvent).e.cause;
+                    if(trigger instanceof Timer){
+                        trigger.reschedule();
                     }
+                    let toTrigger = triggerMap.getReactions(trigger);
+                    if(toTrigger){
+                        for(let reaction of toTrigger){
+                            triggersNow.add(reaction);
+                        }
+                    }
+                    eventQ.pop();
+                    currentHead = eventQ.peek();
                 }
+                
+                for (let reaction of triggersNow){
+                    console.log("Pushing new reaction onto queue");
+                    console.log(reaction);
+                    let prioritizedReaction = new PrioritizedReaction(reaction, getReactionID());
+                    reactionQ.push(prioritizedReaction);
+                }
+ 
+                
                 let headReaction = reactionQ.pop();
                 while(headReaction){
                     //Explicit annotation because reactionQ contains PrioritizedReactions.
@@ -208,10 +224,9 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                     headReaction = reactionQ.pop();
                 }
             }
-            //set up next iteration of outer loop for the next event
-            eventQ.pop();
-            currentHead = eventQ.peek();
-            
+
+            //The next iteration of the outer loop is ready because
+            //currentHead is either null, or a future event
         }
         //Falling out of the while loop means the eventQ is empty.
         console.log("Terminating runtime with success due to empty event queue.");

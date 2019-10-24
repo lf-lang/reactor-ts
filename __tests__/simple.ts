@@ -1,4 +1,4 @@
-import {Reactor, OutPort, InPort, PureEvent, App, Executable} from "../src/reactor";
+import {Reactor, OutPort, InPort, App, Executable} from "../src/reactor";
 
    /**
      * An actor implementation is a reactive component with ports as properties.
