@@ -34,9 +34,31 @@ export type TimeInterval = null | [number, TimeUnit] | 0;
  */ 
 export type TimeInstant = [number, number] | 0;
 
+/**
+ * A descriptor for a time representation as either refering to the physical (wall)
+ * timeline or the logical (execution) timeline. Logical time may get ahead of
+ * physical time, or vice versa.
+ */
+export enum TimelineClass{
+    physical,
+    logical
+}
+
 //---------------------------------------------------------------------//
 // Helper Functions for Types                                                   //
 //---------------------------------------------------------------------//
+
+/**
+ * Return true if t matches any of the zero representations for a TimeInterval
+ * @param t the time interval to test if zero
+ */
+export function timeIntervalIsZero(t: TimeInterval){
+    if(t == 0 || (t && t[0] == 0)){
+        return true;
+    } else {
+        return false;
+    }
+}
 
 //Return true if t0 < t1, otherwise return false.
 export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant){
@@ -219,6 +241,10 @@ export abstract class Reaction{
     state: Reactor;
     triggers: Array<Trigger>;
     priority: number;
+    triggeringActions: Set<Action<any>>;
+    // The events triggering this reaction must be available,
+    // so payloads can be used in react.
+
 
     constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
         this.triggers = triggers;
@@ -350,9 +376,89 @@ export class PrioritizedEvent implements
 
  }
 
-export interface Schedulable<T> {
-    schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
-    unschedule(handle: TimeInstant):void;
+// export interface Schedulable<T> {
+//     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
+//     unschedule(handle: TimeInstant):void;
+// }
+
+
+/**
+ * An action denotes a self-scheduled event.
+ * An action, like an input, can cause reactions to be invoked.
+ * Whereas inputs are provided by other reactors, actions are scheduled
+ * by this reactor itself, either in response to some observed external
+ * event or as a delayed response to some input event. The action can be
+ * scheduled by a reactor by invoking the schedule function in a reaction
+ * or in an asynchronous callback that has been set up in a reaction.
+ */
+
+
+export class Action<T> implements Trigger {
+
+    //A payload is available to any reaction triggered by this action
+    payload: T | null;
+    timeType: TimelineClass;
+    minDelay: TimeInterval;
+    name: string;
+
+    /**
+     * @param name String identifier for this action, so it may be distinguished
+     *  from other actions when its payload is delivered to a reaction.
+     * @param timeType Optional. Defaults to physical. If physical,
+     *  then the physical clock on the local platform is used to assign a timestamp
+     *  to the action when it is enabled. If logical, the current physical time is
+     *  ignored and the timestamp of the action is the current logical time (plus
+     *  one microstep) or, if a minimum delay is given and is greater than zero,
+     *  the current logical time plus the minimum delay.
+     * @param payload Optional. Defaults to null. A data value to be passed to any
+     *  reaction that is triggered by the action
+     * @param minDelay Optional. Defaults to 0. If a minDelay is given, then it 
+     *  specifies a minimum delay, the minimum logical time that must elapse between
+     *  when the action is enabled and when it triggers. If the delay parameter to the
+     *  schedule function and the mindelay parameter are both zero and the physical
+     *  keyword is not given, then the action is timestamped one microstep later.
+     */
+    constructor(name: string, timeType: TimelineClass = TimelineClass.physical, 
+            payload: T|null = null, minDelay: TimeInterval = 0){
+
+        this.timeType = timeType;
+        this.payload = payload;
+        this.minDelay = minDelay;
+        this.name = name;
+    }
+
+    schedule(delay: TimeInterval){
+        if(delay === null){
+            throw new Error("Cannot schedule an action with a null delay");
+        }
+
+        let timestamp: TimeInstant;
+        let wallTime = Date.now();
+        if(this.timeType == TimelineClass.physical){
+            //physical
+            if(wallTime > globals.currentLogicalTime[0] ){
+                timestamp = [wallTime, 0 ];
+            } else {
+                timestamp = [globals.currentLogicalTime[0], globals.currentLogicalTime[1] + 1 ];
+            }
+        } else {
+            //logical
+            if( timeIntervalIsZero(this.minDelay) && timeIntervalIsZero(delay)) {
+                timestamp = [globals.currentLogicalTime[0], globals.currentLogicalTime[1] + 1 ];
+            } else {
+                let newTimeNumber = globals.currentLogicalTime[0] + 
+                    Math.min(timeIntervalToNumber(this.minDelay), timeIntervalToNumber(delay));
+                timestamp = [newTimeNumber, globals.currentLogicalTime[1]];
+            }
+
+            let actionEvent = new Event(this, timestamp, this.payload);
+            let actionPriEvent = new PrioritizedEvent(actionEvent, globals.getEventID());
+            globals.scheduleEvent(actionPriEvent);
+        }
+
+    }
+
+
 }
 
 //Matt: An action is an internal event so I think there's a lot of overlap with

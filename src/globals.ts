@@ -1,7 +1,7 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, timeIntervalToNumber } from "./reactor";
+import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, timeIntervalToNumber, Action } from "./reactor";
 
 //FIXME: Move all of this into a singleton class named Runtime
 
@@ -188,6 +188,10 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 //logical time will only react once.
                 let triggersNow = new Set<Reaction>();
 
+                //Keep track of the actions which trigger a reaction so their payloads
+                //may be associated with the reaction.
+                let reactionsToActions = new Map<Reaction, Set<Action<any>>>();
+
                 //This loop should always execute at least once.
                 while(currentHead && currentHead._priority[0] == currentLogicalTime[0] &&
                     currentHead._priority[1] == currentLogicalTime[1] ){
@@ -195,12 +199,26 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                     //An explicit type assertion is needed because we know the
                     //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
                     let trigger: Trigger = (currentHead as PrioritizedEvent).e.cause;
+                    
                     if(trigger instanceof Timer){
                         trigger.reschedule();
                     }
+
                     let toTrigger = triggerMap.getReactions(trigger);
                     if(toTrigger){
                         for(let reaction of toTrigger){
+
+                             //Ensure this reaction is matched to its actions 
+                            if(trigger instanceof Action){
+                                let actionArray = reactionsToActions.get(reaction);
+                                if( ! actionArray){
+                                    actionArray = new Set<Action<any>>();
+                                } 
+                                actionArray.add(trigger);
+                            }
+
+                            //Push this reaction to the queue when we are done
+                            //processing events.
                             triggersNow.add(reaction);
                         }
                     }
@@ -212,6 +230,10 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                     console.log("Pushing new reaction onto queue");
                     console.log(reaction);
                     let prioritizedReaction = new PrioritizedReaction(reaction, getReactionID());
+                    let triggeringActions = reactionsToActions.get(reaction);
+                    if(triggeringActions){
+                        prioritizedReaction.r.triggeringActions = triggeringActions;
+                    }
                     reactionQ.push(prioritizedReaction);
                 }
  
