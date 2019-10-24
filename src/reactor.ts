@@ -1,5 +1,8 @@
 /*
  FIXME: License, copyright, authors.
+
+ * @author Matt Weber (matt.weber@berkeley.edu),
+ * @author Marten Lohstroh (marten@berkeley.edu)
  */
 
 //import {PriorityQueue} from './util';
@@ -119,7 +122,7 @@ export function timeIntervalToNumber(timeInt: TimeInterval){
 
 /**
  * A Trigger is something which can cause an Event: a Timer, an input, or an action.
- * Reactables may register themselves as triggered by a Trigger. 
+ * Reactions may register themselves as triggered by a Trigger. 
  */
 
 export interface Trigger{}
@@ -198,40 +201,43 @@ export interface Transformation {
 
 //An interface for classes implementing a react function.
 //Both reactions and timers react to events on the event queue
-export interface Reactable {
-    react:() => void;
-    triggers: Array<Trigger>;
-    priority: number;
-}
+// export interface Reaction {
+//     react:() => void;
+//     triggers: Array<Trigger>;
+//     priority: number;
+// }
 
-// A Reaction is a reactable with state.
+// A Reaction is a reaction with state.
 // The arguments of a reaction's react function can be of *any* type.
 // Extra type annotations must be used to ensure that inputs,
 // outputs, and actions map correctly to reaction arguments.
-export abstract class Reaction implements Reactable{
+export abstract class Reaction{
 
     state: Object;
     triggers: Array<Trigger>;
-    react:(...args) => void;
+    react:() => void;
     priority: number;
 
     constructor(state: Object, triggers: Array<Trigger>, priority: number ){
         this.triggers = triggers;
         this.state = state;
         this.priority = priority;
+
+        //Register this reaction's triggers with the runtime.
+        globals.triggerMap.registerReaction(this);
     }
 }
 
 
-//A prioritized reaction wraps a Reactable with a priority and precedence
+//A prioritized reaction wraps a Reaction with a priority and precedence
 //and may be inserted into the reaction queue.
 //The priority of a reaction depends on the priority of its reactor, which is
 //determined by a topological sort of reactors.
-export class PrioritizedReactable implements PrecedenceGraphNode,
+export class PrioritizedReaction implements PrecedenceGraphNode,
  PrioritySetNode<number,number>{
 
 
-    r: Reactable;
+    r: Reaction;
 
     //Reaction attributes
     // triggers: Array<Trigger>;
@@ -243,7 +249,7 @@ export class PrioritizedReactable implements PrecedenceGraphNode,
     _next: PrioritySetNode<number,number> | null;
     _priority: number;
 
-    constructor(r: Reactable, id: number) {
+    constructor(r: Reaction, id: number) {
         this.r = r;
         this._id = id;
         this._next = null;
@@ -401,11 +407,7 @@ export interface Schedulable<T> {
 
 //END COMMENTED OUT ACTION CLASS
 
-
-//Matt: I don't understand why this should be readable,
-//so I'm removing the Readable interface for now
-//implements Readable<TimeInstant>
-export class Timer implements Reactable{
+export class Timer{
     
     //For reference, the type of a TimeInterval is defined as:
     //TimeInterval = null | [number, TimeUnit] | 0;
@@ -437,7 +439,7 @@ export class Timer implements Reactable{
 
     //The react function for a timer schedules the next timer event using the period
     //FIXME: How should a period of 0 be handled? For now it causes the timer to not be scheduled again.
-    react() {
+    reschedule() {
         this._timerFirings++;
         if(this.period && this.period[0] && this.period[0] > 0 && this.period[1]){
             if(this.period[0] > 0){
@@ -459,10 +461,9 @@ export class Timer implements Reactable{
     constructor(period:TimeInterval, offset:TimeInterval) {
         this.period = period;
         this.offset = offset;
-        
-        //Register this timer as its own trigger.
-        this.triggers.push(this);
-        globals.triggerMap.registerReactable(this);
+
+        //FIXME: use this code in reactions
+
 
         //Register this timer so it can be started when the runtime begins.
         globals.timers.push(this);
@@ -1010,8 +1011,8 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
                     if (r.triggers.includes(this)) {
 
                         //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                        let prioritizedReactable = new PrioritizedReactable(r, globals.getReactionID());
-                        globals.reactionQ.push(prioritizedReactable);
+                        let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
+                        globals.reactionQ.push(prioritizedReaction);
                         //globals.reactionQ.push([r.reaction, r.triggers]);
                     }
                 }

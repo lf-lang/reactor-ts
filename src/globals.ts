@@ -1,7 +1,7 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, Reactable, PrioritizedReactable } from "./reactor";
+import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction } from "./reactor";
 
 //FIXME: Move all of this into a singleton class named Runtime
 
@@ -22,53 +22,53 @@ export var startingWallTime: number = -1;
 export var timers: Array<Timer> = [];
 
 /**
- * This class matches a Trigger to the Reactables it triggers.
+ * This class matches a Trigger to the Reactions it triggers.
  * When an event caused by a Trigger comes off the event queue, its
- * matching reactables should be put on the the reaction queue 
+ * matching reactions should be put on the the reaction queue 
  */
 export class TriggerMap{
-    _tMap: Map<Trigger, Set<Reactable>> = new Map<Trigger, Set<Reactable>>();
+    _tMap: Map<Trigger, Set<Reaction>> = new Map<Trigger, Set<Reaction>>();
 
     /**
-     * Establish the mapping for a Reactable.
+     * Establish the mapping for a Reaction.
      */
-    registerReactable(r: Reactable){
+    registerReaction(r: Reaction){
         for(let trigger of r.triggers){
-            let reactableSet = this._tMap.get(trigger);
-            if(reactableSet){
-                if(! reactableSet.has(r)){
-                    reactableSet.add(r);
-                    this._tMap.set(trigger, reactableSet);
+            let reactionSet = this._tMap.get(trigger);
+            if(reactionSet){
+                if(! reactionSet.has(r)){
+                    reactionSet.add(r);
+                    this._tMap.set(trigger, reactionSet);
                 }
-                //If this reactable is already mapped to the trigger,
+                //If this reaction is already mapped to the trigger,
                 //do nothing.
             } else {
-                //This is the first reactable mapped to this trigger,
-                //so create a new reactable set for it.
-                reactableSet = new Set<Reactable>();
-                reactableSet.add(r);
-                this._tMap.set(trigger, reactableSet);
+                //This is the first reaction mapped to this trigger,
+                //so create a new reaction set for it.
+                reactionSet = new Set<Reaction>();
+                reactionSet.add(r);
+                this._tMap.set(trigger, reactionSet);
             }
         }
     }
 
     /**
-     * Get the set of reactables for a trigger.
+     * Get the set of reactions for a trigger.
      */
-    getReactables(t: Trigger){
+    getReactions(t: Trigger){
         return this._tMap.get(t);
     }
 
     /**
      */
-    deregisterReactable(e: Event){
+    deregisterreaction(e: Event){
         //FIXME
     }
 
 }
 
 //FIXME: Triggers must be inserted into this map somewhere.
-//Map triggers coming off the event queue to the reactables they trigger. 
+//Map triggers coming off the event queue to the reactions they trigger. 
 export var triggerMap: TriggerMap = new TriggerMap();
 
 
@@ -148,7 +148,7 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 return;
             } else {
                 //Physical time has caught up to logical time so remove the
-                //event from the queue, advance logical time,
+                //event from the queue, reschedule it if it's a timer, advance logical time,
                 //and put the reactions it triggers on
                 //the reaction queue.
                 currentLogicalTime = currentHead._priority[0];
@@ -161,21 +161,24 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 //An explicit type assertion is needed because we know the
                 //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
                 let trigger: Trigger = (currentHead as PrioritizedEvent).e.cause;
-                let toTrigger = triggerMap.getReactables(trigger);
+                if(trigger instanceof Timer){
+                    trigger.reschedule();
+                }
+                let toTrigger = triggerMap.getReactions(trigger);
                 if(toTrigger){
                     console.log("Something was triggered");
                     console.log(toTrigger);
-                    for(let reactable of toTrigger){
-                        console.log("Pushing new reactable onto queue");
-                        let prioritizedReactable = new PrioritizedReactable(reactable, getReactionID());
-                        reactionQ.push(prioritizedReactable);
+                    for(let reaction of toTrigger){
+                        console.log("Pushing new reaction onto queue");
+                        let prioritizedReaction = new PrioritizedReaction(reaction, getReactionID());
+                        reactionQ.push(prioritizedReaction);
                     }
                 }
                 let headReaction = reactionQ.pop();
                 while(headReaction){
-                    //Explicit annotation because reactionQ contains PrioritizedReactables.
+                    //Explicit annotation because reactionQ contains PrioritizedReactions.
                     console.log("reacting...");
-                    (headReaction as PrioritizedReactable).r.react();
+                    (headReaction as PrioritizedReaction).r.react();
                     headReaction = reactionQ.pop();
                 }
             }
