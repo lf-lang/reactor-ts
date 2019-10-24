@@ -207,24 +207,33 @@ export interface Transformation {
 //     priority: number;
 // }
 
-// A Reaction is a reaction with state.
-// The arguments of a reaction's react function can be of *any* type.
-// Extra type annotations must be used to ensure that inputs,
-// outputs, and actions map correctly to reaction arguments.
+/**
+ * The reaction abstract class.
+ * A concrete reaction class should extend Reaction, and implement a react function.
+ */
+// The reaction ab.
+// 
+
 export abstract class Reaction{
 
-    state: Object;
+    state: Reactor;
     triggers: Array<Trigger>;
-    react:() => void;
     priority: number;
 
-    constructor(state: Object, triggers: Array<Trigger>, priority: number ){
+    constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
         this.triggers = triggers;
         this.state = state;
         this.priority = priority;
 
         //Register this reaction's triggers with the runtime.
         globals.triggerMap.registerReaction(this);
+    }
+
+    /**
+     * This react function must be overridden by a concrete reaction.
+     */
+    react(){
+        throw new Error("React function hasn't been defined");
     }
 }
 
@@ -426,7 +435,6 @@ export class Timer{
     //The setup function should be used to start the timer using the offset
     setup(){
         if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
-            console.log("Triggers length of timer is: " + this.triggers.length);
             let timerInitInstant: TimeInstant = [timeIntervalToNumber(this.offset), 0];
             let timerInitEvent: Event = new Event(this, timerInitInstant, null);
             let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, globals.getEventID());
@@ -498,17 +506,7 @@ export abstract class Reactor implements Nameable {
             ]
     >;
     
-    _reactions:Array<Reaction>;
-    // _reactions:Array<{triggers: Array<Trigger>, reaction: Reaction, args:Array<any>}>;
-    
-    // _reactions:Array<
-    //         [   // triggers, reaction, reaction arguments
-    //             Array<Trigger<any>>, UnorderedReaction, any
-    //         ]
-    // >;
-
-    //abstract _checkTypes();
-
+    _reactions:Array<Reaction> = new Array<Reaction>();
     _timers:Set<Timer> = new Set<Timer>();
 
     //FIXME: assign in constructor?

@@ -2,18 +2,30 @@
 
 import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval} from './reactor';
 
-//No reactions. Just a timer.
+export class Tick extends Reaction{
+
+    /**
+     * Print tick.
+     * @override
+     */
+    react(){
+        console.log("Tick");
+    }
+}
+
+export class Tock extends Reaction{
+
+    /**
+     * Print tock.
+     * @override
+     */
+    react(){
+        console.log("Tock");
+    }
+}
+
+
 export class Clock extends Reactor {
-
-    _reactions = [];
-    //     new Reaction(this,[<Trigger>this.in1, <Trigger>this.in2], this.reactionID1, ),
-    //      new Reaction(this,[<Trigger>this.in1, <Trigger>this.in2], )
-    //     {triggers: [<Trigger>this.in1, <Trigger>this.in2], reaction: new AddTwo(), args: [this.in1, this.in2, this.out]},
-    //     {triggers: [<Trigger>this.in1, <Trigger>this.in2], reaction: new AddN<number>(), args: [[this.in1, this.in2], this.out]},
-    // ];
-
-    //FIXME: Remove this when global triggerMap is implemented
-    //_triggerMap:Map<Trigger, Set<[Reaction, Array<any>]>>;
 
     constructor() {
         super(null, "Clock");
@@ -22,6 +34,16 @@ export class Clock extends Reactor {
         const t2 = new Timer( [1.5, "sec"] , [3.5, "sec"] );
         this.addTimer(t1);
         this.addTimer(t2);
-        //new AddTwo2([this.in1, this.in2, this.in1]);
+        
+        const tickTriggers = new Array();
+        tickTriggers.push(t1);
+        const r1 = new Tick(this, tickTriggers, 0);
+
+        const tockTriggers = new Array();
+        tockTriggers.push(t2);
+        const r2 = new Tock(this, tockTriggers, 0);
+
+        this._reactions.push(r1);
+        this._reactions.push(r2);
     }
 }
