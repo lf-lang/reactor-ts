@@ -6,6 +6,10 @@ import * as globals from './globals';
 
 describe('clock', function () {
     var clock = new Clock();
+    //Tell the reactor runtime to successfully terminate after 6 seconds.
+    globals.setExecutionTimeout([6, "sec"]);
+    //Ensure the test will run for 7 seconds.
+    jest.setTimeout(7000);
 
     it('Timer create test', function () {
         

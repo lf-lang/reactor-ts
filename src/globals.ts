@@ -1,9 +1,18 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction } from "./reactor";
+import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, timeIntervalToNumber } from "./reactor";
 
 //FIXME: Move all of this into a singleton class named Runtime
+
+/**
+ * If not null, finish execution with success at this physical time.
+ */
+var _executionTimeout:TimeInterval | null = null;
+
+export function setExecutionTimeout(t: TimeInterval){
+    _executionTimeout = t;
+}
 
 export var reactionQ = new PrioritySet<number,number>();
 export var eventQ = new PrioritySet<number,TimeInstant>();
@@ -133,18 +142,35 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
         let currentHead = eventQ.peek();
         while(currentHead){
             let currentPhysicalTime = Date.now() - startingWallTime;
+            
+            //If execution has gone on for longer than the execution timeout,
+            //terminate execution with success.
+            if(_executionTimeout && 
+                    timeIntervalToNumber(_executionTimeout) < currentPhysicalTime ){
+                console.log("Execution timeout reached. Terminating runtime with success.");
+                successCallback();
+                return;
+            }
+
             let physicalTimeGap = currentHead._priority[0] - currentPhysicalTime;
             if(physicalTimeGap > 0){
+                
                 //Physical time is behind logical time.
-                //Wait and try again.
+                //Wait until execution timeout or the next event and try again.
+                let timeout = physicalTimeGap;
+                if(_executionTimeout){
+                    timeout = Math.min(physicalTimeGap, timeIntervalToNumber(_executionTimeout));
+                }
+
                 console.log("I set a timeout.");
                 console.log("currentPhysicalTime: " + currentPhysicalTime);
                 console.log("next logical time: " + currentHead._priority[0]);
                 console.log("physicalTimeGap was " + physicalTimeGap);
+
                 setTimeout(  ()=>{
                     _next(successCallback, failureCallback);
                     return;
-                }, physicalTimeGap);
+                }, timeout);
                 return;
             } else {
                 //Physical time has caught up to logical time so remove the
@@ -188,11 +214,9 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
             
         }
         //Falling out of the while loop means the eventQ is empty.
-        console.log("returning _next I fell out of the while loop.");
+        console.log("Terminating runtime with success due to empty event queue.");
         successCallback();
         return;
-        //FIXME: test if the -timeout option has been given and call the correct
-        //callback 
         //FIXME: keep going if the keepalive command-line option has been given
     }
 
