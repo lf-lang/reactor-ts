@@ -511,6 +511,7 @@ export abstract class Reactor implements Nameable {
     _inputs:Set<InPort<any>> = new Set<InPort<any>>();
 
     parent:Reactor|null = null;
+    //FIXME: Create getters and setters for children.
     children:Set<Reactor|null> = new Set<Reactor|null>();
 
     //FIXME: assign in constructor?

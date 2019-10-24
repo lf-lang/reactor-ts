@@ -45,8 +45,19 @@ describe('Container to Contained', () => {
             expect(obtainedContainer._getName()).toBe("Container");
         } else {
             throw new Error("contained._getContainer() returns null");
+        } 
+    })
+
+    it('get contained name from container', () =>{
+
+        //This test assumes contained to be the only child
+        for(let child of container.children){
+            if(child){
+                expect(child._getName()).toBe("Contained");
+            } else {
+                throw new Error("Container has no children");
+            }
         }
-        
     })
 
     //container._add(contained);
