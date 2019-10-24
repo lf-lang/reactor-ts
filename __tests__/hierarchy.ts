@@ -1,4 +1,4 @@
-import {Reactor, OutPort, InPort, PureEvent, App, Executable} from '../src/reactor';
+import {Reactor, OutPort, InPort, App, Executable} from '../src/reactor';
 
 /**
     * An actor implementation is a reactive component with ports as properties.
@@ -11,7 +11,6 @@ class Container extends Reactor {
     _checkTypes() {
         
     }
-
 }
 
 
@@ -25,22 +24,35 @@ class Contained extends Reactor {
     }
 }
 
-var container = new Container(null);
-var contained = new Contained(null);
+var container = new Container(null, "Container");
+var contained = new Contained(container, "Contained");
 
 // */__tests__/.*
 describe('Container to Contained', () => {
     
-    it('contained actor name', () => {
-        var x: bigint = BigInt("0b11");
-
-        console.log("My big int: " + x);
+    it('contained reactor name', () => {
          expect(contained._getName()).toBe("Contained");
     });
+
+    it('container reactor name', () =>{
+        expect(container._getName()).toBe("Container");
+    })
+
+    it('get container name from contained', () =>{
+        let obtainedContainer = contained._getContainer();
+        if(obtainedContainer){
+            // expect(obtainedContainer._getName()).toBe("Container");
+            expect(obtainedContainer._getName()).toBe("Container");
+        } else {
+            throw new Error("contained._getContainer() returns null");
+        }
+        
+    })
 
     //container._add(contained);
 
 });
+
 
 // describe('Contained to Container', () => {
     

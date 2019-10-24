@@ -1,6 +1,6 @@
 'use strict';
 
-import {Adder, AddTwo} from './adder';
+import {Adder} from './adder';
 import {Reactor} from './reactor';
 import * as globals from './globals';
 

@@ -7,23 +7,20 @@ export class Adder extends Reactor {
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
-    
-    _reactions = [
-        //FIXME: use real priorities that aren't magic numbers.
-        new AddTwo(this, [this.in1, this.in2], 3),
-        new AddN<number>(this, [this.in1, this.in2], 4)
-    ];
-    //     new Reaction(this,[<Trigger>this.in1, <Trigger>this.in2], this.reactionID1, ),
-    //      new Reaction(this,[<Trigger>this.in1, <Trigger>this.in2], )
-    //     {triggers: [<Trigger>this.in1, <Trigger>this.in2], reaction: new AddTwo(), args: [this.in1, this.in2, this.out]},
-    //     {triggers: [<Trigger>this.in1, <Trigger>this.in2], reaction: new AddN<number>(), args: [[this.in1, this.in2], this.out]},
-    // ];
 
-    _triggerMap:Map<Trigger, Set<[Reaction, Array<any>]>>;
-
+    //FIXME: express priorities between reactions within a reactor with the same triggers
     constructor() {
         super(null, "Adder");
-        //new AddTwo2([this.in1, this.in2, this.in1]);
+
+        const addTwoTriggers = new Array();
+        addTwoTriggers.push(this.in1);
+        addTwoTriggers.push(this.in2);
+        const r1 = new AddTwo(this, addTwoTriggers, 0);
+
+        const addNTriggers = new Array();
+        addNTriggers.push(this.in1);
+        addNTriggers.push(this.in2);
+        const r2 = new AddN(this, addNTriggers, 0);
     }
 
     //FIXME: the if statement never runs.
@@ -38,7 +35,7 @@ export class Adder extends Reactor {
     }
 }
 
-export class AddTwo extends Reaction {
+class AddTwo extends Reaction {
 
     // state: Object;
     // triggers: Array<Trigger>;
@@ -48,55 +45,25 @@ export class AddTwo extends Reaction {
     //     this.triggers = triggers;
     // }
 
-    react = function (in1: InPort<number>, in2: InPort<number>, out:OutPort<number>) {
-        let a = in1.get();
-        let b = in2.get(); // FIXME: this looks a little clumsy
+    react = function () {
+        let a = this.state.in1.get();
+        let b = this.state.in2.get(); // FIXME: this looks a little clumsy
         if (a == null) {
             a = 0;
         }
         if (b == null) {
             b = 0;
         }
-        out.set(a + b);
+        this.state.out.set(a + b);
     }
 }
-
-class AddN<T> extends Reaction {
-    react = function (src:Array<InPort<T>>, dst:OutPort<T>) {
-        var sum;
-        for (let i of src) {
+//FIXME: do the typechecking to ensure addition is valid here.
+class AddN extends Reaction {
+    react = function () {
+        let sum = 0;
+        for (let i of this.state._inputs) {
             sum += i;
         }
-        dst.set(sum);
+        this.state.out.set(sum);
     }
 }
-
-//FIXME: reaction2 has been deleted from reactor.ts
-// export class AddTwo2 extends Reaction {
-
-//     args;
-
-//     constructor(...args) {
-//         this.args = args;
-//     }
-
-//     react(in1: InPort<number>, in2: InPort<number>, out:OutPort<number>):void {
-//         let a = in1.get();
-//         let b = in2.get(); // FIXME: this looks a little clumsy
-//         if (a == null) {
-//             a = 0;
-//         }
-//         if (b == null) {
-//             b = 0;
-//         }
-//         out.set(a + b);
-//     }
-
-//     _checkTypes() {
-//         // Do not invoke any reactions; only show the 
-//         // type checker how it _would_ be done
-//         if (false) {
-//             this.react.apply(undefined, this.args);
-//         }
-//     }
-// }

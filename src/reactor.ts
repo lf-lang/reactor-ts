@@ -508,6 +508,10 @@ export abstract class Reactor implements Nameable {
     
     _reactions:Array<Reaction> = new Array<Reaction>();
     _timers:Set<Timer> = new Set<Timer>();
+    _inputs:Set<InPort<any>> = new Set<InPort<any>>();
+
+    parent:Reactor|null = null;
+    children:Set<Reactor|null> = new Set<Reactor|null>();
 
     //FIXME: assign in constructor?
     addTimer(timer: Timer){
@@ -563,6 +567,11 @@ export abstract class Reactor implements Nameable {
      * @param {string=} name - Given name
      */
     constructor(parent:Reactor | null, name?:string) {
+        
+        this.parent = parent;
+        if(parent){
+            parent.children.add(this);
+        }
         
         var myName:string = this.constructor.name; // default
         var myIndex:number | null = null;
@@ -1001,10 +1010,6 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
         Object.assign(this, {
             writeValue(container:Reactor, value:T | null):void {
                 this._value = value;
-                
-                //FIXME: parent.getPriority needs to be set somewhere
-                //and it should allow different priorities for different reactions
-                //in the same reactor.
                 for (let r of parent._reactions) {
                     if (r.triggers.includes(this)) {
 
@@ -1077,11 +1082,6 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
 
 }
 
-
-//An Event consists of a tag and and an action
-export class PureEvent {
-
-}
 
 // NOTE: composite IDLE or REACTING.
 // If IDLE, get real time, of REACTING use T+1
