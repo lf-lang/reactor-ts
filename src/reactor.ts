@@ -36,8 +36,7 @@ export type TimeInterval = null | [number, TimeUnit] | 0;
 
 /** 
  * A superdense time instant, represented as a pair. The first element of the pair represents
- * elapsed time in nanoseconds since Epoch. The second element denotes the micro step index,
- * starting from 0.
+ * elapsed time in nanoseconds. The second element denotes the micro step index.
  */ 
 export type TimeInstant = [number, number] | 0;
 
