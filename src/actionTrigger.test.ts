@@ -3,18 +3,17 @@
 
 import {Reactor} from './reactor';
 import * as globals from './globals';
-import { SingleEvent } from './singleEvent';
+import { ActionTrigger } from './actionTrigger';
 
-describe('SingleEvent', function () {
-    var singleEvent = new SingleEvent();
+describe('ActionTrigger', function () {
+    var actionTrigger = new ActionTrigger();
     //Tell the reactor runtime to successfully terminate after 3 seconds.
     globals.setExecutionTimeout([3, "sec"]);
     //Ensure the test will run for 5 seconds.
     jest.setTimeout(5000);
 
-    it('SingleEvent create test', function () {
-        
-        expect(expect(singleEvent).toBeInstanceOf(SingleEvent));
+    it('ActionTrigger create test', function () {
+        expect(expect(actionTrigger).toBeInstanceOf(ActionTrigger));
 
     });
 
