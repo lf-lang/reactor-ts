@@ -1,14 +1,14 @@
 'use strict';
 
 
-import {Reactor} from './reactor';
+import {Reactor, TimeUnit} from './reactor';
 import * as globals from './globals';
 import { SingleEvent } from './singleEvent';
 
 describe('SingleEvent', function () {
     var singleEvent = new SingleEvent();
     //Tell the reactor runtime to successfully terminate after 3 seconds.
-    globals.setExecutionTimeout([3, "sec"]);
+    globals.setExecutionTimeout([3, TimeUnit.secs]);
     //Ensure the test will run for 5 seconds.
     jest.setTimeout(5000);
 

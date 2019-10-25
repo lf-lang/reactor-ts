@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval} from './reactor';
+import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, TimeUnit} from './reactor';
 
 export class Tick extends Reaction{
 
@@ -41,8 +41,8 @@ export class Clock extends Reactor {
     constructor() {
         super(null, "Clock");
 
-        const t1 = new Timer( [1, "sec"], [3, "sec"]);
-        const t2 = new Timer( [1.5, "sec"] , [3.5, "sec"] );
+        const t1 = new Timer( [1, TimeUnit.sec], [3, TimeUnit.sec]);
+        const t2 = new Timer( [1.5, TimeUnit.sec] , [3.5, TimeUnit.sec] );
         this.addTimer(t1);
         this.addTimer(t2);
         

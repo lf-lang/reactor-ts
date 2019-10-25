@@ -1,13 +1,13 @@
 'use strict';
 
 import {Clock} from './clock';
-import {Reactor} from './reactor';
+import {TimeUnit, Reactor} from './reactor';
 import * as globals from './globals';
 
 describe('clock', function () {
     var clock = new Clock();
     //Tell the reactor runtime to successfully terminate after 6 seconds.
-    globals.setExecutionTimeout([6, "sec"]);
+    globals.setExecutionTimeout([6, TimeUnit.secs]);
     //Ensure the test will run for 7 seconds.
     jest.setTimeout(7000);
 

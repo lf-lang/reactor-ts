@@ -94,47 +94,8 @@ export function timeIntervalToNumber(timeInt: TimeInterval){
     if(timeInt === 0){
         return 0;
     }
-
-    let conversionFactor: number = -1;
-
-    //Representation of time is normalized to msecs because javascript timing functions
-    //work in msecs.
-    switch(timeInt[1]){
-        case "nsec" : {
-            conversionFactor = 0.000001;
-            break;
-        }
-        case "usec" : {
-            conversionFactor = 0.001;
-            break;
-        }
-        case "msec" : {
-            conversionFactor = 1;
-            break;
-        }
-        case "sec" : {
-            conversionFactor = 1000;
-            break;
-        }
-        case "minute" : {
-            conversionFactor = 60000;
-            break;
-        }
-        case "hour" : {
-            conversionFactor = 3600000;
-            break;
-        }
-        case "day" : {
-            conversionFactor = 86400000;
-            break;
-        }
-        case "week" : {
-            conversionFactor = 604800000;
-            break;
-        }
-    }
-
-    return timeInt[0] * conversionFactor;
+    
+    return timeInt[0] * timeInt[1];
 };
 
 //---------------------------------------------------------------------//
