@@ -18,8 +18,8 @@ describe('clock', function () {
         console.log(clock);
 
         //expect().toBeUndefined();
-        console.log(JSON.stringify(globals.reactionQ));
-        console.log(globals.triggerMap);
+        //console.log(JSON.stringify(globals.reactionQ));
+        //console.log(globals.triggerMap);
 
     });
 

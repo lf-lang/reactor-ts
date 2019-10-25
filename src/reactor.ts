@@ -84,6 +84,10 @@ export function timeIntervalToNumber(timeInt: TimeInterval){
         throw new Error('timeIntervalToNumber cannot convert a null TimeInterval to a number');
     }
 
+    if(timeInt === 0){
+        return 0;
+    }
+
     let conversionFactor: number = -1;
 
     //Representation of time is normalized to msecs because javascript timing functions
@@ -540,7 +544,8 @@ export class Timer{
 
     //The setup function should be used to start the timer using the offset
     setup(){
-        if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
+        if(this.offset !== null && (this.offset === 0 || this.offset[0] >= 0)){
+        //if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
             let timerInitInstant: TimeInstant = [timeIntervalToNumber(this.offset), 0];
             let timerInitEvent: Event = new Event(this, timerInitInstant, null);
             let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, globals.getEventID());
@@ -548,15 +553,17 @@ export class Timer{
 
             //FIXME
             console.log("Scheduled timer init at " + timerInitInstant);
+        } else {
+            throw new Error("Cannot setup a timer with a null or negative offset.");
         }
     }
 
-    //The react function for a timer schedules the next timer event using the period
-    //FIXME: How should a period of 0 be handled? For now it causes the timer to not be scheduled again.
+    //The react function for a timer schedules the next timer event using the period.
+    //A period of 0 indicates the timer should not be scheduled again.
     reschedule() {
         this._timerFirings++;
-        if(this.period && this.period[0] && this.period[0] > 0 && this.period[1]){
-            if(this.period[0] > 0){
+        if(this.period !== null && (this.period === 0 || this.period[0] >= 0)){
+            if(this.period !== 0 && this.period[0] > 0){
                 let nextLogicalTime: number =  timeIntervalToNumber(this.offset) + 
                     timeIntervalToNumber(this.period) * this._timerFirings;
                 let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
@@ -564,11 +571,12 @@ export class Timer{
                 let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, globals.getEventID());
                 globals.scheduleEvent(nextTimerPriEvent);
 
-
                 console.log("Scheduling next event for timer with period " +
                 this.period[0] + " " + this.period[1]);
             }
 
+        } else {
+            throw new Error("Cannot reschedule a timer with a null or negative period.");
         }
     };
 

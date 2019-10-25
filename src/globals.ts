@@ -227,8 +227,8 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 }
                 
                 for (let reaction of triggersNow){
-                    console.log("Pushing new reaction onto queue");
-                    console.log(reaction);
+                    // console.log("Pushing new reaction onto queue");
+                    // console.log(reaction);
                     let prioritizedReaction = new PrioritizedReaction(reaction, getReactionID());
                     let triggeringActions = reactionsToActions.get(reaction);
                     if(triggeringActions){
