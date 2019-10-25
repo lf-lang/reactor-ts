@@ -1,11 +1,9 @@
-/*
- FIXME: License, copyright, authors.
-
- * @author Matt Weber (matt.weber@berkeley.edu),
- * @author Marten Lohstroh (marten@berkeley.edu)
+/**
+ * Core of the reactor runtime.
+ * 
+ * @author Marten Lohstroh (marten@berkeley.edu),
+ * @author Matt Weber (matt.weber@berkeley.edu)
  */
-
-//import {PriorityQueue} from './util';
 
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
 import * as globals from './globals'
@@ -15,11 +13,21 @@ import * as globals from './globals'
 //---------------------------------------------------------------------//
 
 /** Units for time. */
-export type TimeUnit = "nsec" | "usec" | "msec" | "sec" | 
-              "minute" | "hour" | "day" | "week";
-// export type TimeUnit = "fs" | "ps" | "ns" | "us" | "ms" | "sec" | 
-//               "min" | "hour" | "day" | "week" | "month" | "year";
-// FIXME: align this with LF compiler, maybe use an enum instead
+export enum TimeUnit {
+    nsec = 1,
+    usec = 1000,
+    msec = 1000000,
+    sec = 1000000000,
+    secs = 1000000000,
+    minute = 60000000000,
+    minutes = 60000000000,
+    hour = 3600000000000,
+    hours = 3600000000000,
+    day = 86400000000000,
+    days = 86400000000000,
+    week = 604800000000000,
+    weeks = 604800000000000
+}
 
 /** 
  * A time interval must be accompanied by a time unit. Decimals are ignored.
@@ -27,9 +35,8 @@ export type TimeUnit = "nsec" | "usec" | "msec" | "sec" |
 export type TimeInterval = null | [number, TimeUnit] | 0;
 
 /** 
- * A superdense time moment.
- * If not 0, the first array element represents time instants from the beginning of
- * execution in nanoseconds and the second element represents microsteps
+ * A superdense time instant, represented as a pair. The first element of the pair represents
+ * elapsed time in nanoseconds since Epoch. The second element denotes the micro step index,
  * starting from 0.
  */ 
 export type TimeInstant = [number, number] | 0;
@@ -39,7 +46,7 @@ export type TimeInstant = [number, number] | 0;
  * timeline or the logical (execution) timeline. Logical time may get ahead of
  * physical time, or vice versa.
  */
-export enum TimelineClass{
+export enum TimelineClass {
     physical,
     logical
 }
