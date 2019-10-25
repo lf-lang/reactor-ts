@@ -245,6 +245,10 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                     (headReaction as PrioritizedReaction).r.react();
                     headReaction = reactionQ.pop();
                 }
+
+                //A new Action event may have been pushed onto the event queue by one of
+                //the reactions at this logical time.
+                currentHead = eventQ.peek();
             }
 
             //The next iteration of the outer loop is ready because

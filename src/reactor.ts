@@ -439,12 +439,15 @@ export class Action<T> implements Trigger {
     }
 
     schedule(delay: TimeInterval){
+        console.log("Scheduling action.");
         if(delay === null){
             throw new Error("Cannot schedule an action with a null delay");
         }
 
         let timestamp: TimeInstant;
         let wallTime = Date.now();
+
+        //FIXME: Probably something wrong in one of these cases...
         if(this.timeType == TimelineClass.physical){
             //physical
             if(wallTime > globals.currentLogicalTime[0] ){
@@ -461,12 +464,11 @@ export class Action<T> implements Trigger {
                     Math.min(timeIntervalToNumber(this.minDelay), timeIntervalToNumber(delay));
                 timestamp = [newTimeNumber, globals.currentLogicalTime[1]];
             }
-
-            let actionEvent = new Event(this, timestamp, this.payload);
-            let actionPriEvent = new PrioritizedEvent(actionEvent, globals.getEventID());
-            globals.scheduleEvent(actionPriEvent);
         }
-
+        let actionEvent = new Event(this, timestamp, this.payload);
+        let actionPriEvent = new PrioritizedEvent(actionEvent, globals.getEventID());
+        globals.scheduleEvent(actionPriEvent);
+    
     }
 
 
@@ -630,6 +632,7 @@ export abstract class Reactor implements Nameable {
     _reactions:Array<Reaction> = new Array<Reaction>();
     _timers:Set<Timer> = new Set<Timer>();
     _inputs:Set<InPort<any>> = new Set<InPort<any>>();
+    _actions:Map<string, Action<any>> = new Map<string, Action<any>>();
 
     parent:Reactor|null = null;
     //FIXME: Create getters and setters for children.
@@ -645,6 +648,14 @@ export abstract class Reactor implements Nameable {
     //FIXME: don't return the timer set, return a copy.
     getTimers(){
         return this._timers
+    }
+
+    addAction(a: Action<any>){
+        this._actions.set(a.name, a);
+    }
+
+    getAction(name: string){
+        return this._actions.get(name);
     }
     //getTimers: () => Set<Timer>;
 
