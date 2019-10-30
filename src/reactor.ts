@@ -220,16 +220,14 @@ export function microtimeToNumeric(t: number): NumericTimeInterval {
  * @param t2 subtrahend
  */
 export function numericTimeDifference(t1: NumericTimeInterval, t2: NumericTimeInterval): NumericTimeInterval {
-    console.log("t1: " + t1);
-    console.log("t2: " + t2);
     let difference:NumericTimeInterval = [0, 0];
     const billion = 1000000000;
-    if(t1[1] > t2[1]){
+    if(t1[1] >= t2[1]){
         difference[0] = t1[0] - t2[0];
         difference[1] = t1[1] - t2[1];
     } else {
         //Borrow a second
-        difference[0] = t1[0] - 1  - t2[0];
+        difference[0] = t1[0] - 1 - t2[0];
         difference[1] = t1[1] + billion - t2[1];
     }
     if(difference[0] < 0 || difference[1] < 0){

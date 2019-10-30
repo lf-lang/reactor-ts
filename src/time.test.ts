@@ -1,5 +1,5 @@
 'use strict';
-import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, NumericTimeInterval, compareNumericTimeIntervals, TimeInstant, compareTimeInstants, microtimeToNumeric} from "./reactor";
+import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, NumericTimeInterval, compareNumericTimeIntervals, TimeInstant, compareTimeInstants, microtimeToNumeric, numericTimeSum, numericTimeDifference, numericTimeMultiple} from "./reactor";
 
 /**
  * Test of helper functions for time in reactors
@@ -126,15 +126,67 @@ describe('time representation', function () {
     });
 
     it('microtimeToNumeric', function () {
-
         expect( microtimeToNumeric(0)).toStrictEqual(zeroNumeric);
-        
-        console.log(microtimeToNumeric(300));
         expect( microtimeToNumeric(300)).toStrictEqual(numThreeHundredUS);
         expect( microtimeToNumeric(5000000)).toStrictEqual(numFiveSeconds);
         expect( microtimeToNumeric(5000005)).toStrictEqual(numFiveSFiveUS);
-        
     });
+
+    it('numericTimeSum' , function () {
+        expect(numericTimeSum(numFiveHundredMilNS, numFortyTwoDays)).toStrictEqual([42 * 24 * 60 * 60, 500000000 ]);
+        expect(numericTimeSum(numFiveHundredMilNS, numFiveHundredMilNS)).toStrictEqual([1, 0 ]);
+        
+        expect(numericTimeSum(numOneThousandMS, zeroNumeric)).toStrictEqual(numOneThousandMS);
+    });
+
+    it('numericTimeDifference' , function () {
+        expect(numericTimeDifference(numFortyTwoDays, numFiveHundredMilNS, )).toStrictEqual([42 * 24 * 60 * 60 -1 , 500000000 ]);
+        expect(numericTimeDifference(numFiveSFiveUS, numFiveSFiveUS, )).toStrictEqual(zeroNumeric);
+        expect(numericTimeDifference(numFiveSeconds, numThreeHundredUS, )).toStrictEqual([ 4 , 999700000 ]);
+
+        expect(numericTimeDifference(numFiveSeconds, zeroNumeric, )).toStrictEqual(numFiveSeconds);
+        expect(numericTimeDifference(zeroNumeric, zeroNumeric, )).toStrictEqual(zeroNumeric);
+        
+        expect(() => {
+            numericTimeDifference(zeroNumeric, numFiveSeconds);
+        }).toThrowError()
+
+        expect(() => {
+            numericTimeDifference(numThreeHundredUS, numFiveSeconds);
+        }).toThrowError()
+
+    });
+
+    it('sum and difference', function () {
+        expect(numericTimeDifference(numericTimeSum(numFiveHundredMilNS, numFortyTwoDays ),
+            numFiveHundredMilNS)).toStrictEqual(numFortyTwoDays);
+        expect(numericTimeDifference(numericTimeSum(numFiveHundredMilNS, numFortyTwoDays ),
+            numFortyTwoDays)).toStrictEqual(numFiveHundredMilNS);
+        expect(numericTimeDifference(numericTimeSum(numTwoHundredFiftyMillMS, numOneThousandMS ),
+            numOneThousandMS)).toStrictEqual(numTwoHundredFiftyMillMS);
+        expect(numericTimeDifference(numericTimeSum(numTwoHundredFiftyMillMS, numOneThousandMS ),
+            numTwoHundredFiftyMillMS)).toStrictEqual(numOneThousandMS);
+    });
+
+    it('numericTimeMultiple', function () {
+        expect(numericTimeMultiple(numFiveHundredMilNS, 3)).toStrictEqual([1, 500000000 ]);
+        expect(numericTimeMultiple(numFiveHundredMilNS, 10)).toStrictEqual([5, 0 ]);
+        expect(numericTimeMultiple(numThreeHundredUS, 1000)).toStrictEqual([0, 300000000 ]);
+        
+        expect(numericTimeMultiple(zeroNumeric, 10)).toStrictEqual([0, 0 ]);
+        expect(numericTimeMultiple(zeroNumeric, 0)).toStrictEqual([0, 0 ]);
+        expect(numericTimeMultiple(numFortyTwoDays, 0)).toStrictEqual([0, 0 ]);
+
+        expect(() => {
+            expect(numericTimeMultiple(numFortyTwoDays, 3.2)).toStrictEqual([0, 0 ]);
+        }).toThrowError()
+
+        expect(() => {
+            expect(numericTimeMultiple(numFortyTwoDays, -7)).toStrictEqual([0, 0 ]);
+        }).toThrowError()
+    });
+
+
 
 });
 
