@@ -9,6 +9,15 @@ import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from
 import * as globals from './globals'
 
 //---------------------------------------------------------------------//
+// Modules                                                             //
+//---------------------------------------------------------------------//
+
+//Must first declare require function so compiler doesn't complain
+declare function require(name:string);
+
+const microtime = require("microtime");
+
+//---------------------------------------------------------------------//
 // Types                                                               //
 //---------------------------------------------------------------------//
 
@@ -29,16 +38,27 @@ export enum TimeUnit {
     weeks = 604800000000000
 }
 
+
 /** 
  * A time interval must be accompanied by a time unit. Decimals are ignored.
  */
 export type TimeInterval = null | [number, TimeUnit] | 0;
 
+/**
+ * The internal representation of a TimeInterval broken up as: [seconds, nanoseconds]
+ * 
+ * If we used a Javascript number to hold the number of nanoseconds in the time interval,
+ * the 2^53 bits of precision for a JavaScript number (double) would overflow after 0.29 years.
+ * We use an array here, because in our experiments this representation is much faster
+ * than a JavaScript BigInt.
+ */
+export type NumericTimeInterval = [number, number];
+
 /** 
  * A superdense time instant, represented as a pair. The first element of the pair represents
- * elapsed time in nanoseconds. The second element denotes the micro step index.
+ * elapsed time as a NumericTimeInterval. The second element denotes the micro step index.
  */ 
-export type TimeInstant = [number, number] | 0;
+export type TimeInstant = [NumericTimeInterval, number];
 
 /**
  * A descriptor for a time representation as either refering to the physical (wall)
@@ -59,21 +79,19 @@ export enum TimelineClass {
  * @param t the time interval to test if zero
  */
 export function timeIntervalIsZero(t: TimeInterval){
-    if(t == 0 || (t && t[0] == 0)){
+    if(t === 0 || (t && t[0] == 0)){
         return true;
     } else {
         return false;
     }
 }
 
-//Return true if t0 < t1, otherwise return false.
-export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant){
-    if(t0 === 0){
-        return true;
-    }
-    if(t1 === 0){
-        return false;
-    }
+/**
+ * Return true if t0 < t1, otherwise return false.
+ * @param t0 
+ * @param t1 
+ */
+export function compareNumericTimeIntervals(t0: NumericTimeInterval, t1: NumericTimeInterval){
     if(t0[0] < t1[0]){
         return true;
     }
@@ -84,18 +102,156 @@ export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant){
     return false;
 }
 
-//Convert a time interval to a number. This is helpful for TimeInstants.
-export function timeIntervalToNumber(timeInt: TimeInterval){
-    if(timeInt === null){
-        throw new Error('timeIntervalToNumber cannot convert a null TimeInterval to a number');
+/**
+ * Return true if t0 < t1, otherwise return false.
+ * @param t0 
+ * @param t1 
+ */
+export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
+    //FIXME: these checks are unecessary because I removed 0 from the type.
+    //Why have a special representation for epoch?
+    //Delete, when I feel confident it's not coming back.
+    // if(t0 === 0){
+    //     return true;
+    // }
+    // if(t1 === 0){
+    //     return false;
+    // }
+
+    if(compareNumericTimeIntervals(t0[0], t1[0])){
+        return true;
+    } else{
+        if( t0[0][0] == t1[0][0] && t0[0][1] == t1[0][1] && t0[1] < t1[1] ){
+            return true;   
+        }
+        return false;
+    }
+}
+
+/**
+ * Convert a TimeInterval to its corresponding representation as a NumericTimeInterval
+ * @param t the numeric time interval to convert
+ */
+export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
+    console.log("calling timeIntervalToNumeric with " + t);
+    if(t === null){
+        throw new Error('timeIntervalToNumeric cannot convert a null TimeInterval');
     }
 
-    if(timeInt === 0){
-        return 0;
+    if(t === 0){
+        return [0, 0];
     }
+
+    //Convert the TimeInterval to a BigInt in units of nanoseconds, then split it up
+    //Todo: can maybe do this faster without using bigints, but bigints avoid an overflow
+     const billion = 1000000000;
+    // let bigT = BigInt(t[0]) * BigInt(t[1]);
+
+    let seconds: number;
+    let nseconds: number;
+
+    let secConversionFactor = t[1]/ billion;
+    seconds = Math.floor(t[0] * secConversionFactor);
+    nseconds = (t[0] * secConversionFactor - seconds) * billion;
+
+    // let seconds: number = Math.floor(t / million);
+    // let nseconds: number = t - seconds * million;
+
+    // let seconds: number = parseInt((bigT / billion).toString());
+    // let nseconds: number = parseInt((bigT % billion).toString());
+    return [seconds, nseconds];    
+
+}
+
+//FIXME: Delete when I'm confident numeric time representations aren't coming back.
+// //Convert a time interval to a number. This is helpful for TimeInstants.
+// export function timeIntervalToNumber(timeInt: TimeInterval){
+//     if(timeInt === null){
+//         throw new Error('timeIntervalToNumber cannot convert a null TimeInterval to a number');
+//     }
+
+//     if(timeInt === 0){
+//         return 0;
+//     }
     
-    return timeInt[0] * timeInt[1];
-};
+//     return timeInt[0] * timeInt[1];
+// };
+
+/**
+ * Convert a number representing time in microseconds to a NumericTimeInterval
+ * @param t the number in units of microseconds to convert
+ */
+export function microtimeToNumeric(t: number): NumericTimeInterval {
+    const million = 1000000;
+    let seconds: number = Math.floor(t / million);
+    let nseconds: number = t - seconds * million;
+    return [seconds, nseconds];
+}
+
+/**
+ * Calculate t1 - t2. Returns the difference as a NumericTimeInterval
+ * Assumes t1 >= t2, and throws an error if this assumption is broken.
+ * @param t1 minuend
+ * @param t2 subtrahend
+ */
+export function numericTimeDifference(t1: NumericTimeInterval, t2: NumericTimeInterval): NumericTimeInterval {
+    console.log("t1: " + t1);
+    console.log("t2: " + t2);
+    let difference:NumericTimeInterval = [0, 0];
+    const billion = 1000000000;
+    if(t1[1] > t2[1]){
+        difference[0] = t1[0] - t2[0];
+        difference[1] = t1[1] - t2[1];
+    } else {
+        //Borrow a second
+        difference[0] = t1[0] - 1  - t2[0];
+        difference[1] = t1[1] + billion - t2[1];
+    }
+    if(difference[0] < 0 || difference[1] < 0){
+        throw new Error("numericTimeDifference requires t1 >= t2");
+    }
+    return difference;
+}
+
+/**
+ * Calculate t1 + t2. Returns the sum as a NumericTimeInterval
+ * @param t1 addend 1
+ * @param t2 addend 2
+ */
+export function numericTimeSum(t1: NumericTimeInterval, t2: NumericTimeInterval): NumericTimeInterval {
+    const billion = 1000000000;
+
+    let sum:NumericTimeInterval = [0, 0];
+    
+    if(t1[1] + t2[1] >= billion){
+        //Carry the second
+        sum[0] = t1[0] + t2[0] + 1;
+        sum[1] = t1[1] + t2[1] - billion;
+    } else {
+        sum[0] = t1[0] + t2[0];
+        sum[1] = t1[1] + t2[1];
+    }
+    return sum;
+}
+
+/**
+ * Multiply a timeInterval t1, by a number t2. Returns the product as a NumericTimeInterval
+ * @param t time interval to be multiplied
+ * @param multiple number by which to multiply t
+ */
+export function numericTimeMultiple(t: NumericTimeInterval, multiple: number): NumericTimeInterval {
+    const billion = 1000000000;
+    let product:NumericTimeInterval = [0, 0];
+
+    let nanoProduct = t[1] * multiple;
+    let carry = Math.floor(nanoProduct/ billion)
+    product[1] = nanoProduct - carry * billion;
+    product[0] = t[0] * multiple + carry;
+    
+    return product;
+}
+
+
 
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
@@ -405,24 +561,32 @@ export class Action<T> implements Trigger {
         }
 
         let timestamp: TimeInstant;
-        let wallTime = Date.now();
+        let wallTime: NumericTimeInterval; 
 
         //FIXME: Probably something wrong in one of these cases...
         if(this.timeType == TimelineClass.physical){
             //physical
-            if(wallTime > globals.currentLogicalTime[0] ){
-                timestamp = [wallTime, 0 ];
-            } else {
+            wallTime = microtimeToNumeric(microtime.now());
+            if(compareNumericTimeIntervals(globals.currentLogicalTime[0], wallTime )){
                 timestamp = [globals.currentLogicalTime[0], globals.currentLogicalTime[1] + 1 ];
+            } else {
+                timestamp = [wallTime, 0 ];
             }
         } else {
             //logical
             if( timeIntervalIsZero(this.minDelay) && timeIntervalIsZero(delay)) {
                 timestamp = [globals.currentLogicalTime[0], globals.currentLogicalTime[1] + 1 ];
             } else {
-                let newTimeNumber = globals.currentLogicalTime[0] + 
-                    Math.min(timeIntervalToNumber(this.minDelay), timeIntervalToNumber(delay));
-                timestamp = [newTimeNumber, globals.currentLogicalTime[1]];
+                //Take min of minDelay and delay
+                let numericMinDelay = timeIntervalToNumeric(this.minDelay);
+                let numericDelay = timeIntervalToNumeric(delay);
+                let actionTime: NumericTimeInterval;
+                if(compareNumericTimeIntervals(numericMinDelay, numericDelay )){
+                    actionTime = numericMinDelay;
+                } else{
+                    actionTime = numericDelay;
+                }
+                timestamp = [actionTime, globals.currentLogicalTime[1]];
             }
         }
         let actionEvent = new Event(this, timestamp, this.payload);
@@ -508,14 +672,21 @@ export class Timer{
     //A timer is only triggered by itself.
     triggers: Array<Trigger> = new Array();
 
+    //Private variables used to keep track of rescheduling
     _timerFirings: number = 0;
+    _offsetFromStartingTime: NumericTimeInterval;
 
 
-    //The setup function should be used to start the timer using the offset
+    //The setup function should be used to start the timer using the offset.
+    //It must be called before reschedule, or else _offsetFromStartingTime will
+    //not be set.
     setup(){
         if(this.offset !== null && (this.offset === 0 || this.offset[0] >= 0)){
         //if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
-            let timerInitInstant: TimeInstant = [timeIntervalToNumber(this.offset), 0];
+            
+            let numericOffset = timeIntervalToNumeric(this.offset);
+            this._offsetFromStartingTime =  numericTimeSum( numericOffset, globals.startingWallTime );
+            let timerInitInstant: TimeInstant = [this._offsetFromStartingTime, 0];
             let timerInitEvent: Event = new Event(this, timerInitInstant, null);
             let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, globals.getEventID());
             globals.scheduleEvent(timerInitPriEvent);
@@ -527,14 +698,20 @@ export class Timer{
         }
     }
 
-    //The react function for a timer schedules the next timer event using the period.
-    //A period of 0 indicates the timer should not be scheduled again.
+    /**
+     * The reschedule function for a timer schedules the next timer event using the period.
+     * A period of 0 indicates the timer should not be scheduled again.
+     * Note that rescheduling is based on a multiple of the period and does not "slip"
+     * if the last scheduling happened late.
+     */
     reschedule() {
         this._timerFirings++;
         if(this.period !== null && (this.period === 0 || this.period[0] >= 0)){
             if(this.period !== 0 && this.period[0] > 0){
-                let nextLogicalTime: number =  timeIntervalToNumber(this.offset) + 
-                    timeIntervalToNumber(this.period) * this._timerFirings;
+                // let numericOffset = timeIntervalToNumeric(this.offset);
+                let numericPeriod = timeIntervalToNumeric(this.period);
+                let nextLogicalTime: NumericTimeInterval = numericTimeSum(this._offsetFromStartingTime, 
+                    numericTimeMultiple(numericPeriod , this._timerFirings) ); 
                 let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
                 let nextTimerEvent: Event = new Event(this, nextTimerInstant, null);
                 let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, globals.getEventID());

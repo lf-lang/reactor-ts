@@ -1,14 +1,35 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, timeIntervalToNumber, Action } from "./reactor";
+import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, Action, NumericTimeInterval, microtimeToNumeric, compareNumericTimeIntervals, compareTimeInstants, timeIntervalToNumeric, numericTimeDifference, numericTimeSum } from "./reactor";
+
+//---------------------------------------------------------------------//
+// Modules                                                             //
+//---------------------------------------------------------------------//
+
+//Must first declare require function so compiler doesn't complain
+declare function require(name:string);
+
+const microtime = require("microtime");
+const NanoTimer = require('nanotimer');
 
 //FIXME: Move all of this into a singleton class named Runtime
 
+
+//FIXME: the relationship between _executionTimeout and _relativeExecutionTimeout
+//is confusing and the source of a lot of bugs. Simplify it.
+
 /**
- * If not null, finish execution with success at this physical time.
+ * If not null, finish execution with success, this time interval after
+ * the start of execution.
  */
 var _executionTimeout:TimeInterval | null = null;
+
+/**
+ * The numeric time at which execution should be stopped.
+ * Determined from _executionTimeout and startingWallTime.
+ */
+var _relativeExecutionTimeout: NumericTimeInterval;
 
 export function setExecutionTimeout(t: TimeInterval){
     _executionTimeout = t;
@@ -19,12 +40,12 @@ export var eventQ = new PrioritySet<number,TimeInstant>();
 
 //The current time, made available so actions may be scheduled relative
 //to it. We'll see if this should be moved somewhere else.
-export var currentLogicalTime: TimeInstant = [0,0];
+export var currentLogicalTime: TimeInstant;
 
-//The physical time when execution began expressed as
-//the number of milliseconds elapsed since January 1, 1970 00:00:00 UTC.
+//The physical time when execution began expressed as [seconds, nanoseconds]
+//elapsed since January 1, 1970 00:00:00 UTC.
 //Initialized in startRuntime
-export var startingWallTime: number = -1;
+export var startingWallTime: NumericTimeInterval;
 
 //Array of timers used to start all timers when the runtime begins.
 //_timers are registered here in their constructor.
@@ -100,7 +121,12 @@ export function scheduleEvent(e: PrioritizedEvent){
 }
 
 export function startRuntime(successCallback: () => void , failureCallback: () => void ) {
-    startingWallTime = Date.now();
+    //startingWallTime = microtime.now();
+    startingWallTime = microtimeToNumeric(microtime.now());
+    currentLogicalTime = [ startingWallTime, 0];
+    if(_executionTimeout !== null){
+        _relativeExecutionTimeout = numericTimeSum(startingWallTime, timeIntervalToNumeric(_executionTimeout));
+    }
     _startTimers();
     _next(successCallback, failureCallback);
     //Main from C host:
@@ -139,38 +165,71 @@ var _startTimers = function(){
 
     ///FIXME, give callbacks a way to return status info.
 export function _next(successCallback: ()=> void, failureCallback: () => void){
+        console.log("starting _next");
         let currentHead = eventQ.peek();
         while(currentHead){
-            let currentPhysicalTime = Date.now() - startingWallTime;
+            let currentPhysicalTime:NumericTimeInterval = microtimeToNumeric(microtime.now());
+            console.log("current physical time in next is: " + currentPhysicalTime);
             
             //If execution has gone on for longer than the execution timeout,
             //terminate execution with success.
-            if(_executionTimeout && 
-                    timeIntervalToNumber(_executionTimeout) < currentPhysicalTime ){
-                console.log("Execution timeout reached. Terminating runtime with success.");
-                successCallback();
-                return;
-            }
-
-            let physicalTimeGap = currentHead._priority[0] - currentPhysicalTime;
-            if(physicalTimeGap > 0){
-                
-                //Physical time is behind logical time.
-                //Wait until execution timeout or the next event and try again.
-                let timeout = physicalTimeGap;
-                if(_executionTimeout){
-                    timeout = Math.min(physicalTimeGap, timeIntervalToNumber(_executionTimeout));
+            if(_executionTimeout){
+                //const timeoutInterval: TimeInterval= timeIntervalToNumeric(_executionTimeout);
+                if(compareNumericTimeIntervals( _relativeExecutionTimeout, currentPhysicalTime)){
+                    console.log("Execution timeout reached. Terminating runtime with success.");
+                    successCallback();
+                    return;
                 }
+            }
+            if(compareNumericTimeIntervals(currentPhysicalTime, currentHead._priority[0] )){
+                //Physical time is behind logical time.
+                let physicalTimeGap = numericTimeDifference(currentHead._priority[0], currentPhysicalTime, );
+            
+                //Wait until min of (execution timeout and the next event) and try again.
+                let timeout:NumericTimeInterval;
+                if(_executionTimeout && compareNumericTimeIntervals(_relativeExecutionTimeout, physicalTimeGap)){
+                    timeout = _relativeExecutionTimeout;
+                } else {
+                    timeout = physicalTimeGap;
+                }
+
+
 
                 console.log("I set a timeout.");
                 console.log("currentPhysicalTime: " + currentPhysicalTime);
                 console.log("next logical time: " + currentHead._priority[0]);
                 console.log("physicalTimeGap was " + physicalTimeGap);
 
-                setTimeout(  ()=>{
-                    _next(successCallback, failureCallback);
-                    return;
-                }, timeout);
+
+
+                //Nanotimer https://www.npmjs.com/package/nanotimer accepts timeout
+                //specified by a string followed by a letter indicating the units.
+                //Use n for nanoseconds. We will have to 0 pad timeout[1] if it's
+                //string representation isn't 9 digits long.
+                let nTimer = new NanoTimer();
+                let nanoSecString = timeout[1].toString();
+
+                //FIXME: this test will be unecessary later on when we're more
+                //confident everything is working correctly.
+                if( nanoSecString.length > 9){
+                    throw new Error("Tried to set a timeout for an invalid NumericTimeInterval with nanoseconds: " +
+                        nanoSecString );
+                }
+                
+                let padding = "";
+                for(let i = 0; i < 9 - nanoSecString.length; i++){
+                    padding = "0" + padding 
+                }
+
+                let timeoutString = timeout[0].toString() + padding + nanoSecString + "n"; 
+
+                nTimer.setTimeout(_next, [successCallback, failureCallback], timeoutString);
+                
+                //FIXME: Delete this comment when we're sure nanotimer is the right way to go.
+                // setTimeout(  ()=>{
+                //     _next(successCallback, failureCallback);
+                //     return;
+                // }, timeout);
                 return;
             } else {
                 //Physical time has caught up, so advance logical time
@@ -178,7 +237,7 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 console.log("At least one event is ready to be processed")
                 console.log("advanced logical time to: " + currentHead._priority[0]);
                 console.log("currentPhysicalTime: " + currentPhysicalTime);
-                console.log("physicalTimeGap was " + physicalTimeGap);
+                //console.log("physicalTimeGap was " + physicalTimeGap);
 
                 //Remove all simultaneous events from the queue.
                 //Reschedule timers, and put the triggered reactions on
