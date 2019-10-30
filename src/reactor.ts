@@ -40,7 +40,7 @@ export enum TimeUnit {
 
 
 /** 
- * A time interval must be accompanied by a time unit. Decimals are ignored.
+ * A time interval must be an integer accompanied by a time unit. Decimals are errors.
  */
 export type TimeInterval = null | [number, TimeUnit] | 0;
 
@@ -50,7 +50,9 @@ export type TimeInterval = null | [number, TimeUnit] | 0;
  * If we used a Javascript number to hold the number of nanoseconds in the time interval,
  * the 2^53 bits of precision for a JavaScript number (double) would overflow after 0.29 years.
  * We use an array here, because in our experiments this representation is much faster
- * than a JavaScript BigInt.
+ * than a JavaScript BigInt. To avoid floating point errors, non-integer seconds or 
+ * nanoseconds are not allowed.
+ * 
  */
 export type NumericTimeInterval = [number, number];
 
@@ -109,7 +111,7 @@ export function compareNumericTimeIntervals(t0: NumericTimeInterval, t1: Numeric
  */
 export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
     //FIXME: these checks are unecessary because I removed 0 from the type.
-    //Why have a special representation for epoch?
+    //Why have a second special representation for epoch?
     //Delete, when I feel confident it's not coming back.
     // if(t0 === 0){
     //     return true;
@@ -117,6 +119,10 @@ export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
     // if(t1 === 0){
     //     return false;
     // }
+
+
+
+    //Don't check if TimeInstants have fractional microsteps to save time.
 
     if(compareNumericTimeIntervals(t0[0], t1[0])){
         return true;
@@ -129,10 +135,19 @@ export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
 }
 
 /**
- * Convert a TimeInterval to its corresponding representation as a NumericTimeInterval
- * @param t the numeric time interval to convert
+ * Convert a TimeInterval to its corresponding representation as a NumericTimeInterval.
+ * Attempting to convert a TimeInterval with sub-nanosecond precision to a
+ * NumericTimeInterval will result in an error. Sub-nanosecond precision is not allowed
+ * because:
+ * 1) None of the timing related libraries support it.
+ * 2) It may cause floating point errors in the NumericTimeInterval's
+ *    number representation. Integers have up to 53 bits of precision to be exactly
+ *    represented in a JavaScript number (i.e. a double), but anything right of the
+ *    decimal point such as 0.1 may have a non-exact floating point representation.
+ * @param t The numeric time interval to convert.
  */
 export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
+    //Convert the TimeInterval to a BigInt in units of nanoseconds, then split it up.
     console.log("calling timeIntervalToNumeric with " + t);
     if(t === null){
         throw new Error('timeIntervalToNumeric cannot convert a null TimeInterval');
@@ -142,23 +157,29 @@ export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
         return [0, 0];
     }
 
-    //Convert the TimeInterval to a BigInt in units of nanoseconds, then split it up
-    //Todo: can maybe do this faster without using bigints, but bigints avoid an overflow
-     const billion = 1000000000;
-    // let bigT = BigInt(t[0]) * BigInt(t[1]);
+    if(Math.floor(t[0]) - t[0] !== 0){
+        throw Error("Cannot convert TimeInterval " + t + " to a NumericTimeInterval "+
+        "because it does not have an integer time.");
+        //Allowing this may cause floating point errors.
+    }
+
+    const billion = BigInt(1000000000);
 
     let seconds: number;
     let nseconds: number;
 
-    let secConversionFactor = t[1]/ billion;
-    seconds = Math.floor(t[0] * secConversionFactor);
-    nseconds = (t[0] * secConversionFactor - seconds) * billion;
+    //To avoid overflow and floating point errors, work with BigInts.
+    let bigT = BigInt(t[0]) * BigInt(t[1]);
+    console.log("big Int is: " + bigT);
+    seconds = parseInt((bigT / billion).toString());
+    nseconds = parseInt((bigT % billion).toString());
 
-    // let seconds: number = Math.floor(t / million);
-    // let nseconds: number = t - seconds * million;
+    //FIXME: Remove this comment.
+    //The associativity of these operations is very important because otherwise
+    //there will be floating point errors.
+    // seconds = Math.floor( (t[0] * t[1]) / billion);
+    // nseconds = (t[0] * t[1]) - (seconds * billion);
 
-    // let seconds: number = parseInt((bigT / billion).toString());
-    // let nseconds: number = parseInt((bigT % billion).toString());
     return [seconds, nseconds];    
 
 }
@@ -183,8 +204,12 @@ export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
  */
 export function microtimeToNumeric(t: number): NumericTimeInterval {
     const million = 1000000;
+    const billion = 1000000000;
+
+    //The associativity of these operations is very important because otherwise
+    //there will be floating point errors.
     let seconds: number = Math.floor(t / million);
-    let nseconds: number = t - seconds * million;
+    let nseconds: number = t * 1000 - seconds * billion;
     return [seconds, nseconds];
 }
 

@@ -42,7 +42,7 @@ export class Clock extends Reactor {
         super(null, "Clock");
 
         const t1 = new Timer( [1, TimeUnit.sec], [3, TimeUnit.sec]);
-        const t2 = new Timer( [1.5, TimeUnit.sec] , [3.5, TimeUnit.sec] );
+        const t2 = new Timer( [1500, TimeUnit.msec] , [3500, TimeUnit.msec] );
         this.addTimer(t1);
         this.addTimer(t2);
         
