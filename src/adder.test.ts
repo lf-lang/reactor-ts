@@ -9,10 +9,12 @@ describe('adder', function () {
 
     it('2 + 1 = 3', function () {
         
+        
+
         expect(expect(adder).toBeInstanceOf(Adder));
 
-        console.log(adder);
-        console.log(adder._reactions[0]);
+        // console.log(adder);
+        // console.log(adder._reactions[0]);
 
         //Unecessary now the adder defines its own reactions.
         //var addRe = new AddTwo();
@@ -30,7 +32,7 @@ describe('adder', function () {
         // expect(output_before_fire).toBe(undefined);
 
         //expect().toBeUndefined();
-        console.log(JSON.stringify(globals.reactionQ));
+        // console.log(JSON.stringify(globals.reactionQ));
         
         //expect(adder.out.get()).toBe(3);
 

@@ -4,12 +4,30 @@ import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval} from '
 
 export class ProduceOutput extends Reaction{
 
+    outputPayload:any;
+
+    constructor(a, b, c, outputPayload:any ){
+        super(a,b,c);
+        this.outputPayload = outputPayload
+    }
+
     /**
      * Produce an output event
      * @override
      */
     react(){
-        console.log("FIXME: SingleEvent does not yet produce an output");
+        (this.state as any).o.set(this.outputPayload);
+        console.log("Writing null to SingleEvent's output.");
+
+        // var output = this.state.getOutputs().get("out");
+        // if(output){
+        //     console.log("Writing null to SingleEvent's output.");
+            
+        // } else {
+        //     throw new Error("OutPort 'out' has not been declared for this reactor");
+        // }
+
+        // console.log("FIXME: SingleEvent does not yet produce an output");
     }
 }
 
@@ -17,18 +35,18 @@ export class ProduceOutput extends Reaction{
 //output event
 export class SingleEvent extends Reactor {
 
-    constructor() {
+    o: OutPort<any> = new OutPort<any>(this);
+    t1: Timer = new Timer(0, 0);
+
+    constructor( outputPayload) {
         super(null, "SingleEvent");
-
-        //FIXME: create and add an outPort, so the reaction
-        //can write to it.
-
-        const t1 = new Timer(0, 0);
-        this.addTimer(t1);
         
         const produceOutputTriggers = new Array();
-        produceOutputTriggers.push(t1);
-        const r = new ProduceOutput(this, produceOutputTriggers, 0);
+        produceOutputTriggers.push(this.t1);
+        const r = new ProduceOutput(this, produceOutputTriggers, 0, outputPayload);
         this._reactions.push(r);
     }
 }
+
+
+

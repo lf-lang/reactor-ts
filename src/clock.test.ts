@@ -15,7 +15,7 @@ describe('clock', function () {
         
         expect(expect(clock).toBeInstanceOf(Clock));
 
-        console.log(clock);
+        // console.log(clock);
 
         //expect().toBeUndefined();
         //console.log(JSON.stringify(globals.reactionQ));

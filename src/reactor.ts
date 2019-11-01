@@ -72,6 +72,11 @@ export enum TimelineClass {
     logical
 }
 
+/**
+ * A value (of type T) which is present at a particular TimeInstant
+ */
+export type TimestampedValue<T> = [TimeInstant, T];
+
 //---------------------------------------------------------------------//
 // Helper Functions for Types                                                   //
 //---------------------------------------------------------------------//
@@ -102,6 +107,15 @@ export function compareNumericTimeIntervals(t0: NumericTimeInterval, t1: Numeric
         return true;
     }
     return false;
+}
+
+/**
+ * Return true if t0 and t1 represent the same time instant. Otherwise return false.
+ * @param t0 
+ * @param t1 
+ */
+export function timeInstantsAreEqual(t0: TimeInstant, t1: TimeInstant){
+    return t0[0][0] == t1[0][0] && t0[0][1] == t1[0][1] && t0[1] == t1[1];
 }
 
 /**
@@ -148,7 +162,6 @@ export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
  */
 export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
     //Convert the TimeInterval to a BigInt in units of nanoseconds, then split it up.
-    console.log("calling timeIntervalToNumeric with " + t);
     if(t === null){
         throw new Error('timeIntervalToNumeric cannot convert a null TimeInterval');
     }
@@ -170,7 +183,6 @@ export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
 
     //To avoid overflow and floating point errors, work with BigInts.
     let bigT = BigInt(t[0]) * BigInt(t[1]);
-    console.log("big Int is: " + bigT);
     seconds = parseInt((bigT / billion).toString());
     nseconds = parseInt((bigT % billion).toString());
 
@@ -183,20 +195,6 @@ export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
     return [seconds, nseconds];    
 
 }
-
-//FIXME: Delete when I'm confident numeric time representations aren't coming back.
-// //Convert a time interval to a number. This is helpful for TimeInstants.
-// export function timeIntervalToNumber(timeInt: TimeInterval){
-//     if(timeInt === null){
-//         throw new Error('timeIntervalToNumber cannot convert a null TimeInterval to a number');
-//     }
-
-//     if(timeInt === 0){
-//         return 0;
-//     }
-    
-//     return timeInt[0] * timeInt[1];
-// };
 
 /**
  * Convert a number representing time in microseconds to a NumericTimeInterval
@@ -299,33 +297,6 @@ export function numericTimeMultiple(t: NumericTimeInterval, multiple: number): N
 
 export interface Trigger{}
 
-/**
- * A generic container for components.
- */
-// export interface Container<T: Reactor> {
-
-//     /**
-//      * Add a list of elements to this container. Duplicate entries will
-//      * not be kept.
-//      * @param {T} element
-//      */
-//     _add(...elements: Array<T>): void;
-
-//     /**
-//      * Return whether or not the argument is present in the container.
-//      * @param {T} element
-//      */
-//     _contains(element: T): boolean;
-
-//     /**
-//      * Remove an element from this container.
-//      * @param {string} name
-//      */
-//     _remove(element: T): void;
-
-//     //_move(element: T, destination: Container<T: Component>)
-
-// }
 
 export interface Writable<T> {
     set: (value: T | null) => void;
@@ -371,30 +342,22 @@ export interface Transformation {
     new(container: Set<Reactor>, reactions:Array<Reaction>):Transformation;
 }
 
-//An interface for classes implementing a react function.
-//Both reactions and timers react to events on the event queue
-// export interface Reaction {
-//     react:() => void;
-//     triggers: Array<Trigger>;
-//     priority: number;
-// }
-
 /**
  * The reaction abstract class.
  * A concrete reaction class should extend Reaction, and implement a react function.
  */
-// The reaction ab.
-// 
+
 
 export abstract class Reaction{
 
+    //FIXME: for now state is the entire this for the parent reactor. This should be changed
+    //to a custom data structure with only the state relevant to a reaction.
     state: Reactor;
+
+    //Contains the timers, actions, and inputs that trigger this reaction.
     triggers: Array<Trigger>;
     priority: number;
     triggeringActions: Set<Action<any>>;
-    // The events triggering this reaction must be available,
-    // so payloads can be used in react.
-
 
     constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
         this.triggers = triggers;
@@ -420,7 +383,6 @@ export abstract class Reaction{
 //determined by a topological sort of reactors.
 export class PrioritizedReaction implements PrecedenceGraphNode,
  PrioritySetNode<number,number>{
-
 
     r: Reaction;
 
@@ -459,21 +421,7 @@ export class PrioritizedReaction implements PrecedenceGraphNode,
     }    
 }
 
-
-
-//FIXME: delete Reaction2 once we have verfified it's never used anywhere.
-// export interface Reaction2 {
-    
-//     //new(...args):Reaction2;
-
-//     react:(...args) => void;
-// }
-
-//end of Reaction2 code to delete.
-
-
 /**
- * 
  * An event is caused by a timer, caused by an input, or caused by an internal event
  * It occurs at a particular time instant and carries an arbitrary data type as payload.
  * There are three kinds of events: Timer, Input, and Internal.
@@ -523,13 +471,7 @@ export class PrioritizedEvent implements
     hasPrecedenceOver(node: PrioritySetNode<number,TimeInstant>) {
         return compareTimeInstants(this._priority, node._priority);
     }    
-
  }
-
-// export interface Schedulable<T> {
-//     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
-//     unschedule(handle: TimeInstant):void;
-// }
 
 
 /**
@@ -545,39 +487,35 @@ export class PrioritizedEvent implements
 
 export class Action<T> implements Trigger {
 
-    //A payload is available to any reaction triggered by this action
-    payload: T | null;
     timeType: TimelineClass;
     minDelay: TimeInterval;
     name: string;
 
+    //A payload is available to any reaction triggered by this action.
+    //This timestamped payload can only be read as non
+    _payload: TimestampedValue<T> | null;
+
     /**
-     * @param name String identifier for this action, so it may be distinguished
-     *  from other actions when its payload is delivered to a reaction.
      * @param timeType Optional. Defaults to physical. If physical,
      *  then the physical clock on the local platform is used to assign a timestamp
      *  to the action when it is enabled. If logical, the current physical time is
      *  ignored and the timestamp of the action is the current logical time (plus
      *  one microstep) or, if a minimum delay is given and is greater than zero,
      *  the current logical time plus the minimum delay.
-     * @param payload Optional. Defaults to null. A data value to be passed to any
-     *  reaction that is triggered by the action
      * @param minDelay Optional. Defaults to 0. If a minDelay is given, then it 
      *  specifies a minimum delay, the minimum logical time that must elapse between
      *  when the action is enabled and when it triggers. If the delay parameter to the
      *  schedule function and the mindelay parameter are both zero and the physical
      *  keyword is not given, then the action is timestamped one microstep later.
      */
-    constructor(name: string, timeType: TimelineClass = TimelineClass.physical, 
-            payload: T|null = null, minDelay: TimeInterval = 0){
+    constructor(timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
 
         this.timeType = timeType;
-        this.payload = payload;
         this.minDelay = minDelay;
         this.name = name;
     }
 
-    schedule(delay: TimeInterval){
+    schedule(delay: TimeInterval, payload?: T){
         console.log("Scheduling action.");
         if(delay === null){
             throw new Error("Cannot schedule an action with a null delay");
@@ -586,7 +524,8 @@ export class Action<T> implements Trigger {
         let timestamp: TimeInstant;
         let wallTime: NumericTimeInterval; 
 
-        //FIXME: Probably something wrong in one of these cases...
+        //FIXME: I'm not convinced I understand the spec so,
+        //Probably something wrong in one of these cases...
         if(this.timeType == TimelineClass.physical){
             //physical
             wallTime = microtimeToNumeric(microtime.now());
@@ -612,75 +551,30 @@ export class Action<T> implements Trigger {
                 timestamp = [actionTime, globals.currentLogicalTime[1]];
             }
         }
-        let actionEvent = new Event(this, timestamp, this.payload);
+
+        let actionEvent = new Event(this, timestamp, payload);
         let actionPriEvent = new PrioritizedEvent(actionEvent, globals.getEventID());
-        globals.scheduleEvent(actionPriEvent);
-    
+        globals.scheduleEvent(actionPriEvent);    
     }
 
 
+    //FIXME Create isPresent function for actions? It would return true when the logical timestamps match.
+
+    /**
+     * Called on an action within a reaction to acquire the action's payload.
+     * The payload for an action is set by a scheduled action event, and is only
+     * present for reactions executing at that logical time. When logical time
+     * advances, that previously available payload is now unavailable.
+     */
+    get(): T | null{
+        if(this._payload && timeInstantsAreEqual(this._payload[0], globals.currentLogicalTime)){
+            return this._payload[1]
+        } else {
+            return null;
+        }
+    }
 }
 
-//Matt: An action is an internal event so I think there's a lot of overlap with
-//that class and the below code.
-//BEGIN COMMENTED OUT ACTION CLASS
-
-/**
- * An action denotes a self-scheduled event. If an action is instantiated
- * without a delay, then the time interval between the moment of scheduling
- * this action (cause), and a resulting reaction (effect) will be determined
- * upon the call to schedule. If a delay _is_ specified, it is considered
- * constant and cannot be overridden using the delay argument in a call to 
- * schedule().
- */
-// export class Action<T> implements Trigger {
-//     get: () => T | null;
-
-//     /**
-//      * Schedule this action. If additionalDelay is 0 or unspecified, the action 
-//      * will occur at the current logical time plus one micro step.
-//      */
-//     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
-
-//     constructor(parent:Reactor, delay?:TimeInterval) { 
-//         var _value: T;
-
-//         Object.assign({
-//             get(): T | null {
-//                 return _value;
-//             }
-//             // FIXME: add writeValue
-//         });
-
-//         Object.assign(this, {
-//             schedule(additionalDelay:TimeInterval, value?:T): TimeInstant {
-//                 let numericDelay: number;
-                
-//                 //FIXME
-//                 // if(additionalDelay == null || additionalDelay == 0
-//                 //      || additionalDelay[0] == 0){
-
-
-//                 // }
-
-//                 // if ( (delay == null || delay === 0) &&  ) {
-//                 //     numericDelay = timeIntervalToNumber(additionalDelay);
-//                 // } else {
-//                 //     if (additionalDelay != null && additionalDelay !== 0) {
-//                 //         delay[0] += timeIntervalToNumber(additionalDelay);
-//                 //     }
-//                 // }
-//                 // return _schedule(this, delay, value);
-//             }
-//         });
-//     }
-
-//     unschedule(handle: TimeInstant):void {
-//         // FIXME
-//     }
-// }
-
-//END COMMENTED OUT ACTION CLASS
 
 export class Timer{
     
@@ -714,8 +608,7 @@ export class Timer{
             let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, globals.getEventID());
             globals.scheduleEvent(timerInitPriEvent);
 
-            //FIXME
-            console.log("Scheduled timer init at " + timerInitInstant);
+            console.log("Scheduled timer init for timer with period " + this.period + " at " + timerInitInstant);
         } else {
             throw new Error("Cannot setup a timer with a null or negative offset.");
         }
@@ -740,8 +633,7 @@ export class Timer{
                 let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, globals.getEventID());
                 globals.scheduleEvent(nextTimerPriEvent);
 
-                console.log("Scheduling next event for timer with period " +
-                this.period[0] + " " + this.period[1]);
+                console.log("Scheduling next event for timer with period " + this.period + " for time: " + nextTimerInstant);
             }
 
         } else {
@@ -752,9 +644,6 @@ export class Timer{
     constructor(period:TimeInterval, offset:TimeInterval) {
         this.period = period;
         this.offset = offset;
-
-        //FIXME: use this code in reactions
-
 
         //Register this timer so it can be started when the runtime begins.
         globals.timers.push(this);
@@ -772,8 +661,8 @@ export class Timer{
     // 
 }
 
-//type Port<+T> = Port<T>;
-
+//FIME: This comment seems out of date with the current LF spec
+//regarding composites
 /**
  * Each component has a name. It will typically also acquire a 
  * parent, unless it is a top-level composite. The parent property
@@ -791,33 +680,63 @@ export abstract class Reactor implements Nameable {
     
     _reactions:Array<Reaction> = new Array<Reaction>();
     _timers:Set<Timer> = new Set<Timer>();
-    _inputs:Set<InPort<any>> = new Set<InPort<any>>();
-    _actions:Map<string, Action<any>> = new Map<string, Action<any>>();
+    // _inputs:Map<string, InPort<any>> = new Map< string,InPort<any>>();
+    // _outputs:Map<string, OutPort<any>> = new Map< string ,OutPort<any>>();
+    // _actions:Map<string, Action<any>> = new Map<string, Action<any>>();
 
     parent:Reactor|null = null;
     //FIXME: Create getters and setters for children.
     children:Set<Reactor|null> = new Set<Reactor|null>();
 
-    //FIXME: assign in constructor?
-    addTimer(timer: Timer){
-        this._timers.add(timer);
-    }
-    //addTimer: (timer: Timer) => void;
-    
-    //FIXME: assign in constructor?
-    //FIXME: don't return the timer set, return a copy.
-    getTimers(){
-        return this._timers
+    /**
+     * Returns the set of timers directly owned by this reactor combined with 
+     * the recursive set of all timers of contained reactors.
+     */
+    getTimers(): Set<Timer> {
+        var timers = new Set<Timer>();
+
+        //Timers part of this reactor
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof Timer) {
+                timers.add(value);
+            }
+        }
+
+        //Recursively call this function on child reactors
+        //and add their timers to the timers set.
+        var subTimers: Set<Timer>;
+        if(this.children){
+            for(const child of this.children){
+                if(child){
+                    subTimers = child.getTimers();
+                    for(const subTimer of subTimers){
+                        timers.add(subTimer);
+                    }                     
+                }
+            }
+        }
+        return timers;
     }
 
-    addAction(a: Action<any>){
-        this._actions.set(a.name, a);
-    }
+    // addAction(a: Action<any>){
+    //     this._actions.set(a.name, a);
+    // }
 
-    getAction(name: string){
-        return this._actions.get(name);
-    }
-    //getTimers: () => Set<Timer>;
+    // //FIXME: return a copy
+    // getAction(name: string){
+    //     return this._actions.get(name);
+    // }
+
+    //FIXME: assign in constructor?
+    // addPort(port: PortBase){
+    //     if( port instanceof InPort){
+    //         this._inputs.set(port._getName() ,port);
+    //     } else if (port instanceof OutPort){
+    //         this._outputs.set(port._getName() , port);
+    //     } else {
+    //         throw new Error("Can only addPorts to a reactor of type InPort or OutPort");
+    //     }
+    // }
 
 
     _setName: (string) => void;
@@ -986,6 +905,9 @@ export abstract class Reactor implements Nameable {
         }
     }
 
+    //FIXME: The implementation of _getInputs and _getOutputs below may in fact
+    //be a better design, but they are incompatible with the current implementation
+ 
     _getInputs(): Set<InPort<any>> {
         var inputs = new Set<InPort<any>>();
         for (const [key, value] of Object.entries(this)) {
@@ -1005,10 +927,22 @@ export abstract class Reactor implements Nameable {
         }
         return outputs;
     }
+
+    _getActions(): Set<Action<any>> {
+        var actions = new Set<Action<any>>();
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof Action) {
+                actions.add(value);
+            }
+        }
+        return actions;
+    }
     
 }
 
-export class PortBase implements Named {
+
+//FIXME: Perhaps PortBase and the Port interface can be combined?
+export abstract class PortBase implements Named {
     
     /***** Priviledged functions *****/
 
@@ -1069,11 +1003,7 @@ export class PortBase implements Named {
     }
 }
 
-// export interface Connectable<T> {
-//     +connect: (source: T) => void;
-//     +canConnect: (source: T) => boolean;
-// }
-
+//FIXME: Out of date documentation.
 /**
  * An interface for ports. Each port is associated with a parent component.
  * Ports may be connected to downstream ports using connect(). 
@@ -1084,70 +1014,53 @@ export class PortBase implements Named {
 export interface Port<T> extends  Named {
 
     hasGrandparent: (container:Reactor) => boolean;
-
     hasParent: (component: Reactor) => boolean;
-    
-    connect: (source: Port<T>) => void;
 
+    //FIXME: I think only InPorts should be able to connect to an OutPort.
+    connect: (source: Port<T>) => void;
     canConnect(source: Port<T>): boolean;
 
+    //FIXME: Either implement disconnect() or remove from documentation.
+
 }
-
-// class CallerPort<A,R> implements Connectable<CalleePort<A,R>> {
-
-//     constructor() {
-
-//     }
-
-//     call() {
-
-//     }
-
-//     connect(sink: CalleePort<A,R>):void {
-//         return;
-//     }
-
-//     canConnect(sink: CalleePort<A,R>):boolean {
-//         return true;
-//     }
-
-//     invokeRPC: (arguments: A, delay?:number) => R;
-
-// }
-
-// class CalleePort<A,R> {
-
-// }
 
 
 export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
 
+    value: TimestampedValue<T> | null = null;
+    _connectedInputs: Set<InPort<T>> = new Set<InPort<T>>();
+
     /***** Priviledged functions *****/
+    canConnect: (destination: Port<T>) => boolean
+    connect: (destination: Port<T>) => void;
+    //disconnect: () => void;
+    set: (value: T ) => void;
+    //get: () => T | null;
 
-    canConnect: (source: Port<T>) => boolean
-    connect: (source: Port<T>) => void;
-    disconnect: (direction?:"upstream"|"downstream"|"both") => void;
-    set: (value: T | null) => void;
-    get: () => T | null;
-
+    /**
+     * Create an OutPort.
+     * @param parent The reactor containing this OutPort.
+     */
     constructor(parent: Reactor) {
         super(parent);
-        var myValue: T | null = null;
-        var events: Map<number, T> = new Map();
+        //var events: Map<number, T> = new Map();
 
         Object.assign(this, {
-            set(value: T | null): void {
-                myValue = value; 
+            set(value: T ): void {
+                this.value = [ globals.currentLogicalTime, value]; 
             }
         });
 
-        Object.assign(this, {
-            get(): T | null {
-                return myValue;
-            }
-        });
+        //FIXME: Delete? You should get() from an input port. 
+        // Object.assign(this, {
+        //     get(): T | null {
+        //         return myValue;
+        //     }
+        // });
         
 
+        //FIXME: Is this necessary?
+        //In what circumstances would an outport not be able to connect to an inport?
         Object.assign(this, {
             canConnect(source: Port<T>): boolean { // solution: add Container here. Do tests prior to calling to verify it is the same
                 // var thisComponent = parent;
@@ -1176,7 +1089,17 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
         });
         
         Object.assign(this, {
-            connect(source: Port<T>):void {
+
+             /**
+             * Connect this OutPort to an InPort. One OutPort may be connected to many InPorts.
+             * @param destination The InPort to which this OutPort should be connected.
+             */
+            connect(destination: InPort<T>):void {
+                console.log("connecting " + this + " and " + destination);
+                // this.connectedPort = destination;
+                this._connectedInputs.add(destination);
+                destination.connectedPort = this;
+                
                 // var container = parent._getContainer();
                 // if (container != null) {
                 //     container.connect(this, sink);
@@ -1187,28 +1110,51 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
         });
 
         Object.assign(this, {
-            disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
-                var component = parent;
-                var container = component._getContainer();
+            disconnect(destination: InPort<T>): void {
+                // this.connectedPort = null;
+                this._connectedInputs.delete(destination);
+                destination.connectedPort = null;
+            }
+            
+            // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
+            //     var component = parent;
+            //     var container = component._getContainer();
 
-                if (direction == "upstream" || direction == "both") {
-                    if (component instanceof Reactor) {    
-                        // OUT to OUT
-                        //component._disconnectContainedReceivers(this); //FIXME: add a transfer reaction
-                    }
-                }
+            //     if (direction == "upstream" || direction == "both") {
+            //         if (component instanceof Reactor) {    
+            //             // OUT to OUT
+            //             //component._disconnectContainedReceivers(this); //FIXME: add a transfer reaction
+            //         }
+            //     }
 
-                if (direction == "downstream" || direction == "both") {
-                    // OUT to IN
-                    // OUT to OUT
-                    if (container != null) {
-                        //container._disconnectContainedSource(this);    //FIXME: add a transfer reaction
-                    }
+            //     if (direction == "downstream" || direction == "both") {
+            //         // OUT to IN
+            //         // OUT to OUT
+            //         if (container != null) {
+            //             //container._disconnectContainedSource(this);    //FIXME: add a transfer reaction
+            //         }
+            //     }
+            // }
+        });
+
+        Object.assign(this, {
+            /**
+             * Assigns a value to this output port at the current logical time.
+             * Input events are triggered for all connected input ports.
+             * @param value The value to assign to this output port.
+             */
+            set(value: T):void {
+                this.value = [globals.currentLogicalTime, value];
+                for(const input of this._connectedInputs){
+                    let inputEvent = new Event(input, globals.currentLogicalTime, null);
+                    let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
+                    globals.eventQ.push(prioritizedEvent);
                 }
             }
-        });
+       });
     }
 
+    //FIXME: Delete this comment? Sinks and sources aren't part of the LF spec.
     // NOTE: Due to assymmetry (subtyping) we cannot allow connecting 
     // sinks to sources. It must always be source to sink. Disconnect 
     // does not have this problem.
@@ -1222,101 +1168,99 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
 
 }
 
-class ContainedInput<T> implements Writable<T> {
-    
-    set: (value: T | null) => void;
-
-    constructor(reactor:Reactor, port:InPort<T>) {
-        var valid = true;
-        if (!port.hasParent(reactor)) {
-            console.log("WARNING: port " + port._getFullyQualifiedName()
-                + "is improperly used as a contained port; "
-                + "set() will have no effect.");
-            valid = false;
-        }
-
-        Object.assign(this, {
-            set(value:T | null): void {
-                if (valid) {
-                    return port.writeValue(reactor, value);
-                }
-            }
-        });
-    }
-}
-
-class ContainedOutput<T> implements Readable<T> {
-    get: () => T | null; // FIXME: remove readable from output!!
-    
-    constructor(reactor:Reactor, port:OutPort<T>) {
-        var valid = true;
-        if (!port.hasParent(reactor)) {
-            console.log("WARNING: port " + port._getFullyQualifiedName()
-                + "is improperly used as a contained port; "
-                + "get() will always return null.");
-            valid = false;
-        }
-
-        Object.assign(this, {
-            get(): T | null {
-                if (!valid) {
-                    return null;
-                } else {
-                    return port.get();
-                }
-            }
-        });
-    }
-}
-
-
 export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T> {
 
+    /**
+     * If an InPort has a null value for its connectedPort it is disconnected.
+     * A non-null connectedPort is connected to the specified OutPort.
+     */
+    connectedPort: OutPort<T> | null = null;
+    _value: T | null;
+    // _name: string = "";
+    //_receivers: Set<Port<T>>;
+    //_parent: Component; // $ReadOnly ?
+    //_persist: boolean;
+
     /***** Priviledged functions *****/
-    canConnect:(source: Port<T>) => boolean;        
-    connect: (source: Port<T>) => void;
-    disconnect: (direction?:"upstream"|"downstream"|"both") => void;
+    canConnect:(source: OutPort<T>) => boolean;        
+    connect: (source: OutPort<T>) => void;
+    disconnect: (source: OutPort<T>) => void;
     //send: (value: ?$Subtype<T>, delay?:number) => void;
-    // NOTE: sending to input ports no longer makes sense if we have triggers that carry values
     get: () => T | null;
     writeValue: (container: Reactor, value: T | null) => void;
 
-    _value: T | null;
-    _receivers: Set<Port<T>>;
-    //_parent: Component; // $ReadOnly ?
-    _persist: boolean;
-
     /**
-     * InPorts that are constructed with an initial value will be persistent
+     * Create a new InPort.
+     * @param parent The reactor containing this InPort
      */
-    constructor(parent:Reactor, initialValue?:T | null) {
+    constructor(parent:Reactor) {
         super(parent);
-        if (initialValue)
-            this._value = initialValue;
+        
+        Object.assign(this, {
+            
+            /**
+             * Obtains a value from the connected output port. Throws an error if not connected.
+             * Will return null if the connected output did not have its value set at the current
+             * logical time.
+             */
+            isPresent():boolean {
+                if(this.connectedPort){
+                    if(this.connectedPort.value === null ||
+                         ! timeInstantsAreEqual(this.connectedPort.value[0], globals.currentLogicalTime )){
+                             return false;
+                         } else {
+                             return true;
+                         }
+                } else {
+                    throw new Error("Cannot test a disconnected input port for a present value.")
+                }
+                return this._value;
+                
+            }
+        });
 
         Object.assign(this, {
+
+            /**
+             * Obtains a value from the connected output port. Throws an error if not connected.
+             * Will return null if the connected output did not have its value set at the current
+             * logical time.
+             */
             get():T | null {
+                if(this.connectedPort){
+                    if(this.isPresent()){
+                        return this.connectedPort.value[1];
+                    } else {
+                        return null;
+                    }
+                } else {
+                    throw new Error("Cannot get value from a disconnected output port.")
+                }
                 return this._value;
             }
         });
 
-        Object.assign(this, {
-            writeValue(container:Reactor, value:T | null):void {
-                this._value = value;
-                for (let r of parent._reactions) {
-                    if (r.triggers.includes(this)) {
+        //FIXME: Commented this out, because I think it should be calling set()
+        //on an OutPort which triggers an event for connected inputs.
+        //You don't call write() on an input, right? You get() from an input.
+        // Object.assign(this, {
+        //     writeValue(container:Reactor, value:T | null):void {
+        //         this._value = value;
+        //         for (let r of parent._reactions) {
+        //             if (r.triggers.includes(this)) {
 
-                        //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                        let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
-                        globals.reactionQ.push(prioritizedReaction);
-                        //globals.reactionQ.push([r.reaction, r.triggers]);
-                    }
-                }
-            }
-        });
+        //                 //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+        //                 let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
+        //                 globals.reactionQ.push(prioritizedReaction);
+        //                 //globals.reactionQ.push([r.reaction, r.triggers]);
+        //             }
+        //         }
+        //     }
+        // });
 
+        //FIXME: always returns true.
         Object.assign(this, {
-            canConnect(source: Port<T>): boolean {
+            canConnect(source: OutPort<T>): boolean {
             //     var thisComponent = parent;
             //     var thisContainer = parent._getContainer();
                 
@@ -1329,51 +1273,269 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
             //     } else {
             //         return false;
             //     }
-            return true;
+                return true;
             }
         });
 
         Object.assign(this, {
-            connect(source: Port<T>):void {
-                // var container = parent._getContainer()
-                // if (container != null) {
-                //     container.connect(this, sink);
-                // }
+            //FIXME: Is this function necessary?
+            //It makes more sense to me to call connect() on an output port to connect it to an input port.
+            connect(source: OutPort<T>):void {
+                console.log("connecting " + this + " and " + source);
+                this.connectedPort = source;
+                source._connectedInputs.add(this);
             }
         });
 
         Object.assign(this, {
-            disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
-                var component = parent;
-                var container = component._getContainer();
-
-                if (direction == "upstream" || direction == "both") {
-                    if (container != null) {
-                        // OUT to IN
-                        // IN to IN
-                        //container._disconnectContainedReceivers(this); // FIXME: this should result in the removal of a transfer reactions
-                    }    
-                }
-
-                if (direction == "downstream" || direction == "both") {
-                    if (component instanceof Reactor) {
-                        // IN to IN
-                        //component._disconnectContainedSource(this);
-                    }
-                    if (container != null) {
-                        // IN to OUT
-                        //container._disconnectContainedSource(this);
-                    }
-                }
+            disconnect(source: OutPort<T>): void {
+                this.connectedPort = null;
+                source._connectedInputs.delete(this);
             }
+            // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
+            //     var component = parent;
+            //     var container = component._getContainer();
+
+            //     if (direction == "upstream" || direction == "both") {
+            //         if (container != null) {
+            //             // OUT to IN
+            //             // IN to IN
+            //             //container._disconnectContainedReceivers(this); // FIXME: this should result in the removal of a transfer reactions
+            //         }    
+            //     }
+
+            //     if (direction == "downstream" || direction == "both") {
+            //         if (component instanceof Reactor) {
+            //             // IN to IN
+            //             //component._disconnectContainedSource(this);
+            //         }
+            //         if (container != null) {
+            //             // IN to OUT
+            //             //container._disconnectContainedSource(this);
+            //         }
+            //     }
+            // }
         });
     }
 
     toString(): string {
         return this._getFullyQualifiedName();
     }
-
 }
+
+//FIXME: Move runtime from globals into here.
+export class App extends Reactor implements Executable {
+    
+    // FIXME: add some logging facility here
+    name: string;
+
+    constructor(name: string) {
+        super(null, name);
+    }
+
+
+    start():void {
+
+    }
+
+    stop():void {
+
+    }
+
+    // _checkTypes() {
+
+    // }
+}
+
+//---------------------------------------------------------------------//
+// Commented Out Code                                                 //
+//---------------------------------------------------------------------//
+//For whatever reason, code I don't want to delete just yet.
+
+//FIXME: I don't know what the purpose of this is.
+/**
+ * A generic container for components.
+ */
+// export interface Container<T: Reactor> {
+
+//     /**
+//      * Add a list of elements to this container. Duplicate entries will
+//      * not be kept.
+//      * @param {T} element
+//      */
+//     _add(...elements: Array<T>): void;
+
+//     /**
+//      * Return whether or not the argument is present in the container.
+//      * @param {T} element
+//      */
+//     _contains(element: T): boolean;
+
+//     /**
+//      * Remove an element from this container.
+//      * @param {string} name
+//      */
+//     _remove(element: T): void;
+
+//     //_move(element: T, destination: Container<T: Component>)
+
+// }
+
+
+//An interface for classes implementing a react function.
+//Both reactions and timers react to events on the event queue
+// export interface Reaction {
+//     react:() => void;
+//     triggers: Array<Trigger>;
+//     priority: number;
+// }
+
+
+//Matt: An action is an internal event so I think there's a lot of overlap with
+//that class and the below code.
+//BEGIN COMMENTED OUT ACTION CLASS
+
+/**
+ * An action denotes a self-scheduled event. If an action is instantiated
+ * without a delay, then the time interval between the moment of scheduling
+ * this action (cause), and a resulting reaction (effect) will be determined
+ * upon the call to schedule. If a delay _is_ specified, it is considered
+ * constant and cannot be overridden using the delay argument in a call to 
+ * schedule().
+ */
+// export class Action<T> implements Trigger {
+//     get: () => T | null;
+
+//     /**
+//      * Schedule this action. If additionalDelay is 0 or unspecified, the action 
+//      * will occur at the current logical time plus one micro step.
+//      */
+//     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
+
+//     constructor(parent:Reactor, delay?:TimeInterval) { 
+//         var _value: T;
+
+//         Object.assign({
+//             get(): T | null {
+//                 return _value;
+//             }
+//             // FIXME: add writeValue
+//         });
+
+//         Object.assign(this, {
+//             schedule(additionalDelay:TimeInterval, value?:T): TimeInstant {
+//                 let numericDelay: number;
+                
+//                 //FIXME
+//                 // if(additionalDelay == null || additionalDelay == 0
+//                 //      || additionalDelay[0] == 0){
+
+
+//                 // }
+
+//                 // if ( (delay == null || delay === 0) &&  ) {
+//                 //     numericDelay = timeIntervalToNumber(additionalDelay);
+//                 // } else {
+//                 //     if (additionalDelay != null && additionalDelay !== 0) {
+//                 //         delay[0] += timeIntervalToNumber(additionalDelay);
+//                 //     }
+//                 // }
+//                 // return _schedule(this, delay, value);
+//             }
+//         });
+//     }
+
+//     unschedule(handle: TimeInstant):void {
+//         // FIXME
+//     }
+// }
+
+//END COMMENTED OUT ACTION CLASS
+
+// export interface Schedulable<T> {
+//     schedule: (additionalDelay?:TimeInterval, value?:T) => TimeInstant;
+//     unschedule(handle: TimeInstant):void;
+// }
+
+//FIXME: I believe the current LF spec has all inputs contained.
+// class ContainedInput<T> implements Writable<T> {
+    
+//     set: (value: T | null) => void;
+
+//     constructor(reactor:Reactor, port:InPort<T>) {
+//         var valid = true;
+//         if (!port.hasParent(reactor)) {
+//             console.log("WARNING: port " + port._getFullyQualifiedName()
+//                 + "is improperly used as a contained port; "
+//                 + "set() will have no effect.");
+//             valid = false;
+//         }
+
+//         Object.assign(this, {
+//             set(value:T | null): void {
+//                 if (valid) {
+//                     return port.writeValue(reactor, value);
+//                 }
+//             }
+//         });
+//     }
+// }
+
+//FIXME: I believe the current LF spec has all outputs contained.
+// class ContainedOutput<T> implements Readable<T> {
+//     get: () => T | null; // FIXME: remove readable from output!!
+    
+//     constructor(reactor:Reactor, port:OutPort<T>) {
+//         var valid = true;
+//         if (!port.hasParent(reactor)) {
+//             console.log("WARNING: port " + port._getFullyQualifiedName()
+//                 + "is improperly used as a contained port; "
+//                 + "get() will always return null.");
+//             valid = false;
+//         }
+
+//         Object.assign(this, {
+//             get(): T | null {
+//                 if (!valid) {
+//                     return null;
+//                 } else {
+//                     return port.get();
+//                 }
+//             }
+//         });
+//     }
+// }
+
+// class CallerPort<A,R> implements Connectable<CalleePort<A,R>> {
+
+//     constructor() {
+
+//     }
+
+//     call() {
+
+//     }
+
+//     connect(sink: CalleePort<A,R>):void {
+//         return;
+//     }
+
+//     canConnect(sink: CalleePort<A,R>):boolean {
+//         return true;
+//     }
+
+//     invokeRPC: (arguments: A, delay?:number) => R;
+
+// }
+
+// class CalleePort<A,R> {
+
+// }
+
+// export interface Connectable<T> {
+//     +connect: (source: T) => void;
+//     +canConnect: (source: T) => boolean;
+// }
 
 
 // NOTE: composite IDLE or REACTING.
@@ -1757,26 +1919,8 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
 // Eventually, this should become a worker/threaded composite
 // Also, check out https://github.com/laverdet/isolated-vm
 
-export class App extends Reactor implements Executable {
-    
-    // FIXME: add some logging facility here
 
-    constructor(name: string) {
-        super(null, name);
-    }
 
-    start():void {
-
-    }
-
-    stop():void {
-
-    }
-
-    // _checkTypes() {
-
-    // }
-}
 
 
 // class Countdown {

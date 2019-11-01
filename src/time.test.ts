@@ -1,5 +1,5 @@
 'use strict';
-import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, NumericTimeInterval, compareNumericTimeIntervals, TimeInstant, compareTimeInstants, microtimeToNumeric, numericTimeSum, numericTimeDifference, numericTimeMultiple} from "./reactor";
+import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, NumericTimeInterval, compareNumericTimeIntervals, TimeInstant, compareTimeInstants, microtimeToNumeric, numericTimeSum, numericTimeDifference, numericTimeMultiple, timeInstantsAreEqual} from "./reactor";
 
 /**
  * Test of helper functions for time in reactors
@@ -125,6 +125,13 @@ describe('time representation', function () {
 
     });
 
+    it('timeInstantsAreEqual', function(){
+        expect(timeInstantsAreEqual([[0,0], 0], [[0,0], 1]) ).toBe(false);
+        expect(timeInstantsAreEqual([[0,0], 1], [[0,0], 1]) ).toBe(true);
+        expect(timeInstantsAreEqual([[1,0], 1], [[0,0], 1]) ).toBe(false);
+        expect(timeInstantsAreEqual([[0,1], 1], [[0,1], 1]) ).toBe(true);
+    });
+
     it('microtimeToNumeric', function () {
         expect( microtimeToNumeric(0)).toStrictEqual(zeroNumeric);
         expect( microtimeToNumeric(300)).toStrictEqual(numThreeHundredUS);
@@ -185,8 +192,6 @@ describe('time representation', function () {
             expect(numericTimeMultiple(numFortyTwoDays, -7)).toStrictEqual([0, 0 ]);
         }).toThrowError()
     });
-
-
 
 });
 

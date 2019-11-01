@@ -1,7 +1,7 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, Action, NumericTimeInterval, microtimeToNumeric, compareNumericTimeIntervals, compareTimeInstants, timeIntervalToNumeric, numericTimeDifference, numericTimeSum } from "./reactor";
+import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, Action, NumericTimeInterval, microtimeToNumeric, compareNumericTimeIntervals, compareTimeInstants, timeIntervalToNumeric, numericTimeDifference, numericTimeSum, timeInstantsAreEqual } from "./reactor";
 
 //---------------------------------------------------------------------//
 // Modules                                                             //
@@ -91,7 +91,7 @@ export class TriggerMap{
 
     /**
      */
-    deregisterreaction(e: Event){
+    deregisterReaction(e: Event){
         //FIXME
     }
 
@@ -169,7 +169,7 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
         let currentHead = eventQ.peek();
         while(currentHead){
             let currentPhysicalTime:NumericTimeInterval = microtimeToNumeric(microtime.now());
-            console.log("current physical time in next is: " + currentPhysicalTime);
+            // console.log("current physical time in next is: " + currentPhysicalTime);
             
             //If execution has gone on for longer than the execution timeout,
             //terminate execution with success.
@@ -192,13 +192,12 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 } else {
                     timeout = physicalTimeGap;
                 }
-
-
-
-                console.log("I set a timeout.");
-                console.log("currentPhysicalTime: " + currentPhysicalTime);
-                console.log("next logical time: " + currentHead._priority[0]);
-                console.log("physicalTimeGap was " + physicalTimeGap);
+                console.log("Runtime set a timeout at physical time: " + currentPhysicalTime +
+                 " for an event with logical time: " + currentHead._priority[0]);
+                // console.log("Runtime set a timeout with physicalTimeGap: " + physicalTimeGap);
+                // console.log("currentPhysicalTime: " + currentPhysicalTime);
+                // console.log("next logical time: " + currentHead._priority[0]);
+                // console.log("physicalTimeGap was " + physicalTimeGap);
 
 
 
@@ -234,9 +233,9 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
             } else {
                 //Physical time has caught up, so advance logical time
                 currentLogicalTime = currentHead._priority;
-                console.log("At least one event is ready to be processed")
-                console.log("advanced logical time to: " + currentHead._priority[0]);
-                console.log("currentPhysicalTime: " + currentPhysicalTime);
+                console.log("At least one event is ready to be processed at logical time: "
+                 + currentHead._priority + " and physical time: " + currentPhysicalTime );
+                // console.log("currentPhysicalTime: " + currentPhysicalTime);
                 //console.log("physicalTimeGap was " + physicalTimeGap);
 
                 //Remove all simultaneous events from the queue.
@@ -247,13 +246,19 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 //logical time will only react once.
                 let triggersNow = new Set<Reaction>();
 
+                //FIXME: get rid of this. I don't think we need it with reflection.
                 //Keep track of the actions which trigger a reaction so their payloads
                 //may be associated with the reaction.
-                let reactionsToActions = new Map<Reaction, Set<Action<any>>>();
+                //let reactionsToActions = new Map<Reaction, Set<Action<any>>>();
 
                 //This loop should always execute at least once.
-                while(currentHead && currentHead._priority[0] == currentLogicalTime[0] &&
-                    currentHead._priority[1] == currentLogicalTime[1] ){
+                while(currentHead && timeInstantsAreEqual(currentHead._priority, currentLogicalTime)){
+                    // currentHead._priority[0][0] === currentLogicalTime[0][0] &&
+                    // currentHead._priority[0][1] === currentLogicalTime[0][1] &&
+                    // currentHead._priority[1] === currentLogicalTime[1]){
+
+                // while(currentHead && currentHead._priority[0] === currentLogicalTime[0] &&
+                //     currentHead._priority[1] === currentLogicalTime[1] ){
 
                     //An explicit type assertion is needed because we know the
                     //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
@@ -263,18 +268,25 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                         trigger.reschedule();
                     }
 
+                    if(trigger instanceof Action){
+                        trigger._payload = 
+                            [ currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
+                    }
+
                     let toTrigger = triggerMap.getReactions(trigger);
                     if(toTrigger){
                         for(let reaction of toTrigger){
 
+                            //FIXME: I think we can get rid of this with reflection
+                            //what is actionArray used for?
                              //Ensure this reaction is matched to its actions 
-                            if(trigger instanceof Action){
-                                let actionArray = reactionsToActions.get(reaction);
-                                if( ! actionArray){
-                                    actionArray = new Set<Action<any>>();
-                                } 
-                                actionArray.add(trigger);
-                            }
+                            // if(trigger instanceof Action){
+                            //     let actionArray = reactionsToActions.get(reaction);
+                            //     if( ! actionArray){
+                            //         actionArray = new Set<Action<any>>();
+                            //     } 
+                            //     actionArray.add(trigger);
+                            // }
 
                             //Push this reaction to the queue when we are done
                             //processing events.
@@ -285,22 +297,28 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                     currentHead = eventQ.peek();
                 }
                 
+
+                //FIXME: what is triggeringActions used for?
                 for (let reaction of triggersNow){
                     // console.log("Pushing new reaction onto queue");
                     // console.log(reaction);
                     let prioritizedReaction = new PrioritizedReaction(reaction, getReactionID());
-                    let triggeringActions = reactionsToActions.get(reaction);
-                    if(triggeringActions){
-                        prioritizedReaction.r.triggeringActions = triggeringActions;
-                    }
+                    
+                    //FIXME: I think we can get rid of this because of reflection
+                    // let triggeringActions = reactionsToActions.get(reaction);
+                    // if(triggeringActions){
+                    //     //Must make the action available to the reaction because it might
+                    //     //have a payload.
+                    //     prioritizedReaction.r.triggeringActions = triggeringActions;
+                    // }
                     reactionQ.push(prioritizedReaction);
                 }
  
                 
                 let headReaction = reactionQ.pop();
                 while(headReaction){
-                    //Explicit annotation because reactionQ contains PrioritizedReactions.
                     console.log("reacting...");
+                    //Explicit annotation because reactionQ contains PrioritizedReactions.
                     (headReaction as PrioritizedReaction).r.react();
                     headReaction = reactionQ.pop();
                 }
@@ -321,9 +339,9 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
     }
 
 
-//FIXME: Move queues, schedule, into Runtime class, or make them properties of reactors,
-//and delete this class. I like the idea of calling startRuntime() directly on the top
-//level Reactor.
+//FIXME: Move queues, schedule, into App class in reactor.ts or potentially Runtime class,
+//,or make them properties of reactors,
+//and delete this class.
 
 //Idea: make runtime a singleton class?
 export class Runtime {
