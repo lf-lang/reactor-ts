@@ -50,7 +50,7 @@ export class Clock extends Reactor {
 
         const tockTriggers = new Array();
         tockTriggers.push(this.t2);
-        const r2 = new Tock(this, tockTriggers, 0);
+        const r2 = new Tock(this, tockTriggers, 1);
 
         //At time 5 seconds, this reaction should be triggered
         //simultaneosly by both timers, "Cuckoo" should only
@@ -58,7 +58,7 @@ export class Clock extends Reactor {
         const cuckooTriggers = new Array();
         cuckooTriggers.push(this.t1);
         cuckooTriggers.push(this.t2);
-        const r3 = new Cuckoo(this, cuckooTriggers, 0);
+        const r3 = new Cuckoo(this, cuckooTriggers, 2);
 
         this._reactions.push(r1);
         this._reactions.push(r2);

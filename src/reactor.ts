@@ -940,13 +940,6 @@ export abstract class Reactor implements Nameable {
     
 }
 
-
-//     hasGrandparent: (container:Reactor) => boolean;
-//     hasParent: (component: Reactor) => boolean;
-
-//     connect: (source: Port<T>) => void;
-//     canConnect(source: Port<T>): boolean;
-
 //FIXME: Perhaps PortBase and the Port interface can be combined?
 export abstract class Port<T> implements Named {
     
@@ -962,7 +955,7 @@ export abstract class Port<T> implements Named {
     connect: (source: Port<T>) => void;
     canConnect: (source: Port<T>)=> boolean;
     
-    /* Construct a new port base. */
+    /* Construct a new port. */
     constructor(parent: Reactor) {
         Object.assign(this, {
             _getFullyQualifiedName(): string {
@@ -1046,10 +1039,18 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
         // });
         
 
-        //FIXME: Is this necessary?
-        //In what circumstances would an outport not be able to connect to an inport?
         Object.assign(this, {
             canConnect(source: Port<T>): boolean { // solution: add Container here. Do tests prior to calling to verify it is the same
+                
+            //IN to OUT
+            // - Reactor with input port must be at the same level of hierarchy as
+            // reactor with output port.
+            //- Self-loops are not permitted.
+
+            //OUT to OUT
+            // - One reactor must be the parent of another 
+            // - Self-loops are not permitted.
+                
                 // var thisComponent = parent;
                 // var thisContainer = parent._getContainer();
 
@@ -1086,6 +1087,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
                 // this.connectedPort = destination;
                 this._connectedPorts.add(destination);
                 destination.connectedPort = this;
+
                 
                 // var container = parent._getContainer();
                 // if (container != null) {
@@ -1165,7 +1167,7 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
 
     /**
      * If an InPort has a null value for its connectedPort it is disconnected.
-     * A non-null connectedPort is connected to the specified OutPort.
+     * A non-null connectedPort is connected to the specified port.
      */
     connectedPort: OutPort<T> | null = null;
     value: T | null;
@@ -1191,6 +1193,7 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
         
         Object.assign(this, {
             
+
             /**
              * Obtains a value from the connected output port. Throws an error if not connected.
              * Will return null if the connected output did not have its value set at the current
@@ -1198,12 +1201,16 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
              */
             isPresent():boolean {
                 if(this.connectedPort){
-                    if(this.connectedPort.value === null ||
-                         ! timeInstantsAreEqual(this.connectedPort.value[0], globals.currentLogicalTime )){
-                             return false;
-                         } else {
-                             return true;
-                         }
+                    if(this.connectedPort instanceof OutPort){
+                        if(this.connectedPort.value === null ||
+                            ! timeInstantsAreEqual(this.connectedPort.value[0], globals.currentLogicalTime )){
+                                return false;
+                            } else {
+                                return true;
+                            }
+                    } else {
+                        return this.connectedPort.isPresent();
+                    }
                 } else {
                     throw new Error("Cannot test a disconnected input port for a present value.")
                 }
@@ -1213,16 +1220,24 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
         Object.assign(this, {
 
             /**
-             * Obtains a value from the connected output port. Throws an error if not connected.
+             * Obtains a value from the connected port. If connected to an output port, this
+             * can be done directly. If connected to an input port, recursively call get on that.
+             * Throws an error if this port is not connected to anything
+             * or is connected to a chain of input ports which is not terminated by a connection
+             * to an output port.
              * Will return null if the connected output did not have its value set at the current
              * logical time.
              */
             get():T | null {
                 if(this.connectedPort){
-                    if(this.isPresent()){
-                        return this.connectedPort.value[1];
+                    if(this.connectedPort instanceof OutPort){
+                        if(this.isPresent()){
+                            return this.connectedPort.value[1];
+                        } else {
+                            return null;
+                        }
                     } else {
-                        return null;
+                        return this.connectedPort.get();
                     }
                 } else {
                     throw new Error("Cannot get value from a disconnected port.")
@@ -1251,11 +1266,19 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
         //FIXME: always returns true.
         Object.assign(this, {
             canConnect(source: OutPort<T>): boolean {
+                
+            // IN to IN
+            // - Source must be input port of composite that sink component is contained by.
+            // - Self-loops are not permitted.
+
+            //IN to OUT
+            // - Reactor with input port must be at the same level of hierarchy as
+            // reactor with output port.
+            // - Self-loops are not permitted.
+
             //     var thisComponent = parent;
             //     var thisContainer = parent._getContainer();
-                
-            //     // IN to IN
-            //     // - Source must be input port of composite that sink component is contained by.
+
             //     if (thisComponent instanceof Reactor 
             //         && sink instanceof InPort 
             //         && sink.hasGrandparent(thisComponent)) {
@@ -1263,16 +1286,17 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
             //     } else {
             //         return false;
             //     }
+
+
                 return true;
             }
         });
 
         Object.assign(this, {
             connect(source: OutPort<T>):void {
-                source.connect(this);
-                // console.log("connecting " + this + " and " + source);
-                // this.connectedPort = source;
-                // source._connectedPorts.add(this);
+                console.log("connecting " + this + " and " + source);
+                this.connectedPort = source;
+                source._connectedPorts.add(this);
             }
         });
 
