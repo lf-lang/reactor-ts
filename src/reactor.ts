@@ -787,7 +787,7 @@ export abstract class Reactor implements Nameable {
         
         var myName:string = this.constructor.name; // default
         var myIndex:number | null = null;
-        var relations: Map<Port<any>, Set<Port<any>>> = new Map();
+        // var relations: Map<Port<any>, Set<Port<any>>> = new Map();
 
         // Set this component's name if specified.
         if (name != null) {
@@ -941,8 +941,14 @@ export abstract class Reactor implements Nameable {
 }
 
 
+//     hasGrandparent: (container:Reactor) => boolean;
+//     hasParent: (component: Reactor) => boolean;
+
+//     connect: (source: Port<T>) => void;
+//     canConnect(source: Port<T>): boolean;
+
 //FIXME: Perhaps PortBase and the Port interface can be combined?
-export abstract class PortBase implements Named {
+export abstract class Port<T> implements Named {
     
     /***** Priviledged functions *****/
 
@@ -950,9 +956,11 @@ export abstract class PortBase implements Named {
     _getFullyQualifiedName: () => string;
     _getName: () => string;
 
-
     hasGrandparent: (container:Reactor) => boolean;
     hasParent: (component: Reactor) => boolean;
+
+    connect: (source: Port<T>) => void;
+    canConnect: (source: Port<T>)=> boolean;
     
     /* Construct a new port base. */
     constructor(parent: Reactor) {
@@ -1003,37 +1011,16 @@ export abstract class PortBase implements Named {
     }
 }
 
-//FIXME: Out of date documentation.
-/**
- * An interface for ports. Each port is associated with a parent component.
- * Ports may be connected to downstream ports using connect(). 
- * Connections between ports can be destroyed using disconnect().
- * Messages can be sent via a port using send(). Message delivery is immediate
- * unless a delay is specified.
- */
-export interface Port<T> extends  Named {
 
-    hasGrandparent: (container:Reactor) => boolean;
-    hasParent: (component: Reactor) => boolean;
-
-    //FIXME: I think only InPorts should be able to connect to an OutPort.
-    connect: (source: Port<T>) => void;
-    canConnect(source: Port<T>): boolean;
-
-    //FIXME: Either implement disconnect() or remove from documentation.
-
-}
-
-
-export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
+export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
 
     value: TimestampedValue<T> | null = null;
-    _connectedInputs: Set<InPort<T>> = new Set<InPort<T>>();
+    _connectedPorts: Set<Port<T>> = new Set<Port<T>>();
 
     /***** Priviledged functions *****/
     canConnect: (destination: Port<T>) => boolean
     connect: (destination: Port<T>) => void;
-    //disconnect: () => void;
+    disconnect: () => void;
     set: (value: T ) => void;
     //get: () => T | null;
 
@@ -1097,7 +1084,7 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
             connect(destination: InPort<T>):void {
                 console.log("connecting " + this + " and " + destination);
                 // this.connectedPort = destination;
-                this._connectedInputs.add(destination);
+                this._connectedPorts.add(destination);
                 destination.connectedPort = this;
                 
                 // var container = parent._getContainer();
@@ -1112,7 +1099,7 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
         Object.assign(this, {
             disconnect(destination: InPort<T>): void {
                 // this.connectedPort = null;
-                this._connectedInputs.delete(destination);
+                this._connectedPorts.delete(destination);
                 destination.connectedPort = null;
             }
             
@@ -1140,15 +1127,21 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
         Object.assign(this, {
             /**
              * Assigns a value to this output port at the current logical time.
-             * Input events are triggered for all connected input ports.
+             * Input events are triggered for all connected input ports and 
+             * this function is recursively invoked on all connected output ports.
              * @param value The value to assign to this output port.
              */
             set(value: T):void {
                 this.value = [globals.currentLogicalTime, value];
-                for(const input of this._connectedInputs){
-                    let inputEvent = new Event(input, globals.currentLogicalTime, null);
-                    let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
-                    globals.eventQ.push(prioritizedEvent);
+                for(const port of this._connectedPorts){
+                    if(port instanceof InPort){
+                        let inputEvent = new Event(port, globals.currentLogicalTime, null);
+                        let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
+                        globals.eventQ.push(prioritizedEvent);
+                    } else if(port instanceof OutPort){
+                        port.set(value);
+                    }
+
                 }
             }
        });
@@ -1168,14 +1161,14 @@ export class OutPort<T> extends PortBase implements Port<T>, Writable<T> {
 
 }
 
-export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T> {
+export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
 
     /**
      * If an InPort has a null value for its connectedPort it is disconnected.
      * A non-null connectedPort is connected to the specified OutPort.
      */
     connectedPort: OutPort<T> | null = null;
-    _value: T | null;
+    value: T | null;
     // _name: string = "";
     //_receivers: Set<Port<T>>;
     //_parent: Component; // $ReadOnly ?
@@ -1214,8 +1207,6 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
                 } else {
                     throw new Error("Cannot test a disconnected input port for a present value.")
                 }
-                return this._value;
-                
             }
         });
 
@@ -1234,9 +1225,8 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
                         return null;
                     }
                 } else {
-                    throw new Error("Cannot get value from a disconnected output port.")
+                    throw new Error("Cannot get value from a disconnected port.")
                 }
-                return this._value;
             }
         });
 
@@ -1278,19 +1268,18 @@ export class InPort<T> extends PortBase implements Port<T>, Trigger, Readable<T>
         });
 
         Object.assign(this, {
-            //FIXME: Is this function necessary?
-            //It makes more sense to me to call connect() on an output port to connect it to an input port.
             connect(source: OutPort<T>):void {
-                console.log("connecting " + this + " and " + source);
-                this.connectedPort = source;
-                source._connectedInputs.add(this);
+                source.connect(this);
+                // console.log("connecting " + this + " and " + source);
+                // this.connectedPort = source;
+                // source._connectedPorts.add(this);
             }
         });
 
         Object.assign(this, {
             disconnect(source: OutPort<T>): void {
                 this.connectedPort = null;
-                source._connectedInputs.delete(this);
+                source._connectedPorts.delete(this);
             }
             // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
             //     var component = parent;
@@ -1351,6 +1340,29 @@ export class App extends Reactor implements Executable {
 // Commented Out Code                                                 //
 //---------------------------------------------------------------------//
 //For whatever reason, code I don't want to delete just yet.
+
+
+//Moved to commented section because this interface is redundant with new
+//Port base class. I combined base class with these functions 
+//WARNING: Out of date documentation.
+/**
+ * An interface for ports. Each port is associated with a parent component.
+ * Ports may be connected to downstream ports using connect(). 
+ * Connections between ports can be destroyed using disconnect().
+ * Messages can be sent via a port using send(). Message delivery is immediate
+ * unless a delay is specified.
+ */
+// export interface Port<T> extends  Named {
+
+//     hasGrandparent: (container:Reactor) => boolean;
+//     hasParent: (component: Reactor) => boolean;
+
+//     connect: (source: Port<T>) => void;
+//     canConnect(source: Port<T>): boolean;
+
+
+// }
+
 
 //FIXME: I don't know what the purpose of this is.
 /**
