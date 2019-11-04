@@ -1211,7 +1211,7 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
     //_persist: boolean;
 
     /***** Priviledged functions *****/
-    canConnect:(source: OutPort<T>) => boolean;        
+    canConnect:(source: Port<T>) => boolean;        
     connect: (source: OutPort<T>) => void;
     disconnect: (source: OutPort<T>) => void;
     //send: (value: ?$Subtype<T>, delay?:number) => void;

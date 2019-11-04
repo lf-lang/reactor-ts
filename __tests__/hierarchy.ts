@@ -24,11 +24,17 @@ class Contained extends Reactor {
     }
 }
 
-var container = new Container(null, "Container");
-var contained = new Contained(container, "Contained");
+
 
 // */__tests__/.*
 describe('Container to Contained', () => {
+
+    var container = new Container(null, "Container");
+    var contained = new Contained(container, "Contained");
+    var grandcontained = new Contained(contained, "Grandcontained");
+
+    var container2 = new Container(null, "Container2");
+    var contained2 = new Contained(container2, "Contained2");
     
     it('contained reactor name', () => {
          expect(contained._getName()).toBe("Contained");
@@ -59,6 +65,42 @@ describe('Container to Contained', () => {
             }
         }
     })
+
+    it('testing canConnect', () => {
+        expect(container.a.canConnect(contained.a)).toBe(true);
+        expect(contained.a.canConnect(container.a)).toBe(true);
+        expect(contained.a.canConnect(contained.b)).toBe(true);
+
+        expect(container.a.canConnect(contained.b)).toBe(false);
+        expect(contained.b.canConnect(container.a)).toBe(false);
+
+        expect(container.b.canConnect(contained.a)).toBe(false);
+        expect(contained.a.canConnect(container.b)).toBe(false);
+
+        expect(container.b.canConnect(contained.b)).toBe(true);
+        expect(contained.b.canConnect(container.b)).toBe(true);
+
+        expect(contained.a.canConnect(contained2.a)).toBe(false);
+        expect(contained.a.canConnect(contained2.b)).toBe(false);
+        expect(contained2.a.canConnect(contained.a)).toBe(false);
+        expect(contained2.a.canConnect(contained.a)).toBe(false);
+
+        expect(contained2.a.canConnect(container.b)).toBe(false);
+        expect(contained2.a.canConnect(container.a)).toBe(false);
+        // expect(container2.a.canConnect(contained2.a)).toBe(false);
+       
+        expect(grandcontained.a.canConnect(contained.a)).toBe(true);
+        expect(grandcontained.b.canConnect(contained.b)).toBe(true);
+        expect(grandcontained.a.canConnect(container.a)).toBe(false);
+        expect(grandcontained.b.canConnect(container.b)).toBe(false);
+        expect(grandcontained.a.canConnect(container2.a)).toBe(false);
+        expect(grandcontained.b.canConnect(container2.b)).toBe(false);
+        expect(grandcontained.a.canConnect(contained2.a)).toBe(false);
+        expect(grandcontained.b.canConnect(contained2.b)).toBe(false);
+        
+
+    });
+
 
     //container._add(contained);
 
