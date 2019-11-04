@@ -940,7 +940,6 @@ export abstract class Reactor implements Nameable {
     
 }
 
-//FIXME: Perhaps PortBase and the Port interface can be combined?
 export abstract class Port<T> implements Named {
     
     /***** Priviledged functions *****/
