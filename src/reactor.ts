@@ -942,6 +942,9 @@ export abstract class Reactor implements Nameable {
 
 export abstract class Port<T> implements Named {
     
+    //The reactor containing this port
+    parent: Reactor;
+
     /***** Priviledged functions *****/
 
     /* Return a globally unique identifier. */
@@ -949,13 +952,15 @@ export abstract class Port<T> implements Named {
     _getName: () => string;
 
     hasGrandparent: (container:Reactor) => boolean;
-    hasParent: (component: Reactor) => boolean;
+    hasParent: (component: Reactor) => boolean; 
 
     connect: (source: Port<T>) => void;
     canConnect: (source: Port<T>)=> boolean;
     
     /* Construct a new port. */
     constructor(parent: Reactor) {
+        this.parent = parent;
+
         Object.assign(this, {
             _getFullyQualifiedName(): string {
                 return parent._getFullyQualifiedName() 
@@ -1039,16 +1044,45 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
         
 
         Object.assign(this, {
-            canConnect(source: Port<T>): boolean { // solution: add Container here. Do tests prior to calling to verify it is the same
-                
-            //IN to OUT
-            // - Reactor with input port must be at the same level of hierarchy as
-            // reactor with output port.
-            //- Self-loops are not permitted.
+            /**
+             * Returns true if this port can be connected to sink. False otherwise. 
+             * @param sink The port to test connection against. 
+             */
+            canConnect(sink: Port<T>): boolean {
 
-            //OUT to OUT
-            // - One reactor must be the parent of another 
-            // - Self-loops are not permitted.
+                // Self-loops are not permitted.
+                if(this == sink){
+                    return false;
+                }
+
+                // OUT to In
+                // Reactor with input port must be at the same level of hierarchy as
+                // reactor with output port.
+                if(sink instanceof InPort){ 
+                    if(this.parent.parent == sink.parent.parent){
+                        return true;
+                    } else {
+                        return false;
+                    }
+                
+                // OUT to OUT
+                // One reactor must be the parent of another 
+                } else {
+                    if(this.parent == sink.parent.parent || this.parent.parent == sink.parent){
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+                
+                
+
+
+                
+            
+            
+
+            
                 
                 // var thisComponent = parent;
                 // var thisContainer = parent._getContainer();
@@ -1071,6 +1105,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
                 // else {
                 //     return false;
                 // }
+                // solution: add Container here. Do tests prior to calling to verify it is the same
                 return true;
             }
         });
@@ -1194,9 +1229,9 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
             
 
             /**
-             * Obtains a value from the connected output port. Throws an error if not connected.
-             * Will return null if the connected output did not have its value set at the current
-             * logical time.
+             * Returns true if the connected port is directly or indirectly connected to
+             * an output port with a value set at the current logical time. Returns false otherwise
+             * Throws an error if not connected directly or indirectly to an output port.
              */
             isPresent():boolean {
                 if(this.connectedPort){
@@ -1262,18 +1297,35 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
         //     }
         // });
 
-        //FIXME: always returns true.
-        Object.assign(this, {
-            canConnect(source: OutPort<T>): boolean {
+        
+        Object.assign(this, {   
+            /**
+             * Returns true if this port can be connected to source. False otherwise. 
+             * @param source The port to test connection against. 
+             */
+            canConnect(source: Port<T>): boolean {
                 
-            // IN to IN
-            // - Source must be input port of composite that sink component is contained by.
-            // - Self-loops are not permitted.
-
-            //IN to OUT
-            // - Reactor with input port must be at the same level of hierarchy as
-            // reactor with output port.
-            // - Self-loops are not permitted.
+                //Self loops are not allowed.
+                if(source == this){
+                    return false;
+                }
+                if(source instanceof InPort){
+                    // IN to IN
+                    // One reactor must be the parent of the other.
+                    if(source.parent == this.parent.parent || source.parent.parent == this.parent){
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else{
+                    // IN to OUT
+                    // Reactor with input port must be at the same level of hierarchy as
+                    // reactor with output port.
+                    if(source.parent.parent == this.parent.parent){
+                        return true;
+                    } else {
+                        return false;
+                    }
 
             //     var thisComponent = parent;
             //     var thisContainer = parent._getContainer();
@@ -1287,7 +1339,7 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
             //     }
 
 
-                return true;
+                }
             }
         });
 
