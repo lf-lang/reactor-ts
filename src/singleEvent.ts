@@ -6,8 +6,8 @@ export class ProduceOutput extends Reaction{
 
     outputPayload:any;
 
-    constructor(a, b, c, outputPayload:any ){
-        super(a,b,c);
+    constructor(state: Reactor, triggers: Trigger[], priority: number, outputPayload:any ){
+        super(state,triggers,priority);
         this.outputPayload = outputPayload
     }
 
@@ -17,33 +17,21 @@ export class ProduceOutput extends Reaction{
      */
     react(){
         (this.state as any).o.set(this.outputPayload);
-        console.log("Writing null to SingleEvent's output.");
-
-        // var output = this.state.getOutputs().get("out");
-        // if(output){
-        //     console.log("Writing null to SingleEvent's output.");
-            
-        // } else {
-        //     throw new Error("OutPort 'out' has not been declared for this reactor");
-        // }
-
-        // console.log("FIXME: SingleEvent does not yet produce an output");
+        console.log("Writing payload to SingleEvent's output.");
     }
 }
 
-//Upon initialization, this reactor should produce an
-//output event
+//Upon initialization, this reactor produces the outputPayload given in its constructor
+//on its output port.
 export class SingleEvent extends Reactor {
 
     o: OutPort<any> = new OutPort<any>(this);
     t1: Timer = new Timer(0, 0);
 
-    constructor( outputPayload) {
-        super(null, "SingleEvent");
+    constructor(outputPayload:any, parent: Reactor | null, name?:string ) {
+        super(parent, name);
         
-        const produceOutputTriggers = new Array();
-        produceOutputTriggers.push(this.t1);
-        const r = new ProduceOutput(this, produceOutputTriggers, 0, outputPayload);
+        const r = new ProduceOutput(this, [this.t1], 0, outputPayload);
         this._reactions.push(r);
     }
 }

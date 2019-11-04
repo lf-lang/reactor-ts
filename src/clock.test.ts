@@ -32,7 +32,8 @@ describe('clock', function () {
         };
         var clock = new Clock(done, fail, null, "Clock");
 
-        globals.startRuntime(done, fail);
+        //Don't give the runtime the done callback because we don't care if it terminates
+        globals.startRuntime(() => null, fail);
 
     })
 });

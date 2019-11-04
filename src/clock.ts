@@ -90,7 +90,6 @@ export class Clock extends Reactor {
     constructor(success: () => void, fail: () => void, parent:Reactor | null, name?: string) {
         super(parent, name);
 
-        console.log("in constructor");
         const r1 = new Tick(this, [this.t1], 0);
         const r2 = new Tock(this, [this.t2], 1);
 

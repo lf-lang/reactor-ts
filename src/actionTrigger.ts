@@ -17,15 +17,27 @@ export class ScheduleAction extends Reaction{
 
 export class RespondToAction extends Reaction{
 
-    //FIXME Question:if a reaction is triggered by multiple actions,
-    //how can it tell which one triggered it? Answer: give it an is_present function!
+
+    success: () => void;
+    fail: () => void;
+
+    constructor(state: Reactor, triggers: Trigger[], priority: number, success: () => void, fail: ()=>void ){
+        super(state, triggers, priority)
+        this.success = success;
+        this.fail = fail;
+    }
 
     /**
-     * Produce an output event
+     * If the action payload is correct, test is successful. Otherwise it fails.
      * @override
      */
     react(){
         const msg = (this.state as any).a1.get();
+        if(msg == "hello"){
+            this.success();
+        } else {
+            this.fail();
+        }
         console.log("Response to action is reacting. String payload is: " + msg);
     }
 }
@@ -37,8 +49,8 @@ export class ActionTrigger extends Reactor {
     t1: Timer = new Timer(0,0);
     a1: Action<string> = new Action<string>( TimelineClass.logical);
 
-    constructor() {
-        super(null, "ActionTrigger");
+    constructor( success: () => void, fail: () => void, parent:Reactor|null, name?:string) {
+        super(parent, name);
 
         //FIXME: create and add an outPort, so the reaction
         //can write to it.
@@ -54,7 +66,7 @@ export class ActionTrigger extends Reactor {
         
         const respondToActionTriggers = new Array();
         respondToActionTriggers.push(this.a1);
-        const r2 = new RespondToAction(this, respondToActionTriggers, 0);
+        const r2 = new RespondToAction(this, respondToActionTriggers, 0, success, fail);
         
         this._reactions.push(r1);
         this._reactions.push(r2);
