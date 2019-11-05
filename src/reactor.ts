@@ -956,6 +956,9 @@ export abstract class Port<T> implements Named {
 
     connect: (source: Port<T>) => void;
     canConnect: (source: Port<T>)=> boolean;
+
+    _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
+    _connectedSourcePort: Port<T>| null = null;
     
     /* Construct a new port. */
     constructor(parent: Reactor) {
@@ -1012,7 +1015,8 @@ export abstract class Port<T> implements Named {
 export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
 
     value: TimestampedValue<T> | null = null;
-    _connectedPorts: Set<Port<T>> = new Set<Port<T>>();
+    _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
+    _connectedSourcePort: Port<T> | null = null;
 
     /***** Priviledged functions *****/
     canConnect: (destination: Port<T>) => boolean
@@ -1029,11 +1033,12 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
         super(parent);
         //var events: Map<number, T> = new Map();
 
-        Object.assign(this, {
-            set(value: T ): void {
-                this.value = [ globals.currentLogicalTime, value]; 
-            }
-        });
+        //DUPLICATE DEFINITION. DELETE THIS.
+        // Object.assign(this, {
+        //     set(value: T ): void {
+        //         this.value = [ globals.currentLogicalTime, value]; 
+        //     }
+        // });
 
         //FIXME: Delete? You should get() from an input port. 
         // Object.assign(this, {
@@ -1066,24 +1071,15 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
                     }
                 
                 // OUT to OUT
-                // One reactor must be the parent of another 
+                // This reactor must be the child of sink's reactor 
                 } else {
-                    if(this.parent == sink.parent.parent || this.parent.parent == sink.parent){
+                    if(this.parent.parent == sink.parent){
                         return true;
                     } else {
                         return false;
                     }
                 }
-                
-                
-
-
-                
-            
-            
-
-            
-                
+   
                 // var thisComponent = parent;
                 // var thisContainer = parent._getContainer();
 
@@ -1116,13 +1112,11 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
              * Connect this OutPort to an InPort. One OutPort may be connected to many InPorts.
              * @param destination The InPort to which this OutPort should be connected.
              */
-            connect(destination: InPort<T>):void {
-                console.log("connecting " + this + " and " + destination);
-                // this.connectedPort = destination;
-                this._connectedPorts.add(destination);
-                destination.connectedPort = this;
-
-                
+            connect(sink: Port<T>):void {
+                console.log("connecting " + this + " and " + sink);
+                this._connectedSinkPorts.add(sink);
+                sink._connectedSourcePort = this;
+             
                 // var container = parent._getContainer();
                 // if (container != null) {
                 //     container.connect(this, sink);
@@ -1133,10 +1127,10 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
         });
 
         Object.assign(this, {
-            disconnect(destination: InPort<T>): void {
+            disconnect(sink: Port<T>): void {
                 // this.connectedPort = null;
-                this._connectedPorts.delete(destination);
-                destination.connectedPort = null;
+                this._connectedSinkPorts.delete(sink);
+                sink._connectedSourcePort = null;
             }
             
             // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
@@ -1168,16 +1162,17 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
              * @param value The value to assign to this output port.
              */
             set(value: T):void {
+                console.log("calling set on " + this);
                 this.value = [globals.currentLogicalTime, value];
-                for(const port of this._connectedPorts){
+                for(const port of this._connectedSinkPorts){
                     if(port instanceof InPort){
                         let inputEvent = new Event(port, globals.currentLogicalTime, null);
                         let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
                         globals.eventQ.push(prioritizedEvent);
+                        port.writeValue(value);
                     } else if(port instanceof OutPort){
                         port.set(value);
                     }
-
                 }
             }
        });
@@ -1203,8 +1198,8 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
      * If an InPort has a null value for its connectedPort it is disconnected.
      * A non-null connectedPort is connected to the specified port.
      */
-    connectedPort: OutPort<T> | null = null;
-    value: T | null;
+    _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
+    _connectedSourcePort: Port<T> | null = null;
     // _name: string = "";
     //_receivers: Set<Port<T>>;
     //_parent: Component; // $ReadOnly ?
@@ -1212,11 +1207,11 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
 
     /***** Priviledged functions *****/
     canConnect:(source: Port<T>) => boolean;        
-    connect: (source: OutPort<T>) => void;
-    disconnect: (source: OutPort<T>) => void;
+    connect: (source: Port<T>) => void;
+    disconnect: (source: Port<T>) => void;
     //send: (value: ?$Subtype<T>, delay?:number) => void;
     get: () => T | null;
-    writeValue: (container: Reactor, value: T | null) => void;
+    writeValue: (value: T ) => void;
 
     /**
      * Create a new InPort.
@@ -1234,16 +1229,16 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
              * Throws an error if not connected directly or indirectly to an output port.
              */
             isPresent():boolean {
-                if(this.connectedPort){
-                    if(this.connectedPort instanceof OutPort){
-                        if(this.connectedPort.value === null ||
-                            ! timeInstantsAreEqual(this.connectedPort.value[0], globals.currentLogicalTime )){
+                if(this._connectedSourcePort){
+                    if(this._connectedSourcePort instanceof OutPort){
+                        if(this._connectedSourcePort.value === null ||
+                            ! timeInstantsAreEqual(this._connectedSourcePort.value[0], globals.currentLogicalTime )){
                                 return false;
                             } else {
                                 return true;
                             }
                     } else {
-                        return this.connectedPort.isPresent();
+                        return this._connectedSourcePort.isPresent();
                     }
                 } else {
                     throw new Error("Cannot test a disconnected input port for a present value.")
@@ -1263,15 +1258,16 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
              * logical time.
              */
             get():T | null {
-                if(this.connectedPort){
-                    if(this.connectedPort instanceof OutPort){
+                console.log("calling get on " + this);
+                if(this._connectedSourcePort){
+                    if(this._connectedSourcePort instanceof OutPort){
                         if(this.isPresent()){
-                            return this.connectedPort.value[1];
+                            return this._connectedSourcePort.value[1];
                         } else {
                             return null;
                         }
                     } else {
-                        return this.connectedPort.get();
+                        return this._connectedSourcePort.get();
                     }
                 } else {
                     throw new Error("Cannot get value from a disconnected port.")
@@ -1279,53 +1275,57 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
             }
         });
 
-        //FIXME: Commented this out, because I think it should be calling set()
-        //on an OutPort which triggers an event for connected inputs.
-        //You don't call write() on an input, right? You get() from an input.
-        // Object.assign(this, {
-        //     writeValue(container:Reactor, value:T | null):void {
-        //         this._value = value;
-        //         for (let r of parent._reactions) {
-        //             if (r.triggers.includes(this)) {
 
-        //                 //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-        //                 let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
-        //                 globals.reactionQ.push(prioritizedReaction);
-        //                 //globals.reactionQ.push([r.reaction, r.triggers]);
-        //             }
-        //         }
-        //     }
-        // });
+        Object.assign(this, {
+            writeValue(value:T){
+                this.value = [globals.currentLogicalTime, value];
+                for(const port of this._connectedSinkPorts){
+                    let inputEvent = new Event(port, globals.currentLogicalTime, null);
+                    let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
+                    globals.eventQ.push(prioritizedEvent);
+                    port.writeValue(value);
+                }
+            } 
+
+            //FIXME: Look into this implemenetation. It's probably more efficient.
+            // writeValue(container:Reactor, value:T | null):void {
+            //     this._value = value;
+            //     for (let r of parent._reactions) {
+            //         if (r.triggers.includes(this)) {
+
+            //             //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+            //             let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
+            //             globals.reactionQ.push(prioritizedReaction);
+            //             //globals.reactionQ.push([r.reaction, r.triggers]);
+            //         }
+            //     }
+            // }
+        });
 
         
         Object.assign(this, {   
             /**
              * Returns true if this port can be connected to source. False otherwise. 
-             * @param source The port to test connection against. 
+             * @param sink The port to test connection against. 
              */
-            canConnect(source: Port<T>): boolean {
+            canConnect(sink: Port<T>): boolean {
                 
                 //Self loops are not allowed.
-                if(source == this){
+                if(sink == this){
                     return false;
                 }
-                if(source instanceof InPort){
+                if(sink instanceof InPort){
                     // IN to IN
-                    // One reactor must be the parent of the other.
-                    if(source.parent == this.parent.parent || source.parent.parent == this.parent){
+                    // sink's reactor must be the child of this one.
+                    if(sink.parent.parent == this.parent){
                         return true;
                     } else {
                         return false;
                     }
                 } else{
                     // IN to OUT
-                    // Reactor with input port must be at the same level of hierarchy as
-                    // reactor with output port.
-                    if(source.parent.parent == this.parent.parent){
-                        return true;
-                    } else {
-                        return false;
-                    }
+                    // An output port can't be the sink of an input port.
+                    return false;
 
             //     var thisComponent = parent;
             //     var thisContainer = parent._getContainer();
@@ -1344,17 +1344,18 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
         });
 
         Object.assign(this, {
-            connect(source: OutPort<T>):void {
-                console.log("connecting " + this + " and " + source);
-                this.connectedPort = source;
-                source._connectedPorts.add(this);
+            connect(sink: Port<T>):void {
+                console.log("connecting " + this + " and " + sink);
+                this._connectedSinkPorts.add(sink)
+                sink._connectedSourcePort = this;
             }
         });
 
         Object.assign(this, {
-            disconnect(source: OutPort<T>): void {
-                this.connectedPort = null;
-                source._connectedPorts.delete(this);
+            disconnect(sink: Port<T>): void {
+                this._connectedSinkPorts.delete(this);
+                sink._connectedSourcePort = null;
+                
             }
             // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
             //     var component = parent;

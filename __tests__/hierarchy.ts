@@ -68,8 +68,9 @@ describe('Container to Contained', () => {
 
     it('testing canConnect', () => {
         expect(container.a.canConnect(contained.a)).toBe(true);
-        expect(contained.a.canConnect(container.a)).toBe(true);
-        expect(contained.a.canConnect(contained.b)).toBe(true);
+        expect(contained.a.canConnect(container.a)).toBe(false);
+        expect(contained.a.canConnect(contained.b)).toBe(false);
+        expect(contained.b.canConnect(contained.a)).toBe(true);
 
         expect(container.a.canConnect(contained.b)).toBe(false);
         expect(contained.b.canConnect(container.a)).toBe(false);
@@ -77,7 +78,7 @@ describe('Container to Contained', () => {
         expect(container.b.canConnect(contained.a)).toBe(false);
         expect(contained.a.canConnect(container.b)).toBe(false);
 
-        expect(container.b.canConnect(contained.b)).toBe(true);
+        expect(container.b.canConnect(contained.b)).toBe(false);
         expect(contained.b.canConnect(container.b)).toBe(true);
 
         expect(contained.a.canConnect(contained2.a)).toBe(false);
@@ -89,7 +90,7 @@ describe('Container to Contained', () => {
         expect(contained2.a.canConnect(container.a)).toBe(false);
         // expect(container2.a.canConnect(contained2.a)).toBe(false);
        
-        expect(grandcontained.a.canConnect(contained.a)).toBe(true);
+        expect(grandcontained.a.canConnect(contained.a)).toBe(false);
         expect(grandcontained.b.canConnect(contained.b)).toBe(true);
         expect(grandcontained.a.canConnect(container.a)).toBe(false);
         expect(grandcontained.b.canConnect(container.b)).toBe(false);

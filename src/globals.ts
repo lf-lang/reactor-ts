@@ -1,7 +1,7 @@
 'use strict';
 
 import { PrioritySet } from "./util";
-import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, Action, NumericTimeInterval, microtimeToNumeric, compareNumericTimeIntervals, compareTimeInstants, timeIntervalToNumeric, numericTimeDifference, numericTimeSum, timeInstantsAreEqual } from "./reactor";
+import { Event, Timer, Reaction, Trigger, TimeInterval, TimeInstant, PrioritizedEvent, PrioritizedReaction, Action, NumericTimeInterval, microtimeToNumeric, compareNumericTimeIntervals, compareTimeInstants, timeIntervalToNumeric, numericTimeDifference, numericTimeSum, timeInstantsAreEqual, InPort } from "./reactor";
 
 //---------------------------------------------------------------------//
 // Modules                                                             //

@@ -8,8 +8,6 @@ import { Logger } from './logger';
 
 describe('SingleEvent', function () {
 
-
-
     //Tell the reactor runtime to successfully terminate after 3 seconds.
     globals.setExecutionTimeout([3, TimeUnit.secs]);
     //Ensure the test will run for 5 seconds.
@@ -32,13 +30,12 @@ describe('SingleEvent', function () {
         expect(expect(logger).toBeInstanceOf(Logger));
 
         expect(singleEvent.o.canConnect(logger.i)).toBe(true);
-        expect(logger.i.canConnect(singleEvent.o)).toBe(true);
+        expect(logger.i.canConnect(singleEvent.o)).toBe(false);
 
         //Connect output of singleEvent to input of logger.
-         singleEvent.o.connect(logger.i);
+        singleEvent.o.connect(logger.i);
         // logger.i.connect(singleEvent.o);
 
         globals.startRuntime(()=>null, failRuntime);
-
     })
 });
