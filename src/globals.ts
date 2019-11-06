@@ -110,6 +110,12 @@ export function getReactionID(){
 
 //Use BigInt instead of number?
 var _eventIDCount = 0;
+/**
+ * Obtain a unique identifier for the event.
+ * Note: The monotonicly increasing nature of eventIDs
+ * is used to resolve priority between duplicate events with the same
+ * timestamp in the eventQ.
+ */
 export function getEventID(){
     return _eventIDCount++;
 }
@@ -146,6 +152,9 @@ var _startTimers = function(){
         t.setup();
     }
 };
+
+// Used to look out for the same action scheduled twice at a logical time. 
+var _observedActionEvents : Map<Action<any>, PrioritizedEvent> = new Map<Action<any>, PrioritizedEvent>();
 
 // Wait until physical time matches or exceeds the time of the least tag
     // on the event queue. If there is no event in the queue, return false.
@@ -246,19 +255,15 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 //logical time will only react once.
                 let triggersNow = new Set<Reaction>();
 
-                //FIXME: get rid of this. I don't think we need it with reflection.
-                //Keep track of the actions which trigger a reaction so their payloads
-                //may be associated with the reaction.
-                //let reactionsToActions = new Map<Reaction, Set<Action<any>>>();
+
+                // Keep track of actions at this logical time.
+                // If the same action has been scheduled twice
+                // make sure it gets the correct (last assigned) payload.
+                _observedActionEvents.clear();
 
                 //This loop should always execute at least once.
                 while(currentHead && timeInstantsAreEqual(currentHead._priority, currentLogicalTime)){
-                    // currentHead._priority[0][0] === currentLogicalTime[0][0] &&
-                    // currentHead._priority[0][1] === currentLogicalTime[0][1] &&
-                    // currentHead._priority[1] === currentLogicalTime[1]){
 
-                // while(currentHead && currentHead._priority[0] === currentLogicalTime[0] &&
-                //     currentHead._priority[1] === currentLogicalTime[1] ){
 
                     //An explicit type assertion is needed because we know the
                     //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
@@ -269,8 +274,20 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                     }
 
                     if(trigger instanceof Action){
-                        trigger._payload = 
+                        // Check if this action has been seen before at this logical time.
+                        if(_observedActionEvents.has(trigger) ){
+                            // Whichever event for this action has a greater eventID
+                            // occurred later and it determines the payload. 
+                            if( currentHead._id > (_observedActionEvents.get(trigger) as PrioritizedEvent)._id ){
+                                trigger._payload = 
+                                [ currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];   
+                            }
+                        } else {
+                            _observedActionEvents.set(trigger, (currentHead as PrioritizedEvent));
+                            trigger._payload = 
                             [ currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
+                        }
+                        
                     }
 
                     let toTrigger = triggerMap.getReactions(trigger);

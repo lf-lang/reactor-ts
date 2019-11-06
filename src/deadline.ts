@@ -2,7 +2,7 @@
 
 import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, Action, TimelineClass, Deadline, TimeUnit} from './reactor';
 
-//This test is supposed to violate this deadline.
+// This test is supposed to violate this deadline.
 export class Dead extends Deadline{
     
     success: () => void;
@@ -14,14 +14,14 @@ export class Dead extends Deadline{
         this.fail = fail;
     }
     
-    //  In this test the deadline is gauranteed to be violated so this handler should be
-    //  invoked. 
+    // In this test the deadline is gauranteed to be violated so this handler should be
+    // invoked. 
     handler(){
         this.success();
     }
 }
 
-//This test is supposed to not violate this deadline.
+// This test is supposed to not violate this deadline.
 export class Alive extends Deadline{
     
     success: () => void;
@@ -83,7 +83,7 @@ export class WasteTime extends Reaction{
 
     /**
      * This reaction has higher priority than SoonDead and wastes time,
-     * gauranteeing the deadline will be violated.
+     * guaranteeing the deadline will be violated.
      * @override
      */
     react(){

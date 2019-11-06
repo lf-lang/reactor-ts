@@ -5,13 +5,26 @@ import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, Action
 export class ScheduleAction extends Reaction{
 
     /**
-     * Produce an output event
+     * Schedule the correct payload for action a1.
      * @override
      */
     react(){
         (this.state as any).a1.schedule(0, "hello");
         
-        console.log("Scheduling an action in ScheduleAction to trigger RespondToAction");
+        console.log("Scheduling the final action in ScheduleAction to trigger RespondToAction");
+    }
+}
+
+export class ScheduleOverriddenAction extends Reaction{
+
+    /**
+     * Schedule the incorrect payload for action a1.
+     * @override
+     */
+    react(){
+        (this.state as any).a1.schedule(0, "goodbye");
+        
+        console.log("Scheduling the overridden action in ScheduleOverriddenAction to trigger RespondToAction");
     }
 }
 
@@ -51,24 +64,12 @@ export class ActionTrigger extends Reactor {
 
     constructor( success: () => void, fail: () => void, parent:Reactor|null, name?:string) {
         super(parent, name);
-
-        //FIXME: create and add an outPort, so the reaction
-        //can write to it.
-
-        // const t1 = new Timer(0, 0);
-        // this.addTimer(t1);
-        // const a1 = new Action<string>("triggerResponse", TimelineClass.logical, null );
-        // this.addAction(a1);
         
-        const scheduleActionTriggers = new Array();
-        scheduleActionTriggers.push(this.t1);
-        const r1 = new ScheduleAction(this, scheduleActionTriggers, 0);
+        //Reaction priorities matter here. The overridden reaction must go first.
+        const r2 = new ScheduleOverriddenAction(this,[this.t1], 0);
+        const r1 = new ScheduleAction(this, [this.t1], 1);
+        const r3 = new RespondToAction(this, [this.a1], 2, success, fail);
         
-        const respondToActionTriggers = new Array();
-        respondToActionTriggers.push(this.a1);
-        const r2 = new RespondToAction(this, respondToActionTriggers, 0, success, fail);
-        
-        this._reactions.push(r1);
-        this._reactions.push(r2);
+        this._reactions = [r1, r2, r3];
     }
 }

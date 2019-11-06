@@ -1036,21 +1036,26 @@ export abstract class Port<T> implements Trigger, Named {
 
         Object.assign(this, {
             /**
-             * Assigns a value to this output port at the current logical time.
+             * Assigns a value to this port at the current logical time.
              * Input events are triggered for all connected input ports and 
              * this function is recursively invoked on all connected output ports.
+             * Note: It is considered incorrect for a reaction to directly call this
+             * function on a port. Instead, reactions should call the "set()" function on 
+             * an OutPort. InPorts should not be set().
              * @param value The value to assign to this output port.
              */
-            set(value: T):void {
-                console.log("calling set on " + this);
-                this.value = [globals.currentLogicalTime, value];
+            _writeValue(value: T):void {
+                console.log("calling writeValue on " + this);
+                if(this instanceof OutPort){
+                    this.value = [globals.currentLogicalTime, value];
+                }
                 // TODO: maybe optimize this so ports which don't trigger anyting
                 // don't always generate events.
                 let portEvent = new Event(this, globals.currentLogicalTime, null);
                 let prioritizedEvent = new PrioritizedEvent(portEvent, globals.getEventID());
                 globals.eventQ.push(prioritizedEvent);
                 for(const port of this._connectedSinkPorts){
-                    port.set(value);
+                    port._writeValue(value);
                     // if(port instanceof InPort){
                     //     port.writeValue(value);
                     // } else if(port instanceof OutPort){
@@ -1153,6 +1158,18 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
                 return true;
             }
         });
+
+        Object.assign(this, {
+
+            /**
+            * Write a value to this OutPort and recursively transmit the value to connected
+            * ports while generating Port events for them. 
+            * @param value The value to be written to this port.
+            */
+           set(value: T):void {
+               this._writeValue(value);
+           }
+       });
         
         Object.assign(this, {
 
