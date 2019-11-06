@@ -215,13 +215,13 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                         nanoSecString );
                 }
                 
+
+                //Convert the timeout to a nanotimer compatible string.
                 let padding = "";
                 for(let i = 0; i < 9 - nanoSecString.length; i++){
                     padding = "0" + padding 
                 }
-
                 let timeoutString = timeout[0].toString() + padding + nanoSecString + "n"; 
-
                 nTimer.setTimeout(_next, [successCallback, failureCallback], timeoutString);
                 
                 //FIXME: Delete this comment when we're sure nanotimer is the right way to go.
@@ -272,7 +272,6 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                         trigger._payload = 
                             [ currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
                     }
-                    console.log(trigger);
 
                     let toTrigger = triggerMap.getReactions(trigger);
                     if(toTrigger){
@@ -318,9 +317,21 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 
                 let headReaction = reactionQ.pop();
                 while(headReaction){
-                    console.log("reacting...");
-                    //Explicit annotation because reactionQ contains PrioritizedReactions.
-                    (headReaction as PrioritizedReaction).r.react();
+                    //Explicit type annotation because reactionQ contains PrioritizedReactions.
+                    let r = (headReaction as PrioritizedReaction).r
+                    
+                    //Test if this reaction has a deadline which has been violated.
+                    //This is the case if the reaction has a registered deadline and
+                    //logical time + timeout < physical time
+                    if(r.deadline && compareNumericTimeIntervals( 
+                            numericTimeSum(currentLogicalTime[0], timeIntervalToNumeric(r.deadline.timeout)),
+                            currentPhysicalTime)){
+                        console.log("handling deadline violation");
+                        r.deadline.handler();
+                    } else {
+                        console.log("reacting...");
+                        r.react();
+                    }
                     headReaction = reactionQ.pop();
                 }
 

@@ -3,11 +3,11 @@
 
 import {Reactor, TimeUnit, OutPort, InPort} from './reactor';
 import * as globals from './globals';
-import { OutputResponder } from './outputEvent';
+import { ShowDeadline } from './deadline';
 import { Logger } from './logger';
 
 
-// This test shows the OutputEvent reactor is able to trigger a reaction on
+// This test shows the ShowDeadline reactor is able to trigger a reaction on
 // a contained reactor's output.
 describe('OutputEventTest', function () {
 
@@ -27,7 +27,7 @@ describe('OutputEventTest', function () {
             throw new Error("Reactor has failed.");
         };
 
-        var oEvent = new OutputResponder( done, failReactor, null, "OutputResponder");
+        var sDeadline = new ShowDeadline( done, failReactor, null, "ShowDeadline");
     
         globals.startRuntime(()=>null, failRuntime);
     })

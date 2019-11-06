@@ -360,6 +360,9 @@ export abstract class Reaction{
     priority: number;
     triggeringActions: Set<Action<any>>;
 
+    //A reaction defaults to not having a deadline  
+    deadline: null| Deadline = null;
+
     constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
         this.triggers = triggers;
         this.state = state;
@@ -373,7 +376,30 @@ export abstract class Reaction{
      * This react function must be overridden by a concrete reaction.
      */
     react(){
-        throw new Error("React function hasn't been defined");
+        throw new Error("react function hasn't been defined");
+    }
+}
+
+/**
+ * The abstract class for a reaction deadline. A deadline is an optional relation
+ * between logical time and physical time for a reaction. A reaction possessing a
+ * deadline with a timeout of x seconds will invoke the deadline's handler()
+ * function instad of its ordinary react() function if the reaction is invoked with 
+ * physical time > logical time + timeout.
+ */
+export abstract class Deadline{
+
+    timeout: TimeInterval;
+
+    /**
+     * This handler function must be overriden by a concrete handler.
+     */
+    handler(){
+        throw new Error("handler function hasn't been defined.")
+    }
+
+    constructor(timeout: TimeInterval){
+        this.timeout = timeout;
     }
 }
 

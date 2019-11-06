@@ -56,7 +56,7 @@ describe('HierarchicalSingleEvent', function () {
         seContainer.o.connect(logContainer.i);
         logContainer.i.connect(logger.i);
         // logger.i.connect(singleEvent.o);
-        console.log("starting runtime in hierarch sing event");
+        console.log("starting runtime in hierarch single event");
 
         globals.startRuntime(()=>null, failRuntime);
     })
