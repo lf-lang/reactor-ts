@@ -291,7 +291,8 @@ export function numericTimeMultiple(t: NumericTimeInterval, multiple: number): N
 //---------------------------------------------------------------------//
 
 /**
- * A Trigger is something which can cause an Event: a Timer, an input, or an action.
+ * A Trigger is something which can cause an Event: a Timer, an input,
+ * an output from a contained reactor, or an action.
  * Reactions may register themselves as triggered by a Trigger. 
  */
 
@@ -940,7 +941,7 @@ export abstract class Reactor implements Nameable {
     
 }
 
-export abstract class Port<T> implements Named {
+export abstract class Port<T> implements Trigger, Named {
     
     //The reactor containing this port
     parent: Reactor;
@@ -956,6 +957,8 @@ export abstract class Port<T> implements Named {
 
     connect: (source: Port<T>) => void;
     canConnect: (source: Port<T>)=> boolean;
+
+    set: (value: T) => void;
 
     _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
     _connectedSourcePort: Port<T>| null = null;
@@ -1004,6 +1007,32 @@ export abstract class Port<T> implements Named {
                 return "anonymous";
             }
         });
+
+        Object.assign(this, {
+            /**
+             * Assigns a value to this output port at the current logical time.
+             * Input events are triggered for all connected input ports and 
+             * this function is recursively invoked on all connected output ports.
+             * @param value The value to assign to this output port.
+             */
+            set(value: T):void {
+                console.log("calling set on " + this);
+                this.value = [globals.currentLogicalTime, value];
+                // TODO: maybe optimize this so ports which don't trigger anyting
+                // don't always generate events.
+                let portEvent = new Event(this, globals.currentLogicalTime, null);
+                let prioritizedEvent = new PrioritizedEvent(portEvent, globals.getEventID());
+                globals.eventQ.push(prioritizedEvent);
+                for(const port of this._connectedSinkPorts){
+                    port.set(value);
+                    // if(port instanceof InPort){
+                    //     port.writeValue(value);
+                    // } else if(port instanceof OutPort){
+                    //     port.set(value);
+                    // }
+                }
+            }
+       });
     }
 
     toString(): string {
@@ -1032,13 +1061,6 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
     constructor(parent: Reactor) {
         super(parent);
         //var events: Map<number, T> = new Map();
-
-        //DUPLICATE DEFINITION. DELETE THIS.
-        // Object.assign(this, {
-        //     set(value: T ): void {
-        //         this.value = [ globals.currentLogicalTime, value]; 
-        //     }
-        // });
 
         //FIXME: Delete? You should get() from an input port. 
         // Object.assign(this, {
@@ -1109,8 +1131,8 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
         Object.assign(this, {
 
              /**
-             * Connect this OutPort to an InPort. One OutPort may be connected to many InPorts.
-             * @param destination The InPort to which this OutPort should be connected.
+             * Connect this OutPort to a downstream port.
+             * @param sink The port to which this OutPort should be connected.
              */
             connect(sink: Port<T>):void {
                 console.log("connecting " + this + " and " + sink);
@@ -1154,28 +1176,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
             // }
         });
 
-        Object.assign(this, {
-            /**
-             * Assigns a value to this output port at the current logical time.
-             * Input events are triggered for all connected input ports and 
-             * this function is recursively invoked on all connected output ports.
-             * @param value The value to assign to this output port.
-             */
-            set(value: T):void {
-                console.log("calling set on " + this);
-                this.value = [globals.currentLogicalTime, value];
-                for(const port of this._connectedSinkPorts){
-                    if(port instanceof InPort){
-                        let inputEvent = new Event(port, globals.currentLogicalTime, null);
-                        let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
-                        globals.eventQ.push(prioritizedEvent);
-                        port.writeValue(value);
-                    } else if(port instanceof OutPort){
-                        port.set(value);
-                    }
-                }
-            }
-       });
+
     }
 
     //FIXME: Delete this comment? Sinks and sources aren't part of the LF spec.
@@ -1192,7 +1193,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
 
 }
 
-export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
+export class InPort<T> extends Port<T> implements Readable<T> {
 
     /**
      * If an InPort has a null value for its connectedPort it is disconnected.
@@ -1211,7 +1212,7 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
     disconnect: (source: Port<T>) => void;
     //send: (value: ?$Subtype<T>, delay?:number) => void;
     get: () => T | null;
-    writeValue: (value: T ) => void;
+    //writeValue: (value: T ) => void;
 
     /**
      * Create a new InPort.
@@ -1276,31 +1277,34 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
         });
 
 
-        Object.assign(this, {
-            writeValue(value:T){
-                this.value = [globals.currentLogicalTime, value];
-                for(const port of this._connectedSinkPorts){
-                    let inputEvent = new Event(port, globals.currentLogicalTime, null);
-                    let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
-                    globals.eventQ.push(prioritizedEvent);
-                    port.writeValue(value);
-                }
-            } 
+        // Object.assign(this, {
+        //     //FIXME: There's considerable overlap between this and the set function for
+        //     //OutPort. Refactor?
+        //     writeValue(value:T){
+        //         this.value = [globals.currentLogicalTime, value];
+        //         for(const port of this._connectedSinkPorts){
+        //             let inputEvent = new Event(port, globals.currentLogicalTime, null);
+        //             let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
+        //             globals.eventQ.push(prioritizedEvent);
+        //             port.writeValue(value);
+        //         }
+        //     } 
 
-            //FIXME: Look into this implemenetation. It's probably more efficient.
-            // writeValue(container:Reactor, value:T | null):void {
-            //     this._value = value;
-            //     for (let r of parent._reactions) {
-            //         if (r.triggers.includes(this)) {
 
-            //             //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-            //             let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
-            //             globals.reactionQ.push(prioritizedReaction);
-            //             //globals.reactionQ.push([r.reaction, r.triggers]);
-            //         }
-            //     }
-            // }
-        });
+        //     //FIXME: Look into this implemenetation. It's probably more efficient.
+        //     // writeValue(container:Reactor, value:T | null):void {
+        //     //     this._value = value;
+        //     //     for (let r of parent._reactions) {
+        //     //         if (r.triggers.includes(this)) {
+
+        //     //             //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+        //     //             let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
+        //     //             globals.reactionQ.push(prioritizedReaction);
+        //     //             //globals.reactionQ.push([r.reaction, r.triggers]);
+        //     //         }
+        //     //     }
+        //     // }
+        // });
 
         
         Object.assign(this, {   
@@ -1344,6 +1348,10 @@ export class InPort<T> extends Port<T> implements Trigger, Readable<T> {
         });
 
         Object.assign(this, {
+            /**
+             * Connect this InPort to a downstream port.
+             * @param sink the port to connect to.
+             */
             connect(sink: Port<T>):void {
                 console.log("connecting " + this + " and " + sink);
                 this._connectedSinkPorts.add(sink)

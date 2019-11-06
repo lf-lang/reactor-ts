@@ -272,6 +272,7 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                         trigger._payload = 
                             [ currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
                     }
+                    console.log(trigger);
 
                     let toTrigger = triggerMap.getReactions(trigger);
                     if(toTrigger){
