@@ -34,6 +34,7 @@ export class OutputResponder extends Reactor {
         super(parent, name);
         
         const r = new OutputResponse(this, [this.se.o], 0, success, fail );
+        this._reactions = [r];
     }
 }
 

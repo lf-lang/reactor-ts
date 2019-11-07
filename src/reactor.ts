@@ -124,20 +124,7 @@ export function timeInstantsAreEqual(t0: TimeInstant, t1: TimeInstant){
  * @param t1 
  */
 export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
-    //FIXME: these checks are unecessary because I removed 0 from the type.
-    //Why have a second special representation for epoch?
-    //Delete, when I feel confident it's not coming back.
-    // if(t0 === 0){
-    //     return true;
-    // }
-    // if(t1 === 0){
-    //     return false;
-    // }
-
-
-
-    //Don't check if TimeInstants have fractional microsteps to save time.
-
+    // Don't check if TimeInstants have fractional microsteps to save time.
     if(compareNumericTimeIntervals(t0[0], t1[0])){
         return true;
     } else{
@@ -185,12 +172,6 @@ export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
     let bigT = BigInt(t[0]) * BigInt(t[1]);
     seconds = parseInt((bigT / billion).toString());
     nseconds = parseInt((bigT % billion).toString());
-
-    //FIXME: Remove this comment.
-    //The associativity of these operations is very important because otherwise
-    //there will be floating point errors.
-    // seconds = Math.floor( (t[0] * t[1]) / billion);
-    // nseconds = (t[0] * t[1]) - (seconds * billion);
 
     return [seconds, nseconds];    
 
@@ -1045,24 +1026,55 @@ export abstract class Port<T> implements Trigger, Named {
              * @param value The value to assign to this output port.
              */
             _writeValue(value: T):void {
-                console.log("calling writeValue on " + this);
-                if(this instanceof OutPort){
+                if(this instanceof InPort){
+                    // Input ports can trigger reactions for the reactor
+                    // they are attached to.
+                    for (let r of parent._reactions) {
+                        if (r.triggers.includes(this)) {
+                            //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+                            let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
+                            globals.reactionQ.push(prioritizedReaction);
+                        }
+                    }
+                } else {
+                    // Output ports can trigger reactions for a reactor containing the
+                    // reactor they are attached to.
                     this.value = [globals.currentLogicalTime, value];
+                    if(parent.parent){
+                        for (let r of parent.parent._reactions) {
+                            if (r.triggers.includes(this)) {
+                                //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+                                let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
+                                globals.reactionQ.push(prioritizedReaction);
+                            }
+
+                        }
+
+                    }
                 }
-                // TODO: maybe optimize this so ports which don't trigger anyting
-                // don't always generate events.
-                let portEvent = new Event(this, globals.currentLogicalTime, null);
-                let prioritizedEvent = new PrioritizedEvent(portEvent, globals.getEventID());
-                globals.eventQ.push(prioritizedEvent);
+
                 for(const port of this._connectedSinkPorts){
                     port._writeValue(value);
-                    // if(port instanceof InPort){
-                    //     port.writeValue(value);
-                    // } else if(port instanceof OutPort){
-                    //     port.set(value);
-                    // }
                 }
             }
+
+            // FIXME: This alternate implementation of writeValue directly adds reactions to the reactionQ
+            // that are triggered by this port. It would require implementation is incorrect with the current design because
+            // 
+            //  It's probably more efficient.
+            // writeValue(container:Reactor, value:T | null):void {
+            //     this._value = value;
+            //     for (let r of parent._reactions) {
+            //         if (r.triggers.includes(this)) {
+
+            //             //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+            //             let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
+            //             globals.reactionQ.push(prioritizedReaction);
+            //             //globals.reactionQ.push([r.reaction, r.triggers]);
+            //         }
+            //     }
+            // }
+        // });
        });
     }
 
@@ -1320,34 +1332,8 @@ export class InPort<T> extends Port<T> implements Readable<T> {
         });
 
 
-        // Object.assign(this, {
-        //     //FIXME: There's considerable overlap between this and the set function for
-        //     //OutPort. Refactor?
-        //     writeValue(value:T){
-        //         this.value = [globals.currentLogicalTime, value];
-        //         for(const port of this._connectedSinkPorts){
-        //             let inputEvent = new Event(port, globals.currentLogicalTime, null);
-        //             let prioritizedEvent = new PrioritizedEvent(inputEvent, globals.getEventID());
-        //             globals.eventQ.push(prioritizedEvent);
-        //             port.writeValue(value);
-        //         }
-        //     } 
 
 
-        //     //FIXME: Look into this implemenetation. It's probably more efficient.
-        //     // writeValue(container:Reactor, value:T | null):void {
-        //     //     this._value = value;
-        //     //     for (let r of parent._reactions) {
-        //     //         if (r.triggers.includes(this)) {
-
-        //     //             //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-        //     //             let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
-        //     //             globals.reactionQ.push(prioritizedReaction);
-        //     //             //globals.reactionQ.push([r.reaction, r.triggers]);
-        //     //         }
-        //     //     }
-        //     // }
-        // });
 
         
         Object.assign(this, {   

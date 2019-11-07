@@ -247,21 +247,20 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                 // console.log("currentPhysicalTime: " + currentPhysicalTime);
                 //console.log("physicalTimeGap was " + physicalTimeGap);
 
-                //Remove all simultaneous events from the queue.
-                //Reschedule timers, and put the triggered reactions on
-                //the reaction queue.
-
-                //Using a Set ensures a reaction triggered by multiple events at the same
-                //logical time will only react once.
+                // Using a Set data structure ensures a reaction triggered by
+                // multiple events at the same logical time will only react once.
                 let triggersNow = new Set<Reaction>();
-
 
                 // Keep track of actions at this logical time.
                 // If the same action has been scheduled twice
                 // make sure it gets the correct (last assigned) payload.
                 _observedActionEvents.clear();
 
-                //This loop should always execute at least once.
+
+                // Remove all simultaneous events from the queue.
+                // Reschedule timers, assign action values, and put the triggered reactions on
+                // the reaction queue.
+                // This loop should always execute at least once.
                 while(currentHead && timeInstantsAreEqual(currentHead._priority, currentLogicalTime)){
 
 
@@ -287,7 +286,6 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                             trigger._payload = 
                             [ currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
                         }
-                        
                     }
 
                     let toTrigger = triggerMap.getReactions(trigger);
@@ -314,32 +312,21 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
                     currentHead = eventQ.peek();
                 }
                 
-
-                //FIXME: what is triggeringActions used for?
                 for (let reaction of triggersNow){
                     // console.log("Pushing new reaction onto queue");
                     // console.log(reaction);
                     let prioritizedReaction = new PrioritizedReaction(reaction, getReactionID());
-                    
-                    //FIXME: I think we can get rid of this because of reflection
-                    // let triggeringActions = reactionsToActions.get(reaction);
-                    // if(triggeringActions){
-                    //     //Must make the action available to the reaction because it might
-                    //     //have a payload.
-                    //     prioritizedReaction.r.triggeringActions = triggeringActions;
-                    // }
                     reactionQ.push(prioritizedReaction);
                 }
- 
                 
                 let headReaction = reactionQ.pop();
                 while(headReaction){
-                    //Explicit type annotation because reactionQ contains PrioritizedReactions.
+                    // Explicit type annotation because reactionQ contains PrioritizedReactions.
                     let r = (headReaction as PrioritizedReaction).r
                     
-                    //Test if this reaction has a deadline which has been violated.
-                    //This is the case if the reaction has a registered deadline and
-                    //logical time + timeout < physical time
+                    // Test if this reaction has a deadline which has been violated.
+                    // This is the case if the reaction has a registered deadline and
+                    // logical time + timeout < physical time
                     if(r.deadline && compareNumericTimeIntervals( 
                             numericTimeSum(currentLogicalTime[0], timeIntervalToNumeric(r.deadline.timeout)),
                             currentPhysicalTime)){
