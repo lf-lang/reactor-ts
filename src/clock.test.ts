@@ -2,11 +2,11 @@
 
 import {Clock} from './clock';
 import {TimeUnit, Reactor} from './reactor';
-import * as globals from './globals';
+// import * as globals from './globals';
 
 describe('clock', function () {
     //Tell the reactor runtime to successfully terminate after 6 seconds.
-    globals.setExecutionTimeout([6, TimeUnit.secs]);
+    // globals.setExecutionTimeout([6, TimeUnit.secs]);
     //Ensure the test will run for 7 seconds.
     jest.setTimeout(7000);
 
@@ -30,10 +30,12 @@ describe('clock', function () {
         function fail(){
             throw new Error("Runtime has failed.");
         };
-        var clock = new Clock(done, fail, null, "Clock");
+        var clock = new Clock([6, TimeUnit.secs], done, fail, "Clock");
+        // console.log(clock);
+        clock.start(() => null, fail);
 
         //Don't give the runtime the done callback because we don't care if it terminates
-        globals.startRuntime(() => null, fail);
+        // globals.startRuntime(() => null, fail);
 
     })
 });

@@ -1,8 +1,8 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction} from './reactor';
+import {Reactor, InPort, OutPort, Trigger, Reaction, App} from './reactor';
 
-export class Adder extends Reactor {
+export class Adder extends App {
  
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);
@@ -12,15 +12,8 @@ export class Adder extends Reactor {
     constructor() {
         super(null, "Adder");
 
-        const addTwoTriggers = new Array();
-        addTwoTriggers.push(this.in1);
-        addTwoTriggers.push(this.in2);
-        const r1 = new AddTwo(this, addTwoTriggers, 0);
-
-        const addNTriggers = new Array();
-        addNTriggers.push(this.in1);
-        addNTriggers.push(this.in2);
-        const r2 = new AddN(this, addNTriggers, 0);
+        const r1 = new AddTwo(this, [this.in1, this.in2], 0);
+        const r2 = new AddN(this, [this.in1, this.in2], 0);
     }
 
     //FIXME: the if statement never runs.

@@ -2,7 +2,7 @@
 
 import {Adder} from './adder';
 import {Reactor} from './reactor';
-import * as globals from './globals';
+// import * as globals from './globals';
 
 describe('adder', function () {
     var adder = new Adder();

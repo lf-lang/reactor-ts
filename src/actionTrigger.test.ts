@@ -2,7 +2,7 @@
 
 
 import {Reactor, TimeUnit} from './reactor';
-import * as globals from './globals';
+// import * as globals from './globals';
 import { ActionTrigger } from './actionTrigger';
 
 describe('ActionTrigger', function () {

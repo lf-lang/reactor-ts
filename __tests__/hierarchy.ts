@@ -1,9 +1,9 @@
-import {Reactor, OutPort, InPort, App, Executable} from '../src/reactor';
+import {Reactor, OutPort, InPort, App} from '../src/reactor';
 
 /**
     * An actor implementation is a reactive component with ports as properties.
     */
-class Container extends Reactor {
+class Container extends Reactor{
     
     a: InPort<string> = new InPort(this);
     b: OutPort<string> = new OutPort(this);

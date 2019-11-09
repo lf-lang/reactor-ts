@@ -1,7 +1,7 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, TimeUnit, Action, numericTimeSum, timeInstantsAreEqual} from './reactor';
-import * as globals from './globals'
+import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, TimeUnit, Action, numericTimeSum, timeInstantsAreEqual, App} from './reactor';
+// import * as globals from './globals'
 
 class Tick extends Reaction{
 
@@ -59,14 +59,16 @@ class Test extends Reaction{
      * @override
      */
     react(){
+        console.log("Before check in test");
         // console.log("does current logical time: " + globals.currentLogicalTime[0] + " equal " + numericTimeSum( globals.startingWallTime , [5, 0]));
                 
         //All timers should fire simultaneously at logical time 5 seconds from the start of execution.
         //This should tricker tick, tock, and, cuckoo to simultanously schedule actions
         //1,2, and 3. 
-        if(globals.currentLogicalTime[0][0] ==  numericTimeSum( globals.startingWallTime , [5, 0])[0]
-            && globals.currentLogicalTime[0][1] ==  numericTimeSum( globals.startingWallTime , [5, 0])[1]){
-            if( (this.state as any).a1.get() == 1 
+        if(this.getCurrentLogicalTime()[0][0] ==  numericTimeSum( this.state.app.getStartingWallTime() , [5, 0])[0]
+            && this.getCurrentLogicalTime()[0][1] ==  numericTimeSum( this.state.app.getStartingWallTime() , [5, 0])[1]){
+            console.log("reacting in Test");
+                if( (this.state as any).a1.get() == 1 
                             && (this.state as any).a2.get() == 2
                             && (this.state as any).a3.get() == 3){
                 this.success();
@@ -78,17 +80,17 @@ class Test extends Reaction{
 }
 
 
-export class Clock extends Reactor {
+export class Clock extends App {
 
-    t1: Timer = new Timer( [1, TimeUnit.sec], [3, TimeUnit.sec]);
-    t2: Timer = new Timer( [1500, TimeUnit.msec] , [3500, TimeUnit.msec] );
+    t1: Timer = new Timer( this, [1, TimeUnit.sec], [3, TimeUnit.sec]);
+    t2: Timer = new Timer( this, [1500, TimeUnit.msec] , [3500, TimeUnit.msec] );
 
-    a1: Action<number> = new Action<number>();
-    a2: Action<number> = new Action<number>();
-    a3: Action<number> = new Action<number>();
+    a1: Action<number> = new Action<number>(this);
+    a2: Action<number> = new Action<number>(this);
+    a3: Action<number> = new Action<number>(this);
 
-    constructor(success: () => void, fail: () => void, parent:Reactor | null, name?: string) {
-        super(parent, name);
+    constructor(timeout: TimeInterval,  success: () => void, fail: () => void, name?: string) {
+        super(timeout, name);
 
         const r1 = new Tick(this, [this.t1], 0);
         const r2 = new Tock(this, [this.t2], 1);

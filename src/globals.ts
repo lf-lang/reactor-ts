@@ -97,12 +97,11 @@ export class TriggerMap{
 
 }
 
-//FIXME: Triggers must be inserted into this map somewhere.
 //Map triggers coming off the event queue to the reactions they trigger. 
 export var triggerMap: TriggerMap = new TriggerMap();
 
 
-//Use BigInt instead of number?
+// FIXME: Use BigInt instead of number?
 var _reactionIDCount = 0;
 export function getReactionID(){
     return _reactionIDCount++;
@@ -166,11 +165,11 @@ var _observedActionEvents : Map<Action<any>, PrioritizedEvent> = new Map<Action<
     // and then execute the reactions in order. Each reaction may produce
     // outputs, which places additional reactions into the index-ordered
     // priority queue. All of those will also be executed in order of indices.
-    // If the -timeout option has been given on the command line, then return
-    // false when the logical time duration matches the specified duration.
-    // Also return false if there are no more events in the queue and
+    // If the -timeout option has been given on the command line, then call
+    // failureCallback when the logical time duration matches the specified duration.
+    // Also call failureCallback if there are no more events in the queue and
     // the keepalive command-line option has not been given.
-    // Otherwise, return true.
+    // Otherwise, call successCallback.
 
     ///FIXME, give callbacks a way to return status info.
 export function _next(successCallback: ()=> void, failureCallback: () => void){
@@ -355,12 +354,9 @@ export function _next(successCallback: ()=> void, failureCallback: () => void){
     }
 
 
-//FIXME: Move queues, schedule, into App class in reactor.ts or potentially Runtime class,
-//,or make them properties of reactors,
-//and delete this class.
 
 //Idea: make runtime a singleton class?
-export class Runtime {
+// export class Runtime {
 
 
     //The C hosts's start_timers function contains the line
@@ -389,4 +385,4 @@ export class Runtime {
     // Schedule the specified trigger at current_time plus the
     // offset declared in the trigger plus the extra_delay.
 
-}
+// }

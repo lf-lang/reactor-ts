@@ -1,8 +1,5 @@
-import {Reactor, OutPort, InPort, App, Executable} from "../src/reactor";
+import {Reactor, OutPort, InPort, App} from "../src/reactor";
 
-   /**
-     * An actor implementation is a reactive component with ports as properties.
-     */
     class MyActor extends Reactor {
      
         a: InPort<{t: number}> = new InPort(this);
@@ -18,15 +15,19 @@ import {Reactor, OutPort, InPort, App, Executable} from "../src/reactor";
 
     }
 
-describe('connecting/disconnecting actors', () => {
+
+describe('Test names for contained reactors', () => {
     
-    class MyApp extends App {
-        port = new InPort(this);
+    
+    class myApp extends App {
+        port: InPort<any> = new InPort<any>(this);
+
+        x = new MyActor(this);
+        y = new MyActor2(this);
+
+
         constructor(name: string, someParam: string) {
-            super(name);
-            let x = new MyActor(this);
-            let xx = new MyActor(null, "MyActor"); // Uncontained actor
-            let y = new MyActor2(this);
+            super(null, name);
             
             // NOTE: the following line demonstrates type checking ability:
             // this.connect(x.a, y.b);
@@ -35,18 +36,17 @@ describe('connecting/disconnecting actors', () => {
            // x.a.connect(y.b);
             //this.connect(y.b, x.a);
             // this.connect(y.a, y.b);
+
+
             it('contained actor name', () => {
-                expect(x._getName()).toBe("MyActor");
+                expect(this.x._getName()).toBe("MyActor");
             });
             it('contained actor FQN', () => {
-                expect(x._getFullyQualifiedName()).toBe("Hello World/MyActor");
+                expect(this.x._getFullyQualifiedName()).toBe("Hello World/MyActor");
             });
 
             it('uncontained actor name', () => {
-                expect(xx._getFullyQualifiedName()).toBe("MyActor");
-            });
-            it('uncontained actor FQN', () => {
-                expect(xx._getFullyQualifiedName()).toBe("MyActor");
+                expect(this._getFullyQualifiedName()).toBe("Hello World");
             });
 
             // it('connect two actors, one of which uncontained', () => {
@@ -75,10 +75,10 @@ describe('connecting/disconnecting actors', () => {
             // it('graph after disconnect', () => {
             //    expect(this._getGraph()).toBe("");
             // });
-
         }
     }
 
-    var app = new MyApp("Hello World", "!");
+    var app = new myApp("Hello World", "!");
+
 
 });

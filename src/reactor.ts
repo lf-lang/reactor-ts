@@ -6,7 +6,7 @@
  */
 
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
-import * as globals from './globals'
+// import * as globals from './globals'
 
 //---------------------------------------------------------------------//
 // Modules                                                             //
@@ -16,6 +16,7 @@ import * as globals from './globals'
 declare function require(name:string);
 
 const microtime = require("microtime");
+const NanoTimer = require('nanotimer');
 
 //---------------------------------------------------------------------//
 // Types                                                               //
@@ -272,29 +273,32 @@ export function numericTimeMultiple(t: NumericTimeInterval, multiple: number): N
 //---------------------------------------------------------------------//
 
 /**
- * A Trigger is something which can cause an Event: a Timer, an input,
- * an output from a contained reactor, or an action.
+ * A Trigger is something which can cause an Event: a Timer, or an action.
+ * Technically, inputs and output from contained reactors can also cause events,
+ * but they can just directly put reactions on the reaction queue.
  * Reactions may register themselves as triggered by a Trigger. 
  */
 
 export interface Trigger{}
 
-
+// FIXME: I don't think we need this?
 export interface Writable<T> {
     set: (value: T | null) => void;
 }
 
+// FIXME: I don't think we need this.
 export interface Readable<T> {
     get: () => T | null;
 }
 
+// FIXME: I don't think we need this
 /**
- * To be implemented by a top-level composite.  // FIXME: not sure that we need this
+ * To be implemented by a top-level composite.  
  */
-export interface Executable {
-    start():void;
-    stop():void;
-}
+// export interface Executable {
+//     start():void;
+//     stop():void;
+// }
 
 /**
  * For objects that have a name.
@@ -316,6 +320,7 @@ export interface Nameable extends Named {
     _setName(name: string):void;
 }
 
+// FIXME: call this a mutation?
 export interface Transformation {
     
     container:Set<Reactor>;
@@ -328,8 +333,6 @@ export interface Transformation {
  * The reaction abstract class.
  * A concrete reaction class should extend Reaction, and implement a react function.
  */
-
-
 export abstract class Reaction{
 
     //FIXME: for now state is the entire this for the parent reactor. This should be changed
@@ -344,13 +347,22 @@ export abstract class Reaction{
     //A reaction defaults to not having a deadline  
     deadline: null| Deadline = null;
 
+    /**
+     * Register this reaction's triggers with the app.
+     * This step can't be handled in the constructor because
+     * the app for this reaction is not known at that time.
+     * The app will call this function later as part of its setup process.
+     */
+    public register(){
+        console.log("Before register reaction");
+        this.state.app.triggerMap.registerReaction(this);
+        console.log("After register reaction");
+    }
+
     constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
         this.triggers = triggers;
         this.state = state;
         this.priority = priority;
-
-        //Register this reaction's triggers with the runtime.
-        globals.triggerMap.registerReaction(this);
     }
 
     /**
@@ -358,6 +370,13 @@ export abstract class Reaction{
      */
     react(){
         throw new Error("react function hasn't been defined");
+    }
+
+    /**
+     * More concise way to get logical time in a reaction.
+     */
+    public getCurrentLogicalTime(){
+        return this.state.app.getCurrentLogicalTime();
     }
 }
 
@@ -384,11 +403,12 @@ export abstract class Deadline{
     }
 }
 
-
-//A prioritized reaction wraps a Reaction with a priority and precedence
-//and may be inserted into the reaction queue.
-//The priority of a reaction depends on the priority of its reactor, which is
-//determined by a topological sort of reactors.
+/**
+ * A prioritized reaction wraps a Reaction with a priority and precedence
+ * and may be inserted into the reaction queue.
+ * The priority of a reaction depends on the priority of its reactor, which is
+ * determined by a topological sort of reactors.
+ */
 export class PrioritizedReaction implements PrecedenceGraphNode,
  PrioritySetNode<number,number>{
 
@@ -495,6 +515,10 @@ export class PrioritizedEvent implements
 
 export class Action<T> implements Trigger {
 
+    // The constructor for a reactor sets this attribute for each
+    // of its attached timers.
+    parent: Reactor;
+
     timeType: TimelineClass;
     minDelay: TimeInterval;
     name: string;
@@ -504,6 +528,7 @@ export class Action<T> implements Trigger {
     _payload: TimestampedValue<T> | null;
 
     /**
+     * @param parent The reactor containing this action.
      * @param timeType Optional. Defaults to physical. If physical,
      *  then the physical clock on the local platform is used to assign a timestamp
      *  to the action when it is enabled. If logical, the current physical time is
@@ -516,8 +541,9 @@ export class Action<T> implements Trigger {
      *  schedule function and the mindelay parameter are both zero and the physical
      *  keyword is not given, then the action is timestamped one microstep later.
      */
-    constructor(timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
+    constructor(parent: Reactor, timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
 
+        this.parent = parent;
         this.timeType = timeType;
         this.minDelay = minDelay;
         this.name = name;
@@ -537,15 +563,15 @@ export class Action<T> implements Trigger {
         if(this.timeType == TimelineClass.physical){
             //physical
             wallTime = microtimeToNumeric(microtime.now());
-            if(compareNumericTimeIntervals(globals.currentLogicalTime[0], wallTime )){
-                timestamp = [globals.currentLogicalTime[0], globals.currentLogicalTime[1] + 1 ];
+            if(compareNumericTimeIntervals( this.parent.app.getCurrentLogicalTime()[0], wallTime )){
+                timestamp = [this.parent.app.getCurrentLogicalTime()[0], this.parent.app.getCurrentLogicalTime()[1] + 1 ];
             } else {
                 timestamp = [wallTime, 0 ];
             }
         } else {
             //logical
             if( timeIntervalIsZero(this.minDelay) && timeIntervalIsZero(delay)) {
-                timestamp = [globals.currentLogicalTime[0], globals.currentLogicalTime[1] + 1 ];
+                timestamp = [this.parent.app.getCurrentLogicalTime()[0], this.parent.app.getCurrentLogicalTime()[1] + 1 ];
             } else {
                 //Take min of minDelay and delay
                 let numericMinDelay = timeIntervalToNumeric(this.minDelay);
@@ -556,13 +582,13 @@ export class Action<T> implements Trigger {
                 } else{
                     actionTime = numericDelay;
                 }
-                timestamp = [actionTime, globals.currentLogicalTime[1]];
+                timestamp = [actionTime, this.parent.app.getCurrentLogicalTime()[1]];
             }
         }
 
         let actionEvent = new Event(this, timestamp, payload);
-        let actionPriEvent = new PrioritizedEvent(actionEvent, globals.getEventID());
-        globals.scheduleEvent(actionPriEvent);    
+        let actionPriEvent = new PrioritizedEvent(actionEvent, this.parent.app.getEventID());
+        this.parent.app.scheduleEvent(actionPriEvent);    
     }
 
 
@@ -575,7 +601,7 @@ export class Action<T> implements Trigger {
      * advances, that previously available payload is now unavailable.
      */
     get(): T | null{
-        if(this._payload && timeInstantsAreEqual(this._payload[0], globals.currentLogicalTime)){
+        if(this._payload && timeInstantsAreEqual(this._payload[0], this.parent.app.getCurrentLogicalTime())){
             return this._payload[1]
         } else {
             return null;
@@ -586,13 +612,17 @@ export class Action<T> implements Trigger {
 
 export class Timer{
     
+    // The constructor for a reactor sets this attribute for each
+    // of its attached timers.
+    parent: Reactor;
+
     //For reference, the type of a TimeInterval is defined as:
     //TimeInterval = null | [number, TimeUnit] | 0;
     period: TimeInterval;
     offset: TimeInterval;
     
     //Timers always have top priority.
-    priority = 0;
+    // priority = 0;
 
     //A timer is only triggered by itself.
     triggers: Array<Trigger> = new Array();
@@ -610,11 +640,13 @@ export class Timer{
         //if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
             
             let numericOffset = timeIntervalToNumeric(this.offset);
-            this._offsetFromStartingTime =  numericTimeSum( numericOffset, globals.startingWallTime );
+            this._offsetFromStartingTime =  numericTimeSum( numericOffset, this.parent.app.getStartingWallTime() );
             let timerInitInstant: TimeInstant = [this._offsetFromStartingTime, 0];
             let timerInitEvent: Event = new Event(this, timerInitInstant, null);
-            let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, globals.getEventID());
-            globals.scheduleEvent(timerInitPriEvent);
+            let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, this.parent.app.getEventID());
+            
+            console.log("In setup, this.parent is: " + this.parent);
+            this.parent.app.scheduleEvent(timerInitPriEvent);
 
             console.log("Scheduled timer init for timer with period " + this.period + " at " + timerInitInstant);
         } else {
@@ -638,8 +670,9 @@ export class Timer{
                     numericTimeMultiple(numericPeriod , this._timerFirings) ); 
                 let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
                 let nextTimerEvent: Event = new Event(this, nextTimerInstant, null);
-                let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, globals.getEventID());
-                globals.scheduleEvent(nextTimerPriEvent);
+                let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, this.parent.app.getEventID());
+                console.log("In reschedule, this.parent : " + this.parent);
+                this.parent.app.scheduleEvent(nextTimerPriEvent);
 
                 console.log("Scheduling next event for timer with period " + this.period + " for time: " + nextTimerInstant);
             }
@@ -649,12 +682,13 @@ export class Timer{
         }
     };
 
-    constructor(period:TimeInterval, offset:TimeInterval) {
+    constructor(parent: Reactor, period:TimeInterval, offset:TimeInterval) {
+        this.parent = parent;
         this.period = period;
         this.offset = offset;
 
         //Register this timer so it can be started when the runtime begins.
-        globals.timers.push(this);
+        // globals.timers.push(this);
     }
 
     adjustPeriod(period: TimeInterval):void {   
@@ -687,36 +721,80 @@ export abstract class Reactor implements Nameable {
     >;
     
     _reactions:Array<Reaction> = new Array<Reaction>();
-    _timers:Set<Timer> = new Set<Timer>();
+    
+
+    //_timers:Set<Timer> = new Set<Timer>();
+
+
+
     // _inputs:Map<string, InPort<any>> = new Map< string,InPort<any>>();
     // _outputs:Map<string, OutPort<any>> = new Map< string ,OutPort<any>>();
     // _actions:Map<string, Action<any>> = new Map<string, Action<any>>();
 
-    parent:Reactor|null = null;
+    parent: Reactor|null = null;
+    app:App;
     //FIXME: Create getters and setters for children.
-    children:Set<Reactor|null> = new Set<Reactor|null>();
+    children:Set<Reactor> = new Set<Reactor>();
+
+
+    /**
+     * Returns the set of reactions directly owned by this reactor combined with 
+     * the recursive set of all reactions of contained reactors.
+     */
+    _getReactions(): Set<Reaction> {
+        console.log("In _getReactions for: " + this._getFullyQualifiedName());
+        var reactions = new Set<Reaction>();
+
+        // Reactions part of this reactor
+        for( let r of this._reactions){
+            reactions.add(r);
+        }
+
+        // for (const [key, value] of Object.entries(this)) {
+        //     console.log(key);
+        //     if (value instanceof Reaction) {
+        //         console.log("got a reaction!" + value);
+        //         reactions.add(value);
+        //     }
+        // }
+
+        // Recursively call this function on child reactors
+        // and add their timers to the timers set.
+        var subReactions: Set<Reaction>;
+        if(this.children){
+            for(const child of this.children){
+                if(child){
+                    subReactions = child._getReactions();
+                    for(const subReaction of subReactions){
+                        reactions.add(subReaction);
+                    }                     
+                }
+            }
+        }
+        return reactions;
+    }
 
     /**
      * Returns the set of timers directly owned by this reactor combined with 
      * the recursive set of all timers of contained reactors.
      */
-    getTimers(): Set<Timer> {
+    _getTimers(): Set<Timer> {
         var timers = new Set<Timer>();
 
-        //Timers part of this reactor
+        // Timers part of this reactor
         for (const [key, value] of Object.entries(this)) {
             if (value instanceof Timer) {
                 timers.add(value);
             }
         }
 
-        //Recursively call this function on child reactors
-        //and add their timers to the timers set.
+        // Recursively call this function on child reactors
+        // and add their timers to the timers set.
         var subTimers: Set<Timer>;
         if(this.children){
             for(const child of this.children){
                 if(child){
-                    subTimers = child.getTimers();
+                    subTimers = child._getTimers();
                     for(const subTimer of subTimers){
                         timers.add(subTimer);
                     }                     
@@ -779,6 +857,33 @@ export abstract class Reactor implements Nameable {
      */
     _getFullyQualifiedName: () => string;
 
+
+    /**
+     * Recursively sets the app attribute for this reactor and all contained reactors to app.
+     * @param app The app for this and all contained reactors.
+     */
+    public setApp( app: App){
+        console.log("Starting setApp for: " + this._getFullyQualifiedName());
+        this.app = app;
+        // Recursively set the app attribute for all contained reactors to app.
+        // Don't use reflection to find children because calling setApp on an
+        // App which extends Reactor, results in infinite regress.
+        if(this.children){
+            for(let child of this.children){
+                child.setApp(app);
+            }
+        }
+
+
+        // for (const [key, value] of Object.entries(this)) {
+        //     if (value instanceof Reactor) {
+        //         value.setApp(app);
+        //     }
+        // }
+    }
+
+
+
     //connect: <T>(source: Port<T>, sink:Port<T>) => void;
     // FIXME: connections mus be done sink to source so that we leverage contravariance of functions!!!
     /**
@@ -786,8 +891,7 @@ export abstract class Reactor implements Nameable {
      * if no name is given.
      * @param {string=} name - Given name
      */
-    constructor(parent:Reactor | null, name?:string) {
-        
+    constructor(parent: null| Reactor, name?:string) {
         this.parent = parent;
         if(parent){
             parent.children.add(this);
@@ -806,7 +910,7 @@ export abstract class Reactor implements Nameable {
             _getFullyQualifiedName(): string {
                 var path = "";
                 if (parent != null) {
-                    path = parent._getFullyQualifiedName();
+                    path = this.parent._getFullyQualifiedName();
                 }
                 if (path != "") {
                     path += "/" + this._getName();
@@ -829,26 +933,26 @@ export abstract class Reactor implements Nameable {
 
         Object.assign(this, {
             _setName(name: string) {
-                if (parent != null && (name != myName || myIndex == null)) {
+                if (this.parent != null && (name != myName || myIndex == null)) {
                     //myIndex = parent._getFreshIndex(name); //FIXME: look at former composite
                     myName = name;
                 }
             }
         });
 
-        Object.assign(this, {
-            _hasGrandparent(container:Reactor): boolean {
-                if (parent != null) {
-                    return parent._hasParent(container);
-                } else {
-                    return false;
-                }
-            }
-        });
+        // Object.assign(this, {
+        //     _hasGrandparent(container:Reactor): boolean {
+        //         if (this.parent != null) {
+        //             return this.parent._hasParent(container);
+        //         } else {
+        //             return false;
+        //         }
+        //     }
+        // });
 
         Object.assign(this, {
             _hasParent(container:Reactor): boolean {
-                if (parent != null && parent == container) {
+                if (this.parent != null && this.parent == container) {
                     return true;
                 } else {
                     return false;
@@ -858,32 +962,32 @@ export abstract class Reactor implements Nameable {
 
         Object.assign(this, {
             _getContainer(): Reactor | null {
-                return parent;
+                return this.parent;
             }
         });
 
-        Object.assign(this, {
-            _acquire(newParent: Reactor): boolean {
-                if (parent == null) {
-                    parent = newParent;
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
+        // Object.assign(this, {
+        //     _acquire(newParent: Reactor): boolean {
+        //         if (this.parent == null) {
+        //             parent = newParent;
+        //             return true;
+        //         } else {
+        //             return false;
+        //         }
+        //     }
+        // });
         
-        Object.assign(this, {
-            _release(oldParent: Reactor): boolean {
-                if (parent == oldParent) {
-                    parent = null;
-                    myIndex = null
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
+        // Object.assign(this, {
+        //     _release(oldParent: Reactor): boolean {
+        //         if (parent == oldParent) {
+        //             parent = null;
+        //             myIndex = null
+        //             return true;
+        //         } else {
+        //             return false;
+        //         }
+        //     }
+        // });
 
         // Object.assign(this, {
         //     connect<T>(source: Port<T>, sink: Port<T>):void {
@@ -908,49 +1012,49 @@ export abstract class Reactor implements Nameable {
         // Note: the call to _add will invoke this._acquire,
         // so this code must be executed _after_ assigning
         // the _acquire function in the constructor.
-        if (parent != null) {
-            //parent._add(this); // FIXME: add container capability to Reactor
-        }
+        // if (parent != null) {
+        //     //parent._add(this); // FIXME: add container capability to Reactor
+        // }
     }
 
-    //FIXME: The implementation of _getInputs and _getOutputs below may in fact
-    //be a better design, but they are incompatible with the current implementation
+    
  
-    _getInputs(): Set<InPort<any>> {
-        var inputs = new Set<InPort<any>>();
-        for (const [key, value] of Object.entries(this)) {
-            if (value instanceof InPort) {
-                inputs.add(value);
-            }
-        }
-        return inputs;
-    }
+    // _getInputs(): Set<InPort<any>> {
+    //     var inputs = new Set<InPort<any>>();
+    //     for (const [key, value] of Object.entries(this)) {
+    //         if (value instanceof InPort) {
+    //             inputs.add(value);
+    //         }
+    //     }
+    //     return inputs;
+    // }
 
-    _getOutputs(): Set<OutPort<any>> {
-        var outputs = new Set<OutPort<any>>();
-        for (const [key, value] of Object.entries(this)) {
-            if (value instanceof OutPort) {
-                outputs.add(value);
-            }
-        }
-        return outputs;
-    }
+    // _getOutputs(): Set<OutPort<any>> {
+    //     var outputs = new Set<OutPort<any>>();
+    //     for (const [key, value] of Object.entries(this)) {
+    //         if (value instanceof OutPort) {
+    //             outputs.add(value);
+    //         }
+    //     }
+    //     return outputs;
+    // }
 
-    _getActions(): Set<Action<any>> {
-        var actions = new Set<Action<any>>();
-        for (const [key, value] of Object.entries(this)) {
-            if (value instanceof Action) {
-                actions.add(value);
-            }
-        }
-        return actions;
-    }
+    // _getActions(): Set<Action<any>> {
+    //     var actions = new Set<Action<any>>();
+    //     for (const [key, value] of Object.entries(this)) {
+    //         if (value instanceof Action) {
+    //             actions.add(value);
+    //         }
+    //     }
+    //     return actions;
+    // }
     
 }
 
-export abstract class Port<T> implements Trigger, Named {
+export abstract class Port<T> implements Named {
     
-    //The reactor containing this port
+    // The reactor containing this port
+    // This attribute is set by the parent reactor's constructor.
     parent: Reactor;
 
     /***** Priviledged functions *****/
@@ -972,11 +1076,11 @@ export abstract class Port<T> implements Trigger, Named {
     
     /* Construct a new port. */
     constructor(parent: Reactor) {
-        this.parent = parent;
+         this.parent = parent;
 
         Object.assign(this, {
             _getFullyQualifiedName(): string {
-                return parent._getFullyQualifiedName() 
+                return this.parent._getFullyQualifiedName() 
                     + "/" + this._getName();
             }
 
@@ -984,7 +1088,7 @@ export abstract class Port<T> implements Trigger, Named {
 
         Object.assign(this, {
             hasParent(component: Reactor): boolean {
-                if (component == parent) {
+                if (component == this.parent) {
                     return true;
                 } else {
                     return false;
@@ -994,7 +1098,7 @@ export abstract class Port<T> implements Trigger, Named {
         
         Object.assign(this, {
             hasGrandparent(container:Reactor):boolean {
-                if (container == parent._getContainer()) {
+                if (container == this.parent._getContainer()) {
                     return true;
                 } else {
                     return false;
@@ -1017,39 +1121,40 @@ export abstract class Port<T> implements Trigger, Named {
 
         Object.assign(this, {
             /**
+             * //FIXME: We will probably have to change something
+             * here when we implement mutations.
              * Assigns a value to this port at the current logical time.
-             * Input events are triggered for all connected input ports and 
-             * this function is recursively invoked on all connected output ports.
+             * Put the reactions this port triggers on the reaction 
+             * queue and recursively invoke this function on all connected output ports.
              * Note: It is considered incorrect for a reaction to directly call this
              * function on a port. Instead, reactions should call the "set()" function on 
              * an OutPort. InPorts should not be set().
              * @param value The value to assign to this output port.
              */
             _writeValue(value: T):void {
+                console.log("calling _writeValue on: " + this);
                 if(this instanceof InPort){
                     // Input ports can trigger reactions for the reactor
                     // they are attached to.
-                    for (let r of parent._reactions) {
+                    for (let r of this.parent._reactions) {
                         if (r.triggers.includes(this)) {
                             //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                            let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
-                            globals.reactionQ.push(prioritizedReaction);
+                            let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
+                            this.parent.app.scheduleReaction(prioritizedReaction);
                         }
                     }
                 } else {
                     // Output ports can trigger reactions for a reactor containing the
                     // reactor they are attached to.
-                    this.value = [globals.currentLogicalTime, value];
+                    this.value = [this.parent.app.getCurrentLogicalTime(), value];
                     if(parent.parent){
-                        for (let r of parent.parent._reactions) {
+                        for (let r of this.parent.parent._reactions) {
                             if (r.triggers.includes(this)) {
                                 //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                                let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
-                                globals.reactionQ.push(prioritizedReaction);
+                                let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
+                                this.parent.app.scheduleReaction(prioritizedReaction);
                             }
-
                         }
-
                     }
                 }
 
@@ -1057,24 +1162,6 @@ export abstract class Port<T> implements Trigger, Named {
                     port._writeValue(value);
                 }
             }
-
-            // FIXME: This alternate implementation of writeValue directly adds reactions to the reactionQ
-            // that are triggered by this port. It would require implementation is incorrect with the current design because
-            // 
-            //  It's probably more efficient.
-            // writeValue(container:Reactor, value:T | null):void {
-            //     this._value = value;
-            //     for (let r of parent._reactions) {
-            //         if (r.triggers.includes(this)) {
-
-            //             //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-            //             let prioritizedReaction = new PrioritizedReaction(r, globals.getReactionID());
-            //             globals.reactionQ.push(prioritizedReaction);
-            //             //globals.reactionQ.push([r.reaction, r.triggers]);
-            //         }
-            //     }
-            // }
-        // });
        });
     }
 
@@ -1103,7 +1190,6 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
      */
     constructor(parent: Reactor) {
         super(parent);
-        //var events: Map<number, T> = new Map();
 
         //FIXME: Delete? You should get() from an input port. 
         // Object.assign(this, {
@@ -1273,7 +1359,7 @@ export class InPort<T> extends Port<T> implements Readable<T> {
      * Create a new InPort.
      * @param parent The reactor containing this InPort
      */
-    constructor(parent:Reactor) {
+    constructor(parent: Reactor) {
         super(parent);
         
         Object.assign(this, {
@@ -1288,7 +1374,7 @@ export class InPort<T> extends Port<T> implements Readable<T> {
                 if(this._connectedSourcePort){
                     if(this._connectedSourcePort instanceof OutPort){
                         if(this._connectedSourcePort.value === null ||
-                            ! timeInstantsAreEqual(this._connectedSourcePort.value[0], globals.currentLogicalTime )){
+                            ! timeInstantsAreEqual(this._connectedSourcePort.value[0], this.parent.app.getCurrentLogicalTime() )){
                                 return false;
                             } else {
                                 return true;
@@ -1425,25 +1511,434 @@ export class InPort<T> extends Port<T> implements Readable<T> {
     }
 }
 
+
+/**
+ * This class matches a Trigger to the Reactions it triggers.
+ * When an event caused by a Trigger comes off the event queue, its
+ * matching reactions should be put on the the reaction queue 
+ */
+export class TriggerMap{
+    _tMap: Map<Trigger, Set<Reaction>> = new Map<Trigger, Set<Reaction>>();
+
+    /**
+     * Establish the mapping for a Reaction.
+     */
+    registerReaction(r: Reaction){
+        for(let trigger of r.triggers){
+            let reactionSet = this._tMap.get(trigger);
+            if(reactionSet){
+                if(! reactionSet.has(r)){
+                    reactionSet.add(r);
+                    this._tMap.set(trigger, reactionSet);
+                }
+                //If this reaction is already mapped to the trigger,
+                //do nothing.
+            } else {
+                //This is the first reaction mapped to this trigger,
+                //so create a new reaction set for it.
+                reactionSet = new Set<Reaction>();
+                reactionSet.add(r);
+                this._tMap.set(trigger, reactionSet);
+            }
+        }
+    }
+
+    /**
+     * Get the set of reactions for a trigger.
+     */
+    getReactions(t: Trigger){
+        return this._tMap.get(t);
+    }
+
+    /**
+     * FIXME
+     */
+    deregisterReaction(e: Event){
+        //FIXME
+    }
+
+}
+
 //FIXME: Move runtime from globals into here.
-export class App extends Reactor implements Executable {
+export class App extends Reactor{
     
-    // FIXME: add some logging facility here
-    name: string;
+    // // FIXME: add some logging facility here
+    // name: string;
 
-    constructor(name: string) {
-        super(null, name);
+    /**
+     * If not null, finish execution with success, this time interval after
+     * the start of execution.
+     */
+    private _executionTimeout:TimeInterval | null = null;
+
+    /**
+     * The numeric time at which execution should be stopped.
+     * Determined from _executionTimeout and startingWallTime.
+     */
+    private _relativeExecutionTimeout: NumericTimeInterval;
+
+    /**
+     * Prioritized queues used to manage the execution of reactions and events.
+     */
+    private _reactionQ = new PrioritySet<number,number>();
+    private _eventQ = new PrioritySet<number,TimeInstant>();
+
+    /**
+     * The current time, made available so actions may be scheduled relative to it.
+     */
+    private _currentLogicalTime: TimeInstant;
+
+    /**
+     * The physical time when execution began expressed as [seconds, nanoseconds]
+     * elapsed since January 1, 1970 00:00:00 UTC.
+     * Initialized in start()
+     */
+    private _startingWallTime: NumericTimeInterval;
+
+    /**
+     * Used to look out for the same action scheduled twice at a logical time. 
+     */ 
+    private _observedActionEvents : Map<Action<any>, PrioritizedEvent> = new Map<Action<any>, PrioritizedEvent>();
+
+    // FIXME: Use BigInt instead of number?
+    /** 
+     * Track IDs assigned to reactions and events
+     */
+    private _reactionIDCount = 0;
+    private _eventIDCount = 0;    
+
+    /**
+     * Acquire all the app's timers and call setup on each one.
+     */
+    private _startTimers = function(){
+        let timers: Set<Timer> = this._getTimers();
+        for(let t of timers){
+            t.setup();
+        }
+    };
+
+    /**
+     * Register all the app's reactions with their triggers.
+     */
+    private _registerReactions = function(){
+        let reactions: Set<Reaction> = this._getReactions();
+        // console.log("reactions set in _registerReactions is: " + reactions);
+        for(let r of reactions){
+            console.log("registering: " + r);
+            r.register();
+        }
     }
 
 
-    start():void {
+    /**
+     * Wait until physical time matches or exceeds the time of the least tag
+     * on the event queue. After this wait, advance current_time to match
+     * this tag. Then pop the next event(s) from the event queue that all 
+     * have the same tag, and extract from those events the reactions that
+     * are to be invoked at this logical time.
+     * Sort those reactions by index (determined by a topological sort)
+     * and then execute the reactions in order. Each reaction may produce
+     * outputs, which places additional reactions into the index-ordered
+     * priority queue. All of those will also be executed in order of indices.
+     * If the execution timeout given to this app in its constructor
+     * has a non-null value, then call successCallback (and end this loop) 
+     * when the logical time from the start of execution matches the
+     * specified duration. If execution timeout is null, execution will be
+     * allowed to continue indefinately.
+     * Otherwise, call failureCallback when there are no events in the queue.
+     * 
+     * FIXME: Implement a keepalive option so execution may continue if
+     * there are no more events in the queue.
+     * @param successCallback Callback to be invoked when execution has terminated
+     * in an expected way.
+     * @param failureCallback Callback to be invoked when execution has terminated
+     * in an unexpected way.
+     */
+    private _next(successCallback: ()=> void, failureCallback: () => void){
+        console.log("starting _next");
+        let currentHead = this._eventQ.peek();
+        while(currentHead){
+            let currentPhysicalTime:NumericTimeInterval = microtimeToNumeric(microtime.now());
+            // console.log("current physical time in next is: " + currentPhysicalTime);
+            
+            //If execution has gone on for longer than the execution timeout,
+            //terminate execution with success.
+            if(this._executionTimeout){
+                //const timeoutInterval: TimeInterval= timeIntervalToNumeric(_executionTimeout);
+                if(compareNumericTimeIntervals( this._relativeExecutionTimeout, currentPhysicalTime)){
+                    console.log("Execution timeout reached. Terminating runtime with success.");
+                    successCallback();
+                    return;
+                }
+            }
+            if(compareNumericTimeIntervals(currentPhysicalTime, currentHead._priority[0] )){
+                //Physical time is behind logical time.
+                let physicalTimeGap = numericTimeDifference(currentHead._priority[0], currentPhysicalTime, );
+            
+                //Wait until min of (execution timeout and the next event) and try again.
+                let timeout:NumericTimeInterval;
+                if(this._executionTimeout && compareNumericTimeIntervals(this._relativeExecutionTimeout, physicalTimeGap)){
+                    timeout = this._relativeExecutionTimeout;
+                } else {
+                    timeout = physicalTimeGap;
+                }
+                console.log("Runtime set a timeout at physical time: " + currentPhysicalTime +
+                 " for an event with logical time: " + currentHead._priority[0]);
+                // console.log("Runtime set a timeout with physicalTimeGap: " + physicalTimeGap);
+                // console.log("currentPhysicalTime: " + currentPhysicalTime);
+                // console.log("next logical time: " + currentHead._priority[0]);
+                // console.log("physicalTimeGap was " + physicalTimeGap);
+
+
+
+                //Nanotimer https://www.npmjs.com/package/nanotimer accepts timeout
+                //specified by a string followed by a letter indicating the units.
+                //Use n for nanoseconds. We will have to 0 pad timeout[1] if it's
+                //string representation isn't 9 digits long.
+                let nTimer = new NanoTimer();
+                let nanoSecString = timeout[1].toString();
+
+                //FIXME: this test will be unecessary later on when we're more
+                //confident everything is working correctly.
+                if( nanoSecString.length > 9){
+                    throw new Error("Tried to set a timeout for an invalid NumericTimeInterval with nanoseconds: " +
+                        nanoSecString );
+                }
+                
+
+                //Convert the timeout to a nanotimer compatible string.
+                let padding = "";
+                for(let i = 0; i < 9 - nanoSecString.length; i++){
+                    padding = "0" + padding 
+                }
+                let timeoutString = timeout[0].toString() + padding + nanoSecString + "n"; 
+                nTimer.setTimeout(this._next.bind(this), [successCallback, failureCallback], timeoutString);
+                
+                //FIXME: Delete this comment when we're sure nanotimer is the right way to go.
+                // setTimeout(  ()=>{
+                //     _next(successCallback, failureCallback);
+                //     return;
+                // }, timeout);
+                return;
+            } else {
+                //Physical time has caught up, so advance logical time
+                this._currentLogicalTime = currentHead._priority;
+                console.log("At least one event is ready to be processed at logical time: "
+                 + currentHead._priority + " and physical time: " + currentPhysicalTime );
+                // console.log("currentPhysicalTime: " + currentPhysicalTime);
+                //console.log("physicalTimeGap was " + physicalTimeGap);
+
+                // Using a Set data structure ensures a reaction triggered by
+                // multiple events at the same logical time will only react once.
+                let triggersNow = new Set<Reaction>();
+
+                // Keep track of actions at this logical time.
+                // If the same action has been scheduled twice
+                // make sure it gets the correct (last assigned) payload.
+                this._observedActionEvents.clear();
+
+
+                // Remove all simultaneous events from the queue.
+                // Reschedule timers, assign action values, and put the triggered reactions on
+                // the reaction queue.
+                // This loop should always execute at least once.
+                while(currentHead && timeInstantsAreEqual(currentHead._priority, this._currentLogicalTime)){
+
+
+                    //An explicit type assertion is needed because we know the
+                    //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
+                    let trigger: Trigger = (currentHead as PrioritizedEvent).e.cause;
+                    
+                    if(trigger instanceof Timer){
+                        trigger.reschedule();
+                    }
+
+                    if(trigger instanceof Action){
+                        // Check if this action has been seen before at this logical time.
+                        if(this._observedActionEvents.has(trigger) ){
+                            // Whichever event for this action has a greater eventID
+                            // occurred later and it determines the payload. 
+                            if( currentHead._id > (this._observedActionEvents.get(trigger) as PrioritizedEvent)._id ){
+                                trigger._payload = 
+                                [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];   
+                            }
+                        } else {
+                            this._observedActionEvents.set(trigger, (currentHead as PrioritizedEvent));
+                            trigger._payload = 
+                            [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
+                        }
+                    }
+                    console.log("Before triggermap in next");
+                    let toTrigger = this.triggerMap.getReactions(trigger);
+                    // console.log(toTrigger);
+                    console.log("after triggermap in next");
+                    if(toTrigger){
+                        for(let reaction of toTrigger){
+
+                            //FIXME: I think we can get rid of this with reflection
+                            //what is actionArray used for?
+                             //Ensure this reaction is matched to its actions 
+                            // if(trigger instanceof Action){
+                            //     let actionArray = reactionsToActions.get(reaction);
+                            //     if( ! actionArray){
+                            //         actionArray = new Set<Action<any>>();
+                            //     } 
+                            //     actionArray.add(trigger);
+                            // }
+
+                            //Push this reaction to the queue when we are done
+                            //processing events.
+                            triggersNow.add(reaction);
+                        }
+                    }
+                    this._eventQ.pop();
+                    currentHead = this._eventQ.peek();
+                }
+                
+                for (let reaction of triggersNow){
+                    // console.log("Pushing new reaction onto queue");
+                    // console.log(reaction);
+                    let prioritizedReaction = new PrioritizedReaction(reaction, this.getReactionID());
+                    this._reactionQ.push(prioritizedReaction);
+                }
+                
+                let headReaction = this._reactionQ.pop();
+                while(headReaction){
+                    // Explicit type annotation because reactionQ contains PrioritizedReactions.
+                    let r = (headReaction as PrioritizedReaction).r
+                    
+                    // Test if this reaction has a deadline which has been violated.
+                    // This is the case if the reaction has a registered deadline and
+                    // logical time + timeout < physical time
+                    if(r.deadline && compareNumericTimeIntervals( 
+                            numericTimeSum(this._currentLogicalTime[0], timeIntervalToNumeric(r.deadline.timeout)),
+                            currentPhysicalTime)){
+                        console.log("handling deadline violation");
+                        r.deadline.handler();
+                    } else {
+                        console.log("reacting...");
+                        r.react();
+                    }
+                    headReaction = this._reactionQ.pop();
+                }
+
+                //A new Action event may have been pushed onto the event queue by one of
+                //the reactions at this logical time.
+                currentHead = this._eventQ.peek();
+            }
+
+            //The next iteration of the outer loop is ready because
+            //currentHead is either null, or a future event
+        }
+        //Falling out of the while loop means the eventQ is empty.
+        console.log("Terminating runtime with failure due to empty event queue.");
+        failureCallback();
+        return;
+        //FIXME: keep going if the keepalive command-line option has been given
+    }
+
+    //FIXME: just get the timers from reactors at the start.
+    /**
+     * Array of timers used to start all timers when the runtime begins.
+     * _timers are registered here in their constructor.
+     */
+    // private var timers: Array<Timer> = [];
+
+
+
+    /**
+     * FIXME
+     * @param executionTimeout 
+     * @param name 
+     */
+    constructor(executionTimeout: TimeInterval | null, name?: string) {
+        super(null, name)
+        // Note: this.parent will be initialized to null in super because this app has
+        // no parent to set it otherwise.
+
+        this._executionTimeout = executionTimeout;
+    }
+
+        /**
+     * Maps triggers coming off the event queue to the reactions they trigger.
+     * Public because reactions need to register themselves with this structure
+     * when they're created. 
+     */
+    public triggerMap: TriggerMap = new TriggerMap();
+
+    /**
+     * Public method to push events on the event queue. 
+     * @param e Prioritized event to push onto the event queue.
+     */
+    public scheduleEvent(e: PrioritizedEvent){  
+        this._eventQ.push(e);
+    }
+
+    /**
+     * Public method to push reaction on the reaction queue. 
+     * @param e Prioritized reaction to push onto the reaction queue.
+     */
+    public scheduleReaction(r: PrioritizedReaction){  
+        this._reactionQ.push(r);
+    }
+
+    /**
+     * Obtain a unique identifier for the reaction.
+     */
+    public getReactionID(){
+        return this._reactionIDCount++;
+    }
+
+    /**
+     * Public getter for logical time. 
+     */
+    public getCurrentLogicalTime(){
+        return this._currentLogicalTime;
+    }
+    
+    /**
+     * Obtain a unique identifier for the event.
+     * Note: The monotonicly increasing nature of eventIDs
+     * is used to resolve priority between duplicate events with the same
+     * timestamp in the eventQ.
+     */
+    public getEventID(){
+        return this._eventIDCount++;
+    }
+
+    /**
+     * Public getter for starting wall time.
+     */
+    public getStartingWallTime(){
+        return this._startingWallTime
+    }
+    
+
+
+    public start(successCallback: () => void , failureCallback: () => void):void {
+        // Recursively set the app attribute for this and all contained reactors to this.
+        this.setApp(this);
+        // Recursively register reactions of contained reactors with triggers in the triggerMap.
+        this._registerReactions();
+        // console.log(this.triggerMap);
+        this._startingWallTime = microtimeToNumeric(microtime.now());
+        this._currentLogicalTime = [ this._startingWallTime, 0];
+        if(this._executionTimeout !== null){
+            this._relativeExecutionTimeout = numericTimeSum(this._startingWallTime, timeIntervalToNumeric(this._executionTimeout));
+        }
+        this._startTimers();
+        this._next(successCallback, failureCallback);
 
     }
 
-    stop():void {
 
-    }
 
+    //FIXME:
+    // stop():void {
+
+    // }
+
+    //FIXME: What is this function supposed to do?
     // _checkTypes() {
 
     // }

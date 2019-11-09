@@ -2,7 +2,7 @@
 
 
 import {Reactor, TimeUnit, OutPort, InPort} from './reactor';
-import * as globals from './globals';
+// import * as globals from './globals';
 import { ShowDeadline } from './deadline';
 import { Logger } from './logger';
 
