@@ -59,8 +59,8 @@ export class RespondToAction extends Reaction{
 //output event
 export class ActionTrigger extends Reactor {
 
-    t1: Timer = new Timer(0,0);
-    a1: Action<string> = new Action<string>( TimelineClass.logical);
+    t1: Timer = new Timer(this, 0,0);
+    a1: Action<string> = new Action<string>(this, TimelineClass.logical);
 
     constructor( success: () => void, fail: () => void, parent:Reactor|null, name?:string) {
         super(parent, name);

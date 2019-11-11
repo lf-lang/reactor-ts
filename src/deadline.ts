@@ -95,7 +95,7 @@ export class WasteTime extends Reaction{
 export class ShowDeadline extends Reactor {
 
     //Triggers immediatedly
-    t: Timer = new Timer(0,0);
+    t: Timer = new Timer(this, 0,0);
 
     constructor(success: () => void, fail: () => void, parent:Reactor | null, name?: string) {
         super(parent, name);

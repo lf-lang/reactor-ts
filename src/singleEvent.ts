@@ -20,7 +20,8 @@ export class ProduceOutput extends Reaction{
         // Duplicate sets for the same port like this is bad form,
         // but its worth checking that the correct value (from the last set)
         // is delivered.
-        (this.state as any).o.set(null);
+        
+        // (this.state as any).o.set(null);
         (this.state as any).o.set(this.outputPayload);
         console.log("Writing payload to SingleEvent's output.");
     }
