@@ -121,11 +121,10 @@ export function timeInstantsAreEqual(t0: TimeInstant, t1: TimeInstant){
 
 /**
  * Return true if t0 < t1, otherwise return false.
- * @param t0 
- * @param t1 
+ * @param t0 Left hand time instant.
+ * @param t1 Right hand time instant.
  */
 export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
-    // Don't check if TimeInstants have fractional microsteps to save time.
     if(compareNumericTimeIntervals(t0[0], t1[0])){
         return true;
     } else{
