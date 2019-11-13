@@ -83,12 +83,9 @@ export type TimestampedValue<T> = [TimeInstant, T];
 
 /**
  * Return true if t matches any of the zero representations for a TimeInterval
- * @param t the time interval to test if zero. A null t is an error.
+ * @param t the time interval to test if zero.
  */
 export function timeIntervalIsZero(t: TimeInterval){
-    if(t === null){
-        throw new Error("Cannot test a null timeInterval for zero");
-    }
     if(t === 0 || (t && t[0] === 0)){
         return true;
     } else {
@@ -151,9 +148,6 @@ export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
  */
 export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
     //Convert the TimeInterval to a BigInt in units of nanoseconds, then split it up.
-    if(t === null){
-        throw new Error('timeIntervalToNumeric cannot convert a null TimeInterval');
-    }
 
     if(t === 0){
         return [0, 0];
@@ -312,14 +306,15 @@ export interface Named {
     _getName(): string;
 }
 
+//FIXME: remove this?
 /**
  * For (re)nameable objects.
  */
-// export interface Nameable extends Named {
+export interface Nameable extends Named {
  
-//     /* Set the name of this object. */
-//     _setName(name: string):void;
-// }
+    /* Set the name of this object. */
+    _setName(name: string):void;
+}
 
 // FIXME: call this a mutation?
 export interface Transformation {
@@ -715,7 +710,7 @@ export class Timer{
  * that it is uniquely indexed within that container.
  */
 // FIXME: used to have implements Nameable. Delete?
-export abstract class Reactor{
+export abstract class Reactor implements Nameable{
 
     private _transformations:Array<
             [   // triggers, transformation, transformation arguments
@@ -833,7 +828,7 @@ export abstract class Reactor{
      * Return a string that identifies this component.
      * The name is a path constructed as TopLevelParentName/.../ParentName/ThisReactorsName
      */
-    private _getFullyQualifiedName(): string {
+    _getFullyQualifiedName(): string {
         
         var path = "";
         if (this.parent != null) {
@@ -848,7 +843,7 @@ export abstract class Reactor{
         return path;
     }
 
-    private _getName():string {
+    _getName():string {
         if (this._myIndex != null && this._myIndex != 0) {
             return this._myName + "(" + this._myIndex + ")";
         } else {
@@ -856,7 +851,7 @@ export abstract class Reactor{
         }
     }
 
-    private _setName(name: string) {
+    public _setName(name: string) {
         if (this.parent != null && (name != this._myName || this._myIndex == null)) {
             //myIndex = parent._getFreshIndex(name); //FIXME: look at former composite
             this._myName = name;

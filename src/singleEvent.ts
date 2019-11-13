@@ -31,7 +31,7 @@ export class ProduceOutput extends Reaction{
 //on its output port.
 export class SingleEvent extends Reactor {
 
-    o: OutPort<any> = new OutPort<any>(this);
+    o: OutPort<string> = new OutPort<string>(this);
     t1: Timer = new Timer(this, 0, 0);
 
     constructor(outputPayload:any, parent: Reactor | null, name?:string ) {
