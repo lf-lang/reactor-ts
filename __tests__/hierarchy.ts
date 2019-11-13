@@ -37,13 +37,13 @@ describe('Container to Contained', () => {
     var contained2 = new Contained(container2, "Contained2");
     
     it('contained reactor name', () => {
-        expect(contained._getName()).toBe("Contained");
-        expect(contained._getFullyQualifiedName()).toBe("Container/Contained");
+        // expect(contained._getName()).toBe("Contained");
+        expect(contained.toString()).toBe("Container/Contained");
     });
 
     it('container reactor name', () =>{
-        expect(container._getName()).toBe("Container");
-        expect(container._getFullyQualifiedName()).toBe("Container");
+        // expect(container._getName()).toBe("Container");
+        expect(container.toString()).toBe("Container");
 
     })
 
@@ -51,7 +51,7 @@ describe('Container to Contained', () => {
         let obtainedContainer = contained._getContainer();
         if(obtainedContainer){
             // expect(obtainedContainer._getName()).toBe("Container");
-            expect(obtainedContainer._getName()).toBe("Container");
+            expect(obtainedContainer.toString()).toBe("Container");
         } else {
             throw new Error("contained._getContainer() returns null");
         } 
@@ -62,7 +62,7 @@ describe('Container to Contained', () => {
         //This test assumes contained to be the only child
         for(let child of container.children){
             if(child){
-                expect(child._getName()).toBe("Contained");
+                expect(child.toString()).toBe("Container/Contained");
             } else {
                 throw new Error("Container has no children");
             }

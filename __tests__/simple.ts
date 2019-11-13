@@ -38,15 +38,12 @@ describe('Test names for contained reactors', () => {
             // this.connect(y.a, y.b);
 
 
-            it('contained actor name', () => {
-                expect(this.x._getName()).toBe("MyActor");
-            });
             it('contained actor FQN', () => {
-                expect(this.x._getFullyQualifiedName()).toBe("Hello World/MyActor");
+                expect(this.x.toString()).toBe("Hello World/MyActor");
             });
 
             it('uncontained actor name', () => {
-                expect(this._getFullyQualifiedName()).toBe("Hello World");
+                expect(this.toString()).toBe("Hello World");
             });
 
             // it('connect two actors, one of which uncontained', () => {

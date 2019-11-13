@@ -6,7 +6,7 @@ import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, Numer
  */
 describe('time representation', function () {
 
-    const nullTI: TimeInterval = null;
+    // const nullTI: TimeInterval = null;
     
     //Zero TimeIntervals
     const straightZero: TimeInterval = 0;
@@ -50,7 +50,10 @@ describe('time representation', function () {
      * are correctly identified by the timeIntervalIsZero function.
      */
     it('timeIntervalIsZero', function () {
-        expect( timeIntervalIsZero(nullTI)).toBe(false);
+        // expect(() => {
+        //     timeIntervalToNumeric(nullTI)
+        // }).toThrowError()
+        // expect( timeIntervalIsZero(nullTI)).toBe(false);
         
         expect( timeIntervalIsZero(straightZero)).toBe(true);
         expect( timeIntervalIsZero(zeroSeconds)).toBe(true);
@@ -76,9 +79,9 @@ describe('time representation', function () {
     it('timeIntervalToNumeric', function () {
 
         //Null time intervals are an error.
-        expect(() => {
-            timeIntervalToNumeric(nullTI)
-        }).toThrowError()
+        // expect(() => {
+        //     timeIntervalToNumeric(nullTI)
+        // }).toThrowError()
 
         //Non integer time intervals are an error.
         expect(() => {

@@ -39,11 +39,10 @@ export enum TimeUnit {
     weeks = 604800000000000
 }
 
-
 /** 
  * A time interval must be an integer accompanied by a time unit. Decimals are errors.
  */
-export type TimeInterval = null | [number, TimeUnit] | 0;
+export type TimeInterval = [number, TimeUnit] | 0;
 
 /**
  * The internal representation of a TimeInterval broken up as: [seconds, nanoseconds]
@@ -84,10 +83,13 @@ export type TimestampedValue<T> = [TimeInstant, T];
 
 /**
  * Return true if t matches any of the zero representations for a TimeInterval
- * @param t the time interval to test if zero
+ * @param t the time interval to test if zero. A null t is an error.
  */
 export function timeIntervalIsZero(t: TimeInterval){
-    if(t === 0 || (t && t[0] == 0)){
+    if(t === null){
+        throw new Error("Cannot test a null timeInterval for zero");
+    }
+    if(t === 0 || (t && t[0] === 0)){
         return true;
     } else {
         return false;
@@ -96,8 +98,8 @@ export function timeIntervalIsZero(t: TimeInterval){
 
 /**
  * Return true if t0 < t1, otherwise return false.
- * @param t0 
- * @param t1 
+ * @param t0 Left hand numeric time.
+ * @param t1 Right hand numeric time.
  */
 export function compareNumericTimeIntervals(t0: NumericTimeInterval, t1: NumericTimeInterval){
     if(t0[0] < t1[0]){
@@ -112,8 +114,8 @@ export function compareNumericTimeIntervals(t0: NumericTimeInterval, t1: Numeric
 
 /**
  * Return true if t0 and t1 represent the same time instant. Otherwise return false.
- * @param t0 
- * @param t1 
+ * @param t0 Left hand time instant.
+ * @param t1 Right hand time instant.
  */
 export function timeInstantsAreEqual(t0: TimeInstant, t1: TimeInstant){
     return t0[0][0] == t1[0][0] && t0[0][1] == t1[0][1] && t0[1] == t1[1];
@@ -313,11 +315,11 @@ export interface Named {
 /**
  * For (re)nameable objects.
  */
-export interface Nameable extends Named {
+// export interface Nameable extends Named {
  
-    /* Set the name of this object. */
-    _setName(name: string):void;
-}
+//     /* Set the name of this object. */
+//     _setName(name: string):void;
+// }
 
 // FIXME: call this a mutation?
 export interface Transformation {
@@ -712,16 +714,19 @@ export class Timer{
  * container. Adding a component to a container will also ensure 
  * that it is uniquely indexed within that container.
  */
-export abstract class Reactor implements Nameable {
+// FIXME: used to have implements Nameable. Delete?
+export abstract class Reactor{
 
-    _transformations:Array<
+    private _transformations:Array<
             [   // triggers, transformation, transformation arguments
                 Array<Trigger>, Transformation, any
             ]
     >;
     
+    //FIXME: make this private. Right now this would break tests.
     _reactions:Array<Reaction> = new Array<Reaction>();
-    
+    private _myName: string;
+    private _myIndex: number | null;
 
     //_timers:Set<Timer> = new Set<Timer>();
 
@@ -736,13 +741,13 @@ export abstract class Reactor implements Nameable {
     //FIXME: Create getters and setters for children.
     children:Set<Reactor> = new Set<Reactor>();
 
+    
 
     /**
      * Returns the set of reactions directly owned by this reactor combined with 
      * the recursive set of all reactions of contained reactors.
      */
     private _getReactions(): Set<Reaction> {
-        console.log("In _getReactions for: " + this._getFullyQualifiedName());
         var reactions = new Set<Reaction>();
 
         // Reactions part of this reactor
@@ -824,8 +829,42 @@ export abstract class Reactor implements Nameable {
     //     }
     // }
 
+    /**
+     * Return a string that identifies this component.
+     * The name is a path constructed as TopLevelParentName/.../ParentName/ThisReactorsName
+     */
+    private _getFullyQualifiedName(): string {
+        
+        var path = "";
+        if (this.parent != null) {
+            path = this.parent._getFullyQualifiedName();
+        }
+        if (path != "") {
+            path += "/" + this._getName();
+        } else {
+            path = this._getName();
+        }
+        console.log("In _getfully: " + path);
+        return path;
+    }
 
-    _setName: (string) => void;
+    private _getName():string {
+        if (this._myIndex != null && this._myIndex != 0) {
+            return this._myName + "(" + this._myIndex + ")";
+        } else {
+            return this._myName;
+        }
+    }
+
+    private _setName(name: string) {
+        if (this.parent != null && (name != this._myName || this._myIndex == null)) {
+            //myIndex = parent._getFreshIndex(name); //FIXME: look at former composite
+            this._myName = name;
+        }
+    }
+
+
+    // _setName: (string) => void;
 
     _acquire: (parent: Reactor) => boolean;
 
@@ -833,7 +872,7 @@ export abstract class Reactor implements Nameable {
 
     _getContainer: () => Reactor | null;
 
-    _getName: () => string;
+    // _getName: () => string;
 
     _hasGrandparent: (container:Reactor) => boolean;
 
@@ -852,11 +891,13 @@ export abstract class Reactor implements Nameable {
         this._priority = priority;
     }
 
-    /**
-     * Return a string that identifies this component.
-     */
-    _getFullyQualifiedName: () => string;
 
+    // _getFullyQualifiedName: () => string;
+
+
+    toString(): string {
+        return this._getFullyQualifiedName();
+    }
 
     /**
      * Recursively sets the app attribute for this reactor and all contained reactors to app.
@@ -897,48 +938,16 @@ export abstract class Reactor implements Nameable {
             parent.children.add(this);
         }
         
-        var myName:string = this.constructor.name; // default
-        var myIndex:number | null = null;
+        this._myName = this.constructor.name; // default
+        this._myIndex = null;
         // var relations: Map<Port<any>, Set<Port<any>>> = new Map();
 
         // Set this component's name if specified.
         if (name != null) {
-            myName = name;
+            this._myName = name;
         }
 
-        Object.assign(this, {
-            _getFullyQualifiedName(): string {
-                var path = "";
-                if (parent != null) {
-                    path = this.parent._getFullyQualifiedName();
-                }
-                if (path != "") {
-                    path += "/" + this._getName();
-                } else {
-                    path = this._getName();
-                }
-                return path;
-            }
-        });
-
-        Object.assign(this, {
-            _getName():string {
-                if (myIndex != null && myIndex != 0) {
-                    return myName + "(" + myIndex + ")";
-                } else {
-                    return myName;
-                }
-            }
-        });
-
-        Object.assign(this, {
-            _setName(name: string) {
-                if (this.parent != null && (name != myName || myIndex == null)) {
-                    //myIndex = parent._getFreshIndex(name); //FIXME: look at former composite
-                    myName = name;
-                }
-            }
-        });
+        
 
         // Object.assign(this, {
         //     _hasGrandparent(container:Reactor): boolean {
