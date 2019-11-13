@@ -611,6 +611,7 @@ export class Action<T> implements Trigger {
 
 export class Timer{
     
+    // FIXME, Out of date comment.
     // The constructor for a reactor sets this attribute for each
     // of its attached timers.
     parent: Reactor;
@@ -740,7 +741,7 @@ export abstract class Reactor implements Nameable {
      * Returns the set of reactions directly owned by this reactor combined with 
      * the recursive set of all reactions of contained reactors.
      */
-    _getReactions(): Set<Reaction> {
+    private _getReactions(): Set<Reaction> {
         console.log("In _getReactions for: " + this._getFullyQualifiedName());
         var reactions = new Set<Reaction>();
 
@@ -777,7 +778,7 @@ export abstract class Reactor implements Nameable {
      * Returns the set of timers directly owned by this reactor combined with 
      * the recursive set of all timers of contained reactors.
      */
-    _getTimers(): Set<Timer> {
+    private _getTimers(): Set<Timer> {
         var timers = new Set<Timer>();
 
         // Timers part of this reactor
@@ -1206,7 +1207,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
             canConnect(sink: Port<T>): boolean {
 
                 // Self-loops are not permitted.
-                if(this == sink){
+                if(this === sink){
                     return false;
                 }
 
@@ -1260,7 +1261,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
 
             /**
             * Write a value to this OutPort and recursively transmit the value to connected
-            * ports while generating Port events for them. 
+            * ports while triggering reactions triggered by that port. 
             * @param value The value to be written to this port.
             */
            set(value: T):void {

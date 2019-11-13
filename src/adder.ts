@@ -2,7 +2,7 @@
 
 import {Reactor, InPort, OutPort, Trigger, Reaction, App} from './reactor';
 
-export class Adder extends App {
+export class Adder extends Reactor {
  
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);

@@ -37,11 +37,14 @@ describe('Container to Contained', () => {
     var contained2 = new Contained(container2, "Contained2");
     
     it('contained reactor name', () => {
-         expect(contained._getName()).toBe("Contained");
+        expect(contained._getName()).toBe("Contained");
+        expect(contained._getFullyQualifiedName()).toBe("Container/Contained");
     });
 
     it('container reactor name', () =>{
         expect(container._getName()).toBe("Container");
+        expect(container._getFullyQualifiedName()).toBe("Container");
+
     })
 
     it('get container name from contained', () =>{
@@ -88,7 +91,6 @@ describe('Container to Contained', () => {
 
         expect(contained2.a.canConnect(container.b)).toBe(false);
         expect(contained2.a.canConnect(container.a)).toBe(false);
-        // expect(container2.a.canConnect(contained2.a)).toBe(false);
        
         expect(grandcontained.a.canConnect(contained.a)).toBe(false);
         expect(grandcontained.b.canConnect(contained.b)).toBe(true);
@@ -101,17 +103,4 @@ describe('Container to Contained', () => {
         
 
     });
-
-
-    //container._add(contained);
-
 });
-
-
-// describe('Contained to Container', () => {
-    
-//     // it('contained actor name', () => {
-//     //     expect(x._getName()).toBe("MyActor");
-//     // });
-
-// });

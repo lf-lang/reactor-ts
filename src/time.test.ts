@@ -25,8 +25,6 @@ describe('time representation', function () {
     const oneThousandMS: TimeInterval = [1000, TimeUnit.msec];
     const aboutTenYears: TimeInterval = [365 * 10, TimeUnit.day]
 
-
-
     //NumericTimeIntervals
     const numFiveSeconds: NumericTimeInterval = timeIntervalToNumeric(fiveSeconds);
     const numFortyTwoDays: NumericTimeInterval = timeIntervalToNumeric(fortyTwoDays);
@@ -47,7 +45,10 @@ describe('time representation', function () {
     const tiZero:TimeInstant = [zeroNumeric, 0];
     const tiZero1:TimeInstant = [zeroNumeric, 1];
 
-
+    /**
+     * Test to see if the zero representations for time intervals 
+     * are correctly identified by the timeIntervalIsZero function.
+     */
     it('timeIntervalIsZero', function () {
         expect( timeIntervalIsZero(nullTI)).toBe(false);
         
@@ -66,6 +67,12 @@ describe('time representation', function () {
 
     });
 
+
+    /**
+     * Test of timeIntervalToNumeric function.
+     * It should convert time intervals with the Lingua Franca [ number, Timeunit ]
+     * into the numeric [seconds, nanoseconds] representation.
+     */
     it('timeIntervalToNumeric', function () {
 
         //Null time intervals are an error.
@@ -96,6 +103,10 @@ describe('time representation', function () {
         expect(numAboutTenYears).toStrictEqual( [10 * 365 * 24 * 60 * 60 , 0] );
     });
 
+    /**
+     * Test of compareNumericTimeIntervals.
+     * It should implement deep comparison t0 < t1. 
+     */
     it('compareNumericTimeIntervals', function () {
         expect( compareNumericTimeIntervals(numFiveSeconds, numFiveSeconds) ).toBe(false);
         expect( compareNumericTimeIntervals(numFiveSeconds, numFortyTwoDays) ).toBe(true);
@@ -104,6 +115,11 @@ describe('time representation', function () {
         expect( compareNumericTimeIntervals(numFiveSeconds, numFiveSFiveUS,) ).toBe(true);
     });
 
+    /**
+     * Test of compareTimeInstants.
+     * It should implement deep comparison t0 < t1.
+     * A time instant has [ numericTimeInterval , microstep ]
+     */
     it('compareTimeInstants', function () {
         expect( compareTimeInstants(tiZero, tiZero) ).toBe(false);
         expect( compareTimeInstants(tiZero, tiZero1) ).toBe(true);
@@ -125,6 +141,9 @@ describe('time representation', function () {
 
     });
 
+    /**
+     * Test of deep equality for time instants.
+     */
     it('timeInstantsAreEqual', function(){
         expect(timeInstantsAreEqual([[0,0], 0], [[0,0], 1]) ).toBe(false);
         expect(timeInstantsAreEqual([[0,0], 1], [[0,0], 1]) ).toBe(true);
@@ -132,6 +151,10 @@ describe('time representation', function () {
         expect(timeInstantsAreEqual([[0,1], 1], [[0,1], 1]) ).toBe(true);
     });
 
+    /**
+     * Convert between time expressed as a number
+     * (as obtained from the microtime module) to a numericTimeInterval
+     */
     it('microtimeToNumeric', function () {
         expect( microtimeToNumeric(0)).toStrictEqual(zeroNumeric);
         expect( microtimeToNumeric(300)).toStrictEqual(numThreeHundredUS);
