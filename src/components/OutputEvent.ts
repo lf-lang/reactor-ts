@@ -1,7 +1,7 @@
 'use strict';
 
 import {Reactor, Trigger, Reaction } from '../reactor';
-import { SingleEvent } from './singleEvent';
+import { SingleEvent } from './SingleEvent';
 
 export class OutputResponse extends Reaction{
 

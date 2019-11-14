@@ -4,7 +4,7 @@
 import {App} from '../reactor';
 import {TimeUnit, TimeInterval} from "../time"
 import { SingleEvent } from '../components/SingleEvent';
-import { Logger } from '../components/logger';
+import { Logger } from '../components/Logger';
 
 class SETest extends App{
     singleEvent: SingleEvent;
