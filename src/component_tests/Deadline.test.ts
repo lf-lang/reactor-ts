@@ -3,7 +3,7 @@
 
 import {App} from '../reactor';
 import {TimeUnit, TimeInterval} from "../time"
-import { ShowDeadline } from '../components/deadline';
+import { ShowDeadline } from '../components/Deadline';
 
 class DeadlineTest extends App{
     showDeadline: ShowDeadline;

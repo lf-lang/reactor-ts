@@ -3,8 +3,8 @@
 
 import {Reactor, OutPort, InPort, App} from '../reactor';
 import {TimeUnit, TimeInterval} from "../time"
-import { SingleEvent } from '../components/singleEvent';
-import { Logger } from '../components/logger';
+import { SingleEvent } from '../components/SingleEvent';
+import { Logger } from '../components/Logger';
 
 
 class SEContainer extends Reactor{

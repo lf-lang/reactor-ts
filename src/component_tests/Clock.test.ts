@@ -1,6 +1,6 @@
 'use strict';
 
-import {Clock} from '../components/clock';
+import {Clock} from '../components/Clock';
 import {TimeUnit} from '../time';
 
 describe('clock', function () {
