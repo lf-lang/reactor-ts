@@ -316,7 +316,6 @@ export interface Nameable extends Named {
     _setName(name: string):void;
 }
 
-// FIXME: call this a mutation?
 export interface Mutation {
     
     container:Set<Reactor>;
@@ -445,24 +444,24 @@ export class PrioritizedReaction implements PrecedenceGraphNode,
 
 /**
  * An event is caused by a timer, caused by an input, or caused by an internal event
- * It occurs at a particular time instant and carries an arbitrary data type as payload.
+ * It occurs at a particular time instant and carries an arbitrary data type as value.
  * There are three kinds of events: Timer, Input, and Internal.
  * They all have the same properties.
  */
-//In the C implementation an event has a time, trigger, and payload.
+//In the C implementation an event has a time, trigger, and value.
 
 //FIXME: Rename this class because it conflicts with a built in
 //class in typescript 
 export class Event {
     time: TimeInstant;
     cause: Trigger;
-    payload: any;
+    value: any;
 
-    //FIXME: make payload optional
-    constructor(cause: Trigger, time: TimeInstant, payload: any){
+    //FIXME: make value optional
+    constructor(cause: Trigger, time: TimeInstant, value: any){
         this.time = time;
         this.cause = cause;
-        this.payload = payload;
+        this.value = value;
     }
 }
 
@@ -517,9 +516,9 @@ export class Action<T> implements Trigger {
     minDelay: TimeInterval;
     name: string;
 
-    //A payload is available to any reaction triggered by this action.
-    //This timestamped payload can only be read as non
-    _payload: TimestampedValue<T> | null;
+    //A value is available to any reaction triggered by this action.
+    //This timestamped value can only be read as non
+    _value: TimestampedValue<T> | null;
 
     /**
      * @param parent The reactor containing this action.
@@ -543,7 +542,7 @@ export class Action<T> implements Trigger {
         this.name = name;
     }
 
-    schedule(delay: TimeInterval, payload?: T){
+    schedule(delay: TimeInterval, value?: T){
         console.log("Scheduling action.");
         if(delay === null){
             throw new Error("Cannot schedule an action with a null delay");
@@ -580,7 +579,7 @@ export class Action<T> implements Trigger {
             }
         }
 
-        let actionEvent = new Event(this, timestamp, payload);
+        let actionEvent = new Event(this, timestamp, value);
         let actionPriEvent = new PrioritizedEvent(actionEvent, this.parent.app.getEventID());
         this.parent.app.scheduleEvent(actionPriEvent);    
     }
@@ -589,14 +588,14 @@ export class Action<T> implements Trigger {
     //FIXME Create isPresent function for actions? It would return true when the logical timestamps match.
 
     /**
-     * Called on an action within a reaction to acquire the action's payload.
-     * The payload for an action is set by a scheduled action event, and is only
+     * Called on an action within a reaction to acquire the action's value.
+     * The value for an action is set by a scheduled action event, and is only
      * present for reactions executing at that logical time. When logical time
-     * advances, that previously available payload is now unavailable.
+     * advances, that previously available value is now unavailable.
      */
     get(): T | null{
-        if(this._payload && timeInstantsAreEqual(this._payload[0], this.parent.app.getCurrentLogicalTime())){
-            return this._payload[1]
+        if(this._value && timeInstantsAreEqual(this._value[0], this.parent.app.getCurrentLogicalTime())){
+            return this._value[1]
         } else {
             return null;
         }
@@ -1667,7 +1666,7 @@ export class App extends Reactor{
 
                 // Keep track of actions at this logical time.
                 // If the same action has been scheduled twice
-                // make sure it gets the correct (last assigned) payload.
+                // make sure it gets the correct (last assigned) value.
                 this._observedActionEvents.clear();
 
 
@@ -1690,15 +1689,15 @@ export class App extends Reactor{
                         // Check if this action has been seen before at this logical time.
                         if(this._observedActionEvents.has(trigger) ){
                             // Whichever event for this action has a greater eventID
-                            // occurred later and it determines the payload. 
+                            // occurred later and it determines the value. 
                             if( currentHead._id > (this._observedActionEvents.get(trigger) as PrioritizedEvent)._id ){
-                                trigger._payload = 
-                                [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];   
+                                trigger._value = 
+                                [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.value];   
                             }
                         } else {
                             this._observedActionEvents.set(trigger, (currentHead as PrioritizedEvent));
-                            trigger._payload = 
-                            [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
+                            trigger._value = 
+                            [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.value];
                         }
                     }
                     // console.log("Before triggermap in next");
