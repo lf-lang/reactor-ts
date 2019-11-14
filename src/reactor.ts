@@ -350,9 +350,9 @@ export abstract class Reaction{
      * The app will call this function later as part of its setup process.
      */
     public register(){
-        console.log("Before register reaction");
+        // console.log("Before register reaction");
         this.state.app.triggerMap.registerReaction(this);
-        console.log("After register reaction");
+        // console.log("After register reaction");
     }
 
     constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
@@ -642,7 +642,7 @@ export class Timer{
             let timerInitEvent: Event = new Event(this, timerInitInstant, null);
             let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, this.parent.app.getEventID());
             
-            console.log("In setup, this.parent is: " + this.parent);
+            // console.log("In setup, this.parent is: " + this.parent);
             this.parent.app.scheduleEvent(timerInitPriEvent);
 
             console.log("Scheduled timer init for timer with period " + this.period + " at " + timerInitInstant);
@@ -668,7 +668,7 @@ export class Timer{
                 let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
                 let nextTimerEvent: Event = new Event(this, nextTimerInstant, null);
                 let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, this.parent.app.getEventID());
-                console.log("In reschedule, this.parent : " + this.parent);
+                // console.log("In reschedule, this.parent : " + this.parent);
                 this.parent.app.scheduleEvent(nextTimerPriEvent);
 
                 console.log("Scheduling next event for timer with period " + this.period + " for time: " + nextTimerInstant);
@@ -839,7 +839,6 @@ export abstract class Reactor implements Nameable{
         } else {
             path = this._getName();
         }
-        console.log("In _getfully: " + path);
         return path;
     }
 
@@ -857,21 +856,6 @@ export abstract class Reactor implements Nameable{
             this._myName = name;
         }
     }
-
-
-    // _setName: (string) => void;
-
-    _acquire: (parent: Reactor) => boolean;
-
-    _release: (parent: Reactor) => boolean;
-
-    _getContainer: () => Reactor | null;
-
-    // _getName: () => string;
-
-    _hasGrandparent: (container:Reactor) => boolean;
-
-    _hasParent: (component: Reactor) => boolean;
 
     //A reactor's priority represents its order in the topological sort.
     //The default value of -1 indicates a priority has not been set.
@@ -899,7 +883,7 @@ export abstract class Reactor implements Nameable{
      * @param app The app for this and all contained reactors.
      */
     public setApp( app: App){
-        console.log("Starting setApp for: " + this._getFullyQualifiedName());
+        // console.log("Starting setApp for: " + this._getFullyQualifiedName());
         this.app = app;
         // Recursively set the app attribute for all contained reactors to app.
         // Don't use reflection to find children because calling setApp on an
@@ -918,6 +902,46 @@ export abstract class Reactor implements Nameable{
         // }
     }
 
+    public _hasGrandparent(): boolean {
+        if (this.parent != null) {
+            return this.parent._hasParent();
+        } else {
+            return false;
+        }
+    }
+
+   
+    public _hasParent(): boolean {
+        if (this.parent != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public _getParent(): Reactor | null {
+        return this.parent;
+    }
+
+    public _acquire(newParent: Reactor): boolean {
+        if (this.parent == null) {
+            this.parent = newParent;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public _release(oldParent: Reactor): boolean {
+        if (this.parent == oldParent) {
+            this.parent = null;
+            this._myIndex = null
+            return true;
+        } else {
+            return false;
+        }
+    }
+   
 
 
     //connect: <T>(source: Port<T>, sink:Port<T>) => void;
@@ -941,57 +965,6 @@ export abstract class Reactor implements Nameable{
         if (name != null) {
             this._myName = name;
         }
-
-        
-
-        // Object.assign(this, {
-        //     _hasGrandparent(container:Reactor): boolean {
-        //         if (this.parent != null) {
-        //             return this.parent._hasParent(container);
-        //         } else {
-        //             return false;
-        //         }
-        //     }
-        // });
-
-        Object.assign(this, {
-            _hasParent(container:Reactor): boolean {
-                if (this.parent != null && this.parent == container) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
-
-        Object.assign(this, {
-            _getContainer(): Reactor | null {
-                return this.parent;
-            }
-        });
-
-        // Object.assign(this, {
-        //     _acquire(newParent: Reactor): boolean {
-        //         if (this.parent == null) {
-        //             parent = newParent;
-        //             return true;
-        //         } else {
-        //             return false;
-        //         }
-        //     }
-        // });
-        
-        // Object.assign(this, {
-        //     _release(oldParent: Reactor): boolean {
-        //         if (parent == oldParent) {
-        //             parent = null;
-        //             myIndex = null
-        //             return true;
-        //         } else {
-        //             return false;
-        //         }
-        //     }
-        // });
 
         // Object.assign(this, {
         //     connect<T>(source: Port<T>, sink: Port<T>):void {
@@ -1061,14 +1034,10 @@ export abstract class Port<T> implements Named {
     // This attribute is set by the parent reactor's constructor.
     parent: Reactor;
 
+    protected _value: TimestampedValue<T> | null = null;
     /***** Priviledged functions *****/
 
-    /* Return a globally unique identifier. */
-    _getFullyQualifiedName: () => string;
-    _getName: () => string;
 
-    hasGrandparent: (container:Reactor) => boolean;
-    hasParent: (component: Reactor) => boolean; 
 
     connect: (source: Port<T>) => void;
     canConnect: (source: Port<T>)=> boolean;
@@ -1077,96 +1046,87 @@ export abstract class Port<T> implements Named {
 
     _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
     _connectedSourcePort: Port<T>| null = null;
+
+
+    public _getFullyQualifiedName(): string {
+        return this.parent._getFullyQualifiedName() 
+            + "/" + this._getName();
+    }
+
+    public _hasParent(): boolean {
+        if(this.parent){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public _hasGrandparent():boolean {
+        if(this.parent && this.parent._hasParent()){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /* Return a globally unique identifier. */
+    public _getName(): string {
+        var alt = "";
+        for (const [key, value] of Object.entries(this.parent)) {
+            if (value === this) { // do hasOwnProperty check too?
+                return `${key}`;
+            }
+        }
+        return "anonymous";
+    }
+
+    /**
+     * //FIXME: We will probably have to change something
+     * here when we implement mutations.
+     * Assigns a value to this port at the current logical time.
+     * Put the reactions this port triggers on the reaction 
+     * queue and recursively invoke this function on all connected output ports.
+     * Note: It is considered incorrect for a reaction to directly call this
+     * function on a port. Instead, reactions should call the "set()" function on 
+     * an OutPort. InPorts should not be set().
+     * @param value The value to assign to this output port.
+     */
+    _writeValue(value: T):void {
+        // console.log("calling _writeValue on: " + this);
+        if(this instanceof InPort){
+            // Input ports can trigger reactions for the reactor
+            // they are attached to.
+            for (let r of this.parent._reactions) {
+                if (r.triggers.includes(this)) {
+                    //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+                    let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
+                    this.parent.app.scheduleReaction(prioritizedReaction);
+                }
+            }
+        } else {
+            // Output ports can trigger reactions for a reactor containing the
+            // reactor they are attached to.
+            this._value = [this.parent.app.getCurrentLogicalTime(), value];
+            if(this._hasGrandparent() && this.parent.parent){
+                for (let r of this.parent.parent._reactions) {
+                    if (r.triggers.includes(this)) {
+                        //Create a PrioritySetNode for this reaction and push the node to the reaction queue
+                        let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
+                        this.parent.app.scheduleReaction(prioritizedReaction);
+                    }
+                }
+            }
+        }
+
+        for(const port of this._connectedSinkPorts){
+            port._writeValue(value);
+        }
+    }
+
     
     /* Construct a new port. */
     constructor(parent: Reactor) {
          this.parent = parent;
-
-        Object.assign(this, {
-            _getFullyQualifiedName(): string {
-                return this.parent._getFullyQualifiedName() 
-                    + "/" + this._getName();
-            }
-
-        });
-
-        Object.assign(this, {
-            hasParent(component: Reactor): boolean {
-                if (component == this.parent) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
-        
-        Object.assign(this, {
-            hasGrandparent(container:Reactor):boolean {
-                if (container == this.parent._getContainer()) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
-
-        Object.assign(this, {
-            _getName(): string {
-                var alt = "";
-                for (const [key, value] of Object.entries(parent)) {
-
-                    if (value === this) { // do hasOwnProperty check too?
-                        return `${key}`;
-                    }
-                }
-                return "anonymous";
-            }
-        });
-
-        Object.assign(this, {
-            /**
-             * //FIXME: We will probably have to change something
-             * here when we implement mutations.
-             * Assigns a value to this port at the current logical time.
-             * Put the reactions this port triggers on the reaction 
-             * queue and recursively invoke this function on all connected output ports.
-             * Note: It is considered incorrect for a reaction to directly call this
-             * function on a port. Instead, reactions should call the "set()" function on 
-             * an OutPort. InPorts should not be set().
-             * @param value The value to assign to this output port.
-             */
-            _writeValue(value: T):void {
-                console.log("calling _writeValue on: " + this);
-                if(this instanceof InPort){
-                    // Input ports can trigger reactions for the reactor
-                    // they are attached to.
-                    for (let r of this.parent._reactions) {
-                        if (r.triggers.includes(this)) {
-                            //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                            let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
-                            this.parent.app.scheduleReaction(prioritizedReaction);
-                        }
-                    }
-                } else {
-                    // Output ports can trigger reactions for a reactor containing the
-                    // reactor they are attached to.
-                    this.value = [this.parent.app.getCurrentLogicalTime(), value];
-                    if(parent.parent){
-                        for (let r of this.parent.parent._reactions) {
-                            if (r.triggers.includes(this)) {
-                                //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                                let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
-                                this.parent.app.scheduleReaction(prioritizedReaction);
-                            }
-                        }
-                    }
-                }
-
-                for(const port of this._connectedSinkPorts){
-                    port._writeValue(value);
-                }
-            }
-       });
     }
 
     toString(): string {
@@ -1177,7 +1137,7 @@ export abstract class Port<T> implements Named {
 
 export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
 
-    value: TimestampedValue<T> | null = null;
+    // value: TimestampedValue<T> | null = null;
     _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
     _connectedSourcePort: Port<T> | null = null;
 
@@ -1186,7 +1146,23 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
     connect: (destination: Port<T>) => void;
     disconnect: () => void;
     set: (value: T ) => void;
-    //get: () => T | null;
+
+    public isPresent(){
+        if(this._value && timeInstantsAreEqual(this._value[0],this.parent.app.getCurrentLogicalTime() )){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public get(): T | null {
+        if(this._value && this.isPresent()){
+            return this._value[1];
+        } else {
+            return null;
+        }
+        
+    }
 
     /**
      * Create an OutPort.
@@ -1195,12 +1171,8 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
     constructor(parent: Reactor) {
         super(parent);
 
-        //FIXME: Delete? You should get() from an input port. 
-        // Object.assign(this, {
-        //     get(): T | null {
-        //         return myValue;
-        //     }
-        // });
+
+
         
 
         Object.assign(this, {
@@ -1377,8 +1349,8 @@ export class InPort<T> extends Port<T> implements Readable<T> {
             isPresent():boolean {
                 if(this._connectedSourcePort){
                     if(this._connectedSourcePort instanceof OutPort){
-                        if(this._connectedSourcePort.value === null ||
-                            ! timeInstantsAreEqual(this._connectedSourcePort.value[0], this.parent.app.getCurrentLogicalTime() )){
+                        if(this._connectedSourcePort._value === null ||
+                            ! timeInstantsAreEqual(this._connectedSourcePort._value[0], this.parent.app.getCurrentLogicalTime() )){
                                 return false;
                             } else {
                                 return true;
@@ -1404,11 +1376,11 @@ export class InPort<T> extends Port<T> implements Readable<T> {
              * logical time.
              */
             get():T | null {
-                console.log("calling get on " + this);
+                // console.log("calling get on " + this);
                 if(this._connectedSourcePort){
                     if(this._connectedSourcePort instanceof OutPort){
                         if(this.isPresent()){
-                            return this._connectedSourcePort.value[1];
+                            return this._connectedSourcePort._value[1];
                         } else {
                             return null;
                         }
@@ -1628,7 +1600,7 @@ export class App extends Reactor{
         let reactions: Set<Reaction> = this._getReactions();
         // console.log("reactions set in _registerReactions is: " + reactions);
         for(let r of reactions){
-            console.log("registering: " + r);
+            // console.log("registering: " + r);
             r.register();
         }
     }
@@ -1659,7 +1631,7 @@ export class App extends Reactor{
      * in an unexpected way.
      */
     private _next(successCallback: ()=> void, failureCallback: () => void){
-        console.log("starting _next");
+        // console.log("starting _next");
         let currentHead = this._eventQ.peek();
         while(currentHead){
             let currentPhysicalTime:NumericTimeInterval = microtimeToNumeric(microtime.now());
@@ -1772,10 +1744,10 @@ export class App extends Reactor{
                             [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
                         }
                     }
-                    console.log("Before triggermap in next");
+                    // console.log("Before triggermap in next");
                     let toTrigger = this.triggerMap.getReactions(trigger);
                     // console.log(toTrigger);
-                    console.log("after triggermap in next");
+                    // console.log("after triggermap in next");
                     if(toTrigger){
                         for(let reaction of toTrigger){
 

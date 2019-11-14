@@ -8,7 +8,6 @@ export class Adder extends Reactor {
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
 
-    //FIXME: express priorities between reactions within a reactor with the same triggers
     constructor() {
         super(null, "Adder");
 

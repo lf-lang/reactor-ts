@@ -48,12 +48,12 @@ describe('Container to Contained', () => {
     })
 
     it('get container name from contained', () =>{
-        let obtainedContainer = contained._getContainer();
+        let obtainedContainer = contained._getParent();
         if(obtainedContainer){
             // expect(obtainedContainer._getName()).toBe("Container");
             expect(obtainedContainer.toString()).toBe("Container");
         } else {
-            throw new Error("contained._getContainer() returns null");
+            throw new Error("contained._getParent() returns null");
         } 
     })
 

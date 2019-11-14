@@ -38,6 +38,9 @@ describe('Test names for contained reactors', () => {
             // this.connect(y.a, y.b);
 
 
+            // it('contained actor name', () => {
+            //     expect(this.x._getName()).toBe("MyActor");
+            // });
             it('contained actor FQN', () => {
                 expect(this.x.toString()).toBe("Hello World/MyActor");
             });
