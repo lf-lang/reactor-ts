@@ -5,7 +5,6 @@ import {Reactor, TimeUnit, OutPort, InPort, App, TimeInterval, Timer, Reaction, 
 
 class OutputGetTest extends App{
 
-
     o: OutPort<number> = new OutPort<number>(this);
     t: Timer = new Timer(this, 0, 0);
     

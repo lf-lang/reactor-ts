@@ -364,9 +364,7 @@ export abstract class Reaction{
     /**
      * This react function must be overridden by a concrete reaction.
      */
-    react(){
-        throw new Error("react function hasn't been defined");
-    }
+    public abstract react(): void;
 
     /**
      * More concise way to get logical time in a reaction.
@@ -1035,14 +1033,24 @@ export abstract class Port<T> implements Named {
     parent: Reactor;
 
     protected _value: TimestampedValue<T> | null = null;
+    
+    /**
+     * Getter function for a ports _value attribute.
+     * WARNING: Do not call this function in a reaction.
+     * Use get() instead. This function should only be used
+     * by the runtime to implement user-facing functions such
+     * as get();
+     */
+    public _getValue(){
+        return this._value;
+    }
+
     /***** Priviledged functions *****/
 
-
-
-    connect: (source: Port<T>) => void;
-    canConnect: (source: Port<T>)=> boolean;
-
-    set: (value: T) => void;
+    public abstract connect(source: Port<T>): void;
+    public abstract canConnect(source: Port<T>): boolean;
+    public abstract get():T | null;
+    // public abstract set(value: T): void;
 
     _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
     _connectedSourcePort: Port<T>| null = null;
@@ -1142,10 +1150,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
     _connectedSourcePort: Port<T> | null = null;
 
     /***** Priviledged functions *****/
-    canConnect: (destination: Port<T>) => boolean
-    connect: (destination: Port<T>) => void;
-    disconnect: () => void;
-    set: (value: T ) => void;
+
 
     public isPresent(){
         if(this._value && timeInstantsAreEqual(this._value[0],this.parent.app.getCurrentLogicalTime() )){
@@ -1165,143 +1170,116 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
     }
 
     /**
-     * Create an OutPort.
-     * @param parent The reactor containing this OutPort.
+     * Returns true if this port can be connected to sink. False otherwise. 
+     * @param sink The port to test connection against. 
      */
-    constructor(parent: Reactor) {
-        super(parent);
+    public canConnect(sink: Port<T>): boolean {
 
+        // Self-loops are not permitted.
+        if(this === sink){
+            return false;
+        }
 
-
-        
-
-        Object.assign(this, {
-            /**
-             * Returns true if this port can be connected to sink. False otherwise. 
-             * @param sink The port to test connection against. 
-             */
-            canConnect(sink: Port<T>): boolean {
-
-                // Self-loops are not permitted.
-                if(this === sink){
-                    return false;
-                }
-
-                // OUT to In
-                // Reactor with input port must be at the same level of hierarchy as
-                // reactor with output port.
-                if(sink instanceof InPort){ 
-                    if(this.parent.parent == sink.parent.parent){
-                        return true;
-                    } else {
-                        return false;
-                    }
-                
-                // OUT to OUT
-                // This reactor must be the child of sink's reactor 
-                } else {
-                    if(this.parent.parent == sink.parent){
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-   
-                // var thisComponent = parent;
-                // var thisContainer = parent._getContainer();
-
-                // if (sink instanceof InPort
-                //     && thisContainer != null
-                //     && sink.hasGrandparent(thisContainer) //
-                //     && !sink.hasParent(thisComponent)) {
-                //     // OUT to IN
-                //     // - Component must be in the same container.
-                //     // - Self-loops are not permitted.
-                //     return true;
-                // } else if (sink instanceof OutPort 
-                //     && thisContainer instanceof Reactor 
-                //     && sink.hasParent(thisContainer)) {
-                //     // OUT to OUT
-                //     // - Sink must be output port of composite that source component is contained by.
-                //     return true;
-                // }
-                // else {
-                //     return false;
-                // }
-                // solution: add Container here. Do tests prior to calling to verify it is the same
+        // OUT to In
+        // Reactor with input port must be at the same level of hierarchy as
+        // reactor with output port.
+        if(sink instanceof InPort){ 
+            if(this.parent.parent == sink.parent.parent){
                 return true;
+            } else {
+                return false;
             }
-        });
-
-        Object.assign(this, {
-
-            /**
-            * Write a value to this OutPort and recursively transmit the value to connected
-            * ports while triggering reactions triggered by that port. 
-            * @param value The value to be written to this port.
-            */
-           set(value: T):void {
-               this._writeValue(value);
-           }
-       });
         
-        Object.assign(this, {
-
-             /**
-             * Connect this OutPort to a downstream port.
-             * @param sink The port to which this OutPort should be connected.
-             */
-            connect(sink: Port<T>):void {
-                console.log("connecting " + this + " and " + sink);
-                this._connectedSinkPorts.add(sink);
-                sink._connectedSourcePort = this;
-             
-                // var container = parent._getContainer();
-                // if (container != null) {
-                //     container.connect(this, sink);
-                // } else {
-                //     throw "Unable to connect: add the port's component to a container first.";
-                // }
+        // OUT to OUT
+        // This reactor must be the child of sink's reactor 
+        } else {
+            if(this.parent.parent == sink.parent){
+                return true;
+            } else {
+                return false;
             }
-        });
+        }
 
-        Object.assign(this, {
-            disconnect(sink: Port<T>): void {
-                // this.connectedPort = null;
-                this._connectedSinkPorts.delete(sink);
-                sink._connectedSourcePort = null;
-            }
-            
-            // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
-            //     var component = parent;
-            //     var container = component._getContainer();
+        // var thisComponent = parent;
+        // var thisContainer = parent._getContainer();
 
-            //     if (direction == "upstream" || direction == "both") {
-            //         if (component instanceof Reactor) {    
-            //             // OUT to OUT
-            //             //component._disconnectContainedReceivers(this); //FIXME: add a transfer reaction
-            //         }
-            //     }
-
-            //     if (direction == "downstream" || direction == "both") {
-            //         // OUT to IN
-            //         // OUT to OUT
-            //         if (container != null) {
-            //             //container._disconnectContainedSource(this);    //FIXME: add a transfer reaction
-            //         }
-            //     }
-            // }
-        });
-
-
+        // if (sink instanceof InPort
+        //     && thisContainer != null
+        //     && sink.hasGrandparent(thisContainer) //
+        //     && !sink.hasParent(thisComponent)) {
+        //     // OUT to IN
+        //     // - Component must be in the same container.
+        //     // - Self-loops are not permitted.
+        //     return true;
+        // } else if (sink instanceof OutPort 
+        //     && thisContainer instanceof Reactor 
+        //     && sink.hasParent(thisContainer)) {
+        //     // OUT to OUT
+        //     // - Sink must be output port of composite that source component is contained by.
+        //     return true;
+        // }
+        // else {
+        //     return false;
+        // }
+        // solution: add Container here. Do tests prior to calling to verify it is the same
+        return true;
     }
 
-    //FIXME: Delete this comment? Sinks and sources aren't part of the LF spec.
+
+    /**
+    * Write a value to this OutPort and recursively transmit the value to connected
+    * ports while triggering reactions triggered by that port. 
+    * @param value The value to be written to this port.
+    */
+    public set(value: T):void {
+        this._writeValue(value);
+    }
+
     // NOTE: Due to assymmetry (subtyping) we cannot allow connecting 
     // sinks to sources. It must always be source to sink. Disconnect 
     // does not have this problem.
-    // connect(sink: Port<$Supertype<T>>): void {
-        
+
+    /**
+    * Connect this OutPort to a downstream port.
+    * @param sink The port to which this OutPort should be connected.
+    */
+    connect(sink: Port<T>):void {
+        console.log("connecting " + this + " and " + sink);
+        this._connectedSinkPorts.add(sink);
+        sink._connectedSourcePort = this;
+    
+        // var container = parent._getContainer();
+        // if (container != null) {
+        //     container.connect(this, sink);
+        // } else {
+        //     throw "Unable to connect: add the port's component to a container first.";
+        // }
+    }
+
+    public disconnect(sink: Port<T>): void {
+        // this.connectedPort = null;
+        this._connectedSinkPorts.delete(sink);
+        sink._connectedSourcePort = null;
+    }
+    
+    // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
+    //     var component = parent;
+    //     var container = component._getContainer();
+
+    //     if (direction == "upstream" || direction == "both") {
+    //         if (component instanceof Reactor) {    
+    //             // OUT to OUT
+    //             //component._disconnectContainedReceivers(this); //FIXME: add a transfer reaction
+    //         }
+    //     }
+
+    //     if (direction == "downstream" || direction == "both") {
+    //         // OUT to IN
+    //         // OUT to OUT
+    //         if (container != null) {
+    //             //container._disconnectContainedSource(this);    //FIXME: add a transfer reaction
+    //         }
+    //     }
     // }
 
     toString(): string {
@@ -1323,13 +1301,135 @@ export class InPort<T> extends Port<T> implements Readable<T> {
     //_parent: Component; // $ReadOnly ?
     //_persist: boolean;
 
-    /***** Priviledged functions *****/
-    canConnect:(source: Port<T>) => boolean;        
-    connect: (source: Port<T>) => void;
-    disconnect: (source: Port<T>) => void;
+    /***** Priviledged functions *****/      
     //send: (value: ?$Subtype<T>, delay?:number) => void;
-    get: () => T | null;
     //writeValue: (value: T ) => void;
+
+    /**
+     * Returns true if the connected port is directly or indirectly connected to
+     * an output port with a value set at the current logical time. Returns false otherwise
+     * Throws an error if not connected directly or indirectly to an output port.
+     */
+    public isPresent():boolean {
+        if(this._connectedSourcePort){
+            if(this._connectedSourcePort instanceof OutPort){
+                let portValue = this._connectedSourcePort._getValue();
+                if( portValue === null ||
+                    ! timeInstantsAreEqual(portValue[0], this.parent.app.getCurrentLogicalTime() )){
+                        return false;
+                    } else {
+                        return true;
+                    }
+            } else if(this._connectedSourcePort instanceof InPort) {
+                return this._connectedSourcePort.isPresent();
+            } else {
+                throw new Error("Can only call isPresent() on an InPort or an OutPort");
+            }
+        } else {
+            throw new Error("Cannot test a disconnected input port for a present value.")
+        }
+    }
+
+    /**
+     * Obtains a value from the connected port. If connected to an output port, this
+     * can be done directly. If connected to an input port, recursively call get on that.
+     * Throws an error if this port is not connected to anything
+     * or is connected to a chain of input ports which is not terminated by a connection
+     * to an output port.
+     * Will return null if the connected output did not have its value set at the current
+     * logical time.
+     */
+    get():T | null {
+        // console.log("calling get on " + this);
+        if(this._connectedSourcePort){
+            if(this._connectedSourcePort instanceof OutPort){
+                let portValue = this._connectedSourcePort._getValue();
+                if(portValue && this.isPresent()){
+                    return portValue[1];
+                } else {
+                    return null;
+                }
+            } else {
+                return this._connectedSourcePort.get();
+            }
+        } else {
+            throw new Error("Cannot get value from a disconnected port.")
+        }
+    }
+
+    /**
+     * Returns true if this port can be connected to source. False otherwise. 
+     * @param sink The port to test connection against. 
+     */
+    canConnect(sink: Port<T>): boolean {
+        
+        //Self loops are not allowed.
+        if(sink == this){
+            return false;
+        }
+        if(sink instanceof InPort){
+            // IN to IN
+            // sink's reactor must be the child of this one.
+            if(sink.parent.parent == this.parent){
+                return true;
+            } else {
+                return false;
+            }
+        } else{
+            // IN to OUT
+            // An output port can't be the sink of an input port.
+            return false;
+
+    //     var thisComponent = parent;
+    //     var thisContainer = parent._getContainer();
+
+    //     if (thisComponent instanceof Reactor 
+    //         && sink instanceof InPort 
+    //         && sink.hasGrandparent(thisComponent)) {
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+        }
+    }
+
+    /**
+     * Connect this InPort to a downstream port.
+     * @param sink the port to connect to.
+     */
+    public connect(sink: Port<T>):void {
+        console.log("connecting " + this + " and " + sink);
+        this._connectedSinkPorts.add(sink)
+        sink._connectedSourcePort = this;
+    }
+
+    public disconnect(sink: Port<T>): void {
+        this._connectedSinkPorts.delete(this);
+        sink._connectedSourcePort = null;
+    }
+        // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
+        //     var component = parent;
+        //     var container = component._getContainer();
+
+        //     if (direction == "upstream" || direction == "both") {
+        //         if (container != null) {
+        //             // OUT to IN
+        //             // IN to IN
+        //             //container._disconnectContainedReceivers(this); // FIXME: this should result in the removal of a transfer reactions
+        //         }    
+        //     }
+
+        //     if (direction == "downstream" || direction == "both") {
+        //         if (component instanceof Reactor) {
+        //             // IN to IN
+        //             //component._disconnectContainedSource(this);
+        //         }
+        //         if (container != null) {
+        //             // IN to OUT
+        //             //container._disconnectContainedSource(this);
+        //         }
+        //     }
+        // }
 
     /**
      * Create a new InPort.
@@ -1337,149 +1437,6 @@ export class InPort<T> extends Port<T> implements Readable<T> {
      */
     constructor(parent: Reactor) {
         super(parent);
-        
-        Object.assign(this, {
-            
-
-            /**
-             * Returns true if the connected port is directly or indirectly connected to
-             * an output port with a value set at the current logical time. Returns false otherwise
-             * Throws an error if not connected directly or indirectly to an output port.
-             */
-            isPresent():boolean {
-                if(this._connectedSourcePort){
-                    if(this._connectedSourcePort instanceof OutPort){
-                        if(this._connectedSourcePort._value === null ||
-                            ! timeInstantsAreEqual(this._connectedSourcePort._value[0], this.parent.app.getCurrentLogicalTime() )){
-                                return false;
-                            } else {
-                                return true;
-                            }
-                    } else {
-                        return this._connectedSourcePort.isPresent();
-                    }
-                } else {
-                    throw new Error("Cannot test a disconnected input port for a present value.")
-                }
-            }
-        });
-
-        Object.assign(this, {
-
-            /**
-             * Obtains a value from the connected port. If connected to an output port, this
-             * can be done directly. If connected to an input port, recursively call get on that.
-             * Throws an error if this port is not connected to anything
-             * or is connected to a chain of input ports which is not terminated by a connection
-             * to an output port.
-             * Will return null if the connected output did not have its value set at the current
-             * logical time.
-             */
-            get():T | null {
-                // console.log("calling get on " + this);
-                if(this._connectedSourcePort){
-                    if(this._connectedSourcePort instanceof OutPort){
-                        if(this.isPresent()){
-                            return this._connectedSourcePort._value[1];
-                        } else {
-                            return null;
-                        }
-                    } else {
-                        return this._connectedSourcePort.get();
-                    }
-                } else {
-                    throw new Error("Cannot get value from a disconnected port.")
-                }
-            }
-        });
-
-
-
-
-
-        
-        Object.assign(this, {   
-            /**
-             * Returns true if this port can be connected to source. False otherwise. 
-             * @param sink The port to test connection against. 
-             */
-            canConnect(sink: Port<T>): boolean {
-                
-                //Self loops are not allowed.
-                if(sink == this){
-                    return false;
-                }
-                if(sink instanceof InPort){
-                    // IN to IN
-                    // sink's reactor must be the child of this one.
-                    if(sink.parent.parent == this.parent){
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else{
-                    // IN to OUT
-                    // An output port can't be the sink of an input port.
-                    return false;
-
-            //     var thisComponent = parent;
-            //     var thisContainer = parent._getContainer();
-
-            //     if (thisComponent instanceof Reactor 
-            //         && sink instanceof InPort 
-            //         && sink.hasGrandparent(thisComponent)) {
-            //         return true;
-            //     } else {
-            //         return false;
-            //     }
-
-
-                }
-            }
-        });
-
-        Object.assign(this, {
-            /**
-             * Connect this InPort to a downstream port.
-             * @param sink the port to connect to.
-             */
-            connect(sink: Port<T>):void {
-                console.log("connecting " + this + " and " + sink);
-                this._connectedSinkPorts.add(sink)
-                sink._connectedSourcePort = this;
-            }
-        });
-
-        Object.assign(this, {
-            disconnect(sink: Port<T>): void {
-                this._connectedSinkPorts.delete(this);
-                sink._connectedSourcePort = null;
-                
-            }
-            // disconnect(direction:"upstream"|"downstream"|"both"="both"): void {
-            //     var component = parent;
-            //     var container = component._getContainer();
-
-            //     if (direction == "upstream" || direction == "both") {
-            //         if (container != null) {
-            //             // OUT to IN
-            //             // IN to IN
-            //             //container._disconnectContainedReceivers(this); // FIXME: this should result in the removal of a transfer reactions
-            //         }    
-            //     }
-
-            //     if (direction == "downstream" || direction == "both") {
-            //         if (component instanceof Reactor) {
-            //             // IN to IN
-            //             //component._disconnectContainedSource(this);
-            //         }
-            //         if (container != null) {
-            //             // IN to OUT
-            //             //container._disconnectContainedSource(this);
-            //         }
-            //     }
-            // }
-        });
     }
 
     toString(): string {
