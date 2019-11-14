@@ -317,12 +317,12 @@ export interface Nameable extends Named {
 }
 
 // FIXME: call this a mutation?
-export interface Transformation {
+export interface Mutation {
     
     container:Set<Reactor>;
     reactions:Array<Reaction>;
 
-    new(container: Set<Reactor>, reactions:Array<Reaction>):Transformation;
+    new(container: Set<Reactor>, reactions:Array<Reaction>):Mutation;
 }
 
 /**
@@ -710,9 +710,9 @@ export class Timer{
 // FIXME: used to have implements Nameable. Delete?
 export abstract class Reactor implements Nameable{
 
-    private _transformations:Array<
-            [   // triggers, transformation, transformation arguments
-                Array<Trigger>, Transformation, any
+    private _mutations:Array<
+            [   // triggers, mutation, mutation arguments
+                Array<Trigger>, Mutation, any
             ]
     >;
     
