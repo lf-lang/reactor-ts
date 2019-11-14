@@ -1,10 +1,8 @@
 'use strict';
 
-
-import {Reactor, TimeUnit, OutPort, InPort, App, TimeInterval} from './reactor';
-// import * as globals from './globals';
-import { OutputResponder } from './outputEvent';
-import { Logger } from './logger';
+import {App} from '../reactor';
+import {TimeUnit, TimeInterval} from "../time"
+import { OutputResponder } from '../components/OutputEvent';
 
 class OutputEventTest extends App{
     oResponder: OutputResponder;

@@ -1,6 +1,7 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, Action, TimelineClass} from './reactor';
+import {Reactor, Trigger, Reaction, Timer, Action} from '../reactor';
+import {TimelineClass} from "../time"
 
 export class ScheduleAction extends Reaction{
 

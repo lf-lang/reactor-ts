@@ -1,6 +1,7 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, TimeUnit, Action, numericTimeSum, timeInstantsAreEqual, App} from './reactor';
+import {Reactor, Trigger, Reaction, Timer, Action,  App} from '../reactor';
+import {TimeInterval, TimeUnit, numericTimeSum } from "../time"
 // import * as globals from './globals'
 
 class Tick extends Reaction{

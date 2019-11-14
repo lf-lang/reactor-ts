@@ -1,8 +1,7 @@
 'use strict';
 
-import {Clock} from './clock';
-import {TimeUnit, Reactor} from './reactor';
-// import * as globals from './globals';
+import {Clock} from '../components/clock';
+import {TimeUnit} from '../time';
 
 describe('clock', function () {
     //Tell the reactor runtime to successfully terminate after 6 seconds.

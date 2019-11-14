@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, App} from './reactor';
+import {Reactor, InPort, OutPort, Reaction} from '../reactor';
 
 export class Adder extends Reactor {
  

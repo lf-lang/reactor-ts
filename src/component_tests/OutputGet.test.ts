@@ -1,7 +1,7 @@
 'use strict';
 
-import {Reactor, TimeUnit, OutPort, InPort, App, TimeInterval, Timer, Reaction, Trigger} from './reactor';
-
+import {Reactor, OutPort, App, Timer, Reaction, Trigger} from '../reactor';
+import { TimeUnit, TimeInterval} from "../time";
 
 class OutputGetTest extends App{
 

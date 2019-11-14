@@ -1,5 +1,5 @@
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval} from './reactor';
+import {Reactor, InPort, Trigger, Reaction, } from '../reactor';
 // import { triggerMap } from './globals';
 
 export class Print extends Reaction{

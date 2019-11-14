@@ -1,9 +1,10 @@
 'use strict';
 
 
-import {Reactor, TimeUnit, App, TimeInterval} from './reactor';
+import {App} from '../reactor';
+import {TimeUnit, TimeInterval} from "../time"
 // import * as globals from './globals';
-import { ActionTrigger } from './actionTrigger';
+import { ActionTrigger } from '../components/ActionTrigger';
 
 class ActionTriggerTest extends App{
     aTrigger: ActionTrigger;

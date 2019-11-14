@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval} from './reactor';
+import {Reactor, OutPort, Trigger, Reaction, Timer} from '../reactor';
 
 export class ProduceOutput extends Reaction{
 

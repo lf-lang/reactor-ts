@@ -1,12 +1,9 @@
 'use strict';
 
 
-import {Reactor, TimeUnit, OutPort, InPort, TimeInterval, App} from './reactor';
-// import * as globals from './globals';
-import { ShowDeadline } from './deadline';
-import { Logger } from './logger';
-
-
+import {App} from '../reactor';
+import {TimeUnit, TimeInterval} from "../time"
+import { ShowDeadline } from '../components/deadline';
 
 class DeadlineTest extends App{
     showDeadline: ShowDeadline;

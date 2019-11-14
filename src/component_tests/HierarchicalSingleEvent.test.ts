@@ -1,10 +1,10 @@
 'use strict';
 
 
-import {Reactor, TimeUnit, OutPort, InPort, App, TimeInterval} from './reactor';
-// import * as globals from './globals';
-import { SingleEvent } from './singleEvent';
-import { Logger } from './logger';
+import {Reactor, OutPort, InPort, App} from '../reactor';
+import {TimeUnit, TimeInterval} from "../time"
+import { SingleEvent } from '../components/singleEvent';
+import { Logger } from '../components/logger';
 
 
 class SEContainer extends Reactor{

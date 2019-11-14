@@ -1,10 +1,10 @@
 'use strict';
 
 
-import {Reactor, TimeUnit, App, TimeInterval} from './reactor';
-// import * as globals from './globals';
-import { SingleEvent } from './singleEvent';
-import { Logger } from './logger';
+import {App} from '../reactor';
+import {TimeUnit, TimeInterval} from "../time"
+import { SingleEvent } from '../components/singleEvent';
+import { Logger } from '../components/logger';
 
 class SETest extends App{
     singleEvent: SingleEvent;

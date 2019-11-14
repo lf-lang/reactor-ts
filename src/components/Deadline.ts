@@ -1,6 +1,7 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, Action, TimelineClass, Deadline, TimeUnit} from './reactor';
+import {Reactor, Trigger, Reaction, Timer, Deadline} from '../reactor';
+import {TimeInterval, TimeUnit} from "../time"
 
 // This test is supposed to violate this deadline.
 export class Dead extends Deadline{

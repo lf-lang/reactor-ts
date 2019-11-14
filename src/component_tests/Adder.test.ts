@@ -1,7 +1,6 @@
 'use strict';
 
-import {Adder} from './adder';
-import {Reactor} from './reactor';
+import {Adder} from '../components/Adder';
 // import * as globals from './globals';
 
 describe('adder', function () {

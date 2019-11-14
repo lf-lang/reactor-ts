@@ -1,4 +1,4 @@
-import {TimeInstant} from '../src/reactor';
+import {TimeInstant} from '../src/time';
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
 
 
