@@ -318,10 +318,10 @@ export interface Nameable extends Named {
 
 export interface Mutation {
     
-    container:Set<Reactor>;
+    parent:Set<Reactor>;
     reactions:Array<Reaction>;
 
-    new(container: Set<Reactor>, reactions:Array<Reaction>):Mutation;
+    new(parent: Set<Reactor>, reactions:Array<Reaction>):Mutation;
 }
 
 /**
@@ -703,8 +703,8 @@ export class Timer{
  * Each component has a name. It will typically also acquire a 
  * parent, unless it is a top-level composite. The parent property
  * is set/unset once a component is added to or removed from a 
- * container. Adding a component to a container will also ensure 
- * that it is uniquely indexed within that container.
+ * parent. Adding a component to a parent will also ensure 
+ * that it is uniquely indexed within that parent.
  */
 // FIXME: used to have implements Nameable. Delete?
 export abstract class Reactor implements Nameable{
