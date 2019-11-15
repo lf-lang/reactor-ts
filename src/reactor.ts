@@ -325,11 +325,12 @@ export class Action<T> implements Trigger, Readable<T> {
      *  keyword is not given, then the action is timestamped one microstep later.
      */
     constructor(parent: Reactor, timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
-
         this.parent = parent;
         this.timeType = timeType;
         this.minDelay = minDelay;
         this.name = name;
+
+        this.parent._addAction(this);
     }
 
     /**
@@ -476,6 +477,8 @@ export class Timer{
         this.period = period;
         this.offset = offset;
 
+        this.parent._addTimer(this);
+
         if(period[0] < 0){
             throw new Error("A timer period may not be negative.");
         }
@@ -485,6 +488,7 @@ export class Timer{
         }
     }
 
+    //FIXME
     adjustPeriod(period: TimeInterval):void {   
         // FIXME
     }
@@ -510,29 +514,23 @@ export abstract class Reactor implements Nameable{
     
     //FIXME: make this private. Right now this would break tests.
     _reactions:Array<Reaction> = new Array<Reaction>();
+    private _timers: Set<Timer> = new Set<Timer>();
+    private _actions: Set<Action<any>> = new Set<Action<any>>();
+    private _ports: Set<Port<any>> = new Set<Port<any>>();
+    
     private _myName: string;
     private _myIndex: number | null;
-
-    //_timers:Set<Timer> = new Set<Timer>();
-
-
-
-    // _inputs:Map<string, InPort<any>> = new Map< string,InPort<any>>();
-    // _outputs:Map<string, OutPort<any>> = new Map< string ,OutPort<any>>();
-    // _actions:Map<string, Action<any>> = new Map<string, Action<any>>();
 
     parent: Reactor|null = null;
     app:App;
     //FIXME: Create getters and setters for children.
     children:Set<Reactor> = new Set<Reactor>();
 
-    
-
     /**
      * Returns the set of reactions directly owned by this reactor combined with 
      * the recursive set of all reactions of contained reactors.
      */
-    private _getReactions(): Set<Reaction> {
+    public _getReactions(): Set<Reaction> {
         var reactions = new Set<Reaction>();
 
         // Reactions part of this reactor
@@ -564,19 +562,26 @@ export abstract class Reactor implements Nameable{
         return reactions;
     }
 
+    public _addTimer(newTimer: Timer){
+        this._timers.add(newTimer);
+    }
+
     /**
      * Returns the set of timers directly owned by this reactor combined with 
      * the recursive set of all timers of contained reactors.
      */
-    private _getTimers(): Set<Timer> {
+    public _getTimers(): Set<Timer> {
         var timers = new Set<Timer>();
 
         // Timers part of this reactor
-        for (const [key, value] of Object.entries(this)) {
-            if (value instanceof Timer) {
-                timers.add(value);
-            }
+        for(let t of this._timers){
+            timers.add(t);
         }
+        // for (const [key, value] of Object.entries(this)) {
+        //     if (value instanceof Timer) {
+        //         timers.add(value);
+        //     }
+        // }
 
         // Recursively call this function on child reactors
         // and add their timers to the timers set.
@@ -594,13 +599,14 @@ export abstract class Reactor implements Nameable{
         return timers;
     }
 
-    // addAction(a: Action<any>){
-    //     this._actions.set(a.name, a);
-    // }
+    public _addAction(a: Action<any>){
+        this._actions.add(a);
+    }
 
-    // //FIXME: return a copy
-    // getAction(name: string){
-    //     return this._actions.get(name);
+    // FIXME: return a copy. Also, not used by anything and different functionality
+    // then _getTimers which recursively gets timers. 
+    // public _getActions(name: string){
+    //     return this._actions;
     // }
 
     //FIXME: assign in constructor?
@@ -613,6 +619,10 @@ export abstract class Reactor implements Nameable{
     //         throw new Error("Can only addPorts to a reactor of type InPort or OutPort");
     //     }
     // }
+
+    _addPort(p: Port<any>){
+        this._ports.add(p);
+    }
 
     /**
      * Return a string that identifies this component.
@@ -927,6 +937,7 @@ export abstract class Port<T> implements Named {
     /* Construct a new port. */
     constructor(parent: Reactor) {
          this.parent = parent;
+         this.parent._addPort(this);
     }
 
     toString(): string {
