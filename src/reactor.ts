@@ -24,8 +24,6 @@ const NanoTimer = require('nanotimer');
 // Types                                                               //
 //---------------------------------------------------------------------//
 
-
-
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
 //---------------------------------------------------------------------//
@@ -211,48 +209,33 @@ export class PrioritizedReaction implements PrecedenceGraphNode,
 }
 
 /**
- * An event is caused by a timer, caused by an input, or caused by an internal event
+ * 
+ * An event is caused by a timer, or caused by a scheduled action (an internal event)
  * It occurs at a particular time instant and carries an arbitrary data type as value.
- * There are three kinds of events: Timer, Input, and Internal.
- * They all have the same properties.
+ * An Event has a priority and precedence so it may be inserted into the event queue.
+ * The priority of an Event is determined by its time. An Event with an earlier time
+ * than another has precedence.
  */
-//In the C implementation an event has a time, trigger, and value.
-
-//FIXME: Rename this class because it conflicts with a built in
-//class in typescript. Maybe make it an interface or abstract class?
-export class Event {
-    time: TimeInstant;
-    cause: Trigger;
-    value: any;
-
-    //FIXME: make value optional
-    constructor(cause: Trigger, time: TimeInstant, value: any){
-        this.time = time;
-        this.cause = cause;
-        this.value = value;
-    }
-}
-
-//A prioritized reaction wraps an Event with a priority and precedence
-//and may be inserted into the reaction queue.
-//The priority of an Event is determined by its time. An Event with an earlier time
-//than another has precedence.
-export class PrioritizedEvent implements 
+export class Event<T> implements 
  PrioritySetNode<number,TimeInstant>{
 
-    public e: Event;
+    // Event attributes
+    public time: TimeInstant;
+    public cause: Trigger;
+    public value: T;
 
     //Precedence graph node attributes
     public _id: number;
     public _next: PrioritySetNode<number,TimeInstant> | null;
     public _priority: TimeInstant;
 
-    constructor(e: Event, id: number ){
-        this.e = e;
+    constructor(cause: Trigger, time: TimeInstant, value: any, id: number){
+        this.time = time;
+        this.cause = cause;
+        this.value = value;
         this._id = id;
-
         this._next = null;
-        this._priority = e.time;
+        this._priority = time;
     }
 
     hasPrecedenceOver(node: PrioritySetNode<number,TimeInstant>) {
@@ -397,9 +380,9 @@ export class Action<T> implements Trigger, Readable<T> {
             }
         }
 
-        let actionEvent = new Event(this, timestamp, value);
-        let actionPriEvent = new PrioritizedEvent(actionEvent, this.parent.app.getEventID());
-        this.parent.app.scheduleEvent(actionPriEvent);    
+        let actionEvent = new Event(this, timestamp, value, this.parent.app.getEventID());
+        // let actionPriEvent = new PrioritizedEvent(actionEvent, this.parent.app.getEventID());
+        this.parent.app.scheduleEvent(actionEvent);    
     }
 
 }
@@ -438,11 +421,11 @@ export class Timer{
             let numericOffset = timeIntervalToNumeric(this.offset);
             this._offsetFromStartingTime =  numericTimeSum( numericOffset, this.parent.app.getStartingWallTime() );
             let timerInitInstant: TimeInstant = [this._offsetFromStartingTime, 0];
-            let timerInitEvent: Event = new Event(this, timerInitInstant, null);
-            let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, this.parent.app.getEventID());
+            let timerInitEvent: Event<null> = new Event(this, timerInitInstant, null, this.parent.app.getEventID());
+            // let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, this.parent.app.getEventID());
             
             // console.log("In setup, this.parent is: " + this.parent);
-            this.parent.app.scheduleEvent(timerInitPriEvent);
+            this.parent.app.scheduleEvent(timerInitEvent);
 
             console.log("Scheduled timer init for timer with period " + this.period + " at " + timerInitInstant);
         } else {
@@ -465,10 +448,10 @@ export class Timer{
                 let nextLogicalTime: NumericTimeInterval = numericTimeSum(this._offsetFromStartingTime, 
                     numericTimeMultiple(numericPeriod , this._timerFirings) ); 
                 let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
-                let nextTimerEvent: Event = new Event(this, nextTimerInstant, null);
-                let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, this.parent.app.getEventID());
+                let nextTimerEvent: Event<null> = new Event(this, nextTimerInstant, null, this.parent.app.getEventID());
+                // let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, this.parent.app.getEventID());
                 // console.log("In reschedule, this.parent : " + this.parent);
-                this.parent.app.scheduleEvent(nextTimerPriEvent);
+                this.parent.app.scheduleEvent(nextTimerEvent);
 
                 console.log("Scheduling next event for timer with period " + this.period + " for time: " + nextTimerInstant);
             }
@@ -1287,7 +1270,7 @@ export class TriggerMap{
     /**
      * FIXME
      */
-    deregisterReaction(e: Event){
+    deregisterReaction(e: Event<any>){
         //FIXME
     }
 
@@ -1332,7 +1315,7 @@ export class App extends Reactor{
     /**
      * Used to look out for the same action scheduled twice at a logical time. 
      */ 
-    private _observedActionEvents : Map<Action<any>, PrioritizedEvent> = new Map<Action<any>, PrioritizedEvent>();
+    private _observedActionEvents : Map<Action<any>, Event<any>> = new Map<Action<any>, Event<any>>();
 
     // FIXME: Use BigInt instead of number?
     /** 
@@ -1481,7 +1464,7 @@ export class App extends Reactor{
 
                     //An explicit type assertion is needed because we know the
                     //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
-                    let trigger: Trigger = (currentHead as PrioritizedEvent).e.cause;
+                    let trigger: Trigger = (currentHead as Event<any>).cause;
                     
                     if(trigger instanceof Timer){
                         trigger.reschedule();
@@ -1492,14 +1475,14 @@ export class App extends Reactor{
                         if(this._observedActionEvents.has(trigger) ){
                             // Whichever event for this action has a greater eventID
                             // occurred later and it determines the value. 
-                            if( currentHead._id > (this._observedActionEvents.get(trigger) as PrioritizedEvent)._id ){
-                                trigger.value = (currentHead as PrioritizedEvent).e.value;
+                            if( currentHead._id > (this._observedActionEvents.get(trigger) as Event<any>)._id ){
+                                trigger.value = (currentHead as Event<any>).value;
                                 trigger.timestamp = this._currentLogicalTime;
                             }
                         } else {
                             // Action has not been seen before.
-                            this._observedActionEvents.set(trigger, (currentHead as PrioritizedEvent));
-                            trigger.value = (currentHead as PrioritizedEvent).e.value;
+                            this._observedActionEvents.set(trigger, (currentHead as Event<any>));
+                            trigger.value = (currentHead as Event<any>).value;
                             trigger.timestamp =  this._currentLogicalTime;
                         }
                     }
@@ -1605,7 +1588,7 @@ export class App extends Reactor{
      * Public method to push events on the event queue. 
      * @param e Prioritized event to push onto the event queue.
      */
-    public scheduleEvent(e: PrioritizedEvent){  
+    public scheduleEvent(e: Event<any>){  
         this._eventQ.push(e);
     }
 
@@ -1683,6 +1666,31 @@ export class App extends Reactor{
 // Commented Out Code                                                 //
 //---------------------------------------------------------------------//
 //For whatever reason, code I don't want to delete just yet.
+
+
+/**
+ * An event is caused by a timer, caused by an input, or caused by an internal event
+ * It occurs at a particular time instant and carries an arbitrary data type as value.
+ * There are three kinds of events: Timer, Input, and Internal.
+ * They all have the same properties.
+ */
+//In the C implementation an event has a time, trigger, and value.
+
+//FIXME: Rename this class because it conflicts with a built in
+//class in typescript. Maybe make it an interface or abstract class?
+// export class Event {
+//     time: TimeInstant;
+//     cause: Trigger;
+//     value: any;
+
+//     //FIXME: make value optional
+//     constructor(cause: Trigger, time: TimeInstant, value: any){
+//         this.time = time;
+//         this.cause = cause;
+//         this.value = value;
+//     }
+// }
+
 
 
 //Moved to commented section because this interface is redundant with new
