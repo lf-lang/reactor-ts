@@ -77,6 +77,11 @@ describe('time representation', function () {
             timeIntervalToNumeric([5.000000005, TimeUnit.sec])
         }).toThrowError()
 
+        //Negative time intervals are an error.
+        expect(() => {
+            timeIntervalToNumeric([-5, TimeUnit.sec])
+        }).toThrowError()
+
 
         expect( timeIntervalToNumeric(straightZero)).toStrictEqual( zeroNumeric );
         expect( timeIntervalToNumeric(zeroSeconds)).toStrictEqual( zeroNumeric );

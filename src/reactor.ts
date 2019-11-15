@@ -387,12 +387,17 @@ export class Action<T> implements Trigger, Readable<T> {
 
 }
 
-
+/**
+ * A timer is an attribute of a reactor which periodically (or just once)
+ * creates a timer event. A timer has an offset and a period. Upon initialization
+ * the timer will schedule an event at the given offset from starting wall clock time.
+ * Whenever this timer's event comes off the event queue, it will 
+ * reschedule the event at the current logical time + period in the future. A 0 
+ * period indicates the timer's event is a one-off and should not be rescheduled.
+ */
 export class Timer{
     
-    // FIXME, Out of date comment.
-    // The constructor for a reactor sets this attribute for each
-    // of its attached timers.
+    // The reactor this timer is attached to.
     parent: Reactor;
 
     //For reference, the type of a TimeInterval is defined as:
@@ -411,25 +416,23 @@ export class Timer{
     _offsetFromStartingTime: NumericTimeInterval;
 
 
-    //The setup function should be used to start the timer using the offset.
+    //The setup function is used by an app to create the first timer event.
     //It must be called before reschedule, or else _offsetFromStartingTime will
     //not be set.
     setup(){
-        if(this.offset !== null && (this.offset === 0 || this.offset[0] >= 0)){
-        //if(this.offset && this.offset[0] && this.offset[0] > 0 && this.offset[1]){
+        if(this.offset === 0 || this.offset[0] >= 0){
             
             let numericOffset = timeIntervalToNumeric(this.offset);
             this._offsetFromStartingTime =  numericTimeSum( numericOffset, this.parent.app.getStartingWallTime() );
             let timerInitInstant: TimeInstant = [this._offsetFromStartingTime, 0];
             let timerInitEvent: Event<null> = new Event(this, timerInitInstant, null, this.parent.app.getEventID());
-            // let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, this.parent.app.getEventID());
             
             // console.log("In setup, this.parent is: " + this.parent);
             this.parent.app.scheduleEvent(timerInitEvent);
 
             console.log("Scheduled timer init for timer with period " + this.period + " at " + timerInitInstant);
         } else {
-            throw new Error("Cannot setup a timer with a null or negative offset.");
+            throw new Error("Cannot setup a timer with a negative offset.");
         }
     }
 
@@ -441,15 +444,14 @@ export class Timer{
      */
     reschedule() {
         this._timerFirings++;
-        if(this.period !== null && (this.period === 0 || this.period[0] >= 0)){
-            if(this.period !== 0 && this.period[0] > 0){
-                // let numericOffset = timeIntervalToNumeric(this.offset);
+        if((this.period === 0 || this.period[0] >= 0)){
+            if( !timeIntervalIsZero(this.period)){
+
                 let numericPeriod = timeIntervalToNumeric(this.period);
                 let nextLogicalTime: NumericTimeInterval = numericTimeSum(this._offsetFromStartingTime, 
-                    numericTimeMultiple(numericPeriod , this._timerFirings) ); 
+                                    numericTimeMultiple(numericPeriod , this._timerFirings) ); 
                 let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
                 let nextTimerEvent: Event<null> = new Event(this, nextTimerInstant, null, this.parent.app.getEventID());
-                // let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, this.parent.app.getEventID());
                 // console.log("In reschedule, this.parent : " + this.parent);
                 this.parent.app.scheduleEvent(nextTimerEvent);
 
@@ -457,29 +459,35 @@ export class Timer{
             }
 
         } else {
-            throw new Error("Cannot reschedule a timer with a null or negative period.");
+            throw new Error("Cannot reschedule a timer with a negative period.");
         }
     };
 
+    /**
+     * Timer constructor. 
+     * @param parent The reactor this timer is attached to.
+     * @param period The interval between rescheduled timer events. If 0, will
+     * not reschedule. Cannot be negative.
+     * @param offset The interval between the start of execution and the first
+     * timer event. Cannot be negative.
+     */
     constructor(parent: Reactor, period:TimeInterval, offset:TimeInterval) {
         this.parent = parent;
         this.period = period;
         this.offset = offset;
 
-        //Register this timer so it can be started when the runtime begins.
-        // globals.timers.push(this);
+        if(period[0] < 0){
+            throw new Error("A timer period may not be negative.");
+        }
+
+        if(offset[0] < 0){
+            throw new Error("A timer offset may not be negative.");
+        }
     }
 
     adjustPeriod(period: TimeInterval):void {   
         // FIXME
     }
-    
-    // get():TimeInstant {
-    //     // return current time
-    //     return [0, 0];
-    // }
-
-    // 
 }
 
 //FIME: This comment seems out of date with the current LF spec

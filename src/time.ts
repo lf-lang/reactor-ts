@@ -135,6 +135,10 @@ export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
         return [0, 0];
     }
 
+    if(t[0] < 0){
+        throw Error("A time interval may not be negative.")
+    }
+
     if(Math.floor(t[0]) - t[0] !== 0){
         throw Error("Cannot convert TimeInterval " + t + " to a NumericTimeInterval "+
         "because it does not have an integer time.");
