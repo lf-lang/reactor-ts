@@ -286,14 +286,14 @@ export class Action<T> implements Trigger, Readable<T> {
     // some actions carry values. 
     
     //FIXME: make private?
-    _value: T;
+    value: T;
     
     // The most recent time this action was scheduled.
     // Used by the isPresent function to tell if this action
     // has been scheduled for the current logical time.
     
     //FIXME: make private?
-    _timestamp: TimeInstant | null;
+    timestamp: TimeInstant | null;
 
     /**
      * Returns true if this action was scheduled for the current
@@ -301,11 +301,11 @@ export class Action<T> implements Trigger, Readable<T> {
      * has a value.
      */
     public isPresent(){
-        if(this._timestamp == null){
+        if(this.timestamp == null){
             // This action has never been scheduled before.
             return false;
         }
-        if(timeInstantsAreEqual(this._timestamp, this.parent.app.getCurrentLogicalTime())){
+        if(timeInstantsAreEqual(this.timestamp, this.parent.app.getCurrentLogicalTime())){
             return true;
         } else {
             return false;
@@ -320,8 +320,8 @@ export class Action<T> implements Trigger, Readable<T> {
      * If the action was scheduled with no value, this function returns null.
      */
     public get(): T | null{
-        if(this._value && this.isPresent()){
-            return this._value;
+        if(this.value && this.isPresent()){
+            return this.value;
         } else {
             return null;
         }
@@ -1493,14 +1493,14 @@ export class App extends Reactor{
                             // Whichever event for this action has a greater eventID
                             // occurred later and it determines the value. 
                             if( currentHead._id > (this._observedActionEvents.get(trigger) as PrioritizedEvent)._id ){
-                                trigger._value = (currentHead as PrioritizedEvent).e.value;
-                                trigger._timestamp = this._currentLogicalTime;
+                                trigger.value = (currentHead as PrioritizedEvent).e.value;
+                                trigger.timestamp = this._currentLogicalTime;
                             }
                         } else {
                             // Action has not been seen before.
                             this._observedActionEvents.set(trigger, (currentHead as PrioritizedEvent));
-                            trigger._value = (currentHead as PrioritizedEvent).e.value;
-                            trigger._timestamp =  this._currentLogicalTime;
+                            trigger.value = (currentHead as PrioritizedEvent).e.value;
+                            trigger.timestamp =  this._currentLogicalTime;
                         }
                     }
                     // console.log("Before triggermap in next");
