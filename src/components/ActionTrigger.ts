@@ -43,11 +43,14 @@ export class RespondToAction extends Reaction{
 
     /**
      * If the action payload is correct, test is successful. Otherwise it fails.
+     * Since a2 was not scheduled it should return null on a call to get() and
+     * should return false for isPresent().
      * @override
      */
     react(){
         const msg = (this.state as any).a1.get();
-        if(msg == "hello"){
+        const nothing = (this.state as any).a2.get();
+        if(msg == "hello" && nothing === null && ! (this.state as any).a2.isPresent()){
             this.success();
         } else {
             this.fail();
@@ -61,7 +64,12 @@ export class RespondToAction extends Reaction{
 export class ActionTrigger extends Reactor {
 
     t1: Timer = new Timer(this, 0,0);
+    
+    // This action is scheduled with a value.
     a1: Action<string> = new Action<string>(this, TimelineClass.logical);
+
+    // This action is never scheduled. It should never be present.
+    a2: Action<string> = new Action<string>(this, TimelineClass.logical);
 
     constructor( success: () => void, fail: () => void, parent:Reactor|null, name?:string) {
         super(parent, name);

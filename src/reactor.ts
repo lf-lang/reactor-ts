@@ -29,14 +29,6 @@ const NanoTimer = require('nanotimer');
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
 //---------------------------------------------------------------------//
-// export function _schedule<T>(action:Action<T>, scheduleTime: TimeInstant) {
-//     //FIXME
-// }
-
-// export function _schedule<T>(action:Action<T>, 
-//     additionalDelay:TimeInterval, value:T | null): TimeInstant {
-// return [0,0]
-// }
 
 //---------------------------------------------------------------------//
 // Interfaces                                                          //
@@ -59,16 +51,8 @@ export interface Writable<T> {
 // FIXME: I don't think we need this.
 export interface Readable<T> {
     get: () => T | null;
+    isPresent: () => boolean;
 }
-
-// FIXME: I don't think we need this
-/**
- * To be implemented by a top-level composite.  
- */
-// export interface Executable {
-//     start():void;
-//     stop():void;
-// }
 
 /**
  * For objects that have a name.
@@ -98,6 +82,10 @@ export interface Mutation {
 
     new(parent: Set<Reactor>, reactions:Array<Reaction>):Mutation;
 }
+
+//---------------------------------------------------------------------//
+// Core Reactor Classes                                                //
+//---------------------------------------------------------------------//
 
 /**
  * The reaction abstract class.
@@ -129,6 +117,12 @@ export abstract class Reaction{
         // console.log("After register reaction");
     }
 
+    /**
+     * Reactor constructor: FIXME
+     * @param state FIXME: should be parent
+     * @param triggers 
+     * @param priority 
+     */
     constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
         this.triggers = triggers;
         this.state = state;
@@ -157,7 +151,14 @@ export abstract class Reaction{
  */
 export abstract class Deadline{
 
-    timeout: TimeInterval;
+    private timeout: TimeInterval;
+
+    /**
+     * Getter for timeout.
+     */
+    public getTimeout(){
+        return this.timeout;
+    }
 
     /**
      * This handler function must be overriden by a concrete handler.
@@ -166,10 +167,16 @@ export abstract class Deadline{
         throw new Error("handler function hasn't been defined.")
     }
 
+    /**
+     * Deadline constructor.
+     * @param timeout Time after which the deadline has been missed and the deadline
+     * miss handler should be invoked.
+     */
     constructor(timeout: TimeInterval){
         this.timeout = timeout;
     }
 }
+
 
 /**
  * A prioritized reaction wraps a Reaction with a priority and precedence
@@ -182,11 +189,6 @@ export class PrioritizedReaction implements PrecedenceGraphNode,
 
     r: Reaction;
 
-    //Reaction attributes
-    // triggers: Array<Trigger>;
-    // react:(...args) => void;
-    // state: Object;
-
     //Precedence graph node attributes
     _id: number;
     _next: PrioritySetNode<number,number> | null;
@@ -198,15 +200,6 @@ export class PrioritizedReaction implements PrecedenceGraphNode,
         this._next = null;
         this._priority = r.priority;
     }
-    // constructor(reaction: Reaction, id: number,
-    //     next: PrioritySetNode<number,number>|null, priority: number) {
-    //     this.triggers = reaction.triggers;
-    //     this.react = reaction.react;
-    //     this.state = reaction.state;
-    //     this._id = id;
-    //     this._next = next;
-    //     this._priority = priority;
-    // }
     
     hasPrecedenceOver(node: PrioritySetNode<number,number>) {
         if (this._priority < node._priority) {
@@ -226,7 +219,7 @@ export class PrioritizedReaction implements PrecedenceGraphNode,
 //In the C implementation an event has a time, trigger, and value.
 
 //FIXME: Rename this class because it conflicts with a built in
-//class in typescript 
+//class in typescript. Maybe make it an interface or abstract class?
 export class Event {
     time: TimeInstant;
     cause: Trigger;
@@ -247,12 +240,12 @@ export class Event {
 export class PrioritizedEvent implements 
  PrioritySetNode<number,TimeInstant>{
 
-    e: Event;
+    public e: Event;
 
     //Precedence graph node attributes
-    _id: number;
-    _next: PrioritySetNode<number,TimeInstant> | null;
-    _priority: TimeInstant;
+    public _id: number;
+    public _next: PrioritySetNode<number,TimeInstant> | null;
+    public _priority: TimeInstant;
 
     constructor(e: Event, id: number ){
         this.e = e;
@@ -262,8 +255,6 @@ export class PrioritizedEvent implements
         this._priority = e.time;
     }
 
-    //TODO: remove leading underscore from _priority variable because it's not used
-    //privately in cases like this?
     hasPrecedenceOver(node: PrioritySetNode<number,TimeInstant>) {
         return compareTimeInstants(this._priority, node._priority);
     }    
@@ -279,9 +270,7 @@ export class PrioritizedEvent implements
  * scheduled by a reactor by invoking the schedule function in a reaction
  * or in an asynchronous callback that has been set up in a reaction.
  */
-
-
-export class Action<T> implements Trigger {
+export class Action<T> implements Trigger, Readable<T> {
 
     // The constructor for a reactor sets this attribute for each
     // of its attached timers.
@@ -291,9 +280,52 @@ export class Action<T> implements Trigger {
     minDelay: TimeInterval;
     name: string;
 
-    //A value is available to any reaction triggered by this action.
-    //This timestamped value can only be read as non
-    _value: TimestampedValue<T> | null;
+    // A value is available to any reaction triggered by this action.
+    // The value is not directly associated with a timestamp because
+    // every action needs a timestamp (for _isPresent()) and only
+    // some actions carry values. 
+    
+    //FIXME: make private?
+    _value: T;
+    
+    // The most recent time this action was scheduled.
+    // Used by the isPresent function to tell if this action
+    // has been scheduled for the current logical time.
+    
+    //FIXME: make private?
+    _timestamp: TimeInstant | null;
+
+    /**
+     * Returns true if this action was scheduled for the current
+     * logical time. This result is not affected by whether it
+     * has a value.
+     */
+    public isPresent(){
+        if(this._timestamp == null){
+            // This action has never been scheduled before.
+            return false;
+        }
+        if(timeInstantsAreEqual(this._timestamp, this.parent.app.getCurrentLogicalTime())){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Called on an action within a reaction to acquire the action's value.
+     * The value for an action is set by a scheduled action event, and is only
+     * present for reactions executing at that logical time. When logical time
+     * advances, that previously available value is now unavailable.
+     * If the action was scheduled with no value, this function returns null.
+     */
+    public get(): T | null{
+        if(this._value && this.isPresent()){
+            return this._value;
+        } else {
+            return null;
+        }
+    }
 
     /**
      * @param parent The reactor containing this action.
@@ -317,6 +349,17 @@ export class Action<T> implements Trigger {
         this.name = name;
     }
 
+    /**
+     * Schedule this action. An event for this action will be
+     * created and pushed onto the event queue. If the same action
+     * is scheduled multiple times for the same logical time, the value
+     * associated with the last invocation of the this function determines
+     * the value attached to the action at that logical time.
+     * @param delay The time difference between now and the future when 
+     * this action should occur. 
+     * @param value An optional value to be attached to this action.
+     * The value will be available to reactions depending on this action.
+     */
     schedule(delay: TimeInterval, value?: T){
         console.log("Scheduling action.");
         if(delay === null){
@@ -359,22 +402,6 @@ export class Action<T> implements Trigger {
         this.parent.app.scheduleEvent(actionPriEvent);    
     }
 
-
-    //FIXME Create isPresent function for actions? It would return true when the logical timestamps match.
-
-    /**
-     * Called on an action within a reaction to acquire the action's value.
-     * The value for an action is set by a scheduled action event, and is only
-     * present for reactions executing at that logical time. When logical time
-     * advances, that previously available value is now unavailable.
-     */
-    get(): T | null{
-        if(this._value && timeInstantsAreEqual(this._value[0], this.parent.app.getCurrentLogicalTime())){
-            return this._value[1]
-        } else {
-            return null;
-        }
-    }
 }
 
 
@@ -1466,13 +1493,14 @@ export class App extends Reactor{
                             // Whichever event for this action has a greater eventID
                             // occurred later and it determines the value. 
                             if( currentHead._id > (this._observedActionEvents.get(trigger) as PrioritizedEvent)._id ){
-                                trigger._value = 
-                                [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.value];   
+                                trigger._value = (currentHead as PrioritizedEvent).e.value;
+                                trigger._timestamp = this._currentLogicalTime;
                             }
                         } else {
+                            // Action has not been seen before.
                             this._observedActionEvents.set(trigger, (currentHead as PrioritizedEvent));
-                            trigger._value = 
-                            [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.value];
+                            trigger._value = (currentHead as PrioritizedEvent).e.value;
+                            trigger._timestamp =  this._currentLogicalTime;
                         }
                     }
                     // console.log("Before triggermap in next");
@@ -1518,7 +1546,7 @@ export class App extends Reactor{
                     // This is the case if the reaction has a registered deadline and
                     // logical time + timeout < physical time
                     if(r.deadline && compareNumericTimeIntervals( 
-                            numericTimeSum(this._currentLogicalTime[0], timeIntervalToNumeric(r.deadline.timeout)),
+                            numericTimeSum(this._currentLogicalTime[0], timeIntervalToNumeric(r.deadline.getTimeout())),
                             currentPhysicalTime)){
                         console.log("handling deadline violation");
                         r.deadline.handler();

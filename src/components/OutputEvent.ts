@@ -13,7 +13,6 @@ export class OutputResponse extends Reaction{
         super(state,triggers,priority);
         this.success = success;
         this.fail = fail;
-
     }
 
     /**
