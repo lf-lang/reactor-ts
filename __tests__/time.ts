@@ -93,6 +93,13 @@ describe('time representation', function () {
         expect(numFiveHundredMilNS).toStrictEqual( [0, 500000000] );
         expect(numOneThousandMS).toStrictEqual( [1, 0] );
         expect(numAboutTenYears).toStrictEqual( [10 * 365 * 24 * 60 * 60 , 0] );
+
+        // This test should generate an error because we're trying to convert
+        // a number which can't be represented as a numeric time interval.
+        expect(() => {
+            timeIntervalToNumeric([ Number.MAX_SAFE_INTEGER, TimeUnit.weeks])
+        }).toThrowError();
+
     });
 
     /**

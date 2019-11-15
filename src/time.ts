@@ -148,7 +148,14 @@ export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval{
 
     //To avoid overflow and floating point errors, work with BigInts.
     let bigT = BigInt(t[0]) * BigInt(t[1]);
-    seconds = parseInt((bigT / billion).toString());
+    let max = BigInt(Number.MAX_SAFE_INTEGER);
+
+    let bigSeconds = bigT / billion;
+    if(bigSeconds > max){
+        throw new Error("timeIntervalToNumeric failed. The time interval is too large to safely convert.");
+    }
+
+    seconds = parseInt(bigSeconds.toString());
     nseconds = parseInt((bigT % billion).toString());
 
     return [seconds, nseconds];    
