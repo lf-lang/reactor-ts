@@ -71,14 +71,18 @@ export class ActionTrigger extends Reactor {
     // This action is never scheduled. It should never be present.
     a2: Action<string> = new Action<string>(this, TimelineClass.logical);
 
+    r1: Reaction;
+    r2: Reaction;
+    r3: Reaction;
+
     constructor( success: () => void, fail: () => void, parent:Reactor|null, name?:string) {
         super(parent, name);
         
         //Reaction priorities matter here. The overridden reaction must go first.
-        const r2 = new ScheduleOverriddenAction(this,[this.t1], 0);
-        const r1 = new ScheduleAction(this, [this.t1], 1);
-        const r3 = new RespondToAction(this, [this.a1], 2, success, fail);
+        this.r1 = new ScheduleAction(this, [this.t1], 1);
+        this.r2 = new ScheduleOverriddenAction(this,[this.t1], 0);
+        this.r3 = new RespondToAction(this, [this.a1], 2, success, fail);
         
-        this._reactions = [r1, r2, r3];
+        this._reactions = [this.r1, this.r2, this.r3];
     }
 }

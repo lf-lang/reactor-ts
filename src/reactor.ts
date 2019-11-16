@@ -329,8 +329,6 @@ export class Action<T> implements Trigger, Readable<T> {
         this.timeType = timeType;
         this.minDelay = minDelay;
         this.name = name;
-
-        this.parent._addAction(this);
     }
 
     /**
@@ -477,8 +475,6 @@ export class Timer{
         this.period = period;
         this.offset = offset;
 
-        this.parent._addTimer(this);
-
         if(period[0] < 0){
             throw new Error("A timer period may not be negative.");
         }
@@ -503,7 +499,9 @@ export class Timer{
  * parent. Adding a component to a parent will also ensure 
  * that it is uniquely indexed within that parent.
  */
-// FIXME: used to have implements Nameable. Delete?
+/**
+ * 
+ */
 export abstract class Reactor implements Nameable{
 
     private _mutations:Array<
@@ -514,45 +512,67 @@ export abstract class Reactor implements Nameable{
     
     //FIXME: make this private. Right now this would break tests.
     _reactions:Array<Reaction> = new Array<Reaction>();
-    private _timers: Set<Timer> = new Set<Timer>();
-    private _actions: Set<Action<any>> = new Set<Action<any>>();
-    private _ports: Set<Port<any>> = new Set<Port<any>>();
     
     private _myName: string;
     private _myIndex: number | null;
 
     parent: Reactor|null = null;
     app:App;
-    //FIXME: Create getters and setters for children.
-    children:Set<Reactor> = new Set<Reactor>();
+
+    public _getChildren(): Set<Reactor> {
+        let children = new Set<Reactor>();
+        for (const [key, value] of Object.entries(this)) {
+            // If pointers to other non-child reactors in the hierarchy are not
+            // excluded (eg. value != this.parent) this function will loop forever.
+            if (value instanceof Reactor && value != this.parent && value != this.app) {
+                children.add(value);
+            }
+        }
+        return children;
+
+    }
+
+    /**
+     * Returns the set of reactions owned by this reactor.
+     */
+    public _getReactions(): Set<Reaction> {
+        console.log("Getting reactions for: " + this);
+        let reactions = new Set<Reaction>();
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof Reaction) {
+                reactions.add(value);
+            }
+        }
+        return reactions;
+    }
 
     /**
      * Returns the set of reactions directly owned by this reactor combined with 
      * the recursive set of all reactions of contained reactors.
      */
-    public _getReactions(): Set<Reaction> {
-        var reactions = new Set<Reaction>();
+    public _getAllReactions(): Set<Reaction> {
+        let reactions = this._getReactions();
 
-        // Reactions part of this reactor
-        for( let r of this._reactions){
-            reactions.add(r);
-        }
+        // // Reactions part of this reactor
+        // for( let r of this._reactions){
+        //     reactions.add(r);
+        // }
 
         // for (const [key, value] of Object.entries(this)) {
-        //     console.log(key);
+        //     // console.log(key);
         //     if (value instanceof Reaction) {
-        //         console.log("got a reaction!" + value);
+        //         // console.log("got a reaction!" + value);
         //         reactions.add(value);
         //     }
         // }
 
         // Recursively call this function on child reactors
         // and add their timers to the timers set.
-        var subReactions: Set<Reaction>;
-        if(this.children){
-            for(const child of this.children){
+        let children = this._getChildren();
+        if(children){
+            for(const child of children){
                 if(child){
-                    subReactions = child._getReactions();
+                    let subReactions = child._getAllReactions();
                     for(const subReaction of subReactions){
                         reactions.add(subReaction);
                     }                     
@@ -562,34 +582,36 @@ export abstract class Reactor implements Nameable{
         return reactions;
     }
 
-    public _addTimer(newTimer: Timer){
-        this._timers.add(newTimer);
+    /**
+     * Iterate through this reactor's attributes,
+     * and return the set of its timers.
+     */
+    public _getTimers(): Set<Timer>{
+        console.log("Getting timers for: " + this)
+        let timers = new Set<Timer>();
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof Timer) {
+                timers.add(value);
+            }
+        }
+        return timers;
     }
 
     /**
      * Returns the set of timers directly owned by this reactor combined with 
      * the recursive set of all timers of contained reactors.
      */
-    public _getTimers(): Set<Timer> {
-        var timers = new Set<Timer>();
-
+    public _getAllTimers(): Set<Timer> {
         // Timers part of this reactor
-        for(let t of this._timers){
-            timers.add(t);
-        }
-        // for (const [key, value] of Object.entries(this)) {
-        //     if (value instanceof Timer) {
-        //         timers.add(value);
-        //     }
-        // }
+        let timers = this._getTimers();
 
         // Recursively call this function on child reactors
         // and add their timers to the timers set.
-        var subTimers: Set<Timer>;
-        if(this.children){
-            for(const child of this.children){
+        let children = this._getChildren();
+        if(children){
+            for(const child of children){
                 if(child){
-                    subTimers = child._getTimers();
+                    let subTimers = child._getAllTimers();
                     for(const subTimer of subTimers){
                         timers.add(subTimer);
                     }                     
@@ -599,9 +621,6 @@ export abstract class Reactor implements Nameable{
         return timers;
     }
 
-    public _addAction(a: Action<any>){
-        this._actions.add(a);
-    }
 
     // FIXME: return a copy. Also, not used by anything and different functionality
     // then _getTimers which recursively gets timers. 
@@ -619,10 +638,6 @@ export abstract class Reactor implements Nameable{
     //         throw new Error("Can only addPorts to a reactor of type InPort or OutPort");
     //     }
     // }
-
-    _addPort(p: Port<any>){
-        this._ports.add(p);
-    }
 
     /**
      * Return a string that identifies this component.
@@ -684,22 +699,15 @@ export abstract class Reactor implements Nameable{
      */
     public setApp( app: App){
         // console.log("Starting setApp for: " + this._getFullyQualifiedName());
+        console.log("Setting app for: " + this);
         this.app = app;
         // Recursively set the app attribute for all contained reactors to app.
-        // Don't use reflection to find children because calling setApp on an
-        // App which extends Reactor, results in infinite regress.
-        if(this.children){
-            for(let child of this.children){
+        let children = this._getChildren();
+        if(children){
+            for(let child of children){
                 child.setApp(app);
             }
         }
-
-
-        // for (const [key, value] of Object.entries(this)) {
-        //     if (value instanceof Reactor) {
-        //         value.setApp(app);
-        //     }
-        // }
     }
 
     public _hasGrandparent(): boolean {
@@ -743,7 +751,6 @@ export abstract class Reactor implements Nameable{
     }
    
 
-
     //connect: <T>(source: Port<T>, sink:Port<T>) => void;
     // FIXME: connections mus be done sink to source so that we leverage contravariance of functions!!!
     /**
@@ -753,9 +760,6 @@ export abstract class Reactor implements Nameable{
      */
     constructor(parent: null| Reactor, name?:string) {
         this.parent = parent;
-        if(parent){
-            parent.children.add(this);
-        }
         
         this._myName = this.constructor.name; // default
         this._myIndex = null;
@@ -933,11 +937,9 @@ export abstract class Port<T> implements Named {
         }
     }
 
-    
     /* Construct a new port. */
     constructor(parent: Reactor) {
          this.parent = parent;
-         this.parent._addPort(this);
     }
 
     toString(): string {
@@ -1292,7 +1294,6 @@ export class TriggerMap{
     deregisterReaction(e: Event<any>){
         //FIXME
     }
-
 }
 
 //FIXME: Move runtime from globals into here.
@@ -1347,8 +1348,9 @@ export class App extends Reactor{
      * Acquire all the app's timers and call setup on each one.
      */
     private _startTimers = function(){
-        let timers: Set<Timer> = this._getTimers();
+        let timers: Set<Timer> = this._getAllTimers();
         for(let t of timers){
+            console.log("setting up timer " + t);
             t.setup();
         }
     };
@@ -1357,7 +1359,7 @@ export class App extends Reactor{
      * Register all the app's reactions with their triggers.
      */
     private _registerReactions = function(){
-        let reactions: Set<Reaction> = this._getReactions();
+        let reactions: Set<Reaction> = this._getAllReactions();
         // console.log("reactions set in _registerReactions is: " + reactions);
         for(let r of reactions){
             // console.log("registering: " + r);
@@ -1479,7 +1481,6 @@ export class App extends Reactor{
                 // the reaction queue.
                 // This loop should always execute at least once.
                 while(currentHead && timeInstantsAreEqual(currentHead._priority, this._currentLogicalTime)){
-
 
                     //An explicit type assertion is needed because we know the
                     //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
@@ -1649,8 +1650,6 @@ export class App extends Reactor{
     public getStartingWallTime(){
         return this._startingWallTime
     }
-    
-
 
     public start(successCallback: () => void , failureCallback: () => void):void {
         // Recursively set the app attribute for this and all contained reactors to this.

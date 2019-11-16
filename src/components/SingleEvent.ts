@@ -21,7 +21,6 @@ export class ProduceOutput extends Reaction{
         // but its worth checking that the correct value (from the last set)
         // is delivered.
         
-        // (this.state as any).o.set(null);
         (this.state as any).o.set(this.outputPayload);
         console.log("Writing payload to SingleEvent's output.");
     }
@@ -33,12 +32,13 @@ export class SingleEvent extends Reactor {
 
     o: OutPort<string> = new OutPort<string>(this);
     t1: Timer = new Timer(this, 0, 0);
+    r: Reaction;
 
     constructor(outputPayload:any, parent: Reactor | null, name?:string ) {
         super(parent, name);
         
-        const r = new ProduceOutput(this, [this.t1], 0, outputPayload);
-        this._reactions.push(r);
+        this.r = new ProduceOutput(this, [this.t1], 0, outputPayload);
+        this._reactions.push(this.r);
     }
 }
 

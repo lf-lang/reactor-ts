@@ -98,14 +98,17 @@ export class ShowDeadline extends Reactor {
     //Triggers immediatedly
     t: Timer = new Timer(this, 0,0);
 
+    waste: Reaction;
+    soonDead: Reaction;
+
     constructor(success: () => void, fail: () => void, parent:Reactor | null, name?: string) {
         super(parent, name);
         
         //Priorities are very important here
-        const waste = new WasteTime(this, [this.t], 0, success, fail);
-        const soonDead = new SoonDead(this, [this.t], 1, success, fail);
+        this.waste = new WasteTime(this, [this.t], 0, success, fail);
+        this.soonDead = new SoonDead(this, [this.t], 1, success, fail);
  
-        this._reactions = [waste, soonDead];
+        this._reactions = [this.waste, this.soonDead];
     }
 
 }

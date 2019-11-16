@@ -7,11 +7,12 @@ class OutputGetTest extends App{
 
     o: OutPort<number> = new OutPort<number>(this);
     t: Timer = new Timer(this, 0, 0);
+    r: Reaction;
     
     constructor(timeout: TimeInterval, success: ()=> void, fail: ()=>void, name?:string ){
         super(timeout, name)
-        let r:OutputGetter = new OutputGetter(this,[this.t], 0, success, fail);
-        this._reactions = [r];
+        this.r = new OutputGetter(this,[this.t], 0, success, fail);
+        this._reactions = [this.r];
     }
 }
 
@@ -61,7 +62,7 @@ describe('OutputGetTest', function () {
             throw new Error("Reactor has failed.");
         };
 
-        var oGetTest = new OutputGetTest( [3, TimeUnit.secs], done, failReactor, "OutputEventTest");
+        var oGetTest = new OutputGetTest( [3, TimeUnit.secs], done, failReactor, "OutputGetTest");
         //Don't give the runtime the done callback because we don't care if it terminates
         oGetTest.start(()=> null, failRuntime);
     })

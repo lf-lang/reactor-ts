@@ -28,12 +28,13 @@ export class OutputResponse extends Reaction{
 export class OutputResponder extends Reactor {
 
     se: SingleEvent = new SingleEvent(null, this, "ContainedSingleEvent");
+    r: Reaction;
 
     constructor(success: ()=> void, fail: ()=> void, parent: Reactor|null, name?:string ){
         super(parent, name);
         
-        const r = new OutputResponse(this, [this.se.o], 0, success, fail );
-        this._reactions = [r];
+        this.r = new OutputResponse(this, [this.se.o], 0, success, fail );
+        this._reactions = [this.r];
     }
 }
 

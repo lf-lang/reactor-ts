@@ -90,19 +90,29 @@ export class Clock extends App {
     a2: Action<number> = new Action<number>(this);
     a3: Action<number> = new Action<number>(this);
 
+    r1: Reaction = new Tick(this, [this.t1], 0);
+    r2: Reaction = new Tock(this, [this.t2], 1);
+
+    //At time 5 seconds, this reaction should be triggered
+    //simultaneosly by both timers, "Cuckoo" should only
+    //print once.
+    r3: Reaction = new Cuckoo(this, [this.t1, this.t2], 2);
+    r4: Reaction;
+
     constructor(timeout: TimeInterval,  success: () => void, fail: () => void, name?: string) {
         super(timeout, name);
 
-        const r1 = new Tick(this, [this.t1], 0);
-        const r2 = new Tock(this, [this.t2], 1);
+        // const r1 = new Tick(this, [this.t1], 0);
+        // const r2 = new Tock(this, [this.t2], 1);
 
-        //At time 5 seconds, this reaction should be triggered
-        //simultaneosly by both timers, "Cuckoo" should only
-        //print once.
-        const r3 = new Cuckoo(this, [this.t1, this.t2], 2);
+        // //At time 5 seconds, this reaction should be triggered
+        // //simultaneosly by both timers, "Cuckoo" should only
+        // //print once.
+        // const r3 = new Cuckoo(this, [this.t1, this.t2], 2);
 
-        const r4 = new Test(this, [this.a1, this.a2, this.a3], 4, success, fail);
+        // const r4 = new Test(this, [this.a1, this.a2, this.a3], 4, success, fail);
 
-        this._reactions = [r1, r2, r3, r4];
+        this.r4 = new Test(this, [this.a1, this.a2, this.a3], 4, success, fail);
+        this._reactions = [this.r1, this.r2, this.r3, this.r4];
     }
 }

@@ -60,7 +60,8 @@ describe('Container to Contained', () => {
     it('get contained name from container', () =>{
 
         //This test assumes contained to be the only child
-        for(let child of container.children){
+        let children = container._getChildren();
+        for(let child of children){
             if(child){
                 expect(child.toString()).toBe("Container/Contained");
             } else {
