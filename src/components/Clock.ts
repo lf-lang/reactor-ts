@@ -2,7 +2,6 @@
 
 import {Reactor, Trigger, Reaction, Timer, Action,  App} from '../reactor';
 import {TimeInterval, TimeUnit, numericTimeSum } from "../time"
-// import * as globals from './globals'
 
 class Tick extends Reaction{
 
@@ -83,12 +82,12 @@ class Test extends Reaction{
 
 export class Clock extends App {
 
-    t1: Timer = new Timer( this, [1, TimeUnit.sec], [3, TimeUnit.sec]);
-    t2: Timer = new Timer( this, [1500, TimeUnit.msec] , [3500, TimeUnit.msec] );
+    t1: Timer = new Timer([1, TimeUnit.sec], [3, TimeUnit.sec]);
+    t2: Timer = new Timer([1500, TimeUnit.msec] , [3500, TimeUnit.msec] );
 
-    a1: Action<number> = new Action<number>(this);
-    a2: Action<number> = new Action<number>(this);
-    a3: Action<number> = new Action<number>(this);
+    a1: Action<number> = new Action<number>();
+    a2: Action<number> = new Action<number>();
+    a3: Action<number> = new Action<number>();
 
     r1: Reaction = new Tick(this, [this.t1], 0);
     r2: Reaction = new Tock(this, [this.t2], 1);
@@ -101,17 +100,6 @@ export class Clock extends App {
 
     constructor(timeout: TimeInterval,  success: () => void, fail: () => void, name?: string) {
         super(timeout, name);
-
-        // const r1 = new Tick(this, [this.t1], 0);
-        // const r2 = new Tock(this, [this.t2], 1);
-
-        // //At time 5 seconds, this reaction should be triggered
-        // //simultaneosly by both timers, "Cuckoo" should only
-        // //print once.
-        // const r3 = new Cuckoo(this, [this.t1, this.t2], 2);
-
-        // const r4 = new Test(this, [this.a1, this.a2, this.a3], 4, success, fail);
-
         this.r4 = new Test(this, [this.a1, this.a2, this.a3], 4, success, fail);
         this._reactions = [this.r1, this.r2, this.r3, this.r4];
     }

@@ -9,7 +9,7 @@ export class Adder extends Reactor {
     out: OutPort<number> = new OutPort(this);
 
     constructor() {
-        super(null, "Adder");
+        super("Adder");
 
         const r1 = new AddTwo(this, [this.in1, this.in2], 0);
         const r2 = new AddN(this, [this.in1, this.in2], 0);

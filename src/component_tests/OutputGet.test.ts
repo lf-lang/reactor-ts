@@ -6,7 +6,7 @@ import { TimeUnit, TimeInterval} from "../time";
 class OutputGetTest extends App{
 
     o: OutPort<number> = new OutPort<number>(this);
-    t: Timer = new Timer(this, 0, 0);
+    t: Timer = new Timer(0, 0);
     r: Reaction;
     
     constructor(timeout: TimeInterval, success: ()=> void, fail: ()=>void, name?:string ){

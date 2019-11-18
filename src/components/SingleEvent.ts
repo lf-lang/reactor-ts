@@ -34,11 +34,11 @@ export class ProduceOutput extends Reaction{
 export class SingleEvent extends Reactor {
 
     o: OutPort<string> = new OutPort<string>(this);
-    t1: Timer = new Timer(this, 0, 0);
+    t1: Timer = new Timer(0, 0);
     r: Reaction;
 
     constructor(outputPayload:any, parent: Reactor | null, name?:string ) {
-        super(parent, name);
+        super(name);
         
         this.r = new ProduceOutput(this, [this.t1], 0, outputPayload);
         this._reactions.push(this.r);

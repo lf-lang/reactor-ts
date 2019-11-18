@@ -312,7 +312,6 @@ export class Action<T> implements Trigger, Readable<T> {
 
     /** 
      * Action Constructor
-     * @param parent The reactor containing this action.
      * @param timeType Optional. Defaults to physical. If physical,
      *  then the physical clock on the local platform is used to assign a timestamp
      *  to the action when it is enabled. If logical, the current physical time is
@@ -325,7 +324,7 @@ export class Action<T> implements Trigger, Readable<T> {
      *  schedule function and the mindelay parameter are both zero and the physical
      *  keyword is not given, then the action is timestamped one microstep later.
      */
-    constructor(parent: Reactor, timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
+    constructor(timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
         // this.parent = parent;
         this.timeType = timeType;
         this.minDelay = minDelay;
@@ -479,7 +478,7 @@ export class Timer{
      * @param offset The interval between the start of execution and the first
      * timer event. Cannot be negative.
      */
-    constructor(parent: Reactor, period:TimeInterval, offset:TimeInterval) {
+    constructor(period:TimeInterval, offset:TimeInterval) {
         // this.parent = parent;
         this.period = period;
         this.offset = offset;
@@ -849,7 +848,7 @@ export abstract class Reactor implements Nameable{
      * if no name is given.
      * @param {string=} name - Given name
      */
-    constructor(parent: null| Reactor, name?:string) {
+    constructor(name?:string) {
 
         // This reactor's parent attribute will be set by its parent.
         
@@ -1715,7 +1714,7 @@ export class App extends Reactor{
      * @param name 
      */
     constructor(executionTimeout: TimeInterval | null, name?: string) {
-        super(null, name)
+        super(name)
         
         // Note: this.parent is initialized to null because an app is a top
         // level reactor.

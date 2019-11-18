@@ -34,15 +34,15 @@ class Component extends Reactor {
 // */__tests__/.*
 describe('Container to Contained', () => {
 
-    var container = new Component(null, "Container");
-    var contained = new Component(container, "Contained");
-    var grandcontained = new Component(contained, "Grandcontained");
+    var container = new Component("Container");
+    var contained = new Component("Contained");
+    var grandcontained = new Component("Grandcontained");
 
     container.child = contained;
     contained.child = grandcontained;
 
-    var container2 = new Component(null, "Container2");
-    var contained2 = new Component(container2, "Contained2");
+    var container2 = new Component("Container2");
+    var contained2 = new Component("Contained2");
 
     container2.child = contained2;
 
@@ -54,7 +54,7 @@ describe('Container to Contained', () => {
 
     it('reactor with self as child', () => {
         expect(() => {
-            let loopy = new Component(null, "loopy");
+            let loopy = new Component("loopy");
             loopy.child = loopy;
             loopy._setAllParents(null);
         }).toThrowError();

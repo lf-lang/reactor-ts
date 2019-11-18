@@ -28,18 +28,13 @@ class SETest extends App{
     constructor(timeout: TimeInterval, success: ()=> void, fail: ()=>void, name?:string ){
         super(timeout, name)
 
-        this.seContainer = new SEContainer(this, "SEContainer");
-        this.logContainer = new LogContainer(this, "LogContainer");
+        this.seContainer = new SEContainer("SEContainer");
+        this.logContainer = new LogContainer("LogContainer");
         // this.singleEvent = new SingleEvent("foo", this.seContainer, "SingleEvent");
         // this.logger = new Logger(success, fail, "foo", this.logContainer, "Logger");
         
         this.seContainer.child = new SingleEvent("foo", this.seContainer, "SingleEvent");
         this.logContainer.child = new Logger(success, fail, "foo", this.logContainer, "Logger");
-
-        // Normally _setAllParents would be called as part of the initialization
-        // process for starting an app, but we call it directly here to set
-        // parent attributes needed for this test.
-        this._setAllParents(null);
 
         //Connect output of singleEvent to input of logger through hierarchy.
         this.seContainer.child.o.connect(this.seContainer.o);
@@ -70,7 +65,11 @@ describe('HierarchicalSingleEvent', function () {
         };
 
         let seTest = new SETest([3, TimeUnit.secs], done, failReactor, "SingleEventTesterApp");
-        // console.log(seTest);
+
+        // Normally _setAllParents would be called as part of the initialization
+        // process for starting an app, but we call it directly here to set
+        // parent attributes needed for this test.
+        seTest._setAllParents(null);
 
         expect(expect(seTest.seContainer.child).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logContainer.child).toBeInstanceOf(Logger));
