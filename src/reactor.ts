@@ -778,11 +778,16 @@ export abstract class Reactor implements Nameable{
             timer._setParent(this);
         }
 
-        // Ports must have their parent set in constructor.
-        // let ports = this._getPorts();
-        // for(let port of ports){
-        //     port._setParent(this);
-        // }
+        // Ports have their parent set in constructor, so verify this was done correctly.
+        let ports = this._getPorts();
+        for(let port of ports){
+            if(port._getParent() != this){
+                throw new Error("A port has been incorrectly constructed as an attribute of " +
+                                "a different reactor than the parent it was given in its constructor: "
+                                + port);
+            }
+            // port._setParent(this);
+        }
 
         let actions = this._getActions();
         for(let action of actions){
@@ -832,8 +837,8 @@ export abstract class Reactor implements Nameable{
     }
 
     /**
-     * Setter method for this 
-     * @param parent 
+     * Setter method for this reactor's parent.
+     * @param parent The reactor containing this one.
      */
     public _setParent(parent: Reactor| null){
         this.parent = parent;
@@ -980,11 +985,18 @@ export abstract class Port<T> implements Named {
     }
 
     /**
-     * Setter method for a port's timer attribute.
+     * Setter method for a port's parent attribute.
      * @param parent The reactor this port is attached to.
      */
     public _setParent(parent: Reactor){
         this.parent = parent;
+    }
+
+    /**
+     * Getter method for a port's parent attribute.
+     */
+    public _getParent(){
+        return this.parent;
     }
 
     public _hasParent(): boolean {

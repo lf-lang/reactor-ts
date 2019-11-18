@@ -25,7 +25,6 @@ describe('Test names for contained reactors', () => {
         x = new MyActor();
         y = new MyActor2();
 
-
         constructor(name: string, someParam: string) {
             super(null, name);
 

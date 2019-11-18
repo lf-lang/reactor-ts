@@ -60,6 +60,21 @@ describe('Container to Contained', () => {
         }).toThrowError();
     });
 
+    it('reactor with a port constructed with the wrong parent', () => {
+        expect(() => {
+            let badPortComponent = new Component("hasBadPort");
+            let otherComponent = new Component("otherComponent");
+
+            // this port has been incorrectly constructed because it
+            // is an attribute of badPortComponent, but is set in the constructor
+            // with otherComponent as its parent 
+            badPortComponent.a = new InPort(otherComponent);
+
+            // _setAllParents should throw an error
+            badPortComponent._setAllParents(null);
+        }).toThrowError();
+    });
+
     
     it('contained reactor name', () => {
         // expect(contained._getName()).toBe("Contained");
