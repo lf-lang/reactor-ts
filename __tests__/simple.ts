@@ -28,15 +28,11 @@ describe('Test names for contained reactors', () => {
 
         constructor(name: string, someParam: string) {
             super(null, name);
-            
-            // NOTE: the following line demonstrates type checking ability:
-            // this.connect(x.a, y.b);
-            //y.b.connect(x.a);
 
-           // x.a.connect(y.b);
-            //this.connect(y.b, x.a);
-            // this.connect(y.a, y.b);
-
+            // Normally _setAllParents would be called as part of the initialization
+            // process for starting an app, but we call it directly here to set
+            // parent attributes needed for this test.
+            this._setAllParents(null);
 
             // it('contained actor name', () => {
             //     expect(this.x._getName()).toBe("MyActor");

@@ -1,40 +1,65 @@
 import {Reactor, OutPort, InPort, App} from '../src/reactor';
 
-/**
-    * An actor implementation is a reactive component with ports as properties.
-    */
-class Container extends Reactor{
+class Component extends Reactor {
+    a: InPort<string> = new InPort(this);
+    b: OutPort<string> = new OutPort(this);
+
+    child: Reactor;
+}
+
+
+
+// class Contained extends Reactor {
+
+//     a: InPort<string> = new InPort(this);
+//     b: OutPort<string> = new OutPort(this);
+
+// }
+
+
+// class Container extends Reactor{
     
-    a: InPort<string> = new InPort(this);
-    b: OutPort<string> = new OutPort(this);
+//     a: InPort<string> = new InPort(this);
+//     b: OutPort<string> = new OutPort(this);
 
-    _checkTypes() {
-        
-    }
-}
+//     contained = new Contained(this);
+
+// }
 
 
-class Contained extends Reactor {
 
-    a: InPort<string> = new InPort(this);
-    b: OutPort<string> = new OutPort(this);
-
-    _checkTypes() {
-
-    }
-}
 
 
 
 // */__tests__/.*
 describe('Container to Contained', () => {
 
-    var container = new Container(null, "Container");
-    var contained = new Contained(container, "Contained");
-    var grandcontained = new Contained(contained, "Grandcontained");
+    var container = new Component(null, "Container");
+    var contained = new Component(container, "Contained");
+    var grandcontained = new Component(contained, "Grandcontained");
 
-    var container2 = new Container(null, "Container2");
-    var contained2 = new Contained(container2, "Contained2");
+    container.child = contained;
+    contained.child = grandcontained;
+
+    var container2 = new Component(null, "Container2");
+    var contained2 = new Component(container2, "Contained2");
+
+    container2.child = contained2;
+
+    // Normally _setAllParents would be called as part of the initialization
+    // process for starting an app, but we call it directly here to set
+    // parent attributes needed for this test.
+    container._setAllParents(null);
+    container2._setAllParents(null);
+
+    it('reactor with self as child', () => {
+        expect(() => {
+            let loopy = new Component(null, "loopy");
+            loopy.child = loopy;
+            loopy._setAllParents(null);
+        }).toThrowError();
+    });
+
     
     it('contained reactor name', () => {
         // expect(contained._getName()).toBe("Contained");

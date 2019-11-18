@@ -310,7 +310,8 @@ export class Action<T> implements Trigger, Readable<T> {
         }
     }
 
-    /**
+    /** 
+     * Action Constructor
      * @param parent The reactor containing this action.
      * @param timeType Optional. Defaults to physical. If physical,
      *  then the physical clock on the local platform is used to assign a timestamp
@@ -325,7 +326,7 @@ export class Action<T> implements Trigger, Readable<T> {
      *  keyword is not given, then the action is timestamped one microstep later.
      */
     constructor(parent: Reactor, timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
-        this.parent = parent;
+        // this.parent = parent;
         this.timeType = timeType;
         this.minDelay = minDelay;
         this.name = name;
@@ -382,6 +383,14 @@ export class Action<T> implements Trigger, Readable<T> {
         let actionEvent = new Event(this, timestamp, value, this.parent.app.getEventID());
         // let actionPriEvent = new PrioritizedEvent(actionEvent, this.parent.app.getEventID());
         this.parent.app.scheduleEvent(actionEvent);    
+    }
+
+    /**
+     * Setter method for an action's parent attribute.
+     * @param parent The reactor this action is attached to.
+     */
+    public _setParent(parent: Reactor){
+        this.parent = parent;
     }
 
 }
@@ -471,7 +480,7 @@ export class Timer{
      * timer event. Cannot be negative.
      */
     constructor(parent: Reactor, period:TimeInterval, offset:TimeInterval) {
-        this.parent = parent;
+        // this.parent = parent;
         this.period = period;
         this.offset = offset;
 
@@ -482,6 +491,15 @@ export class Timer{
         if(offset[0] < 0){
             throw new Error("A timer offset may not be negative.");
         }
+    }
+
+    /**
+     * Setter method for a timer's parent attribute.
+     * @param parent The reactor containing this timer.
+     */
+    public _setParent(parent: Reactor){
+        this.parent = parent;
+        console.log("Setting parent for " + this);
     }
 
     //FIXME
@@ -525,6 +543,12 @@ export abstract class Reactor implements Nameable{
             // If pointers to other non-child reactors in the hierarchy are not
             // excluded (eg. value != this.parent) this function will loop forever.
             if (value instanceof Reactor && value != this.parent && value != this.app) {
+                // A reactor may not be a child of itself.
+                if(value == this){
+                    throw new Error("A reactor may not have itself as an attribute." +
+                                    " Reactor attributes of a reactor represent children" +
+                                    " and a reactor may not be a child of itself");
+                }
                 children.add(value);
             }
         }
@@ -621,6 +645,35 @@ export abstract class Reactor implements Nameable{
         return timers;
     }
 
+    /**
+     * Iterate through this reactor's attributes,
+     * and return the set of its ports.
+     */
+    public _getPorts(): Set<Port<any>>{
+        console.log("Getting ports for: " + this)
+        let ports = new Set<Port<any>>();
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof Port) {
+                ports.add(value);
+            }
+        }
+        return ports;
+    }
+
+    /**
+     * Iterate through this reactor's attributes,
+     * and return the set of its actions.
+     */
+    public _getActions(): Set<Action<any>>{
+        console.log("Getting actions for: " + this)
+        let actions = new Set<Action<any>>();
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof Action) {
+                actions.add(value);
+            }
+        }
+        return actions;
+    }
 
     // FIXME: return a copy. Also, not used by anything and different functionality
     // then _getTimers which recursively gets timers. 
@@ -710,6 +763,35 @@ export abstract class Reactor implements Nameable{
         }
     }
 
+    /**
+     * Recursively traverse all reactors and set all parent attributes according
+     * to the reactor hierarchy.
+     */
+    public _setAllParents(parent: Reactor | null){
+        this.parent = parent;
+        let children = this._getChildren();
+        for(let child of children){
+            child._setAllParents(this);
+        }
+
+        let timers = this._getTimers();
+        for(let timer of timers){
+            timer._setParent(this);
+        }
+
+        // Ports must have their parent set in constructor.
+        // let ports = this._getPorts();
+        // for(let port of ports){
+        //     port._setParent(this);
+        // }
+
+        let actions = this._getActions();
+        for(let action of actions){
+            action._setParent(this);
+        }
+
+    }
+
     public _hasGrandparent(): boolean {
         if (this.parent != null) {
             return this.parent._hasParent();
@@ -749,17 +831,27 @@ export abstract class Reactor implements Nameable{
             return false;
         }
     }
+
+    /**
+     * Setter method for this 
+     * @param parent 
+     */
+    public _setParent(parent: Reactor| null){
+        this.parent = parent;
+    }
    
 
     //connect: <T>(source: Port<T>, sink:Port<T>) => void;
     // FIXME: connections mus be done sink to source so that we leverage contravariance of functions!!!
     /**
+     * Reactor Constructor.
      * Create a new component; use the constructor name
      * if no name is given.
      * @param {string=} name - Given name
      */
     constructor(parent: null| Reactor, name?:string) {
-        this.parent = parent;
+
+        // This reactor's parent attribute will be set by its parent.
         
         this._myName = this.constructor.name; // default
         this._myIndex = null;
@@ -769,6 +861,27 @@ export abstract class Reactor implements Nameable{
         if (name != null) {
             this._myName = name;
         }
+
+        // let children = this._getChildren();
+        // for(let child of children){
+        //     child._setParent(this);
+        // }
+
+        // let timers = this._getTimers();
+        // for(let timer of timers){
+        //     timer._setParent(this);
+        // }
+
+        // let ports = this._getPorts();
+        // for(let port of ports){
+        //     port._setParent(this);
+        // }
+
+        // let actions = this._getActions();
+        // for(let action of actions){
+        //     action._setParent(this);
+        // }
+
 
         // Object.assign(this, {
         //     connect<T>(source: Port<T>, sink: Port<T>):void {
@@ -867,6 +980,14 @@ export abstract class Port<T> implements Named {
             + "/" + this._getName();
     }
 
+    /**
+     * Setter method for a port's timer attribute.
+     * @param parent The reactor this port is attached to.
+     */
+    public _setParent(parent: Reactor){
+        this.parent = parent;
+    }
+
     public _hasParent(): boolean {
         if(this.parent){
             return true;
@@ -938,8 +1059,12 @@ export abstract class Port<T> implements Named {
     }
 
     /* Construct a new port. */
+    /**
+     * Port constructor.
+     * @param parent 
+     */
     constructor(parent: Reactor) {
-         this.parent = parent;
+        this.parent = parent;
     }
 
     toString(): string {
@@ -1591,8 +1716,10 @@ export class App extends Reactor{
      */
     constructor(executionTimeout: TimeInterval | null, name?: string) {
         super(null, name)
-        // Note: this.parent will be initialized to null in super because this app has
-        // no parent to set it otherwise.
+        
+        // Note: this.parent is initialized to null because an app is a top
+        // level reactor.
+        this.parent = null;
 
         this._executionTimeout = executionTimeout;
     }
@@ -1652,6 +1779,9 @@ export class App extends Reactor{
     }
 
     public start(successCallback: () => void , failureCallback: () => void):void {
+        // Recursively set the parent attribute for this and all contained reactors and
+        // and components, i.e. ports, actions, and timers.
+        this._setAllParents(null);
         // Recursively set the app attribute for this and all contained reactors to this.
         this.setApp(this);
         // Recursively register reactions of contained reactors with triggers in the triggerMap.

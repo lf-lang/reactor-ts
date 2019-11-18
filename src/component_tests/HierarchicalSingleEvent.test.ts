@@ -10,31 +10,41 @@ import { Logger } from '../components/Logger';
 class SEContainer extends Reactor{
 
     o: OutPort<any>= new OutPort<any>(this);
+    child: SingleEvent;
 }
 
 class LogContainer extends Reactor{
 
     i: InPort<any>= new InPort<any>(this);
+    child: Logger;
 }
 
 class SETest extends App{
     seContainer: SEContainer;
     logContainer: LogContainer;
-    singleEvent: SingleEvent;
-    logger: Logger;
+
+
 
     constructor(timeout: TimeInterval, success: ()=> void, fail: ()=>void, name?:string ){
         super(timeout, name)
 
         this.seContainer = new SEContainer(this, "SEContainer");
         this.logContainer = new LogContainer(this, "LogContainer");
-        this.singleEvent = new SingleEvent("foo", this.seContainer, "SingleEvent");
-        this.logger = new Logger(success, fail, "foo", this.logContainer, "Logger");
+        // this.singleEvent = new SingleEvent("foo", this.seContainer, "SingleEvent");
+        // this.logger = new Logger(success, fail, "foo", this.logContainer, "Logger");
+        
+        this.seContainer.child = new SingleEvent("foo", this.seContainer, "SingleEvent");
+        this.logContainer.child = new Logger(success, fail, "foo", this.logContainer, "Logger");
+
+        // Normally _setAllParents would be called as part of the initialization
+        // process for starting an app, but we call it directly here to set
+        // parent attributes needed for this test.
+        this._setAllParents(null);
 
         //Connect output of singleEvent to input of logger through hierarchy.
-        this.singleEvent.o.connect(this.seContainer.o);
+        this.seContainer.child.o.connect(this.seContainer.o);
         this.seContainer.o.connect(this.logContainer.i);
-        this.logContainer.i.connect(this.logger.i);
+        this.logContainer.i.connect(this.logContainer.child.i);
 
     }
 }
@@ -62,10 +72,12 @@ describe('HierarchicalSingleEvent', function () {
         let seTest = new SETest([3, TimeUnit.secs], done, failReactor, "SingleEventTesterApp");
         // console.log(seTest);
 
-        expect(expect(seTest.singleEvent).toBeInstanceOf(SingleEvent));
-        expect(expect(seTest.logger).toBeInstanceOf(Logger));
+        expect(expect(seTest.seContainer.child).toBeInstanceOf(SingleEvent));
+        expect(expect(seTest.logContainer.child).toBeInstanceOf(Logger));
 
-        expect(seTest.singleEvent.o.canConnect(seTest.logger.i)).toBe(false);
+        expect(seTest.seContainer.child.o.canConnect(seTest.logContainer.child.i)).toBe(false);
+        
+        
         // expect(seTest.logger.i.canConnect(seTest.singleEvent.o)).toBe(false);
 
         seTest.start(()=> null, failRuntime);
