@@ -31,7 +31,7 @@ describe('ActionTrigger', function () {
         //Tell the reactor runtime to successfully terminate after 3 seconds.
         var aTriggerTest = new ActionTriggerTest( [3, TimeUnit.secs], done, failReactor, "ActionTriggerTest");
         //Don't give the runtime the done callback because we don't care if it terminates
-        aTriggerTest.start(()=> null, failRuntime);
+        aTriggerTest._start(()=> null, failRuntime);
 
     })
 });

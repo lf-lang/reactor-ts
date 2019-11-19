@@ -45,6 +45,6 @@ describe('SingleEvent', function () {
         expect(seTest.singleEvent.o.canConnect(seTest.logger.i)).toBe(true);
         expect(seTest.logger.i.canConnect(seTest.singleEvent.o)).toBe(false);
 
-        seTest.start(()=> null, failRuntime);
+        seTest._start(()=> null, failRuntime);
     })
 });

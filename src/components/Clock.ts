@@ -65,8 +65,8 @@ class Test extends Reaction{
         // All timers should fire simultaneously at logical time 5 seconds from the start of execution.
         // This should tricker tick, tock, and, cuckoo to simultanously schedule actions
         // 1,2, and 3. 
-        if(this.getCurrentLogicalTime()[0][0] ==  numericTimeSum( this.state.app.getStartingWallTime() , [5, 0])[0]
-            && this.getCurrentLogicalTime()[0][1] ==  numericTimeSum( this.state.app.getStartingWallTime() , [5, 0])[1]){
+        if(this._getcurrentlogicaltime()[0][0] ==  numericTimeSum( this.state._app._getStartingWallTime() , [5, 0])[0]
+            && this._getcurrentlogicaltime()[0][1] ==  numericTimeSum( this.state._app._getStartingWallTime() , [5, 0])[1]){
             console.log("reacting in Test");
                 if( (this.state as any).a1.get() == 1 
                             && (this.state as any).a2.get() == 2

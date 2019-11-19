@@ -64,6 +64,6 @@ describe('OutputGetTest', function () {
         var oGetTest = new OutputGetTest( [3, TimeUnit.secs], done, failReactor, "OutputGetTest");
         
         //Don't give the runtime the done callback because we don't care if it terminates
-        oGetTest.start(()=> null, failRuntime);
+        oGetTest._start(()=> null, failRuntime);
     })
 });

@@ -34,6 +34,6 @@ describe('OutputEventTest', function () {
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
         var sDeadline = new DeadlineTest( [3, TimeUnit.secs], done, failReactor, "ShowDeadline");
-        sDeadline.start(()=> null, failRuntime);
+        sDeadline._start(()=> null, failRuntime);
     })
 });

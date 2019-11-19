@@ -112,7 +112,7 @@ export abstract class Reaction{
      */
     public register(){
         // console.log("Before register reaction");
-        this.state.app.triggerMap.registerReaction(this);
+        this.state._app._triggerMap.registerReaction(this);
         // console.log("After register reaction");
     }
 
@@ -136,8 +136,8 @@ export abstract class Reaction{
     /**
      * More concise way to get logical time in a reaction.
      */
-    public getCurrentLogicalTime(){
-        return this.state.app.getCurrentLogicalTime();
+    public _getcurrentlogicaltime(){
+        return this.state._app._getcurrentlogicaltime();
     }
 }
 
@@ -305,7 +305,7 @@ export class Action<T> implements Trigger, Readable<T> {
             // This action has never been scheduled before.
             return false;
         }
-        if(timeInstantsAreEqual(this.timestamp, this.parent.app.getCurrentLogicalTime())){
+        if(timeInstantsAreEqual(this.timestamp, this.parent._app._getcurrentlogicaltime())){
             return true;
         } else {
             return false;
@@ -373,15 +373,15 @@ export class Action<T> implements Trigger, Readable<T> {
         if(this.timeType == TimelineClass.physical){
             //physical
             wallTime = microtimeToNumeric(microtime.now());
-            if(compareNumericTimeIntervals( this.parent.app.getCurrentLogicalTime()[0], wallTime )){
-                timestamp = [this.parent.app.getCurrentLogicalTime()[0], this.parent.app.getCurrentLogicalTime()[1] + 1 ];
+            if(compareNumericTimeIntervals( this.parent._app._getcurrentlogicaltime()[0], wallTime )){
+                timestamp = [this.parent._app._getcurrentlogicaltime()[0], this.parent._app._getcurrentlogicaltime()[1] + 1 ];
             } else {
                 timestamp = [wallTime, 0 ];
             }
         } else {
             //logical
             if( timeIntervalIsZero(this.minDelay) && timeIntervalIsZero(delay)) {
-                timestamp = [this.parent.app.getCurrentLogicalTime()[0], this.parent.app.getCurrentLogicalTime()[1] + 1 ];
+                timestamp = [this.parent._app._getcurrentlogicaltime()[0], this.parent._app._getcurrentlogicaltime()[1] + 1 ];
             } else {
                 //Take min of minDelay and delay
                 let numericMinDelay = timeIntervalToNumeric(this.minDelay);
@@ -392,13 +392,13 @@ export class Action<T> implements Trigger, Readable<T> {
                 } else{
                     actionTime = numericDelay;
                 }
-                timestamp = [actionTime, this.parent.app.getCurrentLogicalTime()[1]];
+                timestamp = [actionTime, this.parent._app._getcurrentlogicaltime()[1]];
             }
         }
 
-        let actionEvent = new Event(this, timestamp, value, this.parent.app.getEventID());
+        let actionEvent = new Event(this, timestamp, value, this.parent._app._geteventID());
         // let actionPriEvent = new PrioritizedEvent(actionEvent, this.parent.app.getEventID());
-        this.parent.app.scheduleEvent(actionEvent);    
+        this.parent._app._scheduleEvent(actionEvent);    
     }
 
     /**
@@ -443,11 +443,11 @@ export class Timer{
         if(this.offset === 0 || this.offset[0] >= 0){
             
             let numericOffset = timeIntervalToNumeric(this.offset);
-            this._offsetFromStartingTime =  numericTimeSum( numericOffset, this.parent.app.getStartingWallTime() );
+            this._offsetFromStartingTime =  numericTimeSum( numericOffset, this.parent._app._getStartingWallTime() );
             let timerInitInstant: TimeInstant = [this._offsetFromStartingTime, 0];
-            let timerInitEvent: Event<null> = new Event(this, timerInitInstant, null, this.parent.app.getEventID());
+            let timerInitEvent: Event<null> = new Event(this, timerInitInstant, null, this.parent._app._geteventID());
 
-            this.parent.app.scheduleEvent(timerInitEvent);
+            this.parent._app._scheduleEvent(timerInitEvent);
 
             console.log("Scheduled timer init for timer with period " + this.period + " at " + timerInitInstant);
         } else {
@@ -470,9 +470,9 @@ export class Timer{
                 let nextLogicalTime: NumericTimeInterval = numericTimeSum(this._offsetFromStartingTime, 
                                     numericTimeMultiple(numericPeriod , this._timerFirings) ); 
                 let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
-                let nextTimerEvent: Event<null> = new Event(this, nextTimerInstant, null, this.parent.app.getEventID());
+                let nextTimerEvent: Event<null> = new Event(this, nextTimerInstant, null, this.parent._app._geteventID());
                 // console.log("In reschedule, this.parent : " + this.parent);
-                this.parent.app.scheduleEvent(nextTimerEvent);
+                this.parent._app._scheduleEvent(nextTimerEvent);
 
                 console.log("Scheduling next event for timer with period " + this.period + " for time: " + nextTimerInstant);
             }
@@ -543,8 +543,9 @@ export abstract class Reactor implements Nameable{
     private _myName: string;
     private _myIndex: number | null;
 
-    protected parent: Reactor|null = null;
-    app:App;
+    protected _parent: Reactor|null = null;
+    
+    public _app:App;
 
     /**
      * Obtain the set of this reactor's child reactors.
@@ -558,7 +559,7 @@ export abstract class Reactor implements Nameable{
         for (const [key, value] of Object.entries(this)) {
             // If pointers to other non-child reactors in the hierarchy are not
             // excluded (eg. value != this.parent) this function will loop forever.
-            if (value instanceof Reactor && value != this.parent && value != this.app) {
+            if (value instanceof Reactor && value != this._getParent() && value != this._app) {
                 // A reactor may not be a child of itself.
                 if(value == this){
                     throw new Error("A reactor may not have itself as an attribute." +
@@ -685,8 +686,8 @@ export abstract class Reactor implements Nameable{
     _getFullyQualifiedName(): string {
         
         var path = "";
-        if (this.parent != null) {
-            path = this.parent._getFullyQualifiedName();
+        if (this._getParent() != null) {
+            path = (this._getParent() as Reactor)._getFullyQualifiedName();
         }
         if (path != "") {
             path += "/" + this._getName();
@@ -705,7 +706,7 @@ export abstract class Reactor implements Nameable{
     }
 
     public _setName(name: string) {
-        if (this.parent != null && (name != this._myName || this._myIndex == null)) {
+        if (this._getParent() != null && (name != this._myName || this._myIndex == null)) {
             //myIndex = parent._getFreshIndex(name); //FIXME: look at former composite
             this._myName = name;
         }
@@ -735,7 +736,7 @@ export abstract class Reactor implements Nameable{
     public _setApp( app: App){
         // console.log("Starting _setApp for: " + this._getFullyQualifiedName());
         console.log("Setting app for: " + this);
-        this.app = app;
+        this._app = app;
         // Recursively set the app attribute for all contained reactors to app.
         let children = this._getChildren();
         if(children){
@@ -750,7 +751,7 @@ export abstract class Reactor implements Nameable{
      * to the reactor hierarchy.
      */
     public _setAllParents(parent: Reactor | null){
-        this.parent = parent;
+        this._parent = parent;
         let children = this._getChildren();
         for(let child of children){
             child._setAllParents(this);
@@ -780,8 +781,8 @@ export abstract class Reactor implements Nameable{
     }
 
     public _hasGrandparent(): boolean {
-        if (this.parent != null) {
-            return this.parent._hasParent();
+        if (this._parent != null) {
+            return this._parent._hasParent();
         } else {
             return false;
         }
@@ -789,7 +790,7 @@ export abstract class Reactor implements Nameable{
 
    
     public _hasParent(): boolean {
-        if (this.parent != null) {
+        if (this._parent != null) {
             return true;
         } else {
             return false;
@@ -805,12 +806,12 @@ export abstract class Reactor implements Nameable{
     }
 
     public _getParent(): Reactor | null {
-        return this.parent;
+        return this._parent;
     }
 
     public _acquire(newParent: Reactor): boolean {
-        if (this.parent == null) {
-            this.parent = newParent;
+        if (this._parent == null) {
+            this._parent = newParent;
             return true;
         } else {
             return false;
@@ -818,8 +819,8 @@ export abstract class Reactor implements Nameable{
     }
 
     public _release(oldParent: Reactor): boolean {
-        if (this.parent == oldParent) {
-            this.parent = null;
+        if (this._parent == oldParent) {
+            this._parent = null;
             this._myIndex = null
             return true;
         } else {
@@ -832,7 +833,7 @@ export abstract class Reactor implements Nameable{
      * @param parent The reactor containing this one.
      */
     public _setParent(parent: Reactor| null){
-        this.parent = parent;
+        this._parent = parent;
     }
    
 
@@ -983,20 +984,20 @@ export abstract class Port<T> implements Named {
             for (let r of this.parent._reactions) {
                 if (r.triggers.includes(this)) {
                     //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                    let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
-                    this.parent.app.scheduleReaction(prioritizedReaction);
+                    let prioritizedReaction = new PrioritizedReaction(r, this.parent._app._getReactionID());
+                    this.parent._app._scheduleReaction(prioritizedReaction);
                 }
             }
         } else {
             // Output ports can trigger reactions for a reactor containing the
             // reactor they are attached to.
-            this._value = [this.parent.app.getCurrentLogicalTime(), value];
+            this._value = [this.parent._app._getcurrentlogicaltime(), value];
             if(this._hasGrandparent() && this.parent._getParent()){
                 for (let r of (this.parent._getParent() as Reactor)._reactions) {
                     if (r.triggers.includes(this)) {
                         //Create a PrioritySetNode for this reaction and push the node to the reaction queue
-                        let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
-                        this.parent.app.scheduleReaction(prioritizedReaction);
+                        let prioritizedReaction = new PrioritizedReaction(r, this.parent._app._getReactionID());
+                        this.parent._app._scheduleReaction(prioritizedReaction);
                     }
                 }
             }
@@ -1031,7 +1032,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
     /***** Priviledged functions *****/
 
     public isPresent(){
-        if(this._value && timeInstantsAreEqual(this._value[0],this.parent.app.getCurrentLogicalTime() )){
+        if(this._value && timeInstantsAreEqual(this._value[0],this.parent._app._getcurrentlogicaltime() )){
             return true;
         } else {
             return false;
@@ -1168,7 +1169,7 @@ export class InPort<T> extends Port<T> implements Readable<T> {
             if(this._connectedSourcePort instanceof OutPort){
                 let portValue = this._connectedSourcePort._getValue();
                 if( portValue === null ||
-                    ! timeInstantsAreEqual(portValue[0], this.parent.app.getCurrentLogicalTime() )){
+                    ! timeInstantsAreEqual(portValue[0], this.parent._app._getcurrentlogicaltime() )){
                         return false;
                     } else {
                         return true;
@@ -1542,7 +1543,7 @@ export class App extends Reactor{
                         }
                     }
                     // console.log("Before triggermap in next");
-                    let toTrigger = this.triggerMap.getReactions(trigger);
+                    let toTrigger = this._triggerMap.getReactions(trigger);
                     // console.log(toTrigger);
                     // console.log("after triggermap in next");
                     if(toTrigger){
@@ -1560,7 +1561,7 @@ export class App extends Reactor{
                 for (let reaction of triggersNow){
                     // console.log("Pushing new reaction onto queue");
                     // console.log(reaction);
-                    let prioritizedReaction = new PrioritizedReaction(reaction, this.getReactionID());
+                    let prioritizedReaction = new PrioritizedReaction(reaction, this._getReactionID());
                     this._reactionQ.push(prioritizedReaction);
                 }
                 
@@ -1618,7 +1619,7 @@ export class App extends Reactor{
         
         // Note: this.parent is initialized to null because an app is a top
         // level reactor.
-        this.parent = null;
+        this._parent = null;
 
         this._executionTimeout = executionTimeout;
     }
@@ -1628,13 +1629,13 @@ export class App extends Reactor{
      * Public because reactions need to register themselves with this structure
      * when they're created. 
      */
-    public triggerMap: TriggerMap = new TriggerMap();
+    public _triggerMap: TriggerMap = new TriggerMap();
 
     /**
      * Public method to push events on the event queue. 
      * @param e Prioritized event to push onto the event queue.
      */
-    public scheduleEvent(e: Event<any>){  
+    public _scheduleEvent(e: Event<any>){  
         this._eventQ.push(e);
     }
 
@@ -1642,21 +1643,21 @@ export class App extends Reactor{
      * Public method to push reaction on the reaction queue. 
      * @param e Prioritized reaction to push onto the reaction queue.
      */
-    public scheduleReaction(r: PrioritizedReaction){  
+    public _scheduleReaction(r: PrioritizedReaction){  
         this._reactionQ.push(r);
     }
 
     /**
      * Obtain a unique identifier for the reaction.
      */
-    public getReactionID(){
+    public _getReactionID(){
         return this._reactionIDCount++;
     }
 
     /**
      * Public getter for logical time. 
      */
-    public getCurrentLogicalTime(){
+    public _getcurrentlogicaltime(){
         return this._currentLogicalTime;
     }
     
@@ -1666,18 +1667,18 @@ export class App extends Reactor{
      * is used to resolve priority between duplicate events with the same
      * timestamp in the eventQ.
      */
-    public getEventID(){
+    public _geteventID(){
         return this._eventIDCount++;
     }
 
     /**
      * Public getter for starting wall time.
      */
-    public getStartingWallTime(){
+    public _getStartingWallTime(){
         return this._startingWallTime
     }
 
-    public start(successCallback: () => void , failureCallback: () => void):void {
+    public _start(successCallback: () => void , failureCallback: () => void):void {
         // Recursively set the parent attribute for this and all contained reactors and
         // and components, i.e. ports, actions, and timers.
         this._setAllParents(null);

@@ -68,6 +68,6 @@ describe('HierarchicalSingleEvent', function () {
 
         expect(seTest.seContainer.child.o.canConnect(seTest.logContainer.child.i)).toBe(false);
 
-        seTest.start(()=> null, failRuntime);
+        seTest._start(()=> null, failRuntime);
     });
 });

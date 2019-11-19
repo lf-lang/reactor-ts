@@ -17,7 +17,7 @@ describe('clock', function () {
         var clock = new Clock([6, TimeUnit.secs], done, fail, "Clock");
 
         //Don't give the runtime the done callback because we don't care if it terminates
-        clock.start(() => null, fail);
+        clock._start(() => null, fail);
     })
 });
 
