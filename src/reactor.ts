@@ -117,7 +117,7 @@ export abstract class Reaction{
 
     /**
      * Reactor constructor: FIXME
-     * @param state FIXME: should be parent
+     * @param state FIXME: should probably be named parent
      * @param triggers 
      * @param priority 
      */
@@ -149,6 +149,9 @@ export abstract class Reaction{
  */
 export abstract class Deadline{
 
+    /**
+     * The time after which the deadline miss's handler is invoked.
+     */
     private timeout: TimeInterval;
 
     /**
@@ -222,14 +225,27 @@ export class Event<T> implements
     // Event attributes
     public time: TimeInstant;
     public cause: Trigger;
+    
+    // Associating values with events makes it possible
+    // to ensure actions take on the value assigned the last
+    // time they are scheduled.
     public value: T;
 
-    //Precedence graph node attributes
+    // Precedence graph node attributes
     public _id: number;
     public _next: PrioritySetNode<number,TimeInstant> | null;
     public _priority: TimeInstant;
 
-    constructor(cause: Trigger, time: TimeInstant, value: any, id: number){
+    /**
+     * Constructor for an event.
+     * @param cause The trigger which "caused" this event to occur.
+     * @param time The time instant when this event occurs.
+     * @param value The value associated with this event. 
+     * @param id A unique identifier for this event. This should probably
+     * be obtained from app.getEventID().
+     * 
+     */
+    constructor(cause: Trigger, time: TimeInstant, value:T, id: number){
         this.time = time;
         this.cause = cause;
         this.value = value;
@@ -411,9 +427,6 @@ export class Timer{
     //TimeInterval = null | [number, TimeUnit] | 0;
     period: TimeInterval;
     offset: TimeInterval;
-    
-    //Timers always have top priority.
-    // priority = 0;
 
     //A timer is only triggered by itself.
     triggers: Array<Trigger> = new Array();
@@ -421,7 +434,6 @@ export class Timer{
     //Private variables used to keep track of rescheduling
     _timerFirings: number = 0;
     _offsetFromStartingTime: NumericTimeInterval;
-
 
     //The setup function is used by an app to create the first timer event.
     //It must be called before reschedule, or else _offsetFromStartingTime will
@@ -433,8 +445,7 @@ export class Timer{
             this._offsetFromStartingTime =  numericTimeSum( numericOffset, this.parent.app.getStartingWallTime() );
             let timerInitInstant: TimeInstant = [this._offsetFromStartingTime, 0];
             let timerInitEvent: Event<null> = new Event(this, timerInitInstant, null, this.parent.app.getEventID());
-            
-            // console.log("In setup, this.parent is: " + this.parent);
+
             this.parent.app.scheduleEvent(timerInitEvent);
 
             console.log("Scheduled timer init for timer with period " + this.period + " at " + timerInitInstant);
@@ -479,7 +490,6 @@ export class Timer{
      * timer event. Cannot be negative.
      */
     constructor(period:TimeInterval, offset:TimeInterval) {
-        // this.parent = parent;
         this.period = period;
         this.offset = offset;
 
@@ -501,23 +511,22 @@ export class Timer{
         console.log("Setting parent for " + this);
     }
 
-    //FIXME
+    /**
+     * FIXME: not implemented yet. Do we need this?
+     * @param period 
+     */
     adjustPeriod(period: TimeInterval):void {   
         // FIXME
     }
 }
 
-//FIME: This comment seems out of date with the current LF spec
-//regarding composites
 /**
- * Each component has a name. It will typically also acquire a 
- * parent, unless it is a top-level composite. The parent property
- * is set/unset once a component is added to or removed from a 
- * parent. Adding a component to a parent will also ensure 
- * that it is uniquely indexed within that parent.
- */
-/**
- * 
+ * A reactor is a software component that reacts to input events,
+ * timer events, and internal events. It has private state variables
+ * that are not visible to any other reactor. Its reactions can
+ * consist of altering its own state, sending messages to other
+ * reactors, or affecting the environment through some kind of
+ * actuation or side effect.
  */
 export abstract class Reactor implements Nameable{
 
@@ -536,6 +545,13 @@ export abstract class Reactor implements Nameable{
     parent: Reactor|null = null;
     app:App;
 
+    /**
+     * Obtain the set of this reactor's child reactors.
+     * Watch out for cycles!
+     * This function ignores reactor attributes which reference
+     * this reactor's parent and this reactor's app.
+     * It is an error for a reactor to be a child of itself.
+     */
     public _getChildren(): Set<Reactor> {
         let children = new Set<Reactor>();
         for (const [key, value] of Object.entries(this)) {
@@ -674,23 +690,6 @@ export abstract class Reactor implements Nameable{
         return actions;
     }
 
-    // FIXME: return a copy. Also, not used by anything and different functionality
-    // then _getTimers which recursively gets timers. 
-    // public _getActions(name: string){
-    //     return this._actions;
-    // }
-
-    //FIXME: assign in constructor?
-    // addPort(port: PortBase){
-    //     if( port instanceof InPort){
-    //         this._inputs.set(port._getName() ,port);
-    //     } else if (port instanceof OutPort){
-    //         this._outputs.set(port._getName() , port);
-    //     } else {
-    //         throw new Error("Can only addPorts to a reactor of type InPort or OutPort");
-    //     }
-    // }
-
     /**
      * Return a string that identifies this component.
      * The name is a path constructed as TopLevelParentName/.../ParentName/ThisReactorsName
@@ -737,10 +736,6 @@ export abstract class Reactor implements Nameable{
         this._priority = priority;
     }
 
-
-    // _getFullyQualifiedName: () => string;
-
-
     toString(): string {
         return this._getFullyQualifiedName();
     }
@@ -749,15 +744,15 @@ export abstract class Reactor implements Nameable{
      * Recursively sets the app attribute for this reactor and all contained reactors to app.
      * @param app The app for this and all contained reactors.
      */
-    public setApp( app: App){
-        // console.log("Starting setApp for: " + this._getFullyQualifiedName());
+    public _setApp( app: App){
+        // console.log("Starting _setApp for: " + this._getFullyQualifiedName());
         console.log("Setting app for: " + this);
         this.app = app;
         // Recursively set the app attribute for all contained reactors to app.
         let children = this._getChildren();
         if(children){
             for(let child of children){
-                child.setApp(app);
+                child._setApp(app);
             }
         }
     }
@@ -1794,7 +1789,7 @@ export class App extends Reactor{
         // and components, i.e. ports, actions, and timers.
         this._setAllParents(null);
         // Recursively set the app attribute for this and all contained reactors to this.
-        this.setApp(this);
+        this._setApp(this);
         // Recursively register reactions of contained reactors with triggers in the triggerMap.
         this._registerReactions();
         // console.log(this.triggerMap);

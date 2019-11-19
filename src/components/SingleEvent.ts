@@ -19,8 +19,7 @@ export class ProduceOutput extends Reaction{
 
         // FIXME: create a test that actually tests double sets.
         // It's confusing to have SingleEvent be a DoubleEvent.
-        
-        // Duplicate sets for the same port like this is bad form,
+        // Duplicate sets for the same port is bad form,
         // but its worth checking that the correct value (from the last set)
         // is delivered.
         

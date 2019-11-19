@@ -25,6 +25,10 @@ export class OutputResponse extends Reaction{
     }
 }
 
+/**
+ * This reactor calls the success callback if it triggers a reaction in response
+ * to a value being set to a contained reactor's output port.
+ */
 export class OutputResponder extends Reactor {
 
     se: SingleEvent = new SingleEvent(null, this, "ContainedSingleEvent");

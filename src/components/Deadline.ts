@@ -92,7 +92,10 @@ export class WasteTime extends Reaction{
     }
 }
 
-
+/**
+ * This reactor demonstrates the deadline component.
+ * The soonDead reaction has a deadline that should be missed.
+ */
 export class ShowDeadline extends Reactor {
 
     //Triggers immediatedly
