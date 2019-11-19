@@ -1,9 +1,7 @@
 'use strict';
 
-
 import {App} from '../reactor';
 import {TimeUnit, TimeInterval} from "../time"
-// import * as globals from './globals';
 import { ActionTrigger } from '../components/ActionTrigger';
 
 class ActionTriggerTest extends App{
@@ -17,15 +15,8 @@ class ActionTriggerTest extends App{
 
 describe('ActionTrigger', function () {
 
-    //Tell the reactor runtime to successfully terminate after 3 seconds.
-    // globals.setExecutionTimeout([3, TimeUnit.secs]);
-    //Ensure the test will run for 5 seconds.
+    // Ensure the test will run for no more than 5 seconds.
     jest.setTimeout(5000);
-
-    // it('ActionTrigger create test', function () {
-    //     expect(expect(actionTrigger).toBeInstanceOf(ActionTrigger));
-
-    // });
 
     it('start runtime', done => {
 
@@ -37,6 +28,7 @@ describe('ActionTrigger', function () {
             throw new Error("Reactor has failed.");
         };
 
+        //Tell the reactor runtime to successfully terminate after 3 seconds.
         var aTriggerTest = new ActionTriggerTest( [3, TimeUnit.secs], done, failReactor, "ActionTriggerTest");
         //Don't give the runtime the done callback because we don't care if it terminates
         aTriggerTest.start(()=> null, failRuntime);

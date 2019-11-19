@@ -1,6 +1,5 @@
 
 import {Reactor, InPort, Trigger, Reaction, } from '../reactor';
-// import { triggerMap } from './globals';
 
 export class Print extends Reaction{
 

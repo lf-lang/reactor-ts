@@ -1,6 +1,5 @@
 'use strict';
 
-
 import {App} from '../reactor';
 import {TimeUnit, TimeInterval} from "../time"
 import { SingleEvent } from '../components/SingleEvent';
@@ -23,9 +22,7 @@ class SETest extends App{
 
 describe('SingleEvent', function () {
 
-    //Tell the reactor runtime to successfully terminate after 3 seconds.
-    // globals.setExecutionTimeout([3, TimeUnit.secs]);
-    //Ensure the test will run for 5 seconds.
+    //Ensure the test will run for no more than 5 seconds.
     jest.setTimeout(5000);
 
     it('start runtime with input.connect to output', done => {
@@ -39,8 +36,8 @@ describe('SingleEvent', function () {
             throw new Error("Reactor has failed.");
         };
 
+        // Tell the reactor runtime to successfully terminate after 3 seconds.
         let seTest = new SETest([3, TimeUnit.secs], done, failReactor, "SingleEventTesterApp");
-        // console.log(seTest);
 
         expect(expect(seTest.singleEvent).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logger).toBeInstanceOf(Logger));
@@ -49,9 +46,5 @@ describe('SingleEvent', function () {
         expect(seTest.logger.i.canConnect(seTest.singleEvent.o)).toBe(false);
 
         seTest.start(()=> null, failRuntime);
-        
-        // logger.i.connect(singleEvent.o);
-
-        // globals.startRuntime(()=>null, failRuntime);
     })
 });

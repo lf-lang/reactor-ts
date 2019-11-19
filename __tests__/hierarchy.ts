@@ -7,31 +7,6 @@ class Component extends Reactor {
     child: Reactor;
 }
 
-
-
-// class Contained extends Reactor {
-
-//     a: InPort<string> = new InPort(this);
-//     b: OutPort<string> = new OutPort(this);
-
-// }
-
-
-// class Container extends Reactor{
-    
-//     a: InPort<string> = new InPort(this);
-//     b: OutPort<string> = new OutPort(this);
-
-//     contained = new Contained(this);
-
-// }
-
-
-
-
-
-
-// */__tests__/.*
 describe('Container to Contained', () => {
 
     var container = new Component("Container");

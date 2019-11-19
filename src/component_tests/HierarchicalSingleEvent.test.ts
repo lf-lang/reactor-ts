@@ -1,11 +1,9 @@
 'use strict';
 
-
 import {Reactor, OutPort, InPort, App} from '../reactor';
 import {TimeUnit, TimeInterval} from "../time"
 import { SingleEvent } from '../components/SingleEvent';
 import { Logger } from '../components/Logger';
-
 
 class SEContainer extends Reactor{
 
@@ -23,15 +21,11 @@ class SETest extends App{
     seContainer: SEContainer;
     logContainer: LogContainer;
 
-
-
     constructor(timeout: TimeInterval, success: ()=> void, fail: ()=>void, name?:string ){
         super(timeout, name)
 
         this.seContainer = new SEContainer("SEContainer");
         this.logContainer = new LogContainer("LogContainer");
-        // this.singleEvent = new SingleEvent("foo", this.seContainer, "SingleEvent");
-        // this.logger = new Logger(success, fail, "foo", this.logContainer, "Logger");
         
         this.seContainer.child = new SingleEvent("foo", this.seContainer, "SingleEvent");
         this.logContainer.child = new Logger(success, fail, "foo", this.logContainer, "Logger");
@@ -40,7 +34,6 @@ class SETest extends App{
         this.seContainer.child.o.connect(this.seContainer.o);
         this.seContainer.o.connect(this.logContainer.i);
         this.logContainer.i.connect(this.logContainer.child.i);
-
     }
 }
 
@@ -48,9 +41,7 @@ class SETest extends App{
 //contained by other reactors.
 describe('HierarchicalSingleEvent', function () {
 
-    //Tell the reactor runtime to successfully terminate after 3 seconds.
-    // globals.setExecutionTimeout([3, TimeUnit.secs]);
-    //Ensure the test will run for 5 seconds.
+    // Ensure the test will run for no more than 5 seconds.
     jest.setTimeout(5000);
 
     it('start runtime with input.connect to output', done => {
@@ -64,6 +55,7 @@ describe('HierarchicalSingleEvent', function () {
             throw new Error("Reactor has failed.");
         };
 
+        // Tell the reactor runtime to successfully terminate after 3 seconds.
         let seTest = new SETest([3, TimeUnit.secs], done, failReactor, "SingleEventTesterApp");
 
         // Normally _setAllParents would be called as part of the initialization
@@ -75,45 +67,7 @@ describe('HierarchicalSingleEvent', function () {
         expect(expect(seTest.logContainer.child).toBeInstanceOf(Logger));
 
         expect(seTest.seContainer.child.o.canConnect(seTest.logContainer.child.i)).toBe(false);
-        
-        
-        // expect(seTest.logger.i.canConnect(seTest.singleEvent.o)).toBe(false);
 
         seTest.start(()=> null, failRuntime);
-
-    // it('start runtime with input.connect to output', done => {
-    //     console.log("starting test");
-
-    //     function failRuntime(){
-    //         throw new Error("Runtime has failed.");
-    //     };
-
-    //     function failReactor(){
-    //         throw new Error("Reactor has failed.");
-    //     };
-
-    //     var seContainer = new SEContainer(null, "SingleEventContainer");
-    //     var logContainer = new LogContainer(null, "LogContainer");
-
-    //     var singleEvent = new SingleEvent("foo",seContainer, "SingleEvent");
-    //     var logger = new Logger(done, failReactor, "foo", logContainer, "Logger");
-
-    //     expect(expect(singleEvent).toBeInstanceOf(SingleEvent));
-    //     expect(expect(logger).toBeInstanceOf(Logger));
-
-    //     expect(singleEvent.o.canConnect(logger.i)).toBe(false);
-    //     console.log("past expects...");
-    //     //expect(logger.i.canConnect(singleEvent.o)).toBe(false);
-
-    //     //Connect output of singleEvent to input of logger.
-
-    //     singleEvent.o.connect(seContainer.o);
-    //     seContainer.o.connect(logContainer.i);
-    //     logContainer.i.connect(logger.i);
-    //     // logger.i.connect(singleEvent.o);
-    //     console.log("starting runtime in hierarch single event");
-
-    //     globals.startRuntime(()=>null, failRuntime);
-    // })
     });
 });

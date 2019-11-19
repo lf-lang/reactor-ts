@@ -45,8 +45,6 @@ class OutputGetter extends Reaction{
 // once it has been set()
 describe('OutputGetTest', function () {
 
-    //Tell the reactor runtime to successfully terminate after 3 seconds.
-    // globals.setExecutionTimeout([3, TimeUnit.secs]);
     //Ensure the test will run for 5 seconds.
     jest.setTimeout(5000);
 
@@ -62,7 +60,9 @@ describe('OutputGetTest', function () {
             throw new Error("Reactor has failed.");
         };
 
+        //Tell the reactor runtime to successfully terminate after 3 seconds.
         var oGetTest = new OutputGetTest( [3, TimeUnit.secs], done, failReactor, "OutputGetTest");
+        
         //Don't give the runtime the done callback because we don't care if it terminates
         oGetTest.start(()=> null, failRuntime);
     })
