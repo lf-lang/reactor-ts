@@ -593,19 +593,6 @@ export abstract class Reactor implements Nameable{
     public _getAllReactions(): Set<Reaction> {
         let reactions = this._getReactions();
 
-        // // Reactions part of this reactor
-        // for( let r of this._reactions){
-        //     reactions.add(r);
-        // }
-
-        // for (const [key, value] of Object.entries(this)) {
-        //     // console.log(key);
-        //     if (value instanceof Reaction) {
-        //         // console.log("got a reaction!" + value);
-        //         reactions.add(value);
-        //     }
-        // }
-
         // Recursively call this function on child reactors
         // and add their timers to the timers set.
         let children = this._getChildren();
@@ -627,7 +614,7 @@ export abstract class Reactor implements Nameable{
      * and return the set of its timers.
      */
     public _getTimers(): Set<Timer>{
-        console.log("Getting timers for: " + this)
+        // console.log("Getting timers for: " + this)
         let timers = new Set<Timer>();
         for (const [key, value] of Object.entries(this)) {
             if (value instanceof Timer) {
@@ -666,7 +653,7 @@ export abstract class Reactor implements Nameable{
      * and return the set of its ports.
      */
     public _getPorts(): Set<Port<any>>{
-        console.log("Getting ports for: " + this)
+        // console.log("Getting ports for: " + this)
         let ports = new Set<Port<any>>();
         for (const [key, value] of Object.entries(this)) {
             if (value instanceof Port) {
@@ -681,7 +668,7 @@ export abstract class Reactor implements Nameable{
      * and return the set of its actions.
      */
     public _getActions(): Set<Action<any>>{
-        console.log("Getting actions for: " + this)
+        // console.log("Getting actions for: " + this)
         let actions = new Set<Action<any>>();
         for (const [key, value] of Object.entries(this)) {
             if (value instanceof Action) {
@@ -870,26 +857,6 @@ export abstract class Reactor implements Nameable{
             this._myName = name;
         }
 
-        // let children = this._getChildren();
-        // for(let child of children){
-        //     child._setParent(this);
-        // }
-
-        // let timers = this._getTimers();
-        // for(let timer of timers){
-        //     timer._setParent(this);
-        // }
-
-        // let ports = this._getPorts();
-        // for(let port of ports){
-        //     port._setParent(this);
-        // }
-
-        // let actions = this._getActions();
-        // for(let action of actions){
-        //     action._setParent(this);
-        // }
-
 
         // Object.assign(this, {
         //     connect<T>(source: Port<T>, sink: Port<T>):void {
@@ -918,39 +885,6 @@ export abstract class Reactor implements Nameable{
         //     //parent._add(this); // FIXME: add container capability to Reactor
         // }
     }
-
-    
- 
-    // _getInputs(): Set<InPort<any>> {
-    //     var inputs = new Set<InPort<any>>();
-    //     for (const [key, value] of Object.entries(this)) {
-    //         if (value instanceof InPort) {
-    //             inputs.add(value);
-    //         }
-    //     }
-    //     return inputs;
-    // }
-
-    // _getOutputs(): Set<OutPort<any>> {
-    //     var outputs = new Set<OutPort<any>>();
-    //     for (const [key, value] of Object.entries(this)) {
-    //         if (value instanceof OutPort) {
-    //             outputs.add(value);
-    //         }
-    //     }
-    //     return outputs;
-    // }
-
-    // _getActions(): Set<Action<any>> {
-    //     var actions = new Set<Action<any>>();
-    //     for (const [key, value] of Object.entries(this)) {
-    //         if (value instanceof Action) {
-    //             actions.add(value);
-    //         }
-    //     }
-    //     return actions;
-    // }
-    
 }
 
 export abstract class Port<T> implements Named {
@@ -966,7 +900,7 @@ export abstract class Port<T> implements Named {
      * WARNING: Do not call this function in a reaction.
      * Use get() instead. This function should only be used
      * by the runtime to implement user-facing functions such
-     * as get();
+     * as get().
      */
     public _getValue(){
         return this._value;
@@ -1091,11 +1025,10 @@ export abstract class Port<T> implements Named {
 export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
 
     // value: TimestampedValue<T> | null = null;
-    _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
-    _connectedSourcePort: Port<T> | null = null;
+    // _connectedSinkPorts: Set<Port<T>> = new Set<Port<T>>();
+    // _connectedSourcePort: Port<T> | null = null;
 
     /***** Priviledged functions *****/
-
 
     public isPresent(){
         if(this._value && timeInstantsAreEqual(this._value[0],this.parent.app.getCurrentLogicalTime() )){
@@ -1144,32 +1077,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
                 return false;
             }
         }
-
-        // var thisComponent = parent;
-        // var thisContainer = parent._getContainer();
-
-        // if (sink instanceof InPort
-        //     && thisContainer != null
-        //     && sink.hasGrandparent(thisContainer) //
-        //     && !sink.hasParent(thisComponent)) {
-        //     // OUT to IN
-        //     // - Component must be in the same container.
-        //     // - Self-loops are not permitted.
-        //     return true;
-        // } else if (sink instanceof OutPort 
-        //     && thisContainer instanceof Reactor 
-        //     && sink.hasParent(thisContainer)) {
-        //     // OUT to OUT
-        //     // - Sink must be output port of composite that source component is contained by.
-        //     return true;
-        // }
-        // else {
-        //     return false;
-        // }
-        // solution: add Container here. Do tests prior to calling to verify it is the same
-        return true;
     }
-
 
     /**
     * Write a value to this OutPort and recursively transmit the value to connected
@@ -1592,11 +1500,6 @@ export class App extends Reactor{
                 let timeoutString = timeout[0].toString() + padding + nanoSecString + "n"; 
                 nTimer.setTimeout(this._next.bind(this), [successCallback, failureCallback], timeoutString);
                 
-                //FIXME: Delete this comment when we're sure nanotimer is the right way to go.
-                // setTimeout(  ()=>{
-                //     _next(successCallback, failureCallback);
-                //     return;
-                // }, timeout);
                 return;
             } else {
                 //Physical time has caught up, so advance logical time
@@ -1652,17 +1555,6 @@ export class App extends Reactor{
                     // console.log("after triggermap in next");
                     if(toTrigger){
                         for(let reaction of toTrigger){
-
-                            //FIXME: I think we can get rid of this with reflection
-                            //what is actionArray used for?
-                             //Ensure this reaction is matched to its actions 
-                            // if(trigger instanceof Action){
-                            //     let actionArray = reactionsToActions.get(reaction);
-                            //     if( ! actionArray){
-                            //         actionArray = new Set<Action<any>>();
-                            //     } 
-                            //     actionArray.add(trigger);
-                            // }
 
                             //Push this reaction to the queue when we are done
                             //processing events.
@@ -1739,7 +1631,7 @@ export class App extends Reactor{
         this._executionTimeout = executionTimeout;
     }
 
-        /**
+    /**
      * Maps triggers coming off the event queue to the reactions they trigger.
      * Public because reactions need to register themselves with this structure
      * when they're created. 
