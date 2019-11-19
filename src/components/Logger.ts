@@ -19,7 +19,7 @@ export class Print extends Reaction{
      * @override
      */
     react(){
-        const received = (this.state as any).i.get();
+        const received = (this.state as Logger).i.get();
         if( received ){
             console.log("Logging: " + received);
             if(received === this.expected){

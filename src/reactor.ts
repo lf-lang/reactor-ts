@@ -543,7 +543,7 @@ export abstract class Reactor implements Nameable{
     private _myName: string;
     private _myIndex: number | null;
 
-    parent: Reactor|null = null;
+    protected parent: Reactor|null = null;
     app:App;
 
     /**
@@ -991,8 +991,8 @@ export abstract class Port<T> implements Named {
             // Output ports can trigger reactions for a reactor containing the
             // reactor they are attached to.
             this._value = [this.parent.app.getCurrentLogicalTime(), value];
-            if(this._hasGrandparent() && this.parent.parent){
-                for (let r of this.parent.parent._reactions) {
+            if(this._hasGrandparent() && this.parent._getParent()){
+                for (let r of (this.parent._getParent() as Reactor)._reactions) {
                     if (r.triggers.includes(this)) {
                         //Create a PrioritySetNode for this reaction and push the node to the reaction queue
                         let prioritizedReaction = new PrioritizedReaction(r, this.parent.app.getReactionID());
@@ -1223,7 +1223,7 @@ export class InPort<T> extends Port<T> implements Readable<T> {
         if(sink instanceof InPort){
             // IN to IN
             // sink's reactor must be the child of this one.
-            if(sink.parent.parent == this.parent){
+            if(sink.parent._getParent() == this.parent){
                 return true;
             } else {
                 return false;
