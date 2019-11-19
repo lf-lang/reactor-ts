@@ -1284,14 +1284,6 @@ export class InPort<T> extends Port<T> implements Readable<T> {
         //     }
         // }
 
-    /**
-     * Create a new InPort.
-     * @param parent The reactor containing this InPort
-     */
-    constructor(parent: Reactor) {
-        super(parent);
-    }
-
     toString(): string {
         return this._getFullyQualifiedName();
     }

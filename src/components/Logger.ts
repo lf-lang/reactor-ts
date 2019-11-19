@@ -1,4 +1,3 @@
-
 import {Reactor, InPort, Trigger, Reaction, } from '../reactor';
 
 export class Print extends Reaction{

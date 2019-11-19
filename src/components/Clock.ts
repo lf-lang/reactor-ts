@@ -62,9 +62,9 @@ class Test extends Reaction{
         console.log("Before check in test");
         // console.log("does current logical time: " + globals.currentLogicalTime[0] + " equal " + numericTimeSum( globals.startingWallTime , [5, 0]));
                 
-        //All timers should fire simultaneously at logical time 5 seconds from the start of execution.
-        //This should tricker tick, tock, and, cuckoo to simultanously schedule actions
-        //1,2, and 3. 
+        // All timers should fire simultaneously at logical time 5 seconds from the start of execution.
+        // This should tricker tick, tock, and, cuckoo to simultanously schedule actions
+        // 1,2, and 3. 
         if(this.getCurrentLogicalTime()[0][0] ==  numericTimeSum( this.state.app.getStartingWallTime() , [5, 0])[0]
             && this.getCurrentLogicalTime()[0][1] ==  numericTimeSum( this.state.app.getStartingWallTime() , [5, 0])[1]){
             console.log("reacting in Test");
@@ -79,7 +79,16 @@ class Test extends Reaction{
     }
 }
 
-
+/**
+ * This app tests simultaneous events.
+ * It creates two timers: t1 and t2 which should simultaneously have events at time
+ * 5 seconds from the start of execution.
+ * The timers trigger reactions: r1, r2, and r3. r1 is triggered by t1, r2 is triggered
+ * by t2, and r3 is triggered by both t1 and t2.
+ * Each reaction immediately schedules an action with a corresponding name (r1 schedules t1, etc.).
+ * At time 5 seconds, the Test reaction r4 will be triggered and it will check that a1
+ * a2, and a3 are all simultaneously present.
+ */
 export class Clock extends App {
 
     t1: Timer = new Timer([1, TimeUnit.sec], [3, TimeUnit.sec]);
