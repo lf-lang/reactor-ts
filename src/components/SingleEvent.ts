@@ -23,7 +23,7 @@ export class ProduceOutput extends Reaction{
         // but its worth checking that the correct value (from the last set)
         // is delivered.
         
-        (this.state as any).o.set(this.outputPayload);
+        (this.state as SingleEvent).o.set(this.outputPayload);
         console.log("Writing payload to SingleEvent's output.");
     }
 }

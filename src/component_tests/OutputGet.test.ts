@@ -29,7 +29,7 @@ class OutputGetter extends Reaction{
     }
 
     react(){
-        let state: any = this.state as any;
+        let state: OutputGetTest = this.state as OutputGetTest;
         if(state.o.get() != null){
             throw new Error("Calling get on an output before it has been set does not return null");
         }

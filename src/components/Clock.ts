@@ -10,7 +10,7 @@ class Tick extends Reaction{
      * @override
      */
     react(){
-        (this.state as any).a1.schedule(0, 1);
+        (this.state as Clock).a1.schedule(0, 1);
         console.log("Tick");
     }
 }
@@ -22,7 +22,7 @@ class Tock extends Reaction{
      * @override
      */
     react(){
-        (this.state as any).a2.schedule(0, 2);
+        (this.state as Clock).a2.schedule(0, 2);
         console.log("Tock");
     }
 }
@@ -34,7 +34,7 @@ class Cuckoo extends Reaction{
      * @override
      */
     react(){
-        (this.state as any).a3.schedule(0, 3);
+        (this.state as Clock).a3.schedule(0, 3);
         console.log("Cuckoo");
     }
 }
@@ -68,9 +68,9 @@ class Test extends Reaction{
         if(this._getcurrentlogicaltime()[0][0] ==  numericTimeSum( this.state._app._getStartingWallTime() , [5, 0])[0]
             && this._getcurrentlogicaltime()[0][1] ==  numericTimeSum( this.state._app._getStartingWallTime() , [5, 0])[1]){
             console.log("reacting in Test");
-                if( (this.state as any).a1.get() == 1 
-                            && (this.state as any).a2.get() == 2
-                            && (this.state as any).a3.get() == 3){
+                if( (this.state as Clock).a1.get() == 1 
+                            && (this.state as Clock).a2.get() == 2
+                            && (this.state as Clock).a3.get() == 3){
                 this.success();
             } else {
                 this.fail();

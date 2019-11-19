@@ -10,7 +10,7 @@ export class ScheduleAction extends Reaction{
      * @override
      */
     react(){
-        (this.state as any).a1.schedule(0, "hello");
+        (this.state as ActionTrigger).a1.schedule(0, "hello");
         
         console.log("Scheduling the final action in ScheduleAction to trigger RespondToAction");
     }
@@ -23,7 +23,7 @@ export class ScheduleOverriddenAction extends Reaction{
      * @override
      */
     react(){
-        (this.state as any).a1.schedule(0, "goodbye");
+        (this.state as ActionTrigger).a1.schedule(0, "goodbye");
         
         console.log("Scheduling the overridden action in ScheduleOverriddenAction to trigger RespondToAction");
     }
@@ -48,9 +48,9 @@ export class RespondToAction extends Reaction{
      * @override
      */
     react(){
-        const msg = (this.state as any).a1.get();
-        const nothing = (this.state as any).a2.get();
-        if(msg == "hello" && nothing === null && ! (this.state as any).a2.isPresent()){
+        const msg = (this.state as ActionTrigger).a1.get();
+        const nothing = (this.state as ActionTrigger).a2.get();
+        if(msg == "hello" && nothing === null && ! (this.state as ActionTrigger).a2.isPresent()){
             this.success();
         } else {
             this.fail();
