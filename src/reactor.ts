@@ -52,6 +52,7 @@ export interface Readable<T> {
     isPresent: () => boolean;
 }
 
+
 /**
  * For objects that have a name.
  */
@@ -728,11 +729,11 @@ export abstract class Reactor implements Nameable{
     _priority: number = -1;
 
     //FIXME: assign in constructor?
-    getPriority(){
+    _getPriority(){
         return this._priority;
     }
 
-    setPriority(priority: number){
+    _setPriority(priority: number){
         this._priority = priority;
     }
 
@@ -805,6 +806,14 @@ export abstract class Reactor implements Nameable{
             return true;
         } else {
             return false;
+        }
+    }
+
+    public _getGrandparent(): Reactor {
+        if(this._hasGrandparent()){
+            return ((this._getParent() as Reactor )._getParent() as Reactor);
+        } else {
+            throw new Error("Cannot get grandparent for a port with no grandparent");
         }
     }
 
@@ -948,7 +957,7 @@ export abstract class Port<T> implements Named {
     
     // The reactor containing this port
     // This attribute is set by the parent reactor's constructor.
-    parent: Reactor;
+    protected parent: Reactor;
 
     protected _value: TimestampedValue<T> | null = null;
     
@@ -1120,7 +1129,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
         // Reactor with input port must be at the same level of hierarchy as
         // reactor with output port.
         if(sink instanceof InPort){ 
-            if(this.parent.parent == sink.parent.parent){
+            if(this._getParent()._getParent() == sink._getParent()._getParent()){
                 return true;
             } else {
                 return false;
@@ -1129,7 +1138,7 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
         // OUT to OUT
         // This reactor must be the child of sink's reactor 
         } else {
-            if(this.parent.parent == sink.parent){
+            if(this._getParent()._getParent() == sink._getParent()){
                 return true;
             } else {
                 return false;
