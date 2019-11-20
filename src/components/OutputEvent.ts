@@ -35,7 +35,7 @@ export class OutputResponder extends Reactor {
     r: Reaction;
 
     constructor(success: ()=> void, fail: ()=> void, parent: Reactor|null, name?:string ){
-        super(name);
+        super(parent, name);
         
         this.r = new OutputResponse(this, [this.se.o], 0, success, fail );
         this._reactions = [this.r];

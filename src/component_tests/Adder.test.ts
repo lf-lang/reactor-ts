@@ -3,7 +3,7 @@
 import {Adder} from '../components/Adder';
 
 describe('adder', function () {
-    var adder = new Adder();
+    var adder = new Adder(null);
 
     it('2 + 1 = 3', function () {
         

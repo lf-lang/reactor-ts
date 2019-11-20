@@ -22,8 +22,8 @@ describe('Test names for contained reactors', () => {
     class myApp extends App {
         port: InPort<any> = new InPort<any>(this);
 
-        x = new MyActor();
-        y = new MyActor2();
+        x = new MyActor(this);
+        y = new MyActor2(this);
 
         constructor(name: string, someParam: string) {
             super(null, name);

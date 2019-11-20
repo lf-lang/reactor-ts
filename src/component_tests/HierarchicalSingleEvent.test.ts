@@ -24,8 +24,8 @@ class SETest extends App{
     constructor(timeout: TimeInterval, success: ()=> void, fail: ()=>void, name?:string ){
         super(timeout, name)
 
-        this.seContainer = new SEContainer("SEContainer");
-        this.logContainer = new LogContainer("LogContainer");
+        this.seContainer = new SEContainer(this, "SEContainer");
+        this.logContainer = new LogContainer(this, "LogContainer");
         
         this.seContainer.child = new SingleEvent("foo", this.seContainer, "SingleEvent");
         this.logContainer.child = new Logger(success, fail, "foo", this.logContainer, "Logger");

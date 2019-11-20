@@ -91,12 +91,12 @@ class Test extends Reaction{
  */
 export class Clock extends App {
 
-    t1: Timer = new Timer([1, TimeUnit.sec], [3, TimeUnit.sec]);
-    t2: Timer = new Timer([1500, TimeUnit.msec] , [3500, TimeUnit.msec] );
+    t1: Timer = new Timer(this, [1, TimeUnit.sec], [3, TimeUnit.sec]);
+    t2: Timer = new Timer(this, [1500, TimeUnit.msec] , [3500, TimeUnit.msec] );
 
-    a1: Action<number> = new Action<number>();
-    a2: Action<number> = new Action<number>();
-    a3: Action<number> = new Action<number>();
+    a1: Action<number> = new Action<number>(this);
+    a2: Action<number> = new Action<number>(this);
+    a3: Action<number> = new Action<number>(this);
 
     r1: Reaction = new Tick(this, [this.t1], 0);
     r2: Reaction = new Tock(this, [this.t2], 1);

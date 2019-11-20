@@ -329,6 +329,7 @@ export class Action<T> implements Trigger, Readable<T> {
 
     /** 
      * Action Constructor
+     * @param parent The Reactor containing this action.
      * @param timeType Optional. Defaults to physical. If physical,
      *  then the physical clock on the local platform is used to assign a timestamp
      *  to the action when it is enabled. If logical, the current physical time is
@@ -341,8 +342,8 @@ export class Action<T> implements Trigger, Readable<T> {
      *  schedule function and the mindelay parameter are both zero and the physical
      *  keyword is not given, then the action is timestamped one microstep later.
      */
-    constructor(timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
-        // this.parent = parent;
+    constructor(parent: Reactor, timeType: TimelineClass = TimelineClass.physical, minDelay: TimeInterval = 0){
+        this.parent = parent;
         this.timeType = timeType;
         this.minDelay = minDelay;
         this.name = name;
@@ -490,7 +491,8 @@ export class Timer{
      * @param offset The interval between the start of execution and the first
      * timer event. Cannot be negative.
      */
-    constructor(period:TimeInterval, offset:TimeInterval) {
+    constructor(parent: Reactor, period:TimeInterval, offset:TimeInterval) {
+        this.parent = parent;
         this.period = period;
         this.offset = offset;
 
@@ -531,6 +533,7 @@ export class Timer{
  */
 export abstract class Reactor implements Nameable{
 
+    // FIXME _mutations currently aren't used for anything.
     private _mutations:Array<
             [   // triggers, mutation, mutation arguments
                 Array<Trigger>, Mutation, any
@@ -845,10 +848,9 @@ export abstract class Reactor implements Nameable{
      * if no name is given.
      * @param {string=} name - Given name
      */
-    constructor(name?:string) {
+    constructor(parent: Reactor | null, name?:string) {
 
-        // This reactor's parent attribute will be set by its parent.
-        
+        this._parent = parent;    
         this._myName = this.constructor.name; // default
         this._myIndex = null;
         // var relations: Map<Port<any>, Set<Port<any>>> = new Map();
@@ -1468,8 +1470,6 @@ export class App extends Reactor{
                 // console.log("next logical time: " + currentHead._priority[0]);
                 // console.log("physicalTimeGap was " + physicalTimeGap);
 
-
-
                 //Nanotimer https://www.npmjs.com/package/nanotimer accepts timeout
                 //specified by a string followed by a letter indicating the units.
                 //Use n for nanoseconds. We will have to 0 pad timeout[1] if it's
@@ -1483,7 +1483,6 @@ export class App extends Reactor{
                     throw new Error("Tried to set a timeout for an invalid NumericTimeInterval with nanoseconds: " +
                         nanoSecString );
                 }
-                
 
                 //Convert the timeout to a nanotimer compatible string.
                 let padding = "";
@@ -1600,22 +1599,13 @@ export class App extends Reactor{
         //FIXME: keep going if the keepalive command-line option has been given
     }
 
-    //FIXME: just get the timers from reactors at the start.
-    /**
-     * Array of timers used to start all timers when the runtime begins.
-     * _timers are registered here in their constructor.
-     */
-    // private var timers: Array<Timer> = [];
-
-
-
     /**
      * FIXME
      * @param executionTimeout 
      * @param name 
      */
-    constructor(executionTimeout: TimeInterval | null, name?: string) {
-        super(name)
+    constructor( executionTimeout: TimeInterval | null, name?: string) {
+        super(null, name)
         
         // Note: this.parent is initialized to null because an app is a top
         // level reactor.
@@ -1681,7 +1671,7 @@ export class App extends Reactor{
     public _start(successCallback: () => void , failureCallback: () => void):void {
         // Recursively set the parent attribute for this and all contained reactors and
         // and components, i.e. ports, actions, and timers.
-        this._setAllParents(null);
+        // this._setAllParents(null);
         // Recursively set the app attribute for this and all contained reactors to this.
         this._setApp(this);
         // Recursively register reactions of contained reactors with triggers in the triggerMap.

@@ -99,13 +99,13 @@ export class WasteTime extends Reaction{
 export class ShowDeadline extends Reactor {
 
     //Triggers immediatedly
-    t: Timer = new Timer(0,0);
+    t: Timer = new Timer(this, 0,0);
 
     waste: Reaction;
     soonDead: Reaction;
 
     constructor(success: () => void, fail: () => void, parent:Reactor | null, name?: string) {
-        super(name);
+        super(parent, name);
         
         //Priorities are very important here
         this.waste = new WasteTime(this, [this.t], 0, success, fail);
