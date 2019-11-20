@@ -61,7 +61,7 @@ describe('HierarchicalSingleEvent', function () {
         // Normally _setAllParents would be called as part of the initialization
         // process for starting an app, but we call it directly here to set
         // parent attributes needed for this test.
-        seTest._setAllParents(null);
+        // seTest._setAllParents(null);
 
         expect(expect(seTest.seContainer.child).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logContainer.child).toBeInstanceOf(Logger));

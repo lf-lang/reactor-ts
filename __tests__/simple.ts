@@ -31,7 +31,7 @@ describe('Test names for contained reactors', () => {
             // Normally _setAllParents would be called as part of the initialization
             // process for starting an app, but we call it directly here to set
             // parent attributes needed for this test.
-            this._setAllParents(null);
+            // this._setAllParents(null);
 
             // it('contained actor name', () => {
             //     expect(this.x._getName()).toBe("MyActor");

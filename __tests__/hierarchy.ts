@@ -24,31 +24,31 @@ describe('Container to Contained', () => {
     // Normally _setAllParents would be called as part of the initialization
     // process for starting an app, but we call it directly here to set
     // parent attributes needed for this test.
-    container._setAllParents(null);
-    container2._setAllParents(null);
+    // container._setAllParents(null);
+    // container2._setAllParents(null);
 
-    // it('reactor with self as child', () => {
-    //     expect(() => {
-    //         let loopy = new Component(null, "loopy");
-    //         loopy.child = loopy;
-    //         // loopy._setAllParents(null);
-    //     }).toThrowError();
-    // });
+    it('reactor with self as child', () => {
+        expect(() => {
+            let loopy = new Component(null, "loopy");
+            loopy.child = loopy;
+            loopy._checkAllParents(null);
+        }).toThrowError();
+    });
 
-    // it('reactor with a port constructed with the wrong parent', () => {
-    //     expect(() => {
-    //         let badPortComponent = new Component(null, "hasBadPort");
-    //         let otherComponent = new Component(null, "otherComponent");
+    it('reactor with a port constructed with the wrong parent', () => {
+        expect(() => {
+            let badPortComponent = new Component(null, "hasBadPort");
+            let otherComponent = new Component(null, "otherComponent");
 
-    //         // this port has been incorrectly constructed because it
-    //         // is an attribute of badPortComponent, but is set in the constructor
-    //         // with otherComponent as its parent 
-    //         badPortComponent.a = new InPort(otherComponent);
+            // this port has been incorrectly constructed because it
+            // is an attribute of badPortComponent, but is set in the constructor
+            // with otherComponent as its parent 
+            badPortComponent.a = new InPort(otherComponent);
 
-    //         // _setAllParents should throw an error
-    //         badPortComponent._setAllParents(null);
-    //     }).toThrowError();
-    // });
+            // _setAllParents should throw an error
+            badPortComponent._checkAllParents(null);
+        }).toThrowError();
+    });
 
     
     it('contained reactor name', () => {

@@ -410,6 +410,13 @@ export class Action<T> implements Trigger, Readable<T> {
         this.parent = parent;
     }
 
+    /**
+     * Getter method for an action's parent attribute.
+     */
+    public _getParent(){
+        return this.parent;
+    }
+
 }
 
 /**
@@ -511,7 +518,14 @@ export class Timer{
      */
     public _setParent(parent: Reactor){
         this.parent = parent;
-        console.log("Setting parent for " + this);
+        // console.log("Setting parent for " + this);
+    }
+
+    /**
+     * Getter method for a timer's parent attribute.
+     */
+    public _getParent(){
+        return this.parent;
     }
 
     /**
@@ -750,19 +764,24 @@ export abstract class Reactor implements Nameable{
     }
 
     /**
-     * Recursively traverse all reactors and set all parent attributes according
-     * to the reactor hierarchy.
+     * Recursively traverse all reactors and verify the 
+     * parent property of each component correctly matches its location in
+     * the reactor hierarchy.
      */
-    public _setAllParents(parent: Reactor | null){
-        this._parent = parent;
+    public _checkAllParents(parent: Reactor | null){
+        if(this._parent != parent) throw new Error("The parent property for " + this
+            + " does not match the reactor hierarchy.");
+        // this._parent = parent;
         let children = this._getChildren();
         for(let child of children){
-            child._setAllParents(this);
+            child._checkAllParents(this);
         }
 
         let timers = this._getTimers();
         for(let timer of timers){
-            timer._setParent(this);
+            if(timer._getParent() != this) throw new Error("The parent property for " + timer
+            + " does not match the reactor hierarchy.");
+            // timer._setParent(this);
         }
 
         // Ports have their parent set in constructor, so verify this was done correctly.
@@ -778,7 +797,9 @@ export abstract class Reactor implements Nameable{
 
         let actions = this._getActions();
         for(let action of actions){
-            action._setParent(this);
+            if(action._getParent() != this) throw new Error("The parent property for " + action
+            + " does not match the reactor hierarchy.");
+            // action._setParent(this);
         }
 
     }
@@ -1669,9 +1690,9 @@ export class App extends Reactor{
     }
 
     public _start(successCallback: () => void , failureCallback: () => void):void {
-        // Recursively set the parent attribute for this and all contained reactors and
-        // and components, i.e. ports, actions, and timers.
-        // this._setAllParents(null);
+        // Recursively check the parent attribute for this and all contained reactors and
+        // and components, i.e. ports, actions, and timers have been set correctly.
+        this._checkAllParents(null);
         // Recursively set the app attribute for this and all contained reactors to this.
         this._setApp(this);
         // Recursively register reactions of contained reactors with triggers in the triggerMap.
