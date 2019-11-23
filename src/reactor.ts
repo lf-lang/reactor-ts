@@ -121,6 +121,23 @@ export abstract class Reaction{
         // console.log("After register reaction");
     }
 
+    public toString(){
+        let message = "Reaction with triggers: [ ";
+        for(let trigger of this.triggers){
+            message += trigger.toString() + ", "
+        }
+        message += "] uses: [ ";
+        for(let use of this.uses){
+            message += use.toString() + ", "
+        }
+        message += "] effects: [ ";
+        for(let effect of this.effects){
+            message += effect.toString() + ", "
+        }
+        message += "]";
+        return  message;
+    }
+
     /**
      * Reactor constructor: FIXME
      * @param state FIXME: should probably be named parent
@@ -447,6 +464,10 @@ export class Action<T> implements Trigger, Readable<T> {
         return this.parent;
     }
 
+    public toString(){
+        return "Action of " + this.parent;
+    }
+
 }
 
 /**
@@ -556,6 +577,10 @@ export class Timer{
      */
     public _getParent(){
         return this.parent;
+    }
+
+    public toString(){
+        return "Timer with period: " + this.period + " offset: " + this.offset;
     }
 
     /**
@@ -1792,7 +1817,6 @@ export class App extends Reactor{
             }
         }
 
-
         let priorityCount = 0;
         while(unsetReactions.size > 0){
             // Find a reaction in unsetReactions with no unset dependencies.
@@ -1821,8 +1845,6 @@ export class App extends Reactor{
                     r.setPriority(priorityCount++);
                     newlySetReactions.add(r);
                 }
-
-
             }
 
             // If no new reactions with met dependencies are
