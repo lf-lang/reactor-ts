@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, Trigger, Reaction, Timer, Action} from '../reactor';
+import {Reactor, Trigger, Reaction, Timer, Action, InPort, OutPort} from '../reactor';
 import {TimelineClass} from "../time"
 
 export class ScheduleAction extends Reaction{
@@ -35,8 +35,10 @@ export class RespondToAction extends Reaction{
     success: () => void;
     fail: () => void;
 
-    constructor(state: Reactor, triggers: Trigger[], priority: number, success: () => void, fail: ()=>void ){
-        super(state, triggers, priority)
+    constructor(state: Reactor, triggers: Trigger[], uses: Array<InPort<any>>,
+        effects: Array<OutPort<any> | Action<any>>,
+        success: () => void, fail: ()=>void ){
+        super(state, triggers, uses, effects)
         this.success = success;
         this.fail = fail;
     }
@@ -79,10 +81,10 @@ export class ActionTrigger extends Reactor {
         super(parent, name);
         
         //Reaction priorities matter here. The overridden reaction must go first.
-        this.r1 = new ScheduleAction(this, [this.t1], 1);
-        this.r2 = new ScheduleOverriddenAction(this,[this.t1], 0);
-        this.r3 = new RespondToAction(this, [this.a1], 2, success, fail);
+        this.r1 = new ScheduleAction(this, [this.t1], [], [this.a1]);
+        this.r2 = new ScheduleOverriddenAction(this,[this.t1], [], [this.a1]);
+        this.r3 = new RespondToAction(this, [this.a1], [],[], success, fail);
         
-        this._reactions = [this.r1, this.r2, this.r3];
+        this._reactions = [this.r2, this.r1, this.r3];
     }
 }

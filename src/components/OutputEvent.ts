@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, Trigger, Reaction } from '../reactor';
+import {Reactor, Trigger, Reaction, InPort, OutPort, Action } from '../reactor';
 import { SingleEvent } from './SingleEvent';
 
 export class OutputResponse extends Reaction{
@@ -8,9 +8,9 @@ export class OutputResponse extends Reaction{
     success: () => void;
     fail: () => void;
 
-    constructor(state: Reactor, triggers: Trigger[], priority: number,
-                success: () => void, fail: ()=>void ){
-        super(state,triggers,priority);
+    constructor(state: Reactor, triggers: Trigger[], uses: Array<InPort<any>>,
+        effects: Array<OutPort<any> | Action<any>>, success: () => void, fail: ()=>void ){
+        super(state,triggers,uses, effects);
         this.success = success;
         this.fail = fail;
     }
@@ -37,7 +37,7 @@ export class OutputResponder extends Reactor {
     constructor(success: ()=> void, fail: ()=> void, parent: Reactor|null, name?:string ){
         super(parent, name);
         
-        this.r = new OutputResponse(this, [this.se.o], 0, success, fail );
+        this.r = new OutputResponse(this, [this.se.o], [], [], success, fail );
         this._reactions = [this.r];
     }
 }

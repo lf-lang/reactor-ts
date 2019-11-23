@@ -101,6 +101,11 @@ export abstract class Reaction{
     priority: number;
     triggeringActions: Set<Action<any>>;
 
+    // The dependencies for this reaction.
+    uses: Array<InPort<any>>;
+    // The antidependencies for this reaction.
+    effects: Array<OutPort<any> | Action<any>> 
+
     //A reaction defaults to not having a deadline  
     deadline: null| Deadline = null;
 
@@ -122,10 +127,12 @@ export abstract class Reaction{
      * @param triggers 
      * @param priority 
      */
-    constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
+    constructor(state: Reactor, triggers: Array<Trigger>,
+                 uses: Array<InPort<any>> , effects: Array<OutPort<any> | Action<any>> ){
         this.triggers = triggers;
         this.state = state;
-        this.priority = priority;
+        this.uses = uses;
+        this.effects = effects;
     }
 
     /**
@@ -138,6 +145,29 @@ export abstract class Reaction{
      */
     public _getcurrentlogicaltime(){
         return this.state._app._getcurrentlogicaltime();
+    }
+
+    /**
+     * Getter function for dependencies (uses)
+     */
+    public getUses(){
+        return this.uses;
+    }
+
+    /**
+     * Getter function for anti dependencies (effects)
+     */
+    public getEffects(){
+        return this.effects;
+    }
+
+    /**
+     * Setter for reaction priority. This should
+     * be determined by topological sort of reactions.
+     * @param priority The priority for this reaction.
+     */
+    public setPriority(priority: number){
+        this.priority = priority;
     }
 }
 
@@ -1068,7 +1098,25 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
         } else {
             return null;
         }
-        
+    }
+
+    /**
+     * Return the set of all InPorts connected to this OutPort
+     * directly or indirectly as a sink.
+     */
+    public getAllConnectedSinkInPorts(){
+        let sinkInPorts = new Set<InPort<any>>();
+        for( let connected of this._connectedSinkPorts){
+            if(connected instanceof InPort){
+                sinkInPorts.add(connected);
+            } else {
+                let recursiveSinkInPorts = (connected as OutPort<any>).getAllConnectedSinkInPorts();
+                for (let newSink of recursiveSinkInPorts){
+                    sinkInPorts.add(newSink);
+                }
+            }
+        }
+        return sinkInPorts;
     }
 
     /**
@@ -1689,12 +1737,138 @@ export class App extends Reactor{
         return this._startingWallTime
     }
 
+    /**
+     * Assign a priority to each reaction in the app.
+     * A lower priority signifies precedence for one reaction
+     * over another. 
+     */
+    public _setReactionPriorities(){
+        let unsetReactions = this._getAllReactions();
+        let setReactions = new Set<Reaction>();
+        let unsetOutPorts = new Set<OutPort<any>>();
+
+        // InPorts connected to set OutPorts
+        let setInPorts = new Set<InPort<any>>();
+
+        // A map relating OutPorts to the reactions
+        // which must be set first. 
+        let outPortDependsOn = new Map<OutPort<any>, Set<Reaction>>();
+
+        // A map relating reactions to the InPorts
+        // or reactions which must first be set.
+        let reactionDependsOn = new Map<Reaction, Set<Reaction | InPort<any>>>();
+
+        // Initialize outPortDependsOn and unsetOutPorts
+        for(let r of unsetReactions){
+            for(let e of r.getEffects()){
+                if(e instanceof OutPort){
+                    unsetOutPorts.add(e);
+                    if(outPortDependsOn.has(e)){
+                        (outPortDependsOn.get(e) as Set<Reaction>).add(r);
+                    } else {
+                        let newReactionSet = new Set<Reaction>();
+                        newReactionSet.add(r);
+                        outPortDependsOn.set(e, newReactionSet);
+                    }
+                }
+            }
+        }
+
+        // Initialize reactionDependsOn
+        for(let r of unsetReactions){
+            reactionDependsOn.set(r, new Set<Reaction| InPort<any>>());
+            // Add InPorts from uses
+            for(let u of r.getUses()){
+                (reactionDependsOn.get(r) as Set<Reaction| InPort<any>> ).add(u);
+            }
+            let parentReactions = r.state._reactions;
+            if(! parentReactions.includes(r)){
+                throw new Error(" Reaction " + r + "is not included in its parent's "
+                + " array of reactions");
+            }
+            // Add preceding reactions from parent's reactions array
+            for (let i = 0; parentReactions[i] != r ; i++ ){
+                (reactionDependsOn.get(r) as Set<Reaction| InPort<any>> ).add(parentReactions[i]);
+            }
+        }
+
+
+        let priorityCount = 0;
+        while(unsetReactions.size > 0){
+            // Find a reaction in unsetReactions with no unset dependencies.
+            // Assign it the next lowest priority, and remove
+            // it from unsetReactions. Throw an error, identifying a cycle if 
+            // this process stops before all reactions are set.
+            let newlySetReactions = new Set<Reaction>();
+            for( let r of unsetReactions ){
+                let ready = true;
+                for( let depend of (reactionDependsOn.get(r) as Set<Reaction | InPort<any>>)){
+                    if(depend instanceof Reaction){
+                        if (unsetReactions.has(depend)){
+                            ready = false;
+                            break;
+                        }
+                    } else {
+                        if (! setInPorts.has(depend)){
+                            ready = false;
+                            break;
+                        }
+                    }
+                }
+                if(ready){
+                    console.log("Setting priority for reaction " + r + " to " + priorityCount);
+                    // This reaction has no dependencies. Set its priority.
+                    r.setPriority(priorityCount++);
+                    newlySetReactions.add(r);
+                }
+
+
+            }
+
+            // If no new reactions with met dependencies are
+            // found on this iteration while unset reactions remain,
+            // there must be a cycle.
+            if(newlySetReactions.size == 0){
+                throw new Error("Cycle detected in reaction precedence graph.");
+            }
+
+            // Move newlySetReactions from unsetReactions
+            // to setReactions.
+            for(let toSet of newlySetReactions){
+                unsetReactions.delete(toSet);
+                setReactions.add(toSet)
+            }
+
+            // See if any OutPorts are ready to be set
+            for(let o of unsetOutPorts){
+                let ready = false;
+                for(let portReaction of (outPortDependsOn.get(o) as Set<Reaction>)){
+                    if(unsetReactions.has(portReaction)){
+                        ready = false;
+                        break;
+                    }
+                }
+                if(ready){
+                    // Remove the OutPort from unsetOutPorts and set all connected
+                    // InPorts
+                    unsetOutPorts.delete(o);
+                    let connectedInPorts = o.getAllConnectedSinkInPorts();
+                    for(let connectedInPort of connectedInPorts){
+                        setInPorts.add(connectedInPort);
+                    }
+                }
+            }
+        }
+    }
+
     public _start(successCallback: () => void , failureCallback: () => void):void {
         // Recursively check the parent attribute for this and all contained reactors and
         // and components, i.e. ports, actions, and timers have been set correctly.
         this._checkAllParents(null);
         // Recursively set the app attribute for this and all contained reactors to this.
         this._setApp(this);
+        // Set reactions using a topological sort of the dependency graph.
+        this._setReactionPriorities();
         // Recursively register reactions of contained reactors with triggers in the triggerMap.
         this._registerReactions();
         // console.log(this.triggerMap);

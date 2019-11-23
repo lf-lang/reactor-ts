@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, Trigger, Reaction, Timer, Deadline} from '../reactor';
+import {Reactor, Trigger, Reaction, Timer, Deadline, InPort, OutPort, Action} from '../reactor';
 import {TimeInterval, TimeUnit} from "../time"
 
 // This test is supposed to violate this deadline.
@@ -48,8 +48,9 @@ export class SoonDead extends Reaction{
     fail:() => void;
 
     constructor(state: Reactor, triggers: Trigger[],
-                priority: number, success: () => void, fail: ()=>void){
-        super(state, triggers, priority);
+        uses: Array<InPort<any>>, effects: Array<OutPort<any> | Action<any>>,
+        success: () => void, fail: ()=>void){
+        super(state, triggers, uses, effects);
         this.success = success;
         this.fail = fail;
         this.deadline = new Dead(0, this.success, this.fail);
@@ -72,8 +73,9 @@ export class WasteTime extends Reaction{
     fail:() => void;
 
     constructor(state: Reactor, triggers: Trigger[],
-        priority: number, success: () => void, fail: ()=>void){
-        super(state, triggers, priority);
+        uses: Array<InPort<any>>, effects: Array<OutPort<any> | Action<any>>,
+        success: () => void, fail: ()=>void){
+        super(state, triggers, uses, effects);
         this.success = success;
         this.fail = fail;
 
@@ -107,10 +109,11 @@ export class ShowDeadline extends Reactor {
     constructor(success: () => void, fail: () => void, parent:Reactor | null, name?: string) {
         super(parent, name);
         
-        //Priorities are very important here
-        this.waste = new WasteTime(this, [this.t], 0, success, fail);
-        this.soonDead = new SoonDead(this, [this.t], 1, success, fail);
+        
+        this.waste = new WasteTime(this, [this.t], [], [], success, fail);
+        this.soonDead = new SoonDead(this, [this.t], [], [], success, fail);
  
+        // Priorities are very important here
         this._reactions = [this.waste, this.soonDead];
     }
 

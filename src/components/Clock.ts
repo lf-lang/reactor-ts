@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, Trigger, Reaction, Timer, Action,  App} from '../reactor';
+import {Reactor, Trigger, Reaction, Timer, Action,  App, InPort, OutPort} from '../reactor';
 import {TimeInterval, TimeUnit, numericTimeSum } from "../time"
 
 class Tick extends Reaction{
@@ -47,8 +47,9 @@ class Test extends Reaction{
     /**
      * @override
      */
-    constructor(state: Reactor, triggers: Trigger[], priority: number, success: () => void, fail: ()=>void ){
-        super(state, triggers, priority);
+    constructor(state: Reactor, triggers: Trigger[], uses: Array<InPort<any>>,
+        effects: Array<OutPort<any> | Action<any>>, success: () => void, fail: ()=>void ){
+        super(state, triggers, uses, effects);
         this.success = success;
         this.fail = fail;
 
@@ -98,18 +99,18 @@ export class Clock extends App {
     a2: Action<number> = new Action<number>(this);
     a3: Action<number> = new Action<number>(this);
 
-    r1: Reaction = new Tick(this, [this.t1], 0);
-    r2: Reaction = new Tock(this, [this.t2], 1);
+    r1: Reaction = new Tick(this, [this.t1], [], [this.a1]);
+    r2: Reaction = new Tock(this, [this.t2], [], [this.a2]);
 
     //At time 5 seconds, this reaction should be triggered
     //simultaneosly by both timers, "Cuckoo" should only
     //print once.
-    r3: Reaction = new Cuckoo(this, [this.t1, this.t2], 2);
+    r3: Reaction = new Cuckoo(this, [this.t1, this.t2], [], [this.a3]);
     r4: Reaction;
 
     constructor(timeout: TimeInterval,  success: () => void, fail: () => void, name?: string) {
         super(timeout, name);
-        this.r4 = new Test(this, [this.a1, this.a2, this.a3], 4, success, fail);
+        this.r4 = new Test(this, [this.a1, this.a2, this.a3], [],[], success, fail);
         this._reactions = [this.r1, this.r2, this.r3, this.r4];
     }
 }

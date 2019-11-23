@@ -1,13 +1,14 @@
 'use strict';
 
-import {Reactor, OutPort, Trigger, Reaction, Timer} from '../reactor';
+import {Reactor, OutPort, Trigger, Reaction, Timer, InPort, Action} from '../reactor';
 
 export class ProduceOutput extends Reaction{
 
     outputPayload:any;
 
-    constructor(state: Reactor, triggers: Trigger[], priority: number, outputPayload:any ){
-        super(state,triggers,priority);
+    constructor(state: Reactor, triggers: Trigger[], uses: Array<InPort<any>>,
+        effects: Array<OutPort<any> | Action<any>>, outputPayload:any ){
+        super(state, triggers, uses, effects);
         this.outputPayload = outputPayload
     }
 
@@ -39,7 +40,7 @@ export class SingleEvent extends Reactor {
     constructor(outputPayload:any, parent: Reactor | null, name?:string ) {
         super(parent, name);
         
-        this.r = new ProduceOutput(this, [this.t1], 0, outputPayload);
+        this.r = new ProduceOutput(this, [this.t1], [], [this.o], outputPayload);
         this._reactions.push(this.r);
     }
 }

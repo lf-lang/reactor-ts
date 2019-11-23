@@ -1,4 +1,4 @@
-import {Reactor, InPort, Trigger, Reaction, } from '../reactor';
+import {Reactor, InPort, Trigger, Reaction, OutPort, Action, } from '../reactor';
 
 export class Print extends Reaction{
 
@@ -6,9 +6,9 @@ export class Print extends Reaction{
     fail:() => void;
     expected: any;
 
-    constructor(state: Reactor, triggers: Trigger[],
-                priority: number, success: () => void, fail: ()=>void, expected:any){
-        super(state, triggers, priority);
+    constructor(state: Reactor, triggers: Trigger[], uses: Array<InPort<any>>,
+        effects: Array<OutPort<any> | Action<any>>, success: () => void, fail: ()=>void, expected:any){
+        super(state, triggers, uses, effects);
         this.success = success;
         this.fail = fail;
         this.expected = expected;
@@ -41,7 +41,7 @@ export class Logger extends Reactor {
     constructor(success: () => void, fail: () => void, expected:any ,parent:Reactor | null, name?: string) {
         super(parent, name);
         
-        const r = new Print(this, [this.i], 0, success, fail, expected);
+        const r = new Print(this, [this.i], [this.i], [], success, fail, expected);
         this._reactions.push(r);
     }
 

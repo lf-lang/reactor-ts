@@ -11,8 +11,8 @@ export class Adder extends Reactor {
     constructor(parent: Reactor | null) {
         super(parent, "Adder");
 
-        const r1 = new AddTwo(this, [this.in1, this.in2], 0);
-        const r2 = new AddN(this, [this.in1, this.in2], 0);
+        const r1 = new AddTwo(this, [this.in1, this.in2], [this.in1, this.in2], [this.out]);
+        const r2 = new AddN(this, [this.in1, this.in2], [this.in1, this.in2], [this.out]);
     }
 
     //FIXME: the if statement never runs.

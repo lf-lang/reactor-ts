@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, OutPort, App, Timer, Reaction, Trigger} from '../reactor';
+import {Reactor, OutPort, App, Timer, Reaction, Trigger, InPort, Action} from '../reactor';
 import { TimeUnit, TimeInterval} from "../time";
 
 class OutputGetTest extends App{
@@ -11,7 +11,7 @@ class OutputGetTest extends App{
     
     constructor(timeout: TimeInterval, success: ()=> void, fail: ()=>void, name?:string ){
         super(timeout, name)
-        this.r = new OutputGetter(this,[this.t], 0, success, fail);
+        this.r = new OutputGetter(this,[this.t], [], [this.o], success, fail);
         this._reactions = [this.r];
     }
 }
@@ -21,9 +21,10 @@ class OutputGetter extends Reaction{
     success: () => void;
     fail: ()=>void;
 
-    constructor(state: Reactor, triggers: Trigger[], priority: number,
+    constructor(state: Reactor, triggers: Trigger[], uses: Array<InPort<any>>,
+        effects: Array<OutPort<any> | Action<any>>,
         success: () => void, fail: ()=>void ){
-        super(state,triggers, priority );
+        super(state,triggers, uses, effects );
         this.success = success;
         this.fail = fail;
     }
