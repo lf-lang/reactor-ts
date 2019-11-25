@@ -5,7 +5,7 @@
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
 
-import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
+import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from './util';
 import "./time";
 import { TimeInterval, TimeInstant, compareTimeInstants, TimelineClass, TimestampedValue, NumericTimeInterval, microtimeToNumeric, compareNumericTimeIntervals, timeIntervalIsZero, timeIntervalToNumeric, timeInstantsAreEqual, numericTimeSum, numericTimeMultiple, numericTimeDifference } from './time';
 // import * as globals from './globals'
@@ -544,22 +544,22 @@ export class Timer{
     /**
      * Timer constructor. 
      * @param parent The reactor this timer is attached to.
-     * @param period The interval between rescheduled timer events. If 0, will
-     * not reschedule. Cannot be negative.
      * @param offset The interval between the start of execution and the first
      * timer event. Cannot be negative.
+     * @param period The interval between rescheduled timer events. If 0, will
+     * not reschedule. Cannot be negative.
      */
-    constructor(parent: Reactor, period:TimeInterval, offset:TimeInterval) {
+    constructor(parent: Reactor, offset:TimeInterval, period:TimeInterval) {
         this.parent = parent;
         this.period = period;
         this.offset = offset;
 
-        if(period[0] < 0){
-            throw new Error("A timer period may not be negative.");
-        }
-
         if(offset[0] < 0){
             throw new Error("A timer offset may not be negative.");
+        }
+
+        if(period[0] < 0){
+            throw new Error("A timer period may not be negative.");
         }
     }
 
