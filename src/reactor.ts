@@ -104,7 +104,7 @@ export abstract class Reaction{
     // The dependencies for this reaction.
     uses: Array<InPort<any>>;
     // The antidependencies for this reaction.
-    effects: Array<OutPort<any> | Action<any>> 
+    effects: Array<Port<any> | Action<any>> 
 
     //A reaction defaults to not having a deadline  
     deadline: null| Deadline = null;

@@ -38,7 +38,7 @@ export class Logger extends Reactor {
 
     i: InPort<any> = new InPort<any>(this);
 
-    constructor(success: () => void, fail: () => void, expected:any ,parent:Reactor | null, name?: string) {
+    constructor(success: () => void, fail: () => void, expected:any ,parent:Reactor, name?: string) {
         super(parent, name);
         
         const r = new Print(this, [this.i], [this.i], [], success, fail, expected);
