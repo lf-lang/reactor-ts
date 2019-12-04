@@ -1086,6 +1086,15 @@ export abstract class Port<T> implements Named {
         }
     }
 
+    /**
+    * Write a value to this Port and recursively transmit the value to connected
+    * ports while triggering reactions triggered by that port. 
+    * @param value The value to be written to this port.
+    */
+    public set(value: T):void {
+        this._writeValue(value);
+    }
+
     /* Construct a new port. */
     /**
      * Port constructor.
@@ -1174,15 +1183,6 @@ export class OutPort<T> extends Port<T> implements Port<T>, Writable<T> {
                 return false;
             }
         }
-    }
-
-    /**
-    * Write a value to this OutPort and recursively transmit the value to connected
-    * ports while triggering reactions triggered by that port. 
-    * @param value The value to be written to this port.
-    */
-    public set(value: T):void {
-        this._writeValue(value);
     }
 
     // NOTE: Due to assymmetry (subtyping) we cannot allow connecting 
