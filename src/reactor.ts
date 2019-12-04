@@ -145,7 +145,7 @@ export abstract class Reaction{
      * @param priority 
      */
     constructor(state: Reactor, triggers: Array<Trigger>,
-                 uses: Array<InPort<any>> , effects: Array<OutPort<any> | Action<any>> ){
+                 uses: Array<InPort<any>> , effects: Array<Port<any> | Action<any>> ){
         this.triggers = triggers;
         this.state = state;
         this.uses = uses;
