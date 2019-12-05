@@ -274,7 +274,7 @@ export function numericTimeMultiple(t: NumericTimeInterval, multiple: number): N
  * Reactions may register themselves as triggered by a Trigger. 
  */
 
-export interface Trigger{}
+export type Trigger<T> = Action<T> | InPort<T> | OutPort<T> | Timer
 
 // FIXME: I don't think we need this?
 export interface Writable<T> {
@@ -329,50 +329,46 @@ export interface Transformation {
  * The reaction abstract class.
  * A concrete reaction class should extend Reaction, and implement a react function.
  */
-export abstract class Reaction{
+export abstract class Reaction {
 
     //FIXME: for now state is the entire this for the parent reactor. This should be changed
     //to a custom data structure with only the state relevant to a reaction.
-    state: Reactor;
-
+    state?:{} // FIXME: this is really the parent, not state
+    // FIXME: There should not be a reason to have access to the parent or the top-level reactor in a reaction.
+    app: App; 
     //Contains the timers, actions, and inputs that trigger this reaction.
-    triggers: Array<Trigger>;
+    // triggers: Array<Trigger>;
     priority: number;
-    triggeringActions: Set<Action<any>>;
+    //triggeringActions: Set<Action<any>>;
 
     //A reaction defaults to not having a deadline  
     deadline: null| Deadline = null;
 
-    /**
-     * Register this reaction's triggers with the app.
-     * This step can't be handled in the constructor because
-     * the app for this reaction is not known at that time.
-     * The app will call this function later as part of its setup process.
-     */
-    public register(){
-        console.log("Before register reaction");
-        this.state.app.triggerMap.registerReaction(this);
-        console.log("After register reaction");
+    constructor(util: {}, state?: {}) {
+        //this.state = parent.state;
+        this.state = state;
+        this.app = parent.app;
     }
 
-    constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
-        this.triggers = triggers;
-        this.state = state;
-        this.priority = priority;
-    }
+    // constructor(state: Reactor, triggers: Array<Trigger>, priority: number){
+    //     this.triggers = triggers;
+    //     this.state = state;
+    //     this.priority = priority;
+    // }
 
     /**
      * This react function must be overridden by a concrete reaction.
      */
-    react(){
-        throw new Error("react function hasn't been defined");
-    }
+    abstract react(...args): void;
+    // react(){
+    //     throw new Error("react function hasn't been defined");
+    // }
 
     /**
      * More concise way to get logical time in a reaction.
      */
     public getCurrentLogicalTime(){
-        return this.state.app.getCurrentLogicalTime();
+        return this.app.getCurrentLogicalTime();
     }
 }
 
@@ -455,13 +451,13 @@ export class PrioritizedReaction implements PrecedenceGraphNode,
 
 //FIXME: Rename this class because it conflicts with a built in
 //class in typescript 
-export class Event {
+export class Event<T> {
     time: TimeInstant;
-    cause: Trigger;
-    payload: any;
+    cause: Trigger<T>;
+    payload: T;
 
     //FIXME: make payload optional
-    constructor(cause: Trigger, time: TimeInstant, payload: any){
+    constructor(cause: Trigger<T>, time: TimeInstant, payload: any){
         this.time = time;
         this.cause = cause;
         this.payload = payload;
@@ -472,17 +468,17 @@ export class Event {
 //and may be inserted into the reaction queue.
 //The priority of an Event is determined by its time. An Event with an earlier time
 //than another has precedence.
-export class PrioritizedEvent implements 
+export class PrioritizedEvent<T> implements 
  PrioritySetNode<number,TimeInstant>{
 
-    e: Event;
+    e: Event<T>;
 
     //Precedence graph node attributes
     _id: number;
     _next: PrioritySetNode<number,TimeInstant> | null;
     _priority: TimeInstant;
 
-    constructor(e: Event, id: number ){
+    constructor(e: Event<T>, id: number ){
         this.e = e;
         this._id = id;
 
@@ -509,7 +505,7 @@ export class PrioritizedEvent implements
  */
 
 
-export class Action<T> implements Trigger {
+export class Action<T> {
 
     // The constructor for a reactor sets this attribute for each
     // of its attached timers.
@@ -606,7 +602,7 @@ export class Action<T> implements Trigger {
 }
 
 
-export class Timer{
+export class Timer {
     
     // FIXME, Out of date comment.
     // The constructor for a reactor sets this attribute for each
@@ -620,9 +616,6 @@ export class Timer{
     
     //Timers always have top priority.
     // priority = 0;
-
-    //A timer is only triggered by itself.
-    triggers: Array<Trigger> = new Array();
 
     //Private variables used to keep track of rescheduling
     _timerFirings: number = 0;
@@ -639,8 +632,8 @@ export class Timer{
             let numericOffset = timeIntervalToNumeric(this.offset);
             this._offsetFromStartingTime =  numericTimeSum( numericOffset, this.parent.app.getStartingWallTime() );
             let timerInitInstant: TimeInstant = [this._offsetFromStartingTime, 0];
-            let timerInitEvent: Event = new Event(this, timerInitInstant, null);
-            let timerInitPriEvent: PrioritizedEvent = new PrioritizedEvent(timerInitEvent, this.parent.app.getEventID());
+            let timerInitEvent: Event<undefined> = new Event(this, timerInitInstant, null);
+            let timerInitPriEvent: PrioritizedEvent<undefined> = new PrioritizedEvent(timerInitEvent, this.parent.app.getEventID());
             
             console.log("In setup, this.parent is: " + this.parent);
             this.parent.app.scheduleEvent(timerInitPriEvent);
@@ -666,8 +659,8 @@ export class Timer{
                 let nextLogicalTime: NumericTimeInterval = numericTimeSum(this._offsetFromStartingTime, 
                     numericTimeMultiple(numericPeriod , this._timerFirings) ); 
                 let nextTimerInstant: TimeInstant = [nextLogicalTime, 0];
-                let nextTimerEvent: Event = new Event(this, nextTimerInstant, null);
-                let nextTimerPriEvent: PrioritizedEvent = new PrioritizedEvent(nextTimerEvent, this.parent.app.getEventID());
+                let nextTimerEvent: Event<any> = new Event(this, nextTimerInstant, null);
+                let nextTimerPriEvent: PrioritizedEvent<any> = new PrioritizedEvent(nextTimerEvent, this.parent.app.getEventID());
                 console.log("In reschedule, this.parent : " + this.parent);
                 this.parent.app.scheduleEvent(nextTimerPriEvent);
 
@@ -710,16 +703,22 @@ export class Timer{
  * that it is uniquely indexed within that container.
  */
 // FIXME: used to have implements Nameable. Delete?
-export abstract class Reactor implements Nameable{
+export abstract class Reactor implements Nameable {
 
     private _transformations:Array<
             [   // triggers, transformation, transformation arguments
-                Array<Trigger>, Transformation, any
+                Array<Trigger<any>>, Transformation, any
             ]
     >;
     
     //FIXME: make this private. Right now this would break tests.
-    _reactions:Array<Reaction> = new Array<Reaction>();
+    //_reactions:Array<Reaction> = new Array<Reaction>();
+
+    // [
+    //     {triggers: [<Trigger>this.in1, <Trigger>this.in2], reaction: new AddTwo(), args: [this.in1, this.in2, this.out]}
+    // ];
+
+
     private _myName: string;
     private _myIndex: number | null;
 
@@ -736,43 +735,59 @@ export abstract class Reactor implements Nameable{
     //FIXME: Create getters and setters for children.
     children:Set<Reactor> = new Set<Reactor>();
 
-    
+    /**
+     * Register this reactor's reactions with the app. 
+     * Recursively add the reactions of this reactor's children as well.
+     * This step can't be handled in the constructor because
+     * the app for this reaction is not known at that time.
+     * The app will call this function later as part of its setup process.
+     */
+    protected registerAll(){
+        console.log("Before register reaction of reactor: " + this._getName);
+        this.registerAll();
+        console.log("After register reaction: " + this._getName);
+        for (let r of this.children) {
+            r.registerAll();
+        }
+    }
+
+    //protected abstract register();
 
     /**
      * Returns the set of reactions directly owned by this reactor combined with 
      * the recursive set of all reactions of contained reactors.
      */
-    private _getReactions(): Set<Reaction> {
-        var reactions = new Set<Reaction>();
+    // private _getReactions(): Set<Reaction> {
+    //     var reactions = new Set<Reaction>();
 
-        // Reactions part of this reactor
-        for( let r of this._reactions){
-            reactions.add(r);
-        }
+    //     // Reactions part of this reactor
+    //     for (let i=0; i > this._reactions.length; i++) {
+    //         reactions.add(this._reactions[0].reaction);
+    //     }
 
-        // for (const [key, value] of Object.entries(this)) {
-        //     console.log(key);
-        //     if (value instanceof Reaction) {
-        //         console.log("got a reaction!" + value);
-        //         reactions.add(value);
-        //     }
-        // }
+    //     // for (const [key, value] of Object.entries(this)) {
+    //     //     console.log(key);
+    //     //     if (value instanceof Reaction) {
+    //     //         console.log("got a reaction!" + value);
+    //     //         reactions.add(value);
+    //     //     }
+    //     // }
 
-        // Recursively call this function on child reactors
-        // and add their timers to the timers set.
-        var subReactions: Set<Reaction>;
-        if(this.children){
-            for(const child of this.children){
-                if(child){
-                    subReactions = child._getReactions();
-                    for(const subReaction of subReactions){
-                        reactions.add(subReaction);
-                    }                     
-                }
-            }
-        }
-        return reactions;
-    }
+    //     // Recursively call this function on child reactors
+    //     // and add their timers to the timers set.
+    //     var subReactions: Set<Reaction>;
+    //     if(this.children){
+    //         for(const child of this.children){
+    //             if(child){
+    //                 subReactions = child._getReactions();
+    //                 for(const subReaction of subReactions){
+    //                     reactions.add(subReaction);
+    //                 }                     
+    //             }
+    //         }
+    //     }
+    //     return reactions;
+    // }
 
     /**
      * Returns the set of timers directly owned by this reactor combined with 
@@ -1521,18 +1536,20 @@ export class InPort<T> extends Port<T> implements Readable<T> {
  * When an event caused by a Trigger comes off the event queue, its
  * matching reactions should be put on the the reaction queue 
  */
-export class TriggerMap{
-    _tMap: Map<Trigger, Set<Reaction>> = new Map<Trigger, Set<Reaction>>();
+export class TriggerMap {
+    _tMap: Map<Trigger<any>, Set<Reaction>> = new Map();
+    _aMap: Map<Reaction, Array<Readable<any>|Writable<any>>> = new Map();
+    _comesAfter: Map<Reaction, Reaction> = new Map();
 
     /**
      * Establish the mapping for a Reaction.
      */
-    registerReaction(r: Reaction){
-        for(let trigger of r.triggers){
+    registerReaction(previous: Reaction | null, current: Reaction, triggers:Array<Trigger<any>>, args:Array<Readable<any>|Writable<any>>){
+        for(let trigger of triggers){
             let reactionSet = this._tMap.get(trigger);
-            if(reactionSet){
-                if(! reactionSet.has(r)){
-                    reactionSet.add(r);
+            if(reactionSet) {
+                if(! reactionSet.has(current)) {
+                    reactionSet.add(current);
                     this._tMap.set(trigger, reactionSet);
                 }
                 //If this reaction is already mapped to the trigger,
@@ -1541,8 +1558,12 @@ export class TriggerMap{
                 //This is the first reaction mapped to this trigger,
                 //so create a new reaction set for it.
                 reactionSet = new Set<Reaction>();
-                reactionSet.add(r);
+                reactionSet.add(current);
                 this._tMap.set(trigger, reactionSet);
+            }
+            this._aMap.set(current, args);
+            if (previous != null) {
+                this._comesAfter.set(current, previous)
             }
         }
     }
@@ -1550,21 +1571,21 @@ export class TriggerMap{
     /**
      * Get the set of reactions for a trigger.
      */
-    getReactions(t: Trigger){
+    getReactions(t: Trigger<any>){
         return this._tMap.get(t);
     }
 
     /**
      * FIXME
      */
-    deregisterReaction(e: Event){
+    deregisterReaction(e: Event<any>){ // FIXME: weird
         //FIXME
     }
 
 }
 
 //FIXME: Move runtime from globals into here.
-export class App extends Reactor{
+export class App extends Reactor {
     
     // // FIXME: add some logging facility here
     // name: string;
@@ -1602,7 +1623,7 @@ export class App extends Reactor{
     /**
      * Used to look out for the same action scheduled twice at a logical time. 
      */ 
-    private _observedActionEvents : Map<Action<any>, PrioritizedEvent> = new Map<Action<any>, PrioritizedEvent>();
+    private _observedActionEvents : Map<Action<any>, PrioritizedEvent<any>> = new Map<Action<any>, PrioritizedEvent<any>>();
 
     // FIXME: Use BigInt instead of number?
     /** 
@@ -1621,16 +1642,10 @@ export class App extends Reactor{
         }
     };
 
-    /**
-     * Register all the app's reactions with their triggers.
-     */
-    private _registerReactions = function(){
-        let reactions: Set<Reaction> = this._getReactions();
-        // console.log("reactions set in _registerReactions is: " + reactions);
-        for(let r of reactions){
-            console.log("registering: " + r);
-            r.register();
-        }
+    register() {
+        // for (let r of this._reactions) { // FIXME: why can't top-level have reactions?
+        //     this.app.triggerMap.registerReaction(r.reaction, r.triggers);
+        // } 
     }
 
 
@@ -1751,7 +1766,7 @@ export class App extends Reactor{
 
                     //An explicit type assertion is needed because we know the
                     //eventQ contains PrioritizedEvents, but the compiler doesn't know that.
-                    let trigger: Trigger = (currentHead as PrioritizedEvent).e.cause;
+                    let trigger: Trigger<any> = (currentHead as PrioritizedEvent<any>).e.cause;
                     
                     if(trigger instanceof Timer){
                         trigger.reschedule();
@@ -1762,14 +1777,14 @@ export class App extends Reactor{
                         if(this._observedActionEvents.has(trigger) ){
                             // Whichever event for this action has a greater eventID
                             // occurred later and it determines the payload. 
-                            if( currentHead._id > (this._observedActionEvents.get(trigger) as PrioritizedEvent)._id ){
+                            if( currentHead._id > (this._observedActionEvents.get(trigger) as PrioritizedEvent<any>)._id ){
                                 trigger._payload = 
-                                [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];   
+                                [ this._currentLogicalTime, (currentHead as PrioritizedEvent<any>).e.payload];   
                             }
                         } else {
-                            this._observedActionEvents.set(trigger, (currentHead as PrioritizedEvent));
+                            this._observedActionEvents.set(trigger, (currentHead as PrioritizedEvent<any>));
                             trigger._payload = 
-                            [ this._currentLogicalTime, (currentHead as PrioritizedEvent).e.payload];
+                            [ this._currentLogicalTime, (currentHead as PrioritizedEvent<any>).e.payload];
                         }
                     }
                     console.log("Before triggermap in next");
@@ -1874,7 +1889,7 @@ export class App extends Reactor{
      * Public method to push events on the event queue. 
      * @param e Prioritized event to push onto the event queue.
      */
-    public scheduleEvent(e: PrioritizedEvent){  
+    public scheduleEvent(e: PrioritizedEvent<any>){  
         this._eventQ.push(e);
     }
 
@@ -1923,7 +1938,7 @@ export class App extends Reactor{
         // Recursively set the app attribute for this and all contained reactors to this.
         this.setApp(this);
         // Recursively register reactions of contained reactors with triggers in the triggerMap.
-        this._registerReactions();
+        this.registerAll();
         // console.log(this.triggerMap);
         this._startingWallTime = microtimeToNumeric(microtime.now());
         this._currentLogicalTime = [ this._startingWallTime, 0];

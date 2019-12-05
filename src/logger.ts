@@ -2,7 +2,7 @@
 import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval} from './reactor';
 // import { triggerMap } from './globals';
 
-export class Print extends Reaction{
+export class Print extends Reaction {
 
     success:() => void;
     fail:() => void;
