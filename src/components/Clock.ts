@@ -1,7 +1,7 @@
 'use strict';
 
 import {Reactor, Trigger, Reaction, Timer, Action,  App, InPort, OutPort} from '../reactor';
-import {TimeInterval, TimeUnit, numericTimeSum } from "../time"
+import {TimeInterval, TimeUnit, numericTimeSum, TimelineClass } from "../time"
 
 class Tick extends Reaction{
 
@@ -95,9 +95,9 @@ export class Clock extends App {
     t1: Timer = new Timer(this, [3, TimeUnit.sec], [1, TimeUnit.sec]);
     t2: Timer = new Timer(this, [3500, TimeUnit.msec], [1500, TimeUnit.msec] );
 
-    a1: Action<number> = new Action<number>(this);
-    a2: Action<number> = new Action<number>(this);
-    a3: Action<number> = new Action<number>(this);
+    a1: Action<number> = new Action<number>(this, TimelineClass.logical);
+    a2: Action<number> = new Action<number>(this, TimelineClass.logical);
+    a3: Action<number> = new Action<number>(this, TimelineClass.logical);
 
     r1: Reaction = new Tick(this, [this.t1], [], [this.a1]);
     r2: Reaction = new Tock(this, [this.t2], [], [this.a2]);
