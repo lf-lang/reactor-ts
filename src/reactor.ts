@@ -160,8 +160,8 @@ export abstract class Reaction{
     /**
      * More concise way to get logical time in a reaction.
      */
-    public _getcurrentlogicaltime(){
-        return this.state._app._getcurrentlogicaltime();
+    public _getCurrentLogicalTime(){
+        return this.state._app._getCurrentLogicalTime();
     }
 
     /**
@@ -352,7 +352,7 @@ export class Action<T> implements Trigger, Readable<T> {
             // This action has never been scheduled before.
             return false;
         }
-        if(timeInstantsAreEqual(this.timestamp, this.parent._app._getcurrentlogicaltime())){
+        if(timeInstantsAreEqual(this.timestamp, this.parent._app._getCurrentLogicalTime())){
             return true;
         } else {
             return false;
@@ -421,15 +421,15 @@ export class Action<T> implements Trigger, Readable<T> {
         if(this.timeType == TimelineClass.physical){
             //physical
             wallTime = microtimeToNumeric(microtime.now());
-            if(compareNumericTimeIntervals( this.parent._app._getcurrentlogicaltime()[0], wallTime )){
-                timestamp = [this.parent._app._getcurrentlogicaltime()[0], this.parent._app._getcurrentlogicaltime()[1] + 1 ];
+            if(compareNumericTimeIntervals( this.parent._app._getCurrentLogicalTime()[0], wallTime )){
+                timestamp = [this.parent._app._getCurrentLogicalTime()[0], this.parent._app._getCurrentLogicalTime()[1] + 1 ];
             } else {
                 timestamp = [wallTime, 0 ];
             }
         } else {
             //logical
             if( timeIntervalIsZero(this.minDelay) && timeIntervalIsZero(delay)) {
-                timestamp = [this.parent._app._getcurrentlogicaltime()[0], this.parent._app._getcurrentlogicaltime()[1] + 1 ];
+                timestamp = [this.parent._app._getCurrentLogicalTime()[0], this.parent._app._getCurrentLogicalTime()[1] + 1 ];
             } else {
                 //Take min of minDelay and delay
                 let numericMinDelay = timeIntervalToNumeric(this.minDelay);
@@ -440,7 +440,7 @@ export class Action<T> implements Trigger, Readable<T> {
                 } else{
                     actionTime = numericDelay;
                 }
-                timestamp = [actionTime, this.parent._app._getcurrentlogicaltime()[1]];
+                timestamp = [actionTime, this.parent._app._getCurrentLogicalTime()[1]];
             }
         }
 
@@ -1059,7 +1059,7 @@ export abstract class Port<T> implements Named {
      */
     _writeValue(value: T):void {
         // console.log("calling _writeValue on: " + this);
-        this._value = [this.parent._app._getcurrentlogicaltime(), value];
+        this._value = [this.parent._app._getCurrentLogicalTime(), value];
         if(this instanceof InPort){
             // Input ports can trigger reactions for the reactor
             // they are attached to.
@@ -1095,7 +1095,7 @@ export abstract class Port<T> implements Named {
      * Returns false otherwise
      */
     public isPresent(){
-        if(this._value && timeInstantsAreEqual(this._value[0],this.parent._app._getcurrentlogicaltime() )){
+        if(this._value && timeInstantsAreEqual(this._value[0],this.parent._app._getCurrentLogicalTime() )){
             return true;
         } else {
             return false;
@@ -1705,7 +1705,7 @@ export class App extends Reactor{
     /**
      * Public getter for logical time. 
      */
-    public _getcurrentlogicaltime(){
+    public _getCurrentLogicalTime(){
         return this._currentLogicalTime;
     }
     
