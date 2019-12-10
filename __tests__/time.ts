@@ -1,5 +1,5 @@
 'use strict';
-import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, NumericTimeInterval, compareNumericTimeIntervals, TimeInstant, compareTimeInstants, microtimeToNumeric, numericTimeSum, numericTimeDifference, numericTimeMultiple, timeInstantsAreEqual} from "../src/time";
+import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, NumericTimeInterval, compareNumericTimeIntervals, TimeInstant, compareTimeInstants, microtimeToNumeric, numericTimeSum, numericTimeDifference, numericTimeMultiple, timeInstantsAreEqual, numericTimeEquals} from "../src/time";
 
 /**
  * Test of helper functions for time in reactors
@@ -218,6 +218,11 @@ describe('time representation', function () {
         expect(() => {
             expect(numericTimeMultiple(numFortyTwoDays, -7)).toStrictEqual([0, 0 ]);
         }).toThrowError()
+    });
+
+    it('numericTimeEquals', function () {
+        expect(numericTimeEquals( zeroNumeric, zeroNumeric )).toBe(true);
+        expect(numericTimeEquals( zeroNumeric, numFortyTwoDays )).toBe(false);
     });
 
 });
