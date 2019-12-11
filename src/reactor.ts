@@ -237,6 +237,34 @@ export abstract class Deadline{
     }
 
     /**
+     * More concise way to get logical time in a reaction.
+     */
+    public _getCurrentLogicalTime(){
+        return this.state._app._getCurrentLogicalTime();
+    }
+
+    /**
+     * More concise way to get physical time in a reaction.
+     */
+    public _getCurrentPhysicalTime(){
+        return this.state._app._getCurrentPhysicalTime();
+    }
+
+    /**
+     * More concise way to get elapsed logical time in a reaction.
+     */
+    public _getElapsedLogicalTime(){
+        return this.state._app._getElapsedLogicalTime();
+    }
+
+    /**
+     * More concise way to get elapsed physical time in a reaction.
+     */
+    public _getElapsedPhysicalTime(){
+        return this.state._app._getElapsedPhysicalTime();
+    }
+
+    /**
      * This handler function must be overriden by a concrete handler.
      */
     handler(){
@@ -1655,6 +1683,8 @@ export class App extends Reactor{
                 
                 let headReaction = this._reactionQ.pop();
                 while(headReaction){
+
+                    currentPhysicalTime = microtimeToNumeric(microtime.now());
                     // Explicit type annotation because reactionQ contains PrioritizedReactions.
                     let r = (headReaction as PrioritizedReaction).r
                     
