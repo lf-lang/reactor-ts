@@ -200,6 +200,18 @@ export abstract class Reaction{
     }
 
     /**
+     * Setter for reaction deadline. Once a deadline has been set
+     * the deadline's timeout will determine whether the reaction's 
+     * react function or the deadline's handle function will be invoked.
+     * If a deadline has not been set the reaction's react function
+     * will always always be invoked. 
+     * @param deadline The deadline to attach to this reaction.
+     */
+    public setDeadline(deadline : Deadline){
+        this.deadline = deadline;
+    }
+
+    /**
      * Setter for reaction priority. This should
      * be determined by topological sort of reactions.
      * @param priority The priority for this reaction.
