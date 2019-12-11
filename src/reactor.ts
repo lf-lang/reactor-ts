@@ -224,6 +224,12 @@ export abstract class Deadline{
     private timeout: TimeInterval;
 
     /**
+     * A reference to the reactor this deadline is a part of so it can
+     * access reactor state.
+     */
+    private state: Reactor;
+
+    /**
      * Getter for timeout.
      */
     public getTimeout(){
@@ -239,10 +245,12 @@ export abstract class Deadline{
 
     /**
      * Deadline constructor.
+     * @param state A reference to the state of reactor this deadline is attached to.
      * @param timeout Time after which the deadline has been missed and the deadline
      * miss handler should be invoked.
      */
-    constructor(timeout: TimeInterval){
+    constructor(state: Reactor, timeout: TimeInterval){
+        this.state = state;
         this.timeout = timeout;
     }
 }

@@ -9,8 +9,8 @@ export class Dead extends Deadline{
     success: () => void;
     fail: () => void;
 
-    constructor(timeout: TimeInterval, success: ()=>void , fail: ()=>void  ){
-        super(timeout);
+    constructor(state: Reactor, timeout: TimeInterval, success: ()=>void , fail: ()=>void  ){
+        super(state, timeout);
         this.success = success;
         this.fail = fail;
     }
@@ -28,8 +28,8 @@ export class Alive extends Deadline{
     success: () => void;
     fail: () => void;
 
-    constructor(timeout: TimeInterval, success: ()=>void , fail: ()=>void  ){
-        super(timeout);
+    constructor(state: Reactor, timeout: TimeInterval, success: ()=>void , fail: ()=>void  ){
+        super(state, timeout);
         this.success = success;
         this.fail = fail;
     }
@@ -53,7 +53,7 @@ export class SoonDead extends Reaction{
         super(state, triggers, uses, effects);
         this.success = success;
         this.fail = fail;
-        this.deadline = new Dead(0, this.success, this.fail);
+        this.deadline = new Dead(state, 0, this.success, this.fail);
     }
 
     /**
@@ -81,7 +81,7 @@ export class WasteTime extends Reaction{
 
         //Something has to have failed somewhere if it takes more than 10 seconds
         //for the first reaction scheduled at time 0 to execute.
-        this.deadline = new Alive([10, TimeUnit.sec], this.success, this.fail);
+        this.deadline = new Alive(state, [10, TimeUnit.sec], this.success, this.fail);
     }
 
     /**
