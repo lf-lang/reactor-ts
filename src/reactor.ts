@@ -227,7 +227,7 @@ export abstract class Deadline{
      * A reference to the reactor this deadline is a part of so it can
      * access reactor state.
      */
-    private state: Reactor;
+    protected state: Reactor;
 
     /**
      * Getter for timeout.
