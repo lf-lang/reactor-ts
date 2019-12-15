@@ -161,6 +161,34 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
     updateIfDuplicateOf(node:PrioritySetNode<Priority>|null) {
         return Object.is(this, node);
     }
+    
+    /**
+     * More concise way to get logical time in a reaction.
+     */
+    public _getCurrentLogicalTime(){
+        return this.state._app._getCurrentLogicalTime();
+    }
+
+    /**
+     * More concise way to get physical time in a reaction.
+     */
+    public _getCurrentPhysicalTime(){
+        return this.state._app._getCurrentPhysicalTime();
+    }
+
+    /**
+     * More concise way to get elapsed logical time in a reaction.
+     */
+    public _getElapsedLogicalTime(){
+        return this.state._app._getElapsedLogicalTime();
+    }
+
+    /**
+     * More concise way to get elapsed physical time in a reaction.
+     */
+    public _getElapsedPhysicalTime(){
+        return this.state._app._getElapsedPhysicalTime();
+    }
 
     //A reaction defaults to not having a deadline  FIXME: we want the deadline to have access to the same variables
     deadline: null| Deadline = null;
@@ -189,6 +217,18 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
     }
 
     /**
+     * Setter for reaction deadline. Once a deadline has been set
+     * the deadline's timeout will determine whether the reaction's 
+     * react function or the deadline's handle function will be invoked.
+     * If a deadline has not been set the reaction's react function
+     * will always always be invoked. 
+     * @param deadline The deadline to attach to this reaction.
+     */
+    public setDeadline(deadline : Deadline){
+        this.deadline = deadline;
+    }
+
+    /**
      * Setter for reaction priority. This should
      * be determined by topological sort of reactions.
      * @param priority The priority for this reaction.
@@ -214,10 +254,44 @@ export abstract class Deadline {
     private timeout: TimeInterval;
 
     /**
+     * A reference to the reactor this deadline is a part of so it can
+     * access reactor state.
+     */
+    protected state: Reactor;
+
+    /**
      * Getter for timeout.
      */
     public getTimeout(){
         return this.timeout;
+    }
+
+    /**
+     * More concise way to get logical time in a reaction.
+     */
+    public _getCurrentLogicalTime(){
+        return this.state._app._getCurrentLogicalTime();
+    }
+
+    /**
+     * More concise way to get physical time in a reaction.
+     */
+    public _getCurrentPhysicalTime(){
+        return this.state._app._getCurrentPhysicalTime();
+    }
+
+    /**
+     * More concise way to get elapsed logical time in a reaction.
+     */
+    public _getElapsedLogicalTime(){
+        return this.state._app._getElapsedLogicalTime();
+    }
+
+    /**
+     * More concise way to get elapsed physical time in a reaction.
+     */
+    public _getElapsedPhysicalTime(){
+        return this.state._app._getElapsedPhysicalTime();
     }
 
     /**
@@ -229,10 +303,12 @@ export abstract class Deadline {
 
     /**
      * Deadline constructor.
+     * @param state A reference to the state of reactor this deadline is attached to.
      * @param timeout Time after which the deadline has been missed and the deadline
      * miss handler should be invoked.
      */
-    constructor(timeout: TimeInterval){
+    constructor(state: Reactor, timeout: TimeInterval){
+        this.state = state;
         this.timeout = timeout;
     }
 }
@@ -353,7 +429,7 @@ export class Action<T> implements Variable<T> {
             // This action has never been scheduled before.
             return false;
         }
-        if(timeInstantsAreEqual(this.timestamp, this.parent._app._getcurrentlogicaltime())){
+        if(timeInstantsAreEqual(this.timestamp, this.parent._app._getCurrentLogicalTime())){
             return true;
         } else {
             return false;
@@ -394,7 +470,6 @@ export class Action<T> implements Variable<T> {
         this.parent = parent;
         this.origin = origin;
         this.minDelay = minDelay;
-        this.name = name;
     }
 
     /**
@@ -403,8 +478,9 @@ export class Action<T> implements Variable<T> {
      * is scheduled multiple times for the same logical time, the value
      * associated with the last invocation of the this function determines
      * the value attached to the action at that logical time.
-     * @param delay The time difference between now and the future when 
-     * this action should occur. 
+     * @param delay A component of the time difference between now
+     * and the future when this action should occur. See
+     * https://github.com/icyphy/lingua-franca/wiki/Language-Specification#Action-Declaration.
      * @param value An optional value to be attached to this action.
      * The value will be available to reactions depending on this action.
      */
@@ -415,33 +491,35 @@ export class Action<T> implements Variable<T> {
         }
 
         let timestamp: TimeInstant;
-        let wallTime: NumericTimeInterval; 
+        let wallTime: NumericTimeInterval;
+
+        let numericMinDelay = timeIntervalToNumeric(this.minDelay);
+        let numericDelay = timeIntervalToNumeric(delay);
+
+        // Take sum of minDelay attribute from action and delay from schedule function argument
+        let totalDelay = numericTimeSum(numericMinDelay, numericDelay);
+        let delayedLogicalTime = numericTimeSum( totalDelay, this.parent._app._getCurrentLogicalTime()[0]);
 
         //FIXME: I'm not convinced I understand the spec so,
         //Probably something wrong in one of these cases...
         if(this.origin == Origin.physical){
             //physical
-            wallTime = microtimeToNumeric(microtime.now());
-            if(compareNumericTimeIntervals( this.parent._app._getcurrentlogicaltime()[0], wallTime )){
-                timestamp = [this.parent._app._getcurrentlogicaltime()[0], this.parent._app._getcurrentlogicaltime()[1] + 1 ];
+            wallTime = microtimeToNumeric(microtime.now());   
+            if( totalDelay[0] == 0 && totalDelay[1] == 0 && compareNumericTimeIntervals(wallTime, delayedLogicalTime ) ){
+                timestamp = [this.parent._app._getCurrentLogicalTime()[0], this.parent._app._getCurrentLogicalTime()[1] + 1 ];
             } else {
-                timestamp = [wallTime, 0 ];
+                if(compareNumericTimeIntervals(wallTime, delayedLogicalTime )){
+                    timestamp = [delayedLogicalTime, 0];
+                } else {
+                    timestamp = [wallTime, 0];
+                }
             }
         } else {
             //logical
-            if( timeIntervalIsZero(this.minDelay) && timeIntervalIsZero(delay)) {
-                timestamp = [this.parent._app._getcurrentlogicaltime()[0], this.parent._app._getcurrentlogicaltime()[1] + 1 ];
+            if( totalDelay[0] == 0 && totalDelay[1] == 0 ) {
+                timestamp = [this.parent._app._getCurrentLogicalTime()[0], this.parent._app._getCurrentLogicalTime()[1] + 1 ];
             } else {
-                //Take min of minDelay and delay
-                let numericMinDelay = timeIntervalToNumeric(this.minDelay);
-                let numericDelay = timeIntervalToNumeric(delay);
-                let actionTime: NumericTimeInterval;
-                if(compareNumericTimeIntervals(numericMinDelay, numericDelay )){
-                    actionTime = numericMinDelay;
-                } else{
-                    actionTime = numericDelay;
-                }
-                timestamp = [actionTime, this.parent._app._getcurrentlogicaltime()[1]];
+                timestamp = [delayedLogicalTime, 0];
             }
         }
 
@@ -1129,7 +1207,7 @@ export abstract class Port<T> implements Named, Variable<T> {
     protected writeValue(value: T):void {
         // console.log("calling _writeValue on: " + this);
         this.value = value;
-        this.tag = this.parent._app._getcurrentlogicaltime();
+        this.tag = this.parent._app._getCurrentLogicalTime();
         
         this.parent.enqueueReactions(this);
 
@@ -1144,7 +1222,7 @@ export abstract class Port<T> implements Named, Variable<T> {
      * Returns false otherwise
      */
     public isPresent(){
-        if(this.value && timeInstantsAreEqual(this.tag, this.parent._app._getcurrentlogicaltime() )){
+        if(this.value && timeInstantsAreEqual(this.tag, this.parent._app._getCurrentLogicalTime() )){
             return true;
         } else {
             return false;
@@ -1530,20 +1608,31 @@ export class App extends Reactor {
                 
                 let headReaction = this._reactionQ.pop();
                 while(headReaction){
+
+                    currentPhysicalTime = microtimeToNumeric(microtime.now());
+
+                    if(this._executionTimeout){
+                        if(compareNumericTimeIntervals( this._relativeExecutionTimeout, currentPhysicalTime)){
+                            console.log("Execution timeout reached. Terminating runtime with success.");
+                            successCallback();
+                            return;
+                        }
+                    }
+
                     // Explicit type annotation because reactionQ contains PrioritizedReactions.
                     let r = headReaction;
                     
                     // Test if this reaction has a deadline which has been violated.
                     // This is the case if the reaction has a registered deadline and
                     // logical time + timeout < physical time
-                    // FIXME: deadlines are temporarily disabled.
+                    // FIXME: temporarily disabled deadlines
                     // if(r.deadline && compareNumericTimeIntervals( 
                     //         numericTimeSum(this._currentLogicalTime[0], timeIntervalToNumeric(r.deadline.getTimeout())),
                     //         currentPhysicalTime)){
                     //     console.log("handling deadline violation");
                     //     r.deadline.handler();
                     // } else {
-                    //     console.log("reacting...");
+                    //     // console.log("reacting...");
                     //     r.react();
                     // }
                     headReaction = this._reactionQ.pop();
@@ -1611,8 +1700,29 @@ export class App extends Reactor {
     /**
      * Public getter for logical time. 
      */
-    public _getcurrentlogicaltime(){
+    public _getCurrentLogicalTime(){
         return this._currentLogicalTime;
+    }
+
+    /**
+     * Public getter for physical (wall) time. 
+     */
+    public _getCurrentPhysicalTime(){
+        return microtimeToNumeric(microtime.now());
+    }
+
+    /**
+     * Public getter for elapsed logical time from the start of execution. 
+     */
+    public _getElapsedLogicalTime(){
+        return numericTimeDifference(this._currentLogicalTime[0], this._startingWallTime);
+    }
+
+    /**
+     * Public getter for elapsed physical time from the start of execution. 
+     */
+    public _getElapsedPhysicalTime(){
+        return numericTimeDifference(microtimeToNumeric(microtime.now()), this._startingWallTime);
     }
     
     /**
