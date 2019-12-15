@@ -1,5 +1,5 @@
 'use strict';
-import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, NumericTimeInterval, compareNumericTimeIntervals, TimeInstant, compareTimeInstants, microtimeToNumeric, numericTimeSum, numericTimeDifference, numericTimeMultiple, timeInstantsAreEqual} from "./reactor";
+import {TimeInterval, timeIntervalIsZero, TimeUnit, timeIntervalToNumeric, NumericTimeInterval, compareNumericTimeIntervals, TimeInstant, compareTimeInstants, microtimeToNumeric, numericTimeSum, numericTimeDifference, numericTimeMultiple, timeInstantsAreEqual} from "../src/time";
 
 /**
  * Test of helper functions for time in reactors
@@ -77,6 +77,11 @@ describe('time representation', function () {
             timeIntervalToNumeric([5.000000005, TimeUnit.sec])
         }).toThrowError()
 
+        //Negative time intervals are an error.
+        expect(() => {
+            timeIntervalToNumeric([-5, TimeUnit.sec])
+        }).toThrowError()
+
 
         expect( timeIntervalToNumeric(straightZero)).toStrictEqual( zeroNumeric );
         expect( timeIntervalToNumeric(zeroSeconds)).toStrictEqual( zeroNumeric );
@@ -93,6 +98,13 @@ describe('time representation', function () {
         expect(numFiveHundredMilNS).toStrictEqual( [0, 500000000] );
         expect(numOneThousandMS).toStrictEqual( [1, 0] );
         expect(numAboutTenYears).toStrictEqual( [10 * 365 * 24 * 60 * 60 , 0] );
+
+        // This test should generate an error because we're trying to convert
+        // a number which can't be represented as a numeric time interval.
+        expect(() => {
+            timeIntervalToNumeric([ Number.MAX_SAFE_INTEGER, TimeUnit.weeks])
+        }).toThrowError();
+
     });
 
     /**

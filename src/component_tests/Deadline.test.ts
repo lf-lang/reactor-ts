@@ -1,12 +1,8 @@
 'use strict';
 
-
-import {Reactor, TimeUnit, OutPort, InPort, TimeInterval, App} from './reactor';
-// import * as globals from './globals';
-import { ShowDeadline } from './deadline';
-import { Logger } from './logger';
-
-
+import {App} from '../reactor';
+import {TimeUnit, TimeInterval} from "../time"
+import { ShowDeadline } from '../components/Deadline';
 
 class DeadlineTest extends App{
     showDeadline: ShowDeadline;
@@ -17,14 +13,11 @@ class DeadlineTest extends App{
     }
 }
 
-
 // This test shows the ShowDeadline reactor is able to trigger a reaction on
 // a contained reactor's output.
 describe('OutputEventTest', function () {
 
-    //Tell the reactor runtime to successfully terminate after 3 seconds.
-    // globals.setExecutionTimeout([3, TimeUnit.secs]);
-    //Ensure the test will run for 5 seconds.
+    // Ensure the test will run for no more than 5 seconds.
     jest.setTimeout(5000);
 
     it('start runtime', done => {
@@ -39,7 +32,8 @@ describe('OutputEventTest', function () {
             throw new Error("Reactor has failed.");
         };
 
+        // Tell the reactor runtime to successfully terminate after 3 seconds.
         var sDeadline = new DeadlineTest( [3, TimeUnit.secs], done, failReactor, "ShowDeadline");
-        sDeadline.start(()=> null, failRuntime);
+        sDeadline._start(()=> null, failRuntime);
     })
 });

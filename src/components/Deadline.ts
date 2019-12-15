@@ -1,9 +1,10 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval, Action, TimelineClass, Deadline, TimeUnit} from './reactor';
+import {Reactor, Trigger, Reaction, Timer, Deadline, InPort, OutPort, Action, ArgType} from '../reactor';
+import {TimeInterval, TimeUnit} from "../time"
 
 // This test is supposed to violate this deadline.
-export class Dead extends Deadline{
+export class Dead extends Deadline {
     
     success: () => void;
     fail: () => void;
@@ -41,17 +42,17 @@ export class Alive extends Deadline{
     }
 }
 
-export class SoonDead extends Reaction{
+export class SoonDead<T> extends Reaction<T> {
 
     success:() => void;
     fail:() => void;
 
-    constructor(state: Reactor, triggers: Trigger[],
-                priority: number, success: () => void, fail: ()=>void){
-        super(state, triggers, priority);
+    constructor(state: Reactor, trigs: Trigger[],
+        args: ArgType<T>, success: () => void, fail: ()=>void){
+        super(state, trigs, args);
         this.success = success;
         this.fail = fail;
-        this.deadline = new Dead(0, this.success, this.fail);
+        //this.deadline = new Dead(0, this.success, this.fail);
     }
 
     /**
@@ -65,14 +66,14 @@ export class SoonDead extends Reaction{
     }
 }
 
-export class WasteTime extends Reaction{
+export class WasteTime<T> extends Reaction<T> {
 
     success:() => void;
     fail:() => void;
 
-    constructor(state: Reactor, triggers: Trigger[],
-        priority: number, success: () => void, fail: ()=>void){
-        super(state, triggers, priority);
+    constructor(parent: Reactor, triggers: Trigger[], args: ArgType<T>,
+        success: () => void, fail: ()=>void){
+        super(parent, triggers, args);
         this.success = success;
         this.fail = fail;
 
@@ -91,20 +92,27 @@ export class WasteTime extends Reaction{
     }
 }
 
-
+/**
+ * This reactor demonstrates the deadline component.
+ * The soonDead reaction has a deadline that should be missed.
+ */
 export class ShowDeadline extends Reactor {
 
     //Triggers immediatedly
     t: Timer = new Timer(this, 0,0);
 
-    constructor(success: () => void, fail: () => void, parent:Reactor | null, name?: string) {
-        super(parent, name);
+    waste: Reaction<any>;
+    soonDead: Reaction<any>;
+
+    constructor(parent:Reactor | null, success: () => void, fail: () => void) {
+        super(parent);
         
-        //Priorities are very important here
-        const waste = new WasteTime(this, [this.t], 0, success, fail);
-        const soonDead = new SoonDead(this, [this.t], 1, success, fail);
+        
+        this.waste = new WasteTime(this, [this.t], [], success, fail);
+        this.soonDead = new SoonDead(this, [this.t], [], success, fail);
  
-        this._reactions = [waste, soonDead];
+        // Priorities are very important here
+        //this._reactions = [this.waste, this.soonDead];
     }
 
 }

@@ -1,40 +1,55 @@
 import {Reactor, OutPort, InPort, App} from '../src/reactor';
 
-/**
-    * An actor implementation is a reactive component with ports as properties.
-    */
-class Container extends Reactor{
-    
+class Component extends Reactor {
     a: InPort<string> = new InPort(this);
     b: OutPort<string> = new OutPort(this);
 
-    _checkTypes() {
-        
-    }
+    child: Reactor;
 }
 
-
-class Contained extends Reactor {
-
-    a: InPort<string> = new InPort(this);
-    b: OutPort<string> = new OutPort(this);
-
-    _checkTypes() {
-
-    }
-}
-
-
-
-// */__tests__/.*
 describe('Container to Contained', () => {
 
-    var container = new Container(null, "Container");
-    var contained = new Contained(container, "Contained");
-    var grandcontained = new Contained(contained, "Grandcontained");
+    var container = new Component(null, "Container");
+    var contained = new Component(container, "Contained");
+    var grandcontained = new Component(contained, "Grandcontained");
 
-    var container2 = new Container(null, "Container2");
-    var contained2 = new Contained(container2, "Contained2");
+    container.child = contained;
+    contained.child = grandcontained;
+
+    var container2 = new Component(null, "Container2");
+    var contained2 = new Component(container2, "Contained2");
+
+    container2.child = contained2;
+
+    // Normally _setAllParents would be called as part of the initialization
+    // process for starting an app, but we call it directly here to set
+    // parent attributes needed for this test.
+    // container._setAllParents(null);
+    // container2._setAllParents(null);
+
+    it('reactor with self as child', () => {
+        expect(() => {
+            let loopy = new Component(null, "loopy");
+            loopy.child = loopy;
+            loopy._checkAllParents(null);
+        }).toThrowError();
+    });
+
+    it('reactor with a port constructed with the wrong parent', () => {
+        expect(() => {
+            let badPortComponent = new Component(null, "hasBadPort");
+            let otherComponent = new Component(null, "otherComponent");
+
+            // this port has been incorrectly constructed because it
+            // is an attribute of badPortComponent, but is set in the constructor
+            // with otherComponent as its parent 
+            badPortComponent.a = new InPort(otherComponent);
+
+            // _setAllParents should throw an error
+            badPortComponent._checkAllParents(null);
+        }).toThrowError();
+    });
+
     
     it('contained reactor name', () => {
         // expect(contained._getName()).toBe("Contained");
@@ -47,60 +62,37 @@ describe('Container to Contained', () => {
 
     })
 
-    it('get container name from contained', () =>{
-        let obtainedContainer = contained._getContainer();
-        if(obtainedContainer){
-            // expect(obtainedContainer._getName()).toBe("Container");
-            expect(obtainedContainer.toString()).toBe("Container");
-        } else {
-            throw new Error("contained._getContainer() returns null");
-        } 
-    })
-
-    it('get contained name from container', () =>{
-
-        //This test assumes contained to be the only child
-        for(let child of container.children){
-            if(child){
-                expect(child.toString()).toBe("Container/Contained");
-            } else {
-                throw new Error("Container has no children");
-            }
-        }
-    })
-
     it('testing canConnect', () => {
-        expect(container.a.canConnect(contained.a)).toBe(true);
-        expect(contained.a.canConnect(container.a)).toBe(false);
-        expect(contained.a.canConnect(contained.b)).toBe(false);
-        expect(contained.b.canConnect(contained.a)).toBe(true);
+        expect(container.canConnect(container.a, contained.a)).toBe(true);
+        expect(container.canConnect(contained.a, container.a)).toBe(false);
+        expect(container.canConnect(contained.a, contained.b)).toBe(false);
+        expect(container.canConnect(contained.b, contained.a)).toBe(true);
 
-        expect(container.a.canConnect(contained.b)).toBe(false);
-        expect(contained.b.canConnect(container.a)).toBe(false);
+        expect(container.canConnect(container.a, contained.b)).toBe(false);
+        expect(container.canConnect(contained.b, container.a)).toBe(false);
 
-        expect(container.b.canConnect(contained.a)).toBe(false);
-        expect(contained.a.canConnect(container.b)).toBe(false);
+        expect(container.canConnect(container.b, contained.a)).toBe(false);
+        expect(container.canConnect(contained.a, container.b)).toBe(false);
 
-        expect(container.b.canConnect(contained.b)).toBe(false);
-        expect(contained.b.canConnect(container.b)).toBe(true);
+        expect(container.canConnect(container.b, contained.b)).toBe(false);
+        expect(container.canConnect(contained.b, container.b)).toBe(true);
 
-        expect(contained.a.canConnect(contained2.a)).toBe(false);
-        expect(contained.a.canConnect(contained2.b)).toBe(false);
-        expect(contained2.a.canConnect(contained.a)).toBe(false);
-        expect(contained2.a.canConnect(contained.a)).toBe(false);
+        expect(container.canConnect(contained.a, contained2.a)).toBe(false);
+        expect(container.canConnect(contained.a, contained2.b)).toBe(false);
+        expect(container.canConnect(contained2.a, contained.a)).toBe(false);
+        expect(container.canConnect(contained2.a, contained.a)).toBe(false);
 
-        expect(contained2.a.canConnect(container.b)).toBe(false);
-        expect(contained2.a.canConnect(container.a)).toBe(false);
+        expect(container.canConnect(contained2.a, container.b)).toBe(false);
+        expect(container.canConnect(contained2.a, container.a)).toBe(false);
        
-        expect(grandcontained.a.canConnect(contained.a)).toBe(false);
-        expect(grandcontained.b.canConnect(contained.b)).toBe(true);
-        expect(grandcontained.a.canConnect(container.a)).toBe(false);
-        expect(grandcontained.b.canConnect(container.b)).toBe(false);
-        expect(grandcontained.a.canConnect(container2.a)).toBe(false);
-        expect(grandcontained.b.canConnect(container2.b)).toBe(false);
-        expect(grandcontained.a.canConnect(contained2.a)).toBe(false);
-        expect(grandcontained.b.canConnect(contained2.b)).toBe(false);
-        
+        expect(container.child.canConnect(grandcontained.a, contained.a)).toBe(false);
+        expect(container.child.canConnect(grandcontained.b, contained.b)).toBe(true);
+        expect(container.child.canConnect(grandcontained.a, container.a)).toBe(false);
+        expect(container.child.canConnect(grandcontained.b, container.b)).toBe(false);
+        expect(container.child.canConnect(grandcontained.a, container2.a)).toBe(false);
+        expect(container.child.canConnect(grandcontained.b, container2.b)).toBe(false);
+        expect(container.child.canConnect(grandcontained.a, contained2.a)).toBe(false);
+        expect(container.child.canConnect(grandcontained.b, contained2.b)).toBe(false);        
 
     });
 });

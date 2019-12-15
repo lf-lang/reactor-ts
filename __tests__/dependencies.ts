@@ -1,43 +1,37 @@
-import {TimeInstant} from '../src/reactor';
+import {TimeInstant} from '../src/time';
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
+import {Reactor, Reaction, Priority, AbstractReaction} from '../src/reactor';
 
-
-class Reaction implements PrecedenceGraphNode, PrioritySetNode<number,number> {
-    _id: number;
-    _next: Reaction;
-    _priority: number;
-    constructor(id: number) {
-        this._id = id;
-    }
+class DummyReaction<T> extends Reaction<T> {
     
-    hasPrecedenceOver(node: PrioritySetNode<number,number>) {
-        if (this._priority < node._priority) {
-            return true;
-        } else {
-            return false;
+    public react(...args: any[]): void {
+        throw new Error("Method not implemented.");
+    }
+
+}
+
+class DummyReactor extends Reactor {
+    public nodes: Array<DummyReaction<unknown>> = [];
+    constructor(parent: Reactor|null) {
+        super(parent);
+        for (let i = 0; i < 7; i++) {
+            let r = new DummyReaction(this, [], []);
+            this.nodes.push(r);
+            this.addReaction(r);
         }
     }
-}
-// Mock up for event.
-class Event implements PrioritySetNode<number,TimeInstant> {
-    _id:number;
-    _priority:TimeInstant;
-    _next:PrioritySetNode<number,TimeInstant>|null;
-    hasPrecedenceOver(node:PrioritySetNode<number,TimeInstant>) {
-        return true;
-    }
 
+    getNodes() {
+        return this.nodes;
+    }
 }
 
 describe('Precedence Graph', () => {
 
-    var nodes = [new Reaction(1), new Reaction(2), new Reaction(3), 
-        new Reaction(4), new Reaction(5), new Reaction(6)];
+    var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
+    var reactor = new DummyReactor(null);
 
-    var r7 = new Reaction(7);
-
-    var graph:PrecedenceGraph<Reaction> = new PrecedenceGraph();
-
+    var nodes = reactor.getNodes();
 
 
     graph.addEdge(nodes[3], nodes[5]);
@@ -51,27 +45,27 @@ describe('Precedence Graph', () => {
     graph.updatePriorities();
 
     it('priority of node 6', () => {
-        expect(nodes[5]).toEqual({_id: 6, _priority: 0});
+        expect(nodes[5].getPriority()).toEqual(0);
     });
 
     it('priority of node 4', () => {
-        expect(nodes[3]).toEqual({_id: 4, _priority: 100});
+        expect(nodes[3].getPriority()).toEqual(100);
     });
 
     it('priority of node 5', () => {
-        expect(nodes[4]).toEqual({_id: 5, _priority: 200});
+        expect(nodes[4].getPriority()).toEqual(200);
     });    
 
     it('priority of node 3', () => {
-         expect(nodes[2]).toEqual({_id: 3, _priority: 300});
+         expect(nodes[2].getPriority()).toEqual(300);
     });
 
     it('priority of node 2', () => {
-        expect(nodes[1]).toEqual({_id: 2, _priority: 400});
+        expect(nodes[1].getPriority()).toEqual(400);
     });
 
     it('priority of node 1', () => {
-        expect(nodes[0]).toEqual({_id: 1, _priority: 500});
+        expect(nodes[0].getPriority()).toEqual(500);
     });
 
     it('remove dependency 5 -> 4', () => {
@@ -87,8 +81,8 @@ describe('Precedence Graph', () => {
     });
 
     it('add node 7, put in front of 3', () => {
-        graph.addNode(r7);
-        graph.addEdges(nodes[2], new Set([r7, nodes[3]]));
+        graph.addNode(nodes[6]);
+        graph.addEdges(nodes[2], new Set([nodes[6], nodes[3]]));
         expect(graph.size()[0]).toEqual(6); // V
         expect(graph.size()[1]).toEqual(4); // E
     });
@@ -96,12 +90,12 @@ describe('Precedence Graph', () => {
     it('reorder vertices', () => {
         graph.updatePriorities();
         
-        expect(nodes[5]).toEqual({_id: 6, _priority: 0});
-        expect(nodes[4]).toEqual({_id: 5, _priority: 100});
-        expect(r7).toEqual({_id: 7, _priority: 200});
-        expect(nodes[3]).toEqual({_id: 4, _priority: 300});
-        expect(nodes[0]).toEqual({_id: 1, _priority: 400});
-        expect(nodes[2]).toEqual({_id: 3, _priority: 500});
+        expect(nodes[5].getPriority()).toEqual(0);
+        expect(nodes[4].getPriority()).toEqual(100);
+        expect(nodes[6].getPriority()).toEqual(200);
+        expect(nodes[3].getPriority()).toEqual(300);
+        expect(nodes[0].getPriority()).toEqual(400);
+        expect(nodes[2].getPriority()).toEqual(500);
     });
 
     it('introduce a cycle', () => {
@@ -111,12 +105,13 @@ describe('Precedence Graph', () => {
 
 });
 
-
-describe('Priority Set', () => {
-    var nodes = [new Reaction(1), new Reaction(2), new Reaction(3), 
-        new Reaction(4), new Reaction(5), new Reaction(6)];
+describe('ReactionQ', () => {
     
-    var graph:PrecedenceGraph<Reaction> = new PrecedenceGraph();
+    var graph:PrecedenceGraph<Reaction<unknown>> = new PrecedenceGraph();
+    var reactor = new DummyReactor(null);
+
+    var nodes = reactor.getNodes();
+
     graph.addEdge(nodes[3], nodes[5]);
     graph.addEdge(nodes[4], nodes[3]);
     graph.addEdge(nodes[2], nodes[3]);
@@ -126,39 +121,102 @@ describe('Priority Set', () => {
     graph.addEdge(nodes[0], nodes[4]);
     graph.updatePriorities();
     
-    var reactionQ = new PrioritySet<number, number>();
+    var reactionQ = new PrioritySet<Priority>();
     
-    for (let r of graph.nodes()) {
-        reactionQ.push(r);
+    for (let i = 0; i < 6; i++) {
+        console.log("Pushing node: " + i + " with prio: " + nodes[i].getPriority());
+        reactionQ.push(nodes[i]);
     }
     
-    // duplicate insertion
+    // duplicate insertions
+    console.log("Pushing duplicate node with prio: " + nodes[5].getPriority());
     reactionQ.push(nodes[5]);
+    console.log("Pushing duplicate node with prio: " + nodes[1].getPriority());
+    reactionQ.push(nodes[1]);
 
     it('first pop', () => {
-         expect(reactionQ.pop()).toEqual({_id: 6, _next: null, _priority: 0});
+        // expect(reactionQ.pop()).toEqual({_id: 6, _next: null, _priority: 0});
+        let r = reactionQ.pop();
+        for (let i = 0; i < 6; i++) {
+            if (Object.is(r, nodes[i])) {
+                console.log("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
+            }
+        }
+        expect(Object.is(r, nodes[5])).toBe(true);
+        if (r)
+            expect(r.getPriority()).toEqual(0);
     });
 
     it('second pop', () => {
-        expect(reactionQ.pop()).toEqual({_id: 4, _next: null, _priority: 100});
+        // expect(reactionQ.pop()).toEqual({_id: 4, _next: null, _priority: 100});
+        let r = reactionQ.pop();
+        
+        for (let i = 0; i < 6; i++) {
+            if (Object.is(r, nodes[i])) {
+                console.log("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
+            }
+        }
+        expect(Object.is(r, nodes[3])).toBe(true);
+        if (r)
+            expect(r.getPriority()).toEqual(100);
     });
 
     it('third pop', () => {
-        expect(reactionQ.pop()).toEqual({_id: 5, _next: null, _priority: 200});
+        //expect(reactionQ.pop()).toEqual({_id: 5, _next: null, _priority: 200});
+        let r = reactionQ.pop();
+        for (let i = 0; i < 6; i++) {
+            if (Object.is(r, nodes[i])) {
+                console.log("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
+            }
+        }
+        expect(Object.is(r, nodes[4])).toBe(true);
+        if (r)
+            expect(r.getPriority()).toEqual(200);
     });
 
     it('fourth pop', () => {
-        expect(reactionQ.pop()).toEqual({_id: 3, _next: null, _priority: 300});
+        //expect(reactionQ.pop()).toEqual({_id: 3, _next: null, _priority: 300});
+        let r = reactionQ.pop();
+        for (let i = 0; i < 6; i++) {
+            if (Object.is(r, nodes[i])) {
+                console.log("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
+            }
+        }
+        expect(Object.is(r, nodes[2])).toBe(true);
+        if (r)
+            expect(r.getPriority()).toEqual(300);
+
     });
 
     it('fifth pop', () => {
-        expect(reactionQ.pop()).toEqual({_id: 2, _next: null, _priority: 400});
+        // expect(reactionQ.pop()).toEqual({_id: 2, _next: null, _priority: 400});
+        let r = reactionQ.pop();
+        for (let i = 0; i < 6; i++) {
+            if (Object.is(r, nodes[i])) {
+                console.log("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
+            }
+        }
+        expect(Object.is(r, nodes[1])).toBe(true);
+        if (r)
+            expect(r.getPriority()).toEqual(400);
+
     });
     
     it('sixth pop', () => {
-        expect(reactionQ.pop()).toEqual({_id: 1, _next: null, _priority: 500});
+        //expect(reactionQ.pop()).toEqual({_id: 1, _next: null, _priority: 500});
+        let r = reactionQ.pop();
+        for (let i = 0; i < 6; i++) {
+            if (Object.is(r, nodes[i])) {
+                console.log("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
+            }
+        }
+        expect(Object.is(r, nodes[0])).toBe(true);
+        if (r)
+            expect(r.getPriority()).toEqual(500);
     });
 
-
-
+    it('seventh pop', () => {
+        let r = reactionQ.pop();
+        expect(r).toBeUndefined();
+    });
 });

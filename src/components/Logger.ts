@@ -1,18 +1,13 @@
+import {Reactor, InPort, Trigger, Reaction, OutPort, Action, ArgType, } from '../reactor';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, TimeInterval} from './reactor';
-// import { triggerMap } from './globals';
-
-export class Print extends Reaction {
+export class Print<T> extends Reaction<T> {
 
     success:() => void;
     fail:() => void;
     expected: any;
 
-    constructor(state: Reactor, triggers: Trigger[],
-                priority: number, success: () => void, fail: ()=>void, expected:any){
-        super(state, triggers, priority);
-        this.success = success;
-        this.fail = fail;
+    constructor(parent: Reactor, triggers: Trigger[], args:ArgType<T>, expected:any) {
+        super(parent, triggers, args);
         this.expected = expected;
     }
 
@@ -21,7 +16,7 @@ export class Print extends Reaction {
      * @override
      */
     react(){
-        const received = (this.state as any).i.get();
+        const received = (this.state as Logger).i.get();
         if( received ){
             console.log("Logging: " + received);
             if(received === this.expected){
@@ -40,11 +35,11 @@ export class Logger extends Reactor {
 
     i: InPort<any> = new InPort<any>(this);
 
-    constructor(success: () => void, fail: () => void, expected:any ,parent:Reactor | null, name?: string) {
-        super(parent, name);
+    constructor(parent:Reactor, expected:any) {
+        super(parent);
         
-        const r = new Print(this, [this.i], 0, success, fail, expected);
-        this._reactions.push(r);
+        const r = new Print(this, [this.i], [this.i], expected);
+        //this._reactions.push(r);
     }
 
 }
