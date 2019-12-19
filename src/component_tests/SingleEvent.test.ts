@@ -27,8 +27,8 @@ describe('SingleEvent', function () {
 
     it('start runtime with input.connect to output', done => {
 
-        function failRuntime(){
-            console.log("Runtime has ended.");
+        function emptyQueue(){
+            console.log("Runtime has ended with an empty event queue.");
             // throw new Error("Runtime has failed.");
         };
 
@@ -45,6 +45,6 @@ describe('SingleEvent', function () {
         expect(seTest.singleEvent.o.canConnect(seTest.logger.i)).toBe(true);
         expect(seTest.logger.i.canConnect(seTest.singleEvent.o)).toBe(false);
 
-        seTest._start(()=> null, failRuntime);
+        seTest._start(()=> null, emptyQueue);
     })
 });
