@@ -1,7 +1,7 @@
 {
     "name": "wirewrap",
     "version": "0.0.1",
-    "description": "A Reactive Framework for IoT",
+    "description": "Reactor runtime written in TypeScript",
     "main": "lib/reactor.js",
     "dependencies": {
         "got": "^9.6.0",
@@ -16,8 +16,6 @@
         "@babel/preset-env": "^7.4.3",
         "@babel/preset-typescript": "^7.7.7",
         "@types/jest": "^24.0.15",
-        "babel-cli": "^6.26.0",
-        "babel-core": "^6.26.3",
         "jest": "^24.8.0",
         "ts-jest": "^24.0.2",
         "typedoc": "^0.15.5",
