@@ -16,13 +16,13 @@ To make sure all Node modules are installed, run:
 npm install
 ```
 
-To check types with [flow][flow] and run tests with [Jest][jest], run:
+To run the tests with [Jest][jest], run:
 
 ```
 npm run test
 ```
 
-To generate documentation with [documentation][documentationjs], run:
+To generate documentation with [TypeDoc][typedoc], run:
 
 ```
 npm run doc
@@ -31,6 +31,6 @@ npm run doc
 <!-- links -->
 [travis-image]: https://travis-ci.com/nebgnahz/accessor-flow.svg?token=FtzQss73KSBwcHhSsrGQ&branch=master
 [documentationjs]: https://github.com/documentationjs/documentation
-[flow]: https://flow.org/
+[typedoc]: https://typedoc.org/
 [jest]: https://facebook.github.io/jest
 [designs]: https://github.com/nebgnahz/accessor-flow/issues?q=is%3Aissue+is%3Aopen+label%3ADesign
