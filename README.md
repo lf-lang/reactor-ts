@@ -28,10 +28,6 @@ To generate documentation with [documentation][documentationjs], run:
 npm run doc
 ```
 
-## Designs
-
-[Design issues][designs] are tracked by Github Issues with labels.
-
 <!-- links -->
 [travis-image]: https://travis-ci.com/nebgnahz/accessor-flow.svg?token=FtzQss73KSBwcHhSsrGQ&branch=master
 [documentationjs]: https://github.com/documentationjs/documentation
