@@ -1,6 +1,4 @@
-'use strict';
-
-import {Reactor, Variable, Reaction, Timer, Action, InPort, OutPort, Trigs, Args, ArgType} from '../reactor';
+import {Reactor, Reaction, Timer, Action, Trigs, Args, Schedulable} from '../reactor';
 import {Origin} from "../time"
 
 export class ScheduleAction<T, A> extends Reaction<T> {
@@ -10,7 +8,7 @@ export class ScheduleAction<T, A> extends Reaction<T> {
      * @override
      */
     //@ts-ignore
-    react(a1: Action<string>){
+    react(a1: Schedulable<string>){
         a1.schedule(0, "hello");
         console.log("Scheduling the final action in ScheduleAction to trigger RespondToAction");
     }
@@ -23,7 +21,7 @@ export class ScheduleOverriddenAction<T, A> extends Reaction<T> {
      * @override
      */
     //@ts-ignore
-    react(a1: Action<string>){
+    react(a1: Schedulable<string>){
         a1.schedule(0, "goodbye");
         console.log("Scheduling the overridden action in ScheduleOverriddenAction to trigger RespondToAction");
     }
@@ -41,10 +39,11 @@ export class RespondToAction<T> extends Reaction<T> {
     react(a1: Action<string>, a2: Action<string>){
         const msg = a1.get();
         const nothing = a2.get();
-        if(msg == "hello" && nothing === null && ! a2.isPresent()){
+        if(msg == "hello" && nothing === null && ! a2.isPresent()) {
             this.parent._app.success();
+            console.log("success")
         } else {
-            this.parent._app.fail();
+            this.parent._app.failure();
         }
         console.log("Response to action is reacting. String payload is: " + msg);
     }
@@ -65,9 +64,9 @@ export class ActionTrigger extends Reactor {
     constructor(parent:Reactor|null) {
         super(parent);
         //Reaction priorities matter here. The overridden reaction must go first.
-        this.addReaction(new ScheduleOverriddenAction(this, Trigs(this.a1, this.a2), Args(this.a1, this.a2)));
-        this.addReaction(new ScheduleAction(this, Trigs(this.a1, this.a2), Args(this.a1, this.a2)));
-        this.addReaction(new RespondToAction(this, Trigs(this.a1, this.a2), Args(this.a1, this.a2)));
+        this.addReaction(new ScheduleOverriddenAction(this, Trigs(this.t1), Args(this.getSchedulable(this.a1), this.a2)));
+        this.addReaction(new ScheduleAction(this, Trigs(this.t1), Args(this.getSchedulable(this.a1), this.a2)));
+        this.addReaction(new RespondToAction(this, Trigs(this.a1), Args(this.a1, this.a2)));
 
     }
 }

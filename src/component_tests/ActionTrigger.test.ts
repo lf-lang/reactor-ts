@@ -1,8 +1,6 @@
-'use strict';
-
 import {App} from '../reactor';
-import {TimeUnit, TimeInterval} from "../time"
-import { ActionTrigger } from '../components/ActionTrigger';
+import {TimeInterval} from "../time"
+import {ActionTrigger} from '../components/ActionTrigger';
 
 class ActionTriggerTest extends App {
     aTrigger: ActionTrigger;
@@ -20,18 +18,14 @@ describe('ActionTrigger', function () {
 
     it('start runtime', done => {
 
-        function failRuntime(){
-            // throw new Error("Runtime has failed.");
-            console.log("Runtime has no more events on the queue.");
-        };
-        function failReactor(){
+        function failure(){
             throw new Error("Reactor has failed.");
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var aTriggerTest = new ActionTriggerTest( [3, TimeUnit.secs], "ActionTriggerTest", done, failReactor);
+        var aTriggerTest = new ActionTriggerTest(new TimeInterval(3), "ActionTriggerTest", done, failure);
         //Don't give the runtime the done callback because we don't care if it terminates
-        aTriggerTest._start(()=> null, failRuntime);
+        aTriggerTest._start();
 
     })
 });

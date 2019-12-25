@@ -1,5 +1,6 @@
 import {Adder} from '../components/Adder';
-import {App} from '../reactor';
+import {App, Port} from '../reactor';
+import {TimeInterval} from '../time';
 
 class MyAdder extends Adder {
     public fire() {
@@ -7,8 +8,13 @@ class MyAdder extends Adder {
             r.doReact();
         }
     }
+
+    public getWriter(port: Port<unknown>) {
+        return this.getWritable(port);
+    }
 }
-var app = new App(0);
+
+var app = new App(new TimeInterval(0));
 
 describe('adder', function () {
     
@@ -17,9 +23,8 @@ describe('adder', function () {
     it('2 + 1 = 3', function () {
 
         expect(adder).toBeInstanceOf(Adder);
-        adder._setApp(app); 
-        adder.in1.set(2);
-        adder.in2.set(1);
+        adder.getWriter(adder.in1).set(2);
+        adder.getWriter(adder.in2).set(1);
         adder.fire();
         expect(adder.out.get()).toBe(3);
     });

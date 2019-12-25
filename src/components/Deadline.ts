@@ -68,9 +68,9 @@ export class ShowDeadline extends Reactor {
         
         
         this.waste = new WasteTime(this, [this.t], []);
-        this.waste.setDeadline(new Alive(this, [10, TimeUnit.sec]));
+        this.waste.setDeadline(new Alive(this, new TimeInterval(10)));
         this.soonDead = new SoonDead(this, [this.t], []);
-        this.soonDead.setDeadline(new Dead(this, 0));
+        this.soonDead.setDeadline(new Dead(this, new TimeInterval(0)));
     }
 
 }

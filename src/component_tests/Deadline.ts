@@ -1,5 +1,3 @@
-'use strict';
-
 import {App} from '../reactor';
 import {TimeUnit, TimeInterval} from "../time"
 import { ShowDeadline } from '../components/Deadline';

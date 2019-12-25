@@ -44,7 +44,8 @@ export interface PrecedenceGraphNode<P> {
  */
 export class PrioritySet<P> {
 
-  head: PrioritySetNode<P> | null;
+  private head: PrioritySetNode<P> | null;
+  private count: number = 0;
 
   push(element: PrioritySetNode<P>) {
     // update linked list
@@ -52,6 +53,7 @@ export class PrioritySet<P> {
       // create head
       element.setNext(null);
       this.head = element;
+      this.count++;
       return;
     } else if (element.updateIfDuplicateOf(this.head)) {
       return;
@@ -60,6 +62,7 @@ export class PrioritySet<P> {
       if (element.hasPriorityOver(this.head)) {
         element.setNext(this.head);
         this.head = element;
+        this.count++;
         return;
       }
       // seek
@@ -82,6 +85,7 @@ export class PrioritySet<P> {
         // insert
         element.setNext(curr.getNext()); // null if last
         curr.setNext(element);
+        this.count++;
         return;
       }
     }
@@ -92,6 +96,7 @@ export class PrioritySet<P> {
       let node = this.head;
       this.head = this.head.getNext();
       node.setNext(null); // unhook from linked list
+      this.count--;
       return node;
     }
   }
@@ -101,12 +106,33 @@ export class PrioritySet<P> {
       return this.head;
     }
   }
+
+  size(): number {
+    return this.count;
+  }
 }
 
 export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
 
-  private graph: Map<T, Set<T>> = new Map(); // Map vertices to set of dependencies
-  private numberOfEdges = 0;
+  protected graph: Map<T, Set<T>> = new Map(); // Map vertices to set of dependencies
+  protected numberOfEdges = 0;
+
+  merge(apg: this) {
+    for (const [k, v] of apg.graph) {
+      let nodes = this.graph.get(k);
+      if (nodes != null) {
+        for (let n of v) {
+          if (!nodes.has(n)) {
+            nodes.add(n);
+            this.numberOfEdges++;
+          }
+        }
+      } else {
+        this.graph.set(k, v);
+        this.numberOfEdges += v.size;
+      }
+    }
+  }
 
   addNode(node: T) {
     if (!this.graph.has(node)) {
@@ -114,19 +140,19 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     }
   }
 
-    removeNode(node: T) {
-        let deps: Set<T> | undefined;
-        if (deps = this.graph.get(node)) {
-            this.numberOfEdges -= deps.size;
-            this.graph.delete(node);
-            for (const [v, e] of this.graph) {
-                if (e.has(node)) {
-                  e.delete(node);
-                  this.numberOfEdges--;
-                }
+  removeNode(node: T) {
+    let deps: Set<T> | undefined;
+    if (deps = this.graph.get(node)) {
+        this.numberOfEdges -= deps.size;
+        this.graph.delete(node);
+        for (const [v, e] of this.graph) {
+            if (e.has(node)) {
+              e.delete(node);
+              this.numberOfEdges--;
             }
         }
     }
+  }
 
   // node -> deps
   addEdge(node: T, dependency: T) {
@@ -145,6 +171,12 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     }
   }
 
+  addBackEdges(node:T, antidependencies: Set<T>) {
+    for (let a of antidependencies) {
+      this.addEdge(a, node);
+    }
+  }
+  
   addEdges(node: T, dependencies: Set<T>) {
     let deps = this.graph.get(node);
     if (!deps) {

@@ -1,12 +1,7 @@
 'use strict';
 
-<<<<<<< HEAD
-import {Reactor, Trigger, Reaction, Timer, Action,  App, InPort, OutPort, Trigs, Args, ArgType} from '../reactor';
-import {TimeInterval, TimeUnit, numericTimeSum } from "../time"
-=======
-import {Reactor, Trigger, Reaction, Timer, Action,  App, InPort, OutPort} from '../reactor';
-import {TimeInterval, TimeUnit, numericTimeSum, TimelineClass } from "../time"
->>>>>>> 2cc768aebd78ed51659f0caa298744ff36d1551f
+import {Reactor, Reaction, Timer, Action,  App, Schedulable, ArgType, Args} from '../reactor';
+import {TimeInterval, TimeUnit, Origin, UnitBasedTimeInterval} from "../time"
 
 class Tick<T> extends Reaction<T> {
 
@@ -16,7 +11,7 @@ class Tick<T> extends Reaction<T> {
      *
      */
     //@ts-ignore
-    react(a1: Action<number>){
+    react(a1: Schedulable<number>){
         a1.schedule(0, 1);
         console.log("Tick");
     }
@@ -29,7 +24,7 @@ class Tock<T> extends Reaction<T> {
      * @override
      */
     //@ts-ignore
-    react(a2: Action<number>){
+    react(a2: Schedulable<number>){
         a2.schedule(0, 2);
         console.log("Tock");
     }
@@ -42,25 +37,13 @@ class Cuckoo<T> extends Reaction<T> {
      * @override
      */
     //@ts-ignore
-    react(a3: Action<number>) {
+    react(a3: Schedulable<number>) {
         a3.schedule(0, 3);
         console.log("Cuckoo");
     }
 }
 
 class Test<T> extends Reaction<T> {
-
-    success: () => void;
-    fail: () => void;
-
-    /**
-     * @override
-     */
-    constructor(parent: Reactor, trigs, args: ArgType<T>, success: () => void, fail: () => void ) {
-        super(parent, trigs, args);
-        this.success = success;
-        this.fail = fail;
-    }
 
     /**
      * If all the actions are available at logical time 5 seconds from start, the test is successful.
@@ -74,18 +57,15 @@ class Test<T> extends Reaction<T> {
         // All timers should fire simultaneously at logical time 5 seconds from the start of execution.
         // This should tricker tick, tock, and, cuckoo to simultanously schedule actions
         // 1,2, and 3. 
-<<<<<<< HEAD
-        if(this.parent._app._getcurrentlogicaltime()[0][0] ==  numericTimeSum( this.parent._app._getStartingWallTime() , [5, 0])[0]
-            && this.parent._app._getcurrentlogicaltime()[0][1] ==  numericTimeSum( this.parent._app._getStartingWallTime() , [5, 0])[1]){
-=======
-        if(this._getCurrentLogicalTime()[0][0] ==  numericTimeSum( this.state._app._getStartingWallTime() , [5, 0])[0]
-            && this._getCurrentLogicalTime()[0][1] ==  numericTimeSum( this.state._app._getStartingWallTime() , [5, 0])[1]){
->>>>>>> 2cc768aebd78ed51659f0caa298744ff36d1551f
+        if (this.parent._app._getElapsedLogicalTime().isEqualTo(new TimeInterval(5))) {
             console.log("reacting in Test");
-                if(a1.get() == 1 && a2.get() == 2 && a3.get() == 3){
-                this.success();
+            if(a1.get() == 1 && a2.get() == 2 && a3.get() == 3) {
+                this.parent._app.success();
             } else {
-                this.fail();
+                console.log("a1: " + a1.get());
+                console.log("a2: " + a2.get());
+                console.log("a3: " + a3.get());
+                this.parent._app.failure();
             }
         }
     }
@@ -103,32 +83,22 @@ class Test<T> extends Reaction<T> {
  */
 export class Clock extends App {
 
-    t1: Timer = new Timer(this, [3, TimeUnit.sec], [1, TimeUnit.sec]);
-    t2: Timer = new Timer(this, [3500, TimeUnit.msec], [1500, TimeUnit.msec] );
+    t1: Timer = new Timer(this, new TimeInterval(3), new TimeInterval(1));
+    t2: Timer = new Timer(this, new UnitBasedTimeInterval(3500, TimeUnit.msec), 
+                                new UnitBasedTimeInterval(1500, TimeUnit.msec));
 
-<<<<<<< HEAD
-    a1 = new Action<number>(this);
-    a2 = new Action<number>(this);
-    a3 = new Action<number>(this);
-=======
-    a1: Action<number> = new Action<number>(this, TimelineClass.logical);
-    a2: Action<number> = new Action<number>(this, TimelineClass.logical);
-    a3: Action<number> = new Action<number>(this, TimelineClass.logical);
-
-    r1: Reaction = new Tick(this, [this.t1], [], [this.a1]);
-    r2: Reaction = new Tock(this, [this.t2], [], [this.a2]);
->>>>>>> 2cc768aebd78ed51659f0caa298744ff36d1551f
-
-    //At time 5 seconds, this reaction should be triggered
-    //simultaneosly by both timers, "Cuckoo" should only
-    //print once.
+    a1 = new Action<number>(this, Origin.logical);
+    a2 = new Action<number>(this, Origin.logical);
+    a3 = new Action<number>(this, Origin.logical);
 
     constructor(timeout: TimeInterval,  success: () => void, fail: () => void, name?: string) {
-        super(timeout, name);
-        this.addReaction(new Tick(this, Trigs(this.t1), Args(this.a1)));
-        this.addReaction(new Cuckoo(this, Trigs(this.t1, this.t2), Args(this.a3)));
-        this.addReaction(new Test(this, Trigs(this.a1, this.a2, this.a3), Args(this.a1, this.a2, this.a3), success, fail));
-        this.addReaction(new Tock(this, Trigs(this.t2), Args(this.a2)));
-        this.addReaction(new Cuckoo(this, Trigs(this.t1, this.t2), Args(this.a3)));
+        super(timeout, name, success, fail);
+        this.addReaction(new Tick(this, [this.t1], Args(this.getSchedulable(this.a1))));
+        this.addReaction(new Tock(this, [this.t2], Args(this.getSchedulable(this.a2))));
+        //At time 5 seconds, this reaction should be triggered
+        //simultaneosly by both timers, "Cuckoo" should only
+        //print once.
+        this.addReaction(new Cuckoo(this, [this.t1, this.t2], Args(this.getSchedulable(this.a3))));
+        this.addReaction(new Test(this, [this.a1, this.a2, this.a3], Args(this.a1, this.a2, this.a3)));
     }
 }

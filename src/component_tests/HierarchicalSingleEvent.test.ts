@@ -1,7 +1,7 @@
 'use strict';
 
 import {Reactor, OutPort, InPort, App} from '../reactor';
-import {TimeUnit, TimeInterval} from "../time"
+import {TimeUnit, TimeInterval, UnitBasedTimeInterval} from "../time"
 import { SingleEvent } from '../components/SingleEvent';
 import { Logger } from '../components/Logger';
 
@@ -63,7 +63,7 @@ describe('HierarchicalSingleEvent', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        let seTest = new SETest([3, TimeUnit.secs], "SingleEventTesterApp", done, failReactor);
+        let seTest = new SETest(new TimeInterval(3), "SingleEventTesterApp", done, failReactor);
 
         // Normally _setAllParents would be called as part of the initialization
         // process for starting an app, but we call it directly here to set

@@ -1,4 +1,4 @@
-import {Reactor, InPort, OutPort, Reaction, Args} from '../reactor';
+import {Reactor, InPort, OutPort, Reaction, Trigs, Args, Readable, Writable} from '../reactor';
 
 export class Adder extends Reactor {    
     
@@ -8,13 +8,14 @@ export class Adder extends Reactor {
 
     constructor(parent:Reactor, name: string) {
         super(parent, name);
-        this.addReaction(new AddTwo(this, [this.in1, this.in2], Args(this.in1, this.in2, this.out)));                
+        this.addReaction(new AddTwo(this, Trigs(this.in1, this.in2), Args(this.in1, this.in2, this.getWritable(this.out))));
     }
 }
 
 class AddTwo<T> extends Reaction<T> {
+    
     //@ts-ignore
-    react(in1: InPort<number>, in2: InPort<number>, out:OutPort<number>):void {
+    react(in1: Readable<number>, in2: Readable<number>, out:Writable<number>):void {
         let a = in1.get();
         let b = in2.get();
         if (a == null) {
@@ -23,7 +24,6 @@ class AddTwo<T> extends Reaction<T> {
         if (b == null) {
             b = 0;
         }
-        console.log("Result: :" + a + b);
         out.set(a + b);
     }
 }

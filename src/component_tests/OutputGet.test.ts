@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reactor, OutPort, App, Timer, Reaction, Variable, Args, ArgType} from '../reactor';
+import {Reactor, OutPort, App, Timer, Reaction, Trigger, Args, ArgType, Writable} from '../reactor';
 import { TimeUnit, TimeInterval} from "../time";
 
 class OutputGetTest extends App {
@@ -8,25 +8,16 @@ class OutputGetTest extends App {
     o: OutPort<number> = new OutPort<number>(this);
     t: Timer = new Timer(this, 0, 0);
     
-    constructor(timeout: TimeInterval, name:string, success: ()=> void, fail: ()=>void ){
-        super(timeout);
-        this.addReaction(new OutputGetter(this, [this.t], Args(this.o), success, fail));
+    constructor(timeout: TimeInterval, name:string, success: ()=> void, failure: ()=>void){
+        super(timeout, name, success, failure);
+        this.addReaction(new OutputGetter(this, [this.t], Args(this.getWritable(this.o))));
     }
 }
 
 class OutputGetter<T> extends Reaction<T> {
 
-    success: () => void;
-    fail: () => void;
-
-    constructor(parent: Reactor, trigs:Variable<unknown>[], args:ArgType<T>, success, fail) {
-        super(parent, trigs, args);
-        this.success = success;
-        this.fail = fail;
-    }
-
     //@ts-ignore
-    react(o: OutPort<number>) {
+    react(o: Writable<number>) {
         if(o.get() != null){
             throw new Error("Calling get on an output before it has been set does not return null");
         }
@@ -34,7 +25,7 @@ class OutputGetter<T> extends Reaction<T> {
         if(o.get() !== 5){
             throw new Error("Calling get on an output after it has been set does not return the set value");
         }
-        this.success();
+        this.parent._app.success();
     }
 }
 
@@ -48,19 +39,14 @@ describe('OutputGetTest', function () {
     it('start runtime', done => {
         console.log("starting test");
 
-        function failRuntime(){
-            // throw new Error("Runtime has failed.");
-            console.log("Runtime has no more events on the queue");
-        };
-
-        function failReactor(){
-            throw new Error("Reactor has failed.");
+        function fail(){
+            throw new Error("Test has failed.");
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var oGetTest = new OutputGetTest( [3, TimeUnit.secs], "OutputGetTest", done, failReactor);
+        var oGetTest = new OutputGetTest(new TimeInterval(3), "OutputGetTest", done, fail);
         
         //Don't give the runtime the done callback because we don't care if it terminates
-        oGetTest._start(()=> null, failRuntime);
+        oGetTest._start();
     })
 });
