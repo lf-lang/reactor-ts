@@ -767,8 +767,14 @@ export abstract class Reactor implements Nameable {
             graph.merge(r.getPrecedenceGraph());
         }
         
+        let prev: Reaction<unknown> | null = null;
         for (let r of this._reactions) {
             graph.addNode(r);
+            // Establish dependencies between reactions
+            // depending on their ordering inside the reactor.
+            if (prev) {
+                graph.addEdge(r, prev);
+            }
             var deps = r.getDependencies();
             // look upstream
             for (let d of deps[0]) {
@@ -782,6 +788,7 @@ export abstract class Reactor implements Nameable {
                     graph.addBackEdges(r, d.getDownstreamReactions());
                 }
             }
+            prev = r;
         }
 
         return graph;
