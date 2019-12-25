@@ -75,6 +75,6 @@ describe('HierarchicalSingleEvent', function () {
 
         expect(seTest.seContainer.canConnect(seTest.seContainer.child.o, seTest.logContainer.child.i)).toBe(false);
 
-        seTest._start(()=> null, failRuntime);
+        seTest._start();
     });
 });

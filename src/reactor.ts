@@ -47,9 +47,20 @@ export const Trigs = <T extends VarList>(...args: T) => args;
 // Interfaces                                                          //
 //---------------------------------------------------------------------//
 
+/**
+ * Collection of functions available to mutations (not reactions).
+ */
+export interface Mutations {
+    connect<D, S extends D>(src:Port<S>, dst:Port<D>): void;
+}
+
 export interface Readable<T> {
     get: () => T | null;
     isPresent: () => boolean;
+}
+
+export interface Schedulable<T> {
+    schedule: (extraDelay: TimeInterval | 0, value?: T) => void;
 }
 
 export interface Writable<T> extends Readable<T> {
@@ -57,9 +68,6 @@ export interface Writable<T> extends Readable<T> {
     isProxyOf: (port: Port<any>) => boolean;
 }
 
-export interface Schedulable<T> {
-    schedule: (extraDelay: TimeInterval | 0, value?: T) => void;
-}
 
 /**
  * For objects that have a name.
@@ -1493,58 +1501,6 @@ class Writer<T> implements Writable<T> { // NOTE: don't export this class!
     }
 }
 
-/**
- * This class matches a Trigger to the Reactions it triggers.
- * When an event caused by a Trigger comes off the event queue, its
- * matching reactions should be put on the the reaction queue 
- */
-// export class TriggerMap {
-//     _tMap: Map<Trigger<any>, Set<Reaction>> = new Map();
-//     _aMap: Map<Reaction, Array<Readable<any>|Writable<any>>> = new Map();
-//     _comesAfter: Map<Reaction, Reaction> = new Map();
-
-//     /**
-//      * Establish the mapping for a Reaction.
-//      */
-//     registerReaction(previous: Reaction | null, current: Reaction, triggers:Array<Trigger<any>>, args:Array<Readable<any>|Writable<any>>){
-//         for(let trigger of triggers){
-//             let reactionSet = this._tMap.get(trigger);
-//             if(reactionSet) {
-//                 if(! reactionSet.has(current)) {
-//                     reactionSet.add(current);
-//                     this._tMap.set(trigger, reactionSet);
-//                 }
-//                 //If this reaction is already mapped to the trigger,
-//                 //do nothing.
-//             } else {
-//                 //This is the first reaction mapped to this trigger,
-//                 //so create a new reaction set for it.
-//                 reactionSet = new Set<Reaction>();
-//                 reactionSet.add(current);
-//                 this._tMap.set(trigger, reactionSet);
-//             }
-//             this._aMap.set(current, args);
-//             if (previous != null) {
-//                 this._comesAfter.set(current, previous)
-//             }
-//         }
-//     }
-
-//     /**
-//      * Get the set of reactions for a trigger.
-//      */
-//     getReactions(t: Trigger){
-//         return this._tMap.get(t);
-//     }
-
-//     /**
-//      * FIXME
-//      */
-//     deregisterReaction(e: Event<any>){ // FIXME: weird
-//         //FIXME
-//     }
-// }
-
 class EventQueue extends PrioritySet<TimeInstant> {
 
     public push(event: Event<unknown>) {
@@ -1777,7 +1733,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         }
     }
 
-    public suspendOrTerminate() {
+    private suspendOrTerminate() {
         if (this._keepAlive) {
             // Snooze if event queue is empty and keepalive is true.
             console.log("Going to sleep.");
@@ -1849,128 +1805,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         return getCurrentPhysicalTime().getTimeDifference(this._startOfExecution);
     }
 
-
-    // /**
-    //  * Assign a priority to each reaction in the app.
-    //  * A lower priority signifies precedence for one reaction
-    //  * over another. 
-    //  */
-    // private _setReactionPriorities(){
-    //     let unsetReactions = this._getAllReactions();
-    //     let setReactions = new Set<Reaction>();
-    //     let unsetOutPorts = new Set<OutPort<any>>();
-
-    //     // InPorts connected to set OutPorts
-    //     let setInPorts = new Set<InPort<any>>();
-
-    //     // A map relating OutPorts to the reactions
-    //     // which must be set first. 
-    //     let outPortDependsOn = new Map<OutPort<any>, Set<Reaction>>();
-
-    //     // A map relating reactions to the InPorts
-    //     // or reactions which must first be set.
-    //     let reactionDependsOn = new Map<Reaction, Set<Reaction | InPort<any>>>();
-
-    //     // Initialize outPortDependsOn and unsetOutPorts
-    //     for(let r of unsetReactions){
-    //         for(let e of r.getEffects()){
-    //             if(e instanceof OutPort){
-    //                 unsetOutPorts.add(e);
-    //                 if(outPortDependsOn.has(e)){
-    //                     (outPortDependsOn.get(e) as Set<Reaction>).add(r);
-    //                 } else {
-    //                     let newReactionSet = new Set<Reaction>();
-    //                     newReactionSet.add(r);
-    //                     outPortDependsOn.set(e, newReactionSet);
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     // Initialize reactionDependsOn
-    //     for(let r of unsetReactions){
-    //         reactionDependsOn.set(r, new Set<Reaction| InPort<any>>());
-    //         // Add InPorts from uses
-    //         for(let u of r.getUses()){
-    //             (reactionDependsOn.get(r) as Set<Reaction| InPort<any>> ).add(u);
-    //         }
-    //         let parentReactions = r.state._reactions;
-    //         if(! parentReactions.includes(r)){
-    //             throw new Error(" Reaction " + r + "is not included in its parent's "
-    //             + " array of reactions");
-    //         }
-    //         // Add preceding reactions from parent's reactions array
-    //         for (let i = 0; parentReactions[i] != r ; i++ ){
-    //             (reactionDependsOn.get(r) as Set<Reaction| InPort<any>> ).add(parentReactions[i]);
-    //         }
-    //     }
-
-    //     let priorityCount = 0;
-    //     while(unsetReactions.size > 0){
-    //         // Find a reaction in unsetReactions with no unset dependencies.
-    //         // Assign it the next lowest priority, and remove
-    //         // it from unsetReactions. Throw an error, identifying a cycle if 
-    //         // this process stops before all reactions are set.
-    //         let newlySetReactions = new Set<Reaction>();
-    //         for( let r of unsetReactions ){
-    //             let ready = true;
-    //             for( let depend of (reactionDependsOn.get(r) as Set<Reaction | InPort<any>>)){
-    //                 if(depend instanceof Reaction){
-    //                     if (unsetReactions.has(depend)){
-    //                         ready = false;
-    //                         break;
-    //                     }
-    //                 } else {
-    //                     if (! setInPorts.has(depend)){
-    //                         ready = false;
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //             if(ready){
-    //                 console.log("Setting priority for reaction " + r + " to " + priorityCount);
-    //                 // This reaction has no dependencies. Set its priority.
-    //                 r.setPriority(priorityCount++);
-    //                 newlySetReactions.add(r);
-    //             }
-    //         }
-
-    //         // If no new reactions with met dependencies are
-    //         // found on this iteration while unset reactions remain,
-    //         // there must be a cycle.
-    //         if(newlySetReactions.size == 0){
-    //             throw new Error("Cycle detected in reaction precedence graph.");
-    //         }
-
-    //         // Move newlySetReactions from unsetReactions
-    //         // to setReactions.
-    //         for(let toSet of newlySetReactions){
-    //             unsetReactions.delete(toSet);
-    //             setReactions.add(toSet)
-    //         }
-
-    //         // See if any OutPorts are ready to be set
-    //         for(let o of unsetOutPorts){
-    //             let ready = false;
-    //             for(let portReaction of (outPortDependsOn.get(o) as Set<Reaction<unknown>>)){
-    //                 if(unsetReactions.has(portReaction)){
-    //                     ready = false;
-    //                     break;
-    //                 }
-    //             }
-    //             if(ready){
-    //                 // Remove the OutPort from unsetOutPorts and set all connected
-    //                 // InPorts
-    //                 unsetOutPorts.delete(o);
-    //                 let connectedInPorts = o.getAllConnectedSinkInPorts();
-    //                 for(let connectedInPort of connectedInPorts){
-    //                     setInPorts.add(connectedInPort);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
     public _start():void {
         // Recursively check the parent attribute for this and all contained reactors and
         // and components, i.e. ports, actions, and timers have been set correctly.
@@ -1996,6 +1830,3 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
 }
 
-export interface Mutations {
-    connect<D, S extends D>(src:Port<S>, dst:Port<D>): void;
-}
