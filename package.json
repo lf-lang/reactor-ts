@@ -35,7 +35,14 @@
     "jest": {
         "testPathIgnorePatterns": [
             "node_modules"
-        ]
+        ],
+        "roots": [
+            "<rootDir>/src",
+            "<rootDir>/__tests__"
+        ],
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        }
     },
     "repository": {
         "type": "git",
