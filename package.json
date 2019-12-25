@@ -2,7 +2,7 @@
     "name": "wirewrap",
     "version": "0.0.1",
     "description": "A Reactive Framework for IoT",
-    "main": "lib/index.js",
+    "main": "lib/reactor.js",
     "dependencies": {
         "got": "^9.6.0",
         "heap": "^0.2.6",
@@ -19,7 +19,6 @@
         "babel-cli": "^6.26.0",
         "babel-core": "^6.26.3",
         "babel-plugin-transform-class-properties": "^6.24.1",
-        "flow-bin": "^0.102.0",
         "jest": "^24.8.0",
         "ts-jest": "^24.0.2",
         "typedoc": "^0.15.5",
@@ -31,16 +30,11 @@
     "scripts": {
         "build": "rm -rf lib && babel -D src -d lib && npm run doc",
         "doc": "typedoc --out docs src",
-        "debug": "babel-node app.js",
-        "flow": "flow",
-        "flow-typed": "flow-typed",
-        "jest": "jest",
-        "lint": "eslint src",
-        "test": "node_modules/.bin/jest --coverage"
+        "test": "jest --coverage"
     },
     "jest": {
         "testPathIgnorePatterns": [
-            "canopy"
+            "node_modules"
         ]
     },
     "repository": {
@@ -60,9 +54,9 @@
         "url": "http://people.eecs.berkeley.edu/~marten"
     },
     "contributors": [
+        "Andres Goens",
         "Matt Weber",
-        "Ben Zhang",
-        "Andres Goens"
+        "Ben Zhang"
     ],
     "license": "MIT"
 }
