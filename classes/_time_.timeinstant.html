@@ -1,0 +1,494 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>TimeInstant | wirewrap</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">wirewrap</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="../modules/_time_.html">&quot;time&quot;</a>
+				</li>
+				<li>
+					<a href="_time_.timeinstant.html">TimeInstant</a>
+				</li>
+			</ul>
+			<h1>Class TimeInstant</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>A superdense time instant, represented as a pair. The first element of the pair represents
+						elapsed time as a NumericTimeInterval. The second element denotes the micro step index.</p>
+					</div>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">TimeInstant</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_time_.timeinstant.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_time_.timeinstant.html#microstep" class="tsd-kind-icon">microstep</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_time_.timeinstant.html#time" class="tsd-kind-icon">time</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_time_.timeinstant.html#getlatertime" class="tsd-kind-icon">get<wbr>Later<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_time_.timeinstant.html#getmicrosteplater" class="tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_time_.timeinstant.html#gettimedifference" class="tsd-kind-icon">get<wbr>Time<wbr>Difference</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_time_.timeinstant.html#isearlierthan" class="tsd-kind-icon">is<wbr>Earlier<wbr>Than</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_time_.timeinstant.html#issimultaneouswith" class="tsd-kind-icon">is<wbr>Simultaneous<wbr>With</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_time_.timeinstant.html#tostring" class="tsd-kind-icon">to<wbr>String</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Time<wbr>Instant<span class="tsd-signature-symbol">(</span>timeSinceEpoch<span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a>, microstep<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L174">time.ts:174</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>timeSinceEpoch: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+								</li>
+								<li>
+									<h5>microstep: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="microstep" class="tsd-anchor"></a>
+					<h3>microstep</h3>
+					<div class="tsd-signature tsd-kind-icon">microstep<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L176">time.ts:176</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="time" class="tsd-anchor"></a>
+					<h3>time</h3>
+					<div class="tsd-signature tsd-kind-icon">time<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L174">time.ts:174</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getlatertime" class="tsd-anchor"></a>
+					<h3>get<wbr>Later<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Later<wbr>Time<span class="tsd-signature-symbol">(</span>delay<span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L192">time.ts:192</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>delay: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getmicrosteplater" class="tsd-anchor"></a>
+					<h3>get<wbr>Micro<wbr>Step<wbr>Later</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L196">time.ts:196</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="gettimedifference" class="tsd-anchor"></a>
+					<h3>get<wbr>Time<wbr>Difference</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Time<wbr>Difference<span class="tsd-signature-symbol">(</span>that<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L199">time.ts:199</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>that: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="isearlierthan" class="tsd-anchor"></a>
+					<h3>is<wbr>Earlier<wbr>Than</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Earlier<wbr>Than<span class="tsd-signature-symbol">(</span>that<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L180">time.ts:180</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>that: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="issimultaneouswith" class="tsd-anchor"></a>
+					<h3>is<wbr>Simultaneous<wbr>With</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Simultaneous<wbr>With<span class="tsd-signature-symbol">(</span>that<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L186">time.ts:186</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>that: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="tostring" class="tsd-anchor"></a>
+					<h3>to<wbr>String</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">to<wbr>String<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/ce6581a/src/time.ts#L207">time.ts:207</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_component_tests_actiontrigger_test_.html">&quot;component_<wbr>tests/<wbr>Action<wbr>Trigger.test&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_component_tests_adder_test_.html">&quot;component_<wbr>tests/<wbr>Adder.test&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_component_tests_clock_test_.html">&quot;component_<wbr>tests/<wbr>Clock.test&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_component_tests_deadline_.html">&quot;component_<wbr>tests/<wbr>Deadline&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_component_tests_hierarchicalsingleevent_test_.html">&quot;component_<wbr>tests/<wbr>Hierarchical<wbr>Single<wbr>Event.test&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_component_tests_outputevent_test_.html">&quot;component_<wbr>tests/<wbr>Output<wbr>Event.test&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_component_tests_outputget_test_.html">&quot;component_<wbr>tests/<wbr>Output<wbr>Get.test&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_component_tests_singleevent_test_.html">&quot;component_<wbr>tests/<wbr>Single<wbr>Event.test&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_components_actiontrigger_.html">&quot;components/<wbr>Action<wbr>Trigger&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_components_adder_.html">&quot;components/<wbr>Adder&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_components_clock_.html">&quot;components/<wbr>Clock&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_components_deadline_.html">&quot;components/<wbr>Deadline&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_components_logger_.html">&quot;components/<wbr>Logger&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_components_outputevent_.html">&quot;components/<wbr>Output<wbr>Event&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_components_singleevent_.html">&quot;components/<wbr>Single<wbr>Event&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_reactor_.html">&quot;reactor&quot;</a>
+					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="../modules/_time_.html">&quot;time&quot;</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_util_.html">&quot;util&quot;</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum tsd-parent-kind-external-module">
+						<a href="../enums/_time_.origin.html" class="tsd-kind-icon">Origin</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-parent-kind-external-module">
+						<a href="../enums/_time_.timeunit.html" class="tsd-kind-icon">Time<wbr>Unit</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_time_.timeinstant.html" class="tsd-kind-icon">Time<wbr>Instant</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#microstep" class="tsd-kind-icon">microstep</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#time" class="tsd-kind-icon">time</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#getlatertime" class="tsd-kind-icon">get<wbr>Later<wbr>Time</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#getmicrosteplater" class="tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#gettimedifference" class="tsd-kind-icon">get<wbr>Time<wbr>Difference</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#isearlierthan" class="tsd-kind-icon">is<wbr>Earlier<wbr>Than</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#issimultaneouswith" class="tsd-kind-icon">is<wbr>Simultaneous<wbr>With</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_time_.timeinstant.html#tostring" class="tsd-kind-icon">to<wbr>String</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_time_.timeinterval.html" class="tsd-kind-icon">Time<wbr>Interval</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_time_.unitbasedtimeinterval.html" class="tsd-kind-icon">Unit<wbr>Based<wbr>Time<wbr>Interval</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_time_.html#microtime" class="tsd-kind-icon">microtime</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="../modules/_time_.html#getcurrentphysicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../modules/_time_.html#require" class="tsd-kind-icon">require</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
