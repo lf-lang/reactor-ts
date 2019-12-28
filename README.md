@@ -1,4 +1,4 @@
-Wirewrap: A Reactive Programming Framework for IoT
+A Reactor-Oriented Programming Framework in TypeScript
 ---
 
 [![Build Status](https://travis-ci.com/lhstrh/wirewrap.svg?token=8T9UfA2p8LApAgce1Ta1&branch=master)](https://travis-ci.com/lhstrh/wirewrap)
