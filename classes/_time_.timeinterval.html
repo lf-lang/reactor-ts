@@ -76,8 +76,8 @@
 							(which would occur for time intervals spanning more than 0.29 years
 							if a single JavaScript number, which has 2^53 bits of precision, were
 							to be used), we use <em>two</em> numbers to store a time interval. The first
-							number denotes the number of whole seconds in the interval, while the
-							second number denotes the remaining number of nanoseconds in the interval.
+							number denotes the number of whole seconds in the interval; the second
+							number denotes the remaining number of nanoseconds in the interval.
 							This class serves as a base class for <code>UnitBasedTimeInterval</code>, which
 							provides the convenience of defining time intervals as a single number
 						accompanied by a unit.</p>
@@ -149,7 +149,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L50">time.ts:50</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L51">time.ts:51</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -190,7 +190,7 @@
 					<div class="tsd-signature tsd-kind-icon">nanoseconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L58">time.ts:58</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L59">time.ts:59</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -205,7 +205,7 @@
 					<div class="tsd-signature tsd-kind-icon">seconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L58">time.ts:58</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L59">time.ts:59</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -227,12 +227,12 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L69">time.ts:69</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L70">time.ts:70</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return a new time interval that denotes a duration of this
+									<p>Return a new time interval that denotes the duration of this
 									time interval plus the time interval given as a parameter.</p>
 								</div>
 							</div>
@@ -259,7 +259,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L156">time.ts:156</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L157">time.ts:157</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -288,7 +288,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L109">time.ts:109</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L110">time.ts:110</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -320,7 +320,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L133">time.ts:133</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L134">time.ts:134</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -332,7 +332,7 @@
 								</div>
 								<dl class="tsd-comment-tags">
 									<dt>see</dt>
-									<dd><p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt" class="external">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt</a>.</p>
+									<dd><p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt" class="external">BigInt</a> for further information.</p>
 									</dd>
 								</dl>
 							</div>
@@ -359,7 +359,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L117">time.ts:117</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L118">time.ts:118</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -381,12 +381,12 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L88">time.ts:88</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L89">time.ts:89</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return a new time interval that denotes a duration of this
+									<p>Return a new time interval that denotes the duration of this
 									time interval minus the time interval given as a parameter.</p>
 								</div>
 							</div>
@@ -413,7 +413,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L146">time.ts:146</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1454e28/src/time.ts#L147">time.ts:147</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
