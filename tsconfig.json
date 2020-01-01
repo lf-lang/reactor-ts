@@ -10,6 +10,40 @@
         "strictNullChecks": true,
         "strictFunctionTypes": true
     },
+    "typedocOptions": {
+        "tags": {
+            "allowUnknownTags" : true
+        },
+        "plugins":[
+            "<rootDir>/plugins/markdown",
+            "<rootDir>/node_modules/tsdoc/template/plugins/TSDoc.js"
+        ],
+        "opts": {
+            "template"  :"<rootDir>/node_modules/tsdoc/template",
+            "recurse"   :"true"
+        },
+        "templates" : {
+            "cleverLinks"     : false,
+            "monospaceLinks"  : false
+        },
+        "source": {
+            "includePattern": "(\\.d)?\\.ts$"
+        },
+        "markdown": {
+            "parser"    : "gfm",
+            "hardwrap"  : true
+        },
+        "tsdoc": {
+            "source"            : "<rootDir>/src/",
+            "destination"       : "<rootDir>/docs",
+            "tutorials"         : "",
+            "systemName"        : "reactor-ts",
+            "footer"            : "",
+            "copyright"         : "Copyright © 2019 University of California, Berkeley.",
+            "outputSourceFiles" : true,
+            "commentsOnly"      : true
+        }
+    },
     "include": [
         "src/**/*",
         "__tests__"

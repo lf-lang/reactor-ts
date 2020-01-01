@@ -12,6 +12,7 @@ declare function require(name:string);
 
 /**
  * Module used to acquire time from the platform in microsecond precision.
+ * @see {@link https://www.npmjs.com/package/microtime}
  */
 const Microtime = require("microtime");
 
@@ -39,8 +40,8 @@ export enum TimeUnit {
  * (which would occur for time intervals spanning more than 0.29 years
  * if a single JavaScript number, which has 2^53 bits of precision, were
  * to be used), we use _two_ numbers to store a time interval. The first
- * number denotes the number of whole seconds in the interval, while the
- * second number denotes the remaining number of nanoseconds in the interval.
+ * number denotes the number of whole seconds in the interval; the second
+ * number denotes the remaining number of nanoseconds in the interval.
  * This class serves as a base class for `UnitBasedTimeInterval`, which 
  * provides the convenience of defining time intervals as a single number
  * accompanied by a unit.
@@ -62,7 +63,7 @@ export class TimeInterval {
     }
 
     /**
-     * Return a new time interval that denotes a duration of this 
+     * Return a new time interval that denotes the duration of this 
      * time interval plus the time interval given as a parameter.
      * @param other The time interval to add to this one.
      */
@@ -81,7 +82,7 @@ export class TimeInterval {
     }
 
     /**
-     * Return a new time interval that denotes a duration of this 
+     * Return a new time interval that denotes the duration of this 
      * time interval minus the time interval given as a parameter.
      * @param other The time interval to subtract from this one.
      */
@@ -128,7 +129,7 @@ export class TimeInterval {
      * NOTE: Performing this comparison involves a conversion to a big integer
      * and is therefore relatively costly.
      * @param other The time interval to compare to this one.
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt}.
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt|BigInt} for further information.
      */
     isSmallerThan(other: TimeInterval) {
         if (this.seconds < other.seconds) {
