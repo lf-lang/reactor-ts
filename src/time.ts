@@ -1,15 +1,23 @@
-declare function require(name:string);
-
-const microtime = require("microtime");
-
-
 /**
  * Types and helper functions relating to time for reactors.
  * @author Marten Lohstroh (marten@berkeley.edu)
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
 
-/** Units for time. */
+/**
+ * CommonJS `require` function.
+ * @param name The module to import.
+ */
+declare function require(name:string);
+
+/**
+ * Module used to acquire time from the platform in microsecond precision.
+ */
+const Microtime = require("microtime");
+
+/**
+ * Units (and conversion factors from nanoseconds) for time values.
+ **/
 export enum TimeUnit {
     nsec = 1,
     usec = 1000,
@@ -27,17 +35,26 @@ export enum TimeUnit {
 }
 
 /**
- * The internal representation of a TimeInterval broken up as: [seconds, nanoseconds]
- * 
- * If we used a Javascript number to hold the number of nanoseconds in the time interval,
- * the 2^53 bits of precision for a JavaScript number (double) would overflow after 0.29 years.
- * We use an array here, because in our experiments this representation is much faster
- * than a JavaScript BigInt. To avoid floating point errors, non-integer seconds or 
- * nanoseconds are not allowed.
- * 
+ * A time interval given in nanosecond precision. To prevent overflow
+ * (which would occur for time intervals spanning more than 0.29 years
+ * if a single JavaScript number, which has 2^53 bits of precision, were
+ * to be used), we use _two_ numbers to store a time interval. The first
+ * number denotes the number of whole seconds in the interval, while the
+ * second number denotes the remaining number of nanoseconds in the interval.
+ * This class serves as a base class for `UnitBasedTimeInterval`, which 
+ * provides the convenience of defining time intervals as a single number
+ * accompanied by a unit.
+ * @see TimeUnit
+ * @see UnitBasedTimeInterval
  */
 export class TimeInterval {
 
+    /**
+     * Create a new time interval. Both parameters must be non-zero integers;
+     * an error will be thrown otherwise. The second parameter is optional.
+     * @param seconds Number of seconds in the interval.
+     * @param nanoseconds Remaining number of nanoseconds (defaults to zero).
+     */
     constructor(protected seconds: number, protected nanoseconds: number=0) {
         if(!Number.isInteger(seconds) || !Number.isInteger(nanoseconds) || seconds < 0 || nanoseconds < 0) {
             throw new Error("Cannot instantiate a time interval based on negative or non-integer numbers.");
@@ -45,9 +62,9 @@ export class TimeInterval {
     }
 
     /**
-     * Return a new time spec that denotes a duration of this 
-     * time spec plus a given other time spec.
-     * @param other Time spec to add to this one.
+     * Return a new time interval that denotes a duration of this 
+     * time interval plus the time interval given as a parameter.
+     * @param other The time interval to add to this one.
      */
     add(other: TimeInterval): TimeInterval {
         const billion = 1000000000;
@@ -63,9 +80,14 @@ export class TimeInterval {
         return new TimeInterval(seconds, nanoseconds);
     }
 
-    subtract(that: TimeInterval): TimeInterval {
-        var s = this.seconds - that.seconds;;
-        var ns = this.nanoseconds - that.nanoseconds;
+    /**
+     * Return a new time interval that denotes a duration of this 
+     * time interval minus the time interval given as a parameter.
+     * @param other The time interval to subtract from this one.
+     */
+    subtract(other: TimeInterval): TimeInterval {
+        var s = this.seconds - other.seconds;;
+        var ns = this.nanoseconds - other.nanoseconds;
 
         if(ns < 0) {
             // Borrow a second
@@ -80,12 +102,18 @@ export class TimeInterval {
     }
 
     /**
-     * Return true if this denotes a zero time interval.
+     * Return true this denotes a time interval equal of equal
+     * length as the time interval given as a parameter.
+     * @param other The time interval to compare to this one.
      */
-    isEqualTo(other: TimeInterval) {
-        return this.seconds == other.seconds && this.nanoseconds == other.nanoseconds;
+    isEqualTo(other: TimeInterval): boolean {
+        return this.seconds == other.seconds 
+            && this.nanoseconds == other.nanoseconds;
     }
 
+    /**
+     * Return true if this denotes a zero time interval.
+     */
     isZero() {
         if(this.seconds == 0 && this.nanoseconds == 0) {
             return true;
@@ -95,8 +123,12 @@ export class TimeInterval {
     }
 
     /**
-     * Return true if t0 < t1, otherwise return false.
-     * Doing this comparison involves a conversion to a big integer and thus is costly.
+     * Return true if this time interval is of smaller length than the time
+     * interval given as a parameter, return false otherwise.
+     * NOTE: Performing this comparison involves a conversion to a big integer
+     * and is therefore relatively costly.
+     * @param other The time interval to compare to this one.
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt}.
      */
     isSmallerThan(other: TimeInterval) {
         if (this.seconds < other.seconds) {
@@ -115,6 +147,12 @@ export class TimeInterval {
         return "(" + this.seconds + " secs; " + this.nanoseconds + " nsecs)";
     }
 
+    /**
+     * Get a string representation of this time interval that is compatible
+     * with `nanotimer`.
+     * @see {@link https://www.npmjs.com/package/nanotimer} for 
+     * further information.
+     */
     public getNanoTime(): string {
         let nanoSecString = this.nanoseconds.toString();
         let padding = "";
@@ -219,210 +257,9 @@ export enum Origin {
     logical
 }
 
-/**
- * A value (of type T) which is present at a particular TimeInstant
- */
-//export type TimestampedValue<T> = [TimeInstant, T];
-
-//---------------------------------------------------------------------//
-// Helper Functions for Types                                                   //
-//---------------------------------------------------------------------//
-
-/**
- * Return true if t matches any of the zero representations for a TimeInterval
- * @param t the time interval to test if zero.
- */
-// export function timeIntervalIsZero(t: TimeInterval){
-//     if(t === 0 || (t && t[0] === 0)){
-//         return true;
-//     } else {
-//         return false;
-//     }
-// }
-
-// /**
-//  * Return true if t0 < t1, otherwise return false.
-//  * @param t0 Left hand numeric time.
-//  * @param t1 Right hand numeric time.
-//  */
-// export function compareNumericTimeIntervals(t0: NumericTimeInterval, t1: NumericTimeInterval){
-//     if(t0[0] < t1[0]){
-//         return true;
-//     }
-//     if(t0[0] == t1[0] &&
-//             t0[1] < t1[1]){
-//         return true;
-//     }
-//     return false;
-// }
-
-/**
- * Return true if t0 and t1 represent the same time instant. Otherwise return false.
- * @param t0 Left hand time instant.
- * @param t1 Right hand time instant.
- */
-// export function timeInstantsAreEqual(t0: TimeInstant, t1: TimeInstant){
-//     return t0[0][0] == t1[0][0] && t0[0][1] == t1[0][1] && t0[1] == t1[1];
-// }
-
-/**
- * Return true if t0 < t1, otherwise return false.
- * @param t0 Left hand time instant.
- * @param t1 Right hand time instant.
- */
-// export function compareTimeInstants(t0: TimeInstant, t1: TimeInstant): boolean{
-//     if(compareNumericTimeIntervals(t0[0], t1[0])){
-//         return true;
-//     } else{
-//         if( t0[0][0] == t1[0][0] && t0[0][1] == t1[0][1] && t0[1] < t1[1] ){
-//             return true;   
-//         }
-//         return false;
-//     }
-// }
-
-/**
- * Convert a TimeInterval to its corresponding representation as a NumericTimeInterval.
- * Attempting to convert a TimeInterval with sub-nanosecond precision to a
- * NumericTimeInterval will result in an error. Sub-nanosecond precision is not allowed
- * because:
- * 1) None of the timing related libraries support it.
- * 2) It may cause floating point errors in the NumericTimeInterval's
- *    number representation. Integers have up to 53 bits of precision to be exactly
- *    represented in a JavaScript number (i.e. a double), but anything right of the
- *    decimal point such as 0.1 may have a non-exact floating point representation.
- * @param t The numeric time interval to convert.
- */
-// export function timeIntervalToNumeric(t: TimeInterval): NumericTimeInterval {
-//     //Convert the TimeInterval to a BigInt in units of nanoseconds, then split it up.
-
-//     if(t === 0){
-//         return [0, 0];
-//     }
-
-//     if(t[0] < 0){
-//         throw Error("A time interval may not be negative.")
-//     }
-
-//     if(Math.floor(t[0]) - t[0] !== 0){
-//         throw Error("Cannot convert TimeInterval " + t + " to a NumericTimeInterval "+
-//         "because it does not have an integer time.");
-//         //Allowing this may cause floating point errors.
-//     }
-
-//     const billion = BigInt(1000000000);
-
-//     let seconds: number;
-//     let nseconds: number;
-
-//     //To avoid overflow and floating point errors, work with BigInts.
-//     let bigT = BigInt(t[0]) * BigInt(t[1]);
-//     let max = BigInt(Number.MAX_SAFE_INTEGER);
-
-//     let bigSeconds = bigT / billion;
-//     if(bigSeconds > max){
-//         throw new Error("timeIntervalToNumeric failed. The time interval is too large to safely convert.");
-//     }
-
-//     seconds = parseInt(bigSeconds.toString());
-//     nseconds = parseInt((bigT % billion).toString());
-
-//     return [seconds, nseconds];    
-
-// }
-
 export function getCurrentPhysicalTime(): TimeInstant {
-    let t = microtime.now();
+    let t = Microtime.now();
     let seconds: number = Math.floor(t / 1000000);
     let nseconds: number = t * 1000 - seconds * 1000000000;
     return new TimeInstant(new TimeInterval(seconds, nseconds), 0);
 }
-
-// /**
-//  * Convert a number representing time in microseconds to a NumericTimeInterval
-//  * @param t the number in units of microseconds to convert
-//  */
-// export function microtimeToNumeric(t: number): NumericTimeInterval {
-//     const million = 1000000;
-//     const billion = 1000000000;
-
-//     //The associativity of these operations is very important because otherwise
-//     //there will be floating point errors.
-//     let seconds: number = Math.floor(t / million);
-//     let nseconds: number = t * 1000 - seconds * billion;
-//     return [seconds, nseconds];
-// }
-
-/**
- * Calculate t1 - t2. Returns the difference as a NumericTimeInterval
- * Assumes t1 >= t2, and throws an error if this assumption is broken.
- * @param t1 minuend
- * @param t2 subtrahend
- */
-// export function numericTimeDifference(t1: NumericTimeInterval, t2: NumericTimeInterval): NumericTimeInterval {
-    // let difference:NumericTimeInterval = [0, 0];
-    // const billion = 1000000000;
-    // if(t1[1] >= t2[1]){
-    //     difference[0] = t1[0] - t2[0];
-    //     difference[1] = t1[1] - t2[1];
-    // } else {
-    //     //Borrow a second
-    //     difference[0] = t1[0] - 1 - t2[0];
-    //     difference[1] = t1[1] + billion - t2[1];
-    // }
-    // if(difference[0] < 0 || difference[1] < 0){
-    //     throw new Error("numericTimeDifference requires t1 >= t2");
-    // }
-//     return difference;
-// }
-
-/**
- * Calculate t1 + t2. Returns the sum as a NumericTimeInterval
- * @param t1 addend 1
- * @param t2 addend 2
- */
-// export function numericTimeSum(t1: NumericTimeInterval, t2: NumericTimeInterval): NumericTimeInterval {
-//     const billion = 1000000000;
-
-//     let sum:NumericTimeInterval = [0, 0];
-    
-//     if(t1[1] + t2[1] >= billion){
-//         //Carry the second
-//         sum[0] = t1[0] + t2[0] + 1;
-//         sum[1] = t1[1] + t2[1] - billion;
-//     } else {
-//         sum[0] = t1[0] + t2[0];
-//         sum[1] = t1[1] + t2[1];
-//     }
-//     return sum;
-// }
-
-// /**
-//  * Multiply a timeInterval t1, by a number t2. Returns the product as a NumericTimeInterval
-//  * @param t time interval to be multiplied
-//  * @param multiple number by which to multiply t
-//  */
-// export function numericTimeMultiple(t: NumericTimeInterval, multiple: number): NumericTimeInterval {
-//     const billion = 1000000000;
-//     let product:NumericTimeInterval = [0, 0];
-
-//     let nanoProduct = t[1] * multiple;
-//     let carry = Math.floor(nanoProduct/ billion)
-//     product[1] = nanoProduct - carry * billion;
-//     product[0] = t[0] * multiple + carry;
-    
-//     return product;
-// }
-
-// /**
-//  * Return true if timeInterval t1 is equal to timeInterval t2.
-//  * @param t1 First time interval.
-//  * @param t2 Second time interval
-//  */
-// export function numericTimeEquals(t1: NumericTimeInterval, t2: NumericTimeInterval): Boolean {
-//     if(t1[0] == t2[0] && t2[1] == t2[1]){
-//         return true;
-//     } else {
-//         return false;
-//     }
-// }

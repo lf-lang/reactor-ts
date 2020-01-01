@@ -13,10 +13,15 @@ import {TimeInterval, TimeInstant, Origin, getCurrentPhysicalTime} from './time'
 // Modules                                                             //
 //---------------------------------------------------------------------//
 
-//Must first declare require function so compiler doesn't complain
+/**
+ * CommonJS `require` function.
+ * @param name The module to import.
+ */
 declare function require(name:string);
 
-//const microtime = require("microtime");
+/**
+ * Timer used for precisely timing the triggering of reactions.
+ */
 const NanoTimer = require('nanotimer');
 
 //---------------------------------------------------------------------//
@@ -666,7 +671,8 @@ export abstract class Reactor implements Nameable {
      * of all elements found in the list, which is far less specific than the
      * return type inferred for this function.
      * @param args
-     * @see https://github.com/Microsoft/TypeScript/pull/24897
+     * @see {@link https://github.com/Microsoft/TypeScript/pull/24897} 
+     * for further information.
      * @see Reaction
      */
     readonly check = <X extends Variable[]>(...args: X) => args;
