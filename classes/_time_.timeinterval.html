@@ -72,13 +72,24 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>The internal representation of a TimeInterval broken up as: [seconds, nanoseconds]</p>
+						<p>A time interval given in nanosecond precision. To prevent overflow
+							(which would occur for time intervals spanning more than 0.29 years
+							if a single JavaScript number, which has 2^53 bits of precision, were
+							to be used), we use <em>two</em> numbers to store a time interval. The first
+							number denotes the number of whole seconds in the interval, while the
+							second number denotes the remaining number of nanoseconds in the interval.
+							This class serves as a base class for <code>UnitBasedTimeInterval</code>, which
+							provides the convenience of defining time intervals as a single number
+						accompanied by a unit.</p>
 					</div>
-					<p>If we used a Javascript number to hold the number of nanoseconds in the time interval,
-						the 2^53 bits of precision for a JavaScript number (double) would overflow after 0.29 years.
-						We use an array here, because in our experiments this representation is much faster
-						than a JavaScript BigInt. To avoid floating point errors, non-integer seconds or
-					nanoseconds are not allowed.</p>
+					<dl class="tsd-comment-tags">
+						<dt>see</dt>
+						<dd><p>TimeUnit</p>
+						</dd>
+						<dt>see</dt>
+						<dd><p>UnitBasedTimeInterval</p>
+						</dd>
+					</dl>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
@@ -138,16 +149,32 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L39">time.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L50">time.ts:50</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a new time interval. Both parameters must be non-zero integers;
+									an error will be thrown otherwise. The second parameter is optional.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>seconds: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Number of seconds in the interval.</p>
+										</div>
+									</div>
 								</li>
 								<li>
 									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> nanoseconds: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Remaining number of nanoseconds (defaults to zero).</p>
+										</div>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
@@ -163,9 +190,14 @@
 					<div class="tsd-signature tsd-kind-icon">nanoseconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L41">time.ts:41</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L58">time.ts:58</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Remaining number of nanoseconds (defaults to zero).</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 					<a name="seconds" class="tsd-anchor"></a>
@@ -173,9 +205,14 @@
 					<div class="tsd-signature tsd-kind-icon">seconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L41">time.ts:41</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L58">time.ts:58</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Number of seconds in the interval.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -190,13 +227,13 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L52">time.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L69">time.ts:69</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return a new time spec that denotes a duration of this
-									time spec plus a given other time spec.</p>
+									<p>Return a new time interval that denotes a duration of this
+									time interval plus the time interval given as a parameter.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -204,7 +241,7 @@
 								<li>
 									<h5>other: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
 									<div class="tsd-comment tsd-typography">
-										<p>Time spec to add to this one.</p>
+										<p>The time interval to add to this one.</p>
 									</div>
 								</li>
 							</ul>
@@ -222,9 +259,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L118">time.ts:118</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L156">time.ts:156</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get a string representation of this time interval that is compatible
+									with <code>nanotimer</code>.</p>
+								</div>
+								<dl class="tsd-comment-tags">
+									<dt>see</dt>
+									<dd><p><a href="https://www.npmjs.com/package/nanotimer" class="external">https://www.npmjs.com/package/nanotimer</a> for
+										further information.</p>
+									</dd>
+								</dl>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
 						</li>
 					</ul>
@@ -239,18 +288,22 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L85">time.ts:85</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L109">time.ts:109</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return true if this denotes a zero time interval.</p>
+									<p>Return true this denotes a time interval equal of equal
+									length as the time interval given as a parameter.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>other: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time interval to compare to this one.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -267,19 +320,29 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L101">time.ts:101</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L133">time.ts:133</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return true if t0 &lt; t1, otherwise return false.
-									Doing this comparison involves a conversion to a big integer and thus is costly.</p>
+									<p>Return true if this time interval is of smaller length than the time
+										interval given as a parameter, return false otherwise.
+										NOTE: Performing this comparison involves a conversion to a big integer
+									and is therefore relatively costly.</p>
 								</div>
+								<dl class="tsd-comment-tags">
+									<dt>see</dt>
+									<dd><p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt" class="external">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt</a>.</p>
+									</dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>other: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time interval to compare to this one.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -296,9 +359,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L89">time.ts:89</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L117">time.ts:117</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return true if this denotes a zero time interval.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
 						</li>
 					</ul>
@@ -307,19 +375,28 @@
 					<a name="subtract" class="tsd-anchor"></a>
 					<h3>subtract</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">subtract<span class="tsd-signature-symbol">(</span>that<span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
+						<li class="tsd-signature tsd-kind-icon">subtract<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L66">time.ts:66</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L88">time.ts:88</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return a new time interval that denotes a duration of this
+									time interval minus the time interval given as a parameter.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>that: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<h5>other: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time interval to subtract from this one.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
@@ -336,7 +413,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L114">time.ts:114</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L146">time.ts:146</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -466,7 +543,7 @@
 						<a href="_time_.unitbasedtimeinterval.html" class="tsd-kind-icon">Unit<wbr>Based<wbr>Time<wbr>Interval</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_time_.html#microtime" class="tsd-kind-icon">microtime</a>
+						<a href="../modules/_time_.html#microtime" class="tsd-kind-icon">Microtime</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
 						<a href="../modules/_time_.html#getcurrentphysicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time</a>

@@ -66,6 +66,21 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Types and helper functions relating to time for reactors.</p>
+					</div>
+					<dl class="tsd-comment-tags">
+						<dt>author</dt>
+						<dd><p>Marten Lohstroh (<a href="mailto:marten@berkeley.edu">marten@berkeley.edu</a>)</p>
+						</dd>
+						<dt>author</dt>
+						<dd><p>Matt Weber (<a href="mailto:matt.weber@berkeley.edu">matt.weber@berkeley.edu</a>)</p>
+						</dd>
+					</dl>
+				</div>
+			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
@@ -88,7 +103,7 @@
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Variables</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="_time_.html#microtime" class="tsd-kind-icon">microtime</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported"><a href="_time_.html#microtime" class="tsd-kind-icon">Microtime</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -105,13 +120,18 @@
 				<h2>Variables</h2>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 					<a name="microtime" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagConst">Const</span> microtime</h3>
-					<div class="tsd-signature tsd-kind-icon">microtime<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;require(&quot;microtime&quot;)</span></div>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> Microtime</h3>
+					<div class="tsd-signature tsd-kind-icon">Microtime<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;require(&quot;microtime&quot;)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L3">time.ts:3</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L16">time.ts:16</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Module used to acquire time from the platform in microsecond precision.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -126,22 +146,9 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L334">time.ts:334</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L260">time.ts:260</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Convert a TimeInterval to its corresponding representation as a NumericTimeInterval.
-										Attempting to convert a TimeInterval with sub-nanosecond precision to a
-										NumericTimeInterval will result in an error. Sub-nanosecond precision is not allowed
-									because:</p>
-									<p>1) None of the timing related libraries support it.
-										2) It may cause floating point errors in the NumericTimeInterval&#39;s
-										number representation. Integers have up to 53 bits of precision to be exactly
-										represented in a JavaScript number (i.e. a double), but anything right of the
-									decimal point such as 0.1 may have a non-exact floating point representation.</p>
-								</div>
-							</div>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
 						</li>
 					</ul>
@@ -156,13 +163,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/841d88a/src/time.ts#L1">time.ts:1</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/44a0c28/src/time.ts#L11">time.ts:11</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>CommonJS <code>require</code> function.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>name: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The module to import.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
@@ -251,7 +266,7 @@
 						<a href="../classes/_time_.unitbasedtimeinterval.html" class="tsd-kind-icon">Unit<wbr>Based<wbr>Time<wbr>Interval</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_time_.html#microtime" class="tsd-kind-icon">microtime</a>
+						<a href="_time_.html#microtime" class="tsd-kind-icon">Microtime</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
 						<a href="_time_.html#getcurrentphysicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time</a>
