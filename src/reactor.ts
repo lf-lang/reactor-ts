@@ -16,7 +16,7 @@ import {TimeInterval, TimeInstant, Origin, getCurrentPhysicalTime} from './time'
 //Must first declare require function so compiler doesn't complain
 declare function require(name:string);
 
-const microtime = require("microtime");
+//const microtime = require("microtime");
 const NanoTimer = require('nanotimer');
 
 //---------------------------------------------------------------------//
@@ -24,20 +24,28 @@ const NanoTimer = require('nanotimer');
 //---------------------------------------------------------------------//
 
 /**
- * A variable is a port, timer, or action.
+ * A variable is a port, action, or timer. Its value is readable using
+ * `get`, and may be writable using `set`. When `isPresent` is called 
+ * on a variable, it will return true if the value has been set at the 
+ * current logical time, and false otherwise.
  */
 export type Variable = Readable<unknown> | Writable<unknown>;
 
 /**
- * A trigger can cause the invocation of a reaction.
+ * A number that indicates a reaction's position with respect to other
+ * reactions in an acyclic precendence graph.
+ * @see ReactionQueue
  */
-export type Trigger = Action<unknown> | Readable<unknown> | Timer | Writable<unknown>
 export type Priority = number;
-export type ArgType<T> = T extends any[] ? T : never; // (Readable<unknown>|Writable<unknown>)
-export type VarList = Variable[];
 
-export const Args = <T extends VarList>(...args: T) => args;
-export const Trigs = <T extends VarList>(...args: T) => args;
+/**
+ * Conditional type for lists of variables. If the type variable `T` is
+ * inferred to be a subtype of `Variable[]`, it will yield that type, 
+ * `never` otherwise.
+ */
+export type VarList<T> = T extends Variable[] ? T : never;
+
+
 
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
@@ -54,23 +62,31 @@ export interface Mutations {
     connect<D, S extends D>(src:Port<S>, dst:Port<D>): void;
 }
 
+/**
+ * Interface for readable ports or actions.
+ */
 export interface Readable<T> {
     get: () => T | null;
     isPresent: () => boolean;
 }
 
+/**
+ * Interface for schedulable actions.
+ */
 export interface Schedulable<T> {
     schedule: (extraDelay: TimeInterval | 0, value?: T) => void;
 }
 
+/**
+ * Interface for writable ports.
+ */
 export interface Writable<T> extends Readable<T> {
     set: (value: T | null) => void;
     isProxyOf: (port: Port<any>) => boolean;
 }
 
-
 /**
- * For objects that have a name.
+ * Interface for objects that have a name.
  */
 export interface Named {
     /* Return the fully qualified name of this object. */
@@ -81,7 +97,7 @@ export interface Named {
 }
 
 /**
- * For (re)nameable objects.
+ * Interface for (re)nameable objects.
  */
 export interface Nameable extends Named {
  
@@ -93,11 +109,10 @@ export interface Nameable extends Named {
 // Core Reactor Classes                                                //
 //---------------------------------------------------------------------//
 
-// SECOND: remove second type parameter
-// THIRD: see if its possble to force the use of Args() (probably not)
-
 /**
- * Base class for reactions.
+ * Generic base class for reactions. The type parameter `T` denotes the
+ * type of argument list that the function `react` is applied to when this
+ * reaction gets triggered.
  */
 export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNode<Priority> {
     
@@ -105,7 +120,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      *  the directed acyclic precedence graph. */
     private priority: Priority;
 
-    state;
+    readonly state = {};
 
     private next: PrioritySetNode<Priority> | null = null;
 
@@ -153,33 +168,33 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
     updateIfDuplicateOf(node:PrioritySetNode<Priority>|null) {
         return Object.is(this, node);
     }
-    
+
     /**
      * More concise way to get logical time in a reaction.
      */
     public _getCurrentLogicalTime():TimeInstant {
-        return this.state._app._getCurrentLogicalTime();
+        return this.parent._app._getCurrentLogicalTime();
     }
 
     /**
      * More concise way to get physical time in a reaction.
      */
     public _getCurrentPhysicalTime(){
-        return this.state._app._getCurrentPhysicalTime();
+        return getCurrentPhysicalTime();
     }
 
     /**
      * More concise way to get elapsed logical time in a reaction.
      */
     public _getElapsedLogicalTime(){
-        return this.state._app._getElapsedLogicalTime();
+        return this.parent._app._getElapsedLogicalTime();
     }
 
     /**
      * More concise way to get elapsed physical time in a reaction.
      */
     public _getElapsedPhysicalTime(){
-        return this.state._app._getElapsedPhysicalTime(); // FIXME: All these former references to state are bogus
+        return this.parent._app._getElapsedPhysicalTime(); // FIXME: All these former references to state are bogus
     }
 
     //A reaction defaults to not having a deadline  FIXME: we want the deadline to have access to the same variables
@@ -190,7 +205,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      * the variables that trigger it, and the arguments passed to the react function.
      * @param state state shared among reactions
      */
-    constructor(protected parent:Reactor, public trigs:Trigger[], public args:ArgType<T>) { // FIXME: make these private and have getters
+    constructor(protected parent:Reactor, public trigs:Variable[], public args:VarList<T>) { // FIXME: make these private and have getters
         this.state = parent.state;
     }
 
@@ -202,7 +217,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      * implementations of this method.
      * @param args The arguments to with this function is to be applied.
      */
-    public abstract react(...args:ArgType<T>): void;
+    public abstract react(...args:VarList<T>): void;
 
     private values: Map<Readable<unknown>, unknown> = new Map();
 
@@ -345,7 +360,7 @@ class Event<T> implements PrioritySetNode<TimeInstant> {
         return false;
     }
 
-    getID(): [Trigger, TimeInstant] {
+    getID(): [Variable, TimeInstant] {
         return [this.trigger, this.time];
     }
 
@@ -625,7 +640,7 @@ export abstract class Reactor implements Nameable {
     
     public state = {};
 
-    private _triggerMap: Map<Trigger, Set<Reaction<unknown>>> = new Map();
+    private _triggerMap: Map<Variable, Set<Reaction<unknown>>> = new Map();
 
     private _dependsOnReactions: Map<Port<unknown>, Set<Reaction<unknown>>> = new Map();
 
@@ -642,6 +657,19 @@ export abstract class Reactor implements Nameable {
     private _startupActions: Set<Startup> = new Set();
 
     private _shutdownActions: Set<Action<unknown>> = new Set();
+
+    /**
+     * Generic helper function that turns a list of rest parameters into a tuple.
+     * It is necessary to pass `args` given to the constructor of a reaction
+     * through this function in order to ensure type safety. Otherwise, the 
+     * inferred type will collapse to `Array<T>` where `T` is the union type 
+     * of all elements found in the list, which is far less specific than the
+     * return type inferred for this function.
+     * @param args
+     * @see https://github.com/Microsoft/TypeScript/pull/24897
+     * @see Reaction
+     */
+    readonly check = <X extends Variable[]>(...args: X) => args;
 
     /** Reactions added by the implemented of derived reactor classes. */
     protected _reactions: Reaction<unknown>[] = [];
@@ -721,7 +749,7 @@ export abstract class Reactor implements Nameable {
 
     protected addReaction<T>(reaction: Reaction<T>) : Reaction<T> {
         // Ensure that arguments are compatible with implementation of react().
-        (function<X>(args: ArgType<X>, fun: (...args:ArgType<X>) => void): void {
+        (function<X>(args: VarList<X>, fun: (...args:VarList<X>) => void): void {
         })(reaction.args, reaction.react);
         this._reactions.push(reaction);
         // Stick this reaction into the trigger map to ensure it gets triggered.
@@ -917,7 +945,7 @@ export abstract class Reactor implements Nameable {
                     this.parent._startupChildren();
                     this.parent._setTimers();
                 }
-            }(this, Trigs(this.startup), Args());
+            }(this, [this.startup], []);
         this.addReaction(startup);
 
         // Add default shutdown reaction.
@@ -927,7 +955,7 @@ export abstract class Reactor implements Nameable {
                 this.parent._unsetTimers();
                 // Schedule shutdown for all contained reactors.
             }
-        }(this, Trigs(this.shutdown), Args());
+        }(this, [this.shutdown], []);
         this.addReaction(shutdown);
     }
 
@@ -1644,7 +1672,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         //             // For debuggin purposes: print a heartbeat message.
         //             console.log("Heartbeat at time: " + this.parent._app._getCurrentLogicalTime());
         //         }
-        //     }(this, Trigs(this.heartbeat), Args())
+        //     }(this, Trigs(this.heartbeat), VarList())
         // );
     }
 

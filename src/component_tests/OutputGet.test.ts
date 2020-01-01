@@ -1,7 +1,5 @@
-'use strict';
-
-import {Reactor, OutPort, App, Timer, Reaction, Trigger, Args, ArgType, Writable} from '../reactor';
-import { TimeUnit, TimeInterval} from "../time";
+import {OutPort, App, Timer, Reaction, Writable} from '../reactor';
+import {TimeInterval} from "../time";
 
 class OutputGetTest extends App {
 
@@ -10,7 +8,7 @@ class OutputGetTest extends App {
     
     constructor(timeout: TimeInterval, name:string, success: ()=> void, failure: ()=>void){
         super(timeout, name, success, failure);
-        this.addReaction(new OutputGetter(this, [this.t], Args(this.getWritable(this.o))));
+        this.addReaction(new OutputGetter(this, [this.t], this.check(this.getWritable(this.o))));
     }
 }
 

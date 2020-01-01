@@ -1,10 +1,10 @@
-import {Reactor, InPort, Trigger, Reaction, ArgType, Args} from '../reactor';
+import {Reactor, InPort, Reaction, Variable, VarList} from '../reactor';
 
 export class Print<T> extends Reaction<T> {
 
     expected: any;
 
-    constructor(parent: Reactor, triggers: Trigger[], args:ArgType<T>, expected:any) {
+    constructor(parent: Reactor, triggers: Variable[], args:VarList<T>, expected:any) {
         super(parent, triggers, args);
         this.expected = expected;
     }
@@ -35,7 +35,7 @@ export class Logger extends Reactor {
 
     constructor(parent:Reactor, expected:any) {
         super(parent);
-        this.addReaction(new Print(this, [this.i], Args(this.i), expected));
+        this.addReaction(new Print(this, [this.i], this.check(this.i), expected));
     }
 
 }

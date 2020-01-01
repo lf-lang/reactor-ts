@@ -1,4 +1,4 @@
-import {Reactor, Reaction, Timer, Action, Trigs, Args, Schedulable} from '../reactor';
+import {Reactor, Reaction, Timer, Action, Schedulable} from '../reactor';
 import {Origin} from "../time"
 
 export class ScheduleAction<T, A> extends Reaction<T> {
@@ -64,9 +64,9 @@ export class ActionTrigger extends Reactor {
     constructor(parent:Reactor|null) {
         super(parent);
         //Reaction priorities matter here. The overridden reaction must go first.
-        this.addReaction(new ScheduleOverriddenAction(this, Trigs(this.t1), Args(this.getSchedulable(this.a1), this.a2)));
-        this.addReaction(new ScheduleAction(this, Trigs(this.t1), Args(this.getSchedulable(this.a1), this.a2)));
-        this.addReaction(new RespondToAction(this, Trigs(this.a1), Args(this.a1, this.a2)));
+        this.addReaction(new ScheduleOverriddenAction(this, this.check(this.t1), this.check(this.getSchedulable(this.a1), this.a2)));
+        this.addReaction(new ScheduleAction(this, this.check(this.t1), this.check(this.getSchedulable(this.a1), this.a2)));
+        this.addReaction(new RespondToAction(this, this.check(this.a1), this.check(this.a1, this.a2)));
 
     }
 }

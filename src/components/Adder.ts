@@ -1,4 +1,4 @@
-import {Reactor, InPort, OutPort, Reaction, Trigs, Args, Readable, Writable} from '../reactor';
+import {Reactor, InPort, OutPort, Reaction, VarList, Readable, Writable} from '../reactor';
 
 export class Adder extends Reactor {    
     
@@ -8,7 +8,7 @@ export class Adder extends Reactor {
 
     constructor(parent:Reactor, name: string) {
         super(parent, name);
-        this.addReaction(new AddTwo(this, Trigs(this.in1, this.in2), Args(this.in1, this.in2, this.getWritable(this.out))));
+        this.addReaction(new AddTwo(this, [this.in1, this.in2], this.check(this.in1, this.in2, this.getWritable(this.out))));
     }
 }
 

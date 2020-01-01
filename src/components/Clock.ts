@@ -1,6 +1,4 @@
-'use strict';
-
-import {Reactor, Reaction, Timer, Action,  App, Schedulable, ArgType, Args} from '../reactor';
+import {Reaction, Timer, Action,  App, Schedulable} from '../reactor';
 import {TimeInterval, TimeUnit, Origin, UnitBasedTimeInterval} from "../time"
 
 class Tick<T> extends Reaction<T> {
@@ -93,12 +91,12 @@ export class Clock extends App {
 
     constructor(timeout: TimeInterval,  success: () => void, fail: () => void, name?: string) {
         super(timeout, name, success, fail);
-        this.addReaction(new Tick(this, [this.t1], Args(this.getSchedulable(this.a1))));
-        this.addReaction(new Tock(this, [this.t2], Args(this.getSchedulable(this.a2))));
+        this.addReaction(new Tick(this, [this.t1], this.check(this.getSchedulable(this.a1))));
+        this.addReaction(new Tock(this, [this.t2], this.check(this.getSchedulable(this.a2))));
         //At time 5 seconds, this reaction should be triggered
         //simultaneosly by both timers, "Cuckoo" should only
         //print once.
-        this.addReaction(new Cuckoo(this, [this.t1, this.t2], Args(this.getSchedulable(this.a3))));
-        this.addReaction(new Test(this, [this.a1, this.a2, this.a3], Args(this.a1, this.a2, this.a3)));
+        this.addReaction(new Cuckoo(this, [this.t1, this.t2], this.check(this.getSchedulable(this.a3))));
+        this.addReaction(new Test(this, [this.a1, this.a2, this.a3], this.check(this.a1, this.a2, this.a3)));
     }
 }

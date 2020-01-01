@@ -1,9 +1,9 @@
 'use strict';
 
-import {Reactor, InPort, OutPort, Trigger, Reaction, Timer, Trigs, Args, Writable, ArgType} from '../reactor';
+import {Reactor, OutPort, Reaction, Timer, Writable, Variable, VarList} from '../reactor';
 export class ProduceOutput<T, S> extends Reaction<T> {
 
-    constructor(parent: Reactor, trigs:Trigger[], args: ArgType<T>, private payload:S) {
+    constructor(parent: Reactor, trigs:Variable[], args: VarList<T>, private payload:S) {
         super(parent, trigs, args);
     }
 
@@ -31,7 +31,7 @@ export class SingleEvent<T> extends Reactor {
 
     constructor(parent:Reactor, private payload:T) {
         super(parent);
-        this.addReaction(new ProduceOutput(this, Trigs(this.t1), Args(this.getWritable(this.o)), payload));
+        this.addReaction(new ProduceOutput(this, [this.t1], this.check(this.getWritable(this.o)), payload));
     }
 }
 

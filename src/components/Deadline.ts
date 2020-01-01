@@ -1,4 +1,4 @@
-import {Reactor, Trigger, Reaction, Timer, Deadline, InPort, OutPort, Action, ArgType} from '../reactor';
+import {Reactor, Reaction, Timer, Deadline, InPort, OutPort, Action, VarList} from '../reactor';
 import {TimeInterval, TimeUnit} from "../time"
 
 // This test is supposed to violate this deadline.
