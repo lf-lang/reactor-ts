@@ -219,9 +219,9 @@ describe('time representation', function () {
     //     expect(numericTimeMultiple(zeroNumeric, 0)).toStrictEqual([0, 0 ]);
     //     expect(numericTimeMultiple(numFortyTwoDays, 0)).toStrictEqual([0, 0 ]);
 
-    //     expect(() => {
-    //         expect(numericTimeMultiple(numFortyTwoDays, 3.2)).toStrictEqual([0, 0 ]);
-    //     }).toThrowError()
+    expect(() => {
+        expect(new TimeInterval(4.3, 2.1));
+    }).toThrowError()
 
     //     expect(() => {
     //         expect(numericTimeMultiple(numFortyTwoDays, -7)).toStrictEqual([0, 0 ]);
