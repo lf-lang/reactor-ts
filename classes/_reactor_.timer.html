@@ -85,13 +85,19 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Timer</span>
+						<a href="_reactor_.descendant.html" class="tsd-signature-type">Descendant</a>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">Timer</span>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</section>
 			<section class="tsd-panel">
 				<h3>Implements</h3>
 				<ul class="tsd-hierarchy">
+					<li><a href="../interfaces/_reactor_.named.html" class="tsd-signature-type">Named</a></li>
 					<li><a href="../interfaces/_reactor_.readable.html" class="tsd-signature-type">Readable</a><span class="tsd-signature-symbol">&lt;</span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">&gt;</span></li>
 				</ul>
 			</section>
@@ -102,14 +108,14 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_reactor_.timer.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite"><a href="_reactor_.timer.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_reactor_.timer.html#offset" class="tsd-kind-icon">offset</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.timer.html#parent" class="tsd-kind-icon">parent</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-protected"><a href="_reactor_.timer.html#parent" class="tsd-kind-icon">parent</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_reactor_.timer.html#period" class="tsd-kind-icon">period</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.timer.html#tag" class="tsd-kind-icon">tag</a></li>
 							</ul>
@@ -118,7 +124,10 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_reactor_.timer.html#get" class="tsd-kind-icon">get</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_reactor_.timer.html#getfullyqualifiedname" class="tsd-kind-icon">get<wbr>Fully<wbr>Qualified<wbr>Name</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_reactor_.timer.html#getname" class="tsd-kind-icon">get<wbr>Name</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_reactor_.timer.html#ispresent" class="tsd-kind-icon">is<wbr>Present</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_reactor_.timer.html#setalias" class="tsd-kind-icon">set<wbr>Alias</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_reactor_.timer.html#tostring" class="tsd-kind-icon">to<wbr>String</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_reactor_.timer.html#update" class="tsd-kind-icon">update</a></li>
 							</ul>
@@ -128,17 +137,18 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
 						<li class="tsd-signature tsd-kind-icon">new <wbr>Timer<span class="tsd-signature-symbol">(</span>parent<span class="tsd-signature-symbol">: </span><a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a>, offset<span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span>, period<span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_reactor_.timer.html" class="tsd-signature-type">Timer</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
+								<p>Overrides <a href="_reactor_.descendant.html">Descendant</a>.<a href="_reactor_.descendant.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L579">reactor.ts:579</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L572">reactor.ts:572</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -188,17 +198,18 @@
 					<div class="tsd-signature tsd-kind-icon">offset<span class="tsd-signature-symbol">:</span> <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L579">reactor.ts:579</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L572">reactor.ts:572</a></li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-protected">
 					<a name="parent" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> parent</h3>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> parent</h3>
 					<div class="tsd-signature tsd-kind-icon">parent<span class="tsd-signature-symbol">:</span> <a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></div>
 					<aside class="tsd-sources">
+						<p>Overrides <a href="_reactor_.descendant.html">Descendant</a>.<a href="_reactor_.descendant.html#parent">parent</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L589">reactor.ts:589</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L582">reactor.ts:582</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -213,17 +224,17 @@
 					<div class="tsd-signature tsd-kind-icon">period<span class="tsd-signature-symbol">:</span> <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L578">reactor.ts:578</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L571">reactor.ts:571</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="tag" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> tag</h3>
-					<div class="tsd-signature tsd-kind-icon">tag<span class="tsd-signature-symbol">:</span> <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></div>
+					<div class="tsd-signature tsd-kind-icon">tag<span class="tsd-signature-symbol">:</span> <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L561">reactor.ts:561</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L554">reactor.ts:554</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -240,13 +251,57 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L563">reactor.ts:563</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L556">reactor.ts:556</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a>
 								<span class="tsd-signature-symbol"> | </span>
 								<span class="tsd-signature-type">null</span>
 							</h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+					<a name="getfullyqualifiedname" class="tsd-anchor"></a>
+					<h3>get<wbr>Fully<wbr>Qualified<wbr>Name</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Fully<wbr>Qualified<wbr>Name<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Implementation of <a href="../interfaces/_reactor_.named.html">Named</a>.<a href="../interfaces/_reactor_.named.html#getfullyqualifiedname">getFullyQualifiedName</a></p>
+								<p>Inherited from <a href="_reactor_.descendant.html">Descendant</a>.<a href="_reactor_.descendant.html#getfullyqualifiedname">getFullyQualifiedName</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L130">reactor.ts:130</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return a string that identifies this component.
+									The name is a path constructed as TopLevelParentName/.../ParentName/ThisReactorsName</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+					<a name="getname" class="tsd-anchor"></a>
+					<h3>get<wbr>Name</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Name<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Implementation of <a href="../interfaces/_reactor_.named.html">Named</a>.<a href="../interfaces/_reactor_.named.html#getname">getName</a></p>
+								<p>Inherited from <a href="_reactor_.descendant.html">Descendant</a>.<a href="_reactor_.descendant.html#getname">getName</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L144">reactor.ts:144</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -260,10 +315,35 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L571">reactor.ts:571</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L564">reactor.ts:564</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+					<a name="setalias" class="tsd-anchor"></a>
+					<h3>set<wbr>Alias</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon">set<wbr>Alias<span class="tsd-signature-symbol">(</span>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Implementation of <a href="../interfaces/_reactor_.named.html">Named</a>.<a href="../interfaces/_reactor_.named.html#setalias">setAlias</a></p>
+								<p>Inherited from <a href="_reactor_.descendant.html">Descendant</a>.<a href="_reactor_.descendant.html#setalias">setAlias</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L167">reactor.ts:167</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>name: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -277,7 +357,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L625">reactor.ts:625</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L612">reactor.ts:612</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -294,7 +374,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/1093e70/src/reactor.ts#L615">reactor.ts:615</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L602">reactor.ts:602</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -391,6 +471,9 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="_reactor_.deadline.html" class="tsd-kind-icon">Deadline</a>
 					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_reactor_.descendant.html" class="tsd-kind-icon">Descendant</a>
+					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="_reactor_.event.html" class="tsd-kind-icon">Event</a>
 					</li>
@@ -426,13 +509,13 @@
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
 						<a href="_reactor_.timer.html" class="tsd-kind-icon">Timer</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
 								<a href="_reactor_.timer.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="_reactor_.timer.html#offset" class="tsd-kind-icon">offset</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-protected">
 								<a href="_reactor_.timer.html#parent" class="tsd-kind-icon">parent</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
@@ -444,8 +527,17 @@
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_reactor_.timer.html#get" class="tsd-kind-icon">get</a>
 							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+								<a href="_reactor_.timer.html#getfullyqualifiedname" class="tsd-kind-icon">get<wbr>Fully<wbr>Qualified<wbr>Name</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+								<a href="_reactor_.timer.html#getname" class="tsd-kind-icon">get<wbr>Name</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_reactor_.timer.html#ispresent" class="tsd-kind-icon">is<wbr>Present</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
+								<a href="_reactor_.timer.html#setalias" class="tsd-kind-icon">set<wbr>Alias</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_reactor_.timer.html#tostring" class="tsd-kind-icon">to<wbr>String</a>
@@ -464,9 +556,6 @@
 						<a href="../interfaces/_reactor_.mutations.html" class="tsd-kind-icon">Mutations</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="../interfaces/_reactor_.nameable.html" class="tsd-kind-icon">Nameable</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
 						<a href="../interfaces/_reactor_.named.html" class="tsd-kind-icon">Named</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
@@ -474,6 +563,9 @@
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../interfaces/_reactor_.schedulable.html" class="tsd-kind-icon">Schedulable</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="../interfaces/_reactor_.util.html" class="tsd-kind-icon">Util</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../interfaces/_reactor_.writable.html" class="tsd-kind-icon">Writable</a>

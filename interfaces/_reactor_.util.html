@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Deadline | wirewrap</title>
+	<title>Util | wirewrap</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,40 +59,21 @@
 					<a href="../modules/_reactor_.html">&quot;reactor&quot;</a>
 				</li>
 				<li>
-					<a href="_reactor_.deadline.html">Deadline</a>
+					<a href="_reactor_.util.html">Util</a>
 				</li>
 			</ul>
-			<h1>Class Deadline</h1>
+			<h1>Interface Util</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>The abstract class for a reaction deadline. A deadline is an optional relation
-							between logical time and physical time for a reaction. A reaction possessing a
-							deadline with a timeout of x seconds will invoke the deadline&#39;s handler()
-							function instad of its ordinary react() function if the reaction is invoked with
-						physical time &gt; logical time + timeout.</p>
-					</div>
-				</div>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Deadline</span>
-						<ul class="tsd-hierarchy">
-							<li>
-								<a href="_components_deadline_.dead.html" class="tsd-signature-type">Dead</a>
-							</li>
-							<li>
-								<a href="_components_deadline_.alive.html" class="tsd-signature-type">Alive</a>
-							</li>
-						</ul>
+						<span class="target">Util</span>
 					</li>
 				</ul>
 			</section>
@@ -101,149 +82,143 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Constructors</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_reactor_.deadline.html#constructor" class="tsd-kind-icon">constructor</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section tsd-is-private-protected">
-							<h3>Properties</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_reactor_.deadline.html#state" class="tsd-kind-icon">state</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.deadline.html#timeout" class="tsd-kind-icon">timeout</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_reactor_.deadline.html#gettimeout" class="tsd-kind-icon">get<wbr>Timeout</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_reactor_.deadline.html#handler" class="tsd-kind-icon">handler</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.util.html#failure" class="tsd-kind-icon">failure</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.util.html#getcurrentlogicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Logical<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.util.html#getcurrentphysicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.util.html#getelapsedlogicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Logical<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.util.html#getelapsedphysicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Physical<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.util.html#schedule" class="tsd-kind-icon">schedule</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.util.html#success" class="tsd-kind-icon">success</a></li>
 							</ul>
 						</section>
-					</div>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
-					<a name="constructor" class="tsd-anchor"></a>
-					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Deadline<span class="tsd-signature-symbol">(</span>state<span class="tsd-signature-symbol">: </span><a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a>, timeout<span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_reactor_.deadline.html" class="tsd-signature-type">Deadline</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L316">reactor.ts:316</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Deadline constructor.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>state: <a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<div class="lead">
-											<p>A reference to the state of reactor this deadline is attached to.</p>
-										</div>
-									</div>
-								</li>
-								<li>
-									<h5>timeout: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<div class="lead">
-											<p>Time after which the deadline has been missed and the deadline
-											miss handler should be invoked.</p>
-										</div>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_reactor_.deadline.html" class="tsd-signature-type">Deadline</a></h4>
-						</li>
-					</ul>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
-					<a name="state" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagProtected">Protected</span> state</h3>
-					<div class="tsd-signature tsd-kind-icon">state<span class="tsd-signature-symbol">:</span> <a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L302">reactor.ts:302</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>A reference to the reactor this deadline is a part of so it can
-							access reactor state.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="timeout" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> timeout</h3>
-					<div class="tsd-signature tsd-kind-icon">timeout<span class="tsd-signature-symbol">:</span> <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L296">reactor.ts:296</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>The time after which the deadline miss&#39;s handler is invoked.</p>
-						</div>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="gettimeout" class="tsd-anchor"></a>
-					<h3>get<wbr>Timeout</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Timeout<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="failure" class="tsd-anchor"></a>
+					<h3>failure</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">failure<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L307">reactor.ts:307</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L72">reactor.ts:72</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Getter for timeout.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="handler" class="tsd-anchor"></a>
-					<h3>handler</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">handler<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="getcurrentlogicaltime" class="tsd-anchor"></a>
+					<h3>get<wbr>Current<wbr>Logical<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Current<wbr>Logical<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L314">reactor.ts:314</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L62">reactor.ts:62</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>This handler function must be overriden by a concrete handler.</p>
-								</div>
-							</div>
+							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="getcurrentphysicaltime" class="tsd-anchor"></a>
+					<h3>get<wbr>Current<wbr>Physical<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L64">reactor.ts:64</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="getelapsedlogicaltime" class="tsd-anchor"></a>
+					<h3>get<wbr>Elapsed<wbr>Logical<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Elapsed<wbr>Logical<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L66">reactor.ts:66</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="getelapsedphysicaltime" class="tsd-anchor"></a>
+					<h3>get<wbr>Elapsed<wbr>Physical<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Elapsed<wbr>Physical<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L68">reactor.ts:68</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="schedule" class="tsd-anchor"></a>
+					<h3>schedule</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">schedule<span class="tsd-signature-symbol">(</span>e<span class="tsd-signature-symbol">: </span><a href="../classes/_reactor_.event.html" class="tsd-signature-type">Event</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L74">reactor.ts:74</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>e: <a href="../classes/_reactor_.event.html" class="tsd-signature-type">Event</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="success" class="tsd-anchor"></a>
+					<h3>success</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">success<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/66cf861/src/reactor.ts#L70">reactor.ts:70</a></li>
+								</ul>
+							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
@@ -315,91 +290,97 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_reactor_.action.html" class="tsd-kind-icon">Action</a>
+						<a href="../classes/_reactor_.action.html" class="tsd-kind-icon">Action</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_reactor_.app.html" class="tsd-kind-icon">App</a>
+						<a href="../classes/_reactor_.app.html" class="tsd-kind-icon">App</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/_reactor_.deadline.html" class="tsd-kind-icon">Deadline</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../classes/_reactor_.descendant.html" class="tsd-kind-icon">Descendant</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="../classes/_reactor_.event.html" class="tsd-kind-icon">Event</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../classes/_reactor_.eventqueue.html" class="tsd-kind-icon">Event<wbr>Queue</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_reactor_.inport.html" class="tsd-kind-icon">In<wbr>Port</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_reactor_.outport.html" class="tsd-kind-icon">Out<wbr>Port</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_reactor_.port.html" class="tsd-kind-icon">Port</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_reactor_.reaction.html" class="tsd-kind-icon">Reaction</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="../classes/_reactor_.reactionqueue.html" class="tsd-kind-icon">Reaction<wbr>Queue</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/_reactor_.reactor.html" class="tsd-kind-icon">Reactor</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_reactor_.scheduler.html" class="tsd-kind-icon">Scheduler</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/_reactor_.startup.html" class="tsd-kind-icon">Startup</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/_reactor_.timer.html" class="tsd-kind-icon">Timer</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="../classes/_reactor_.writer.html" class="tsd-kind-icon">Writer</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="_reactor_.mutations.html" class="tsd-kind-icon">Mutations</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="_reactor_.named.html" class="tsd-kind-icon">Named</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="_reactor_.readable.html" class="tsd-kind-icon">Readable</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="_reactor_.schedulable.html" class="tsd-kind-icon">Schedulable</a>
 					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_reactor_.deadline.html" class="tsd-kind-icon">Deadline</a>
+					<li class="current tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="_reactor_.util.html" class="tsd-kind-icon">Util</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="_reactor_.deadline.html#constructor" class="tsd-kind-icon">constructor</a>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_reactor_.util.html#failure" class="tsd-kind-icon">failure</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
-								<a href="_reactor_.deadline.html#state" class="tsd-kind-icon">state</a>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_reactor_.util.html#getcurrentlogicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Logical<wbr>Time</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_reactor_.deadline.html#timeout" class="tsd-kind-icon">timeout</a>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_reactor_.util.html#getcurrentphysicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_reactor_.deadline.html#gettimeout" class="tsd-kind-icon">get<wbr>Timeout</a>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_reactor_.util.html#getelapsedlogicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Logical<wbr>Time</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_reactor_.deadline.html#handler" class="tsd-kind-icon">handler</a>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_reactor_.util.html#getelapsedphysicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Physical<wbr>Time</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_reactor_.util.html#schedule" class="tsd-kind-icon">schedule</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_reactor_.util.html#success" class="tsd-kind-icon">success</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_reactor_.descendant.html" class="tsd-kind-icon">Descendant</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="_reactor_.event.html" class="tsd-kind-icon">Event</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_reactor_.eventqueue.html" class="tsd-kind-icon">Event<wbr>Queue</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_reactor_.inport.html" class="tsd-kind-icon">In<wbr>Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_reactor_.outport.html" class="tsd-kind-icon">Out<wbr>Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_reactor_.port.html" class="tsd-kind-icon">Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_reactor_.reaction.html" class="tsd-kind-icon">Reaction</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_reactor_.reactionqueue.html" class="tsd-kind-icon">Reaction<wbr>Queue</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_reactor_.reactor.html" class="tsd-kind-icon">Reactor</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_reactor_.scheduler.html" class="tsd-kind-icon">Scheduler</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_reactor_.startup.html" class="tsd-kind-icon">Startup</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_reactor_.timer.html" class="tsd-kind-icon">Timer</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="_reactor_.writer.html" class="tsd-kind-icon">Writer</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="../interfaces/_reactor_.mutations.html" class="tsd-kind-icon">Mutations</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="../interfaces/_reactor_.named.html" class="tsd-kind-icon">Named</a>
-					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="../interfaces/_reactor_.readable.html" class="tsd-kind-icon">Readable</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="../interfaces/_reactor_.schedulable.html" class="tsd-kind-icon">Schedulable</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="../interfaces/_reactor_.util.html" class="tsd-kind-icon">Util</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="../interfaces/_reactor_.writable.html" class="tsd-kind-icon">Writable</a>
+						<a href="_reactor_.writable.html" class="tsd-kind-icon">Writable</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="../modules/_reactor_.html#priority" class="tsd-kind-icon">Priority</a>
