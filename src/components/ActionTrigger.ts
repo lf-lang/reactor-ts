@@ -40,10 +40,10 @@ export class RespondToAction<T> extends Reaction<T> {
         const msg = a1.get();
         const nothing = a2.get();
         if(msg == "hello" && nothing === null && ! a2.isPresent()) {
-            this.parent._app.success();
+            this.parent.util.success();
             console.log("success")
         } else {
-            this.parent._app.failure();
+            this.parent.util.failure();
         }
         console.log("Response to action is reacting. String payload is: " + msg);
     }

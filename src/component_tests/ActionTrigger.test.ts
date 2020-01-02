@@ -5,8 +5,8 @@ import {ActionTrigger} from '../components/ActionTrigger';
 class ActionTriggerTest extends App {
     aTrigger: ActionTrigger;
 
-    constructor(timeout: TimeInterval, name?: string, success?: ()=> void, fail?: ()=>void){
-        super(timeout, name, success, fail);
+    constructor(name: string, timeout: TimeInterval, success?: ()=> void, fail?: ()=>void){
+        super(name, timeout, success, fail);
         this.aTrigger = new ActionTrigger(this);
     }
 }
@@ -23,7 +23,7 @@ describe('ActionTrigger', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var aTriggerTest = new ActionTriggerTest(new TimeInterval(3), "ActionTriggerTest", done, failure);
+        var aTriggerTest = new ActionTriggerTest("ActionTriggerTest", new TimeInterval(3), done, failure);
         //Don't give the runtime the done callback because we don't care if it terminates
         aTriggerTest._start();
 

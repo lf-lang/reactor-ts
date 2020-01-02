@@ -5,9 +5,9 @@ import { ShowDeadline } from '../components/Deadline';
 class DeadlineTest extends App{
     showDeadline: ShowDeadline;
 
-    constructor(timeout: TimeInterval, success: ()=> void, fail: ()=>void, name?:string ){
-        super(timeout, name)
-        this.showDeadline = new ShowDeadline(success, fail, this, "ShowDeadline");
+    constructor(name:string, timeout: TimeInterval, success: ()=> void, fail: ()=>void){
+        super(name, timeout)
+        this.showDeadline = new ShowDeadline(this, success, fail);
     }
 }
 
@@ -31,7 +31,7 @@ describe('OutputEventTest', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        var sDeadline = new DeadlineTest( new TimeInterval(3), done, failReactor, "ShowDeadline");
+        var sDeadline = new DeadlineTest("ShowDeadline", new TimeInterval(3), done, failReactor);
         sDeadline._start();
     })
 });

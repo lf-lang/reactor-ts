@@ -1,22 +1,28 @@
 import {Reactor, OutPort, InPort, App} from '../src/reactor';
 
+var app = new App("MyApp");
+
 class Component extends Reactor {
     a: InPort<string> = new InPort(this);
     b: OutPort<string> = new OutPort(this);
 
-    child: Reactor;
+    constructor(parent: Reactor, alias:string) {
+        super(parent);
+        this.setAlias(alias);
+    }
+    child: Reactor | undefined;
 }
 
 describe('Container to Contained', () => {
 
-    var container = new Component(null, "Container");
+    var container = new Component(app, "Container");
     var contained = new Component(container, "Contained");
-    var grandcontained = new Component(contained, "Grandcontained");
+    var grandcontained = new Component(contained, "GrandContained");
 
     container.child = contained;
     contained.child = grandcontained;
 
-    var container2 = new Component(null, "Container2");
+    var container2 = new Component(app, "Container2");
     var contained2 = new Component(container2, "Contained2");
 
     container2.child = contained2;
@@ -29,7 +35,7 @@ describe('Container to Contained', () => {
 
     it('reactor with self as child', () => {
         expect(() => {
-            let loopy = new Component(null, "loopy");
+            let loopy = new Component(app, "Loopy");
             loopy.child = loopy;
             loopy._checkAllParents(null);
         }).toThrowError();
@@ -37,8 +43,8 @@ describe('Container to Contained', () => {
 
     it('reactor with a port constructed with the wrong parent', () => {
         expect(() => {
-            let badPortComponent = new Component(null, "hasBadPort");
-            let otherComponent = new Component(null, "otherComponent");
+            let badPortComponent = new Component(app, "BadPortComponent");
+            let otherComponent = new Component(app, "OtherComponent");
 
             // this port has been incorrectly constructed because it
             // is an attribute of badPortComponent, but is set in the constructor
@@ -53,12 +59,12 @@ describe('Container to Contained', () => {
     
     it('contained reactor name', () => {
         // expect(contained._getName()).toBe("Contained");
-        expect(contained.toString()).toBe("Container/Contained");
+        expect(contained.toString()).toBe("MyApp/Container/Contained");
     });
 
     it('container reactor name', () =>{
         // expect(container._getName()).toBe("Container");
-        expect(container.toString()).toBe("Container");
+        expect(container.toString()).toBe("MyApp/Container");
 
     })
 
@@ -85,14 +91,18 @@ describe('Container to Contained', () => {
         expect(container.canConnect(contained2.a, container.b)).toBe(false);
         expect(container.canConnect(contained2.a, container.a)).toBe(false);
        
-        expect(container.child.canConnect(grandcontained.a, contained.a)).toBe(false);
-        expect(container.child.canConnect(grandcontained.b, contained.b)).toBe(true);
-        expect(container.child.canConnect(grandcontained.a, container.a)).toBe(false);
-        expect(container.child.canConnect(grandcontained.b, container.b)).toBe(false);
-        expect(container.child.canConnect(grandcontained.a, container2.a)).toBe(false);
-        expect(container.child.canConnect(grandcontained.b, container2.b)).toBe(false);
-        expect(container.child.canConnect(grandcontained.a, contained2.a)).toBe(false);
-        expect(container.child.canConnect(grandcontained.b, contained2.b)).toBe(false);        
-
+        expect(container.child).toBeDefined();
+        
+        if (container.child) {
+            expect(container.child.canConnect(grandcontained.a, contained.a)).toBe(false);
+            expect(container.child.canConnect(grandcontained.b, contained.b)).toBe(true);
+            expect(container.child.canConnect(grandcontained.a, container.a)).toBe(false);
+            expect(container.child.canConnect(grandcontained.b, container.b)).toBe(false);
+            expect(container.child.canConnect(grandcontained.a, container2.a)).toBe(false);
+            expect(container.child.canConnect(grandcontained.b, container2.b)).toBe(false);
+            expect(container.child.canConnect(grandcontained.a, contained2.a)).toBe(false);
+            expect(container.child.canConnect(grandcontained.b, contained2.b)).toBe(false);
+        }
+                
     });
 });

@@ -6,8 +6,8 @@ export class Adder extends Reactor {
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
 
-    constructor(parent:Reactor, name: string) {
-        super(parent, name);
+    constructor(parent:Reactor) {
+        super(parent);
         this.addReaction(new AddTwo(this, [this.in1, this.in2], this.check(this.in1, this.in2, this.getWritable(this.out))));
     }
 }

@@ -1,6 +1,5 @@
 import {Adder} from '../components/Adder';
 import {App, Port} from '../reactor';
-import {TimeInterval} from '../time';
 
 class MyAdder extends Adder {
     public fire() {
@@ -14,11 +13,11 @@ class MyAdder extends Adder {
     }
 }
 
-var app = new App(new TimeInterval(0));
+var app = new App("MyApp");
 
 describe('adder', function () {
     
-    var adder = new MyAdder(app, "MyAdder");
+    var adder = new MyAdder(app);
 
     it('2 + 1 = 3', function () {
 

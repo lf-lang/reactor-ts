@@ -18,9 +18,9 @@ export class Print<T> extends Reaction<T> {
         if(received) {
             console.log("Logging: " + received);
             if(received == this.expected){
-                this.parent._app.success();
+                this.parent.util.success();
             } else {
-                this.parent._app.failure();
+                this.parent.util.failure();
             }
         } else {
             throw new Error("Log had no input available. This shouldn't happen because the logging reaction is triggered by the input");

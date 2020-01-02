@@ -34,7 +34,7 @@ class SETest extends App {
     logContainer: LogContainer;
 
     constructor(timeout: TimeInterval, name:string, success: ()=> void, fail: ()=>void ){
-        super(timeout, name, success, fail)
+        super(name, timeout, success, fail)
 
         this.seContainer = new SEContainer(this);
         this.logContainer = new LogContainer(this);

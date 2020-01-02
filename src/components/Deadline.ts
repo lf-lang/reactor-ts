@@ -61,8 +61,8 @@ export class ShowDeadline extends Reactor {
     success: () => void
     fail: () => void
 
-    constructor(success: () => void, fail: () => void, parent:Reactor | null, name?: string) {
-        super(parent, name);
+    constructor(parent:Reactor | null, success: () => void, fail: () => void) {
+        super(parent);
         this.success = success;
         this.fail = fail;
         

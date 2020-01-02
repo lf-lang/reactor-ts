@@ -8,13 +8,13 @@ export interface PrioritySetNode<P> {
     /**
      * Get a pointer to the next node in this priority set.
      */
-    getNext(): PrioritySetNode<P> | null;
+    getNext(): PrioritySetNode<P> | undefined;
     
     /**
      * Set a pointer to the next node in this priority set.
      * @param node Next element in the priority set this node is a part of.
      */
-    setNext(node: PrioritySetNode<P> | null);
+    setNext(node: PrioritySetNode<P> | undefined): void;
 
     /**
      * Return the priority of this node.
@@ -25,18 +25,18 @@ export interface PrioritySetNode<P> {
      * Determine whether this node has priority over the given node or not.
      * @param node A node to compare the priority of this node to.
      */
-    hasPriorityOver: (node: PrioritySetNode<P> | null) => boolean;
+    hasPriorityOver: (node: PrioritySetNode<P> | undefined) => boolean;
     
     /**
      * If the given node is considered a duplicate of this node, then
      * update this node if needed, and return true. Return false otherwise.
      * @param node A node that may or may not be a duplicate of this node.
      */
-    updateIfDuplicateOf: (node: PrioritySetNode<P> | null) => boolean;
+    updateIfDuplicateOf: (node: PrioritySetNode<P> | undefined) => boolean;
 }
 
 export interface PrecedenceGraphNode<P> {
-    setPriority(priority: P);
+    setPriority(priority: P): void;
 }
 
 /**
@@ -44,14 +44,14 @@ export interface PrecedenceGraphNode<P> {
  */
 export class PrioritySet<P> {
 
-  private head: PrioritySetNode<P> | null;
+  private head: PrioritySetNode<P> | undefined;
   private count: number = 0;
 
   push(element: PrioritySetNode<P>) {
     // update linked list
-    if (this.head == null) {
+    if (this.head == undefined) {
       // create head
-      element.setNext(null);
+      element.setNext(undefined);
       this.head = element;
       this.count++;
       return;
@@ -66,10 +66,10 @@ export class PrioritySet<P> {
         return;
       }
       // seek
-      var curr: PrioritySetNode<P> | null = this.head;
-      while (curr != null) {
-        let next = curr.getNext();
-        if (next != null) {
+      var curr: PrioritySetNode<P> | undefined = this.head;
+      while (curr) {
+        let next: PrioritySetNode<P> | undefined = curr.getNext();
+        if (next) {
           if (element.updateIfDuplicateOf(next)) {
             return;
           } else if (element.hasPriorityOver(next)) {
@@ -81,9 +81,9 @@ export class PrioritySet<P> {
           break;
         }
       }
-      if (curr != null) {
+      if (curr) {
         // insert
-        element.setNext(curr.getNext()); // null if last
+        element.setNext(curr.getNext()); // undefined if last
         curr.setNext(element);
         this.count++;
         return;
@@ -92,17 +92,17 @@ export class PrioritySet<P> {
   }
 
   pop(): PrioritySetNode<P> | undefined {
-    if (this.head != null) {
+    if (this.head) {
       let node = this.head;
       this.head = this.head.getNext();
-      node.setNext(null); // unhook from linked list
+      node.setNext(undefined); // unhook from linked list
       this.count--;
       return node;
     }
   }
 
   peek(): PrioritySetNode<P> | undefined {
-    if (this.head != null) {
+    if (this.head) {
       return this.head;
     }
   }
@@ -120,7 +120,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
   merge(apg: this) {
     for (const [k, v] of apg.graph) {
       let nodes = this.graph.get(k);
-      if (nodes != null) {
+      if (nodes) {
         for (let n of v) {
           if (!nodes.has(n)) {
             nodes.add(n);
@@ -226,7 +226,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     }
 
     /* Sort reactions */
-    for (var n: T | undefined; (n = start.shift()) != null; count += spacing) {
+    for (var n: T | undefined; (n = start.shift()); count += spacing) {
       n.setPriority(count);
 
       // for each node v with an edge e from n to v do

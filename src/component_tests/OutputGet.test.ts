@@ -7,7 +7,7 @@ class OutputGetTest extends App {
     t: Timer = new Timer(this, 0, 0);
     
     constructor(timeout: TimeInterval, name:string, success: ()=> void, failure: ()=>void){
-        super(timeout, name, success, failure);
+        super(name, timeout, success, failure);
         this.addReaction(new OutputGetter(this, [this.t], this.check(this.getWritable(this.o))));
     }
 }
@@ -23,7 +23,7 @@ class OutputGetter<T> extends Reaction<T> {
         if(o.get() !== 5){
             throw new Error("Calling get on an output after it has been set does not return the set value");
         }
-        this.parent._app.success();
+        this.parent.util.success();
     }
 }
 

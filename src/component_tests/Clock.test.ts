@@ -14,7 +14,7 @@ describe('clock', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 6 seconds.
-        var clock = new Clock(new TimeInterval(6), done, fail, "Clock");
+        var clock = new Clock("Clock", new TimeInterval(6), done, fail);
 
         //Don't give the runtime the done callback because we don't care if it terminates
         clock._start();

@@ -1,6 +1,6 @@
 import {TimeInstant} from '../src/time';
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
-import {Reactor, Reaction, Priority} from '../src/reactor';
+import {Reactor, Reaction, Priority, App} from '../src/reactor';
 
 class DummyReaction<T> extends Reaction<T> {
     
@@ -29,7 +29,7 @@ class DummyReactor extends Reactor {
 describe('Precedence Graph', () => {
 
     var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
-    var reactor = new DummyReactor(null);
+    var reactor = new DummyReactor(new App("MyApp"));
 
     var nodes = reactor.getNodes();
 
@@ -108,7 +108,7 @@ describe('Precedence Graph', () => {
 describe('ReactionQ', () => {
     
     var graph:PrecedenceGraph<Reaction<unknown>> = new PrecedenceGraph();
-    var reactor = new DummyReactor(null);
+    var reactor = new DummyReactor(new App("MyApp"));
 
     var nodes = reactor.getNodes();
 

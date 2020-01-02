@@ -55,15 +55,15 @@ class Test<T> extends Reaction<T> {
         // All timers should fire simultaneously at logical time 5 seconds from the start of execution.
         // This should tricker tick, tock, and, cuckoo to simultanously schedule actions
         // 1,2, and 3. 
-        if (this.parent._app._getElapsedLogicalTime().isEqualTo(new TimeInterval(5))) {
+        if (this.parent.util.getElapsedLogicalTime().isEqualTo(new TimeInterval(5))) {
             console.log("reacting in Test");
             if(a1.get() == 1 && a2.get() == 2 && a3.get() == 3) {
-                this.parent._app.success();
+                this.parent.util.success();
             } else {
                 console.log("a1: " + a1.get());
                 console.log("a2: " + a2.get());
                 console.log("a3: " + a3.get());
-                this.parent._app.failure();
+                this.parent.util.failure();
             }
         }
     }
@@ -89,8 +89,8 @@ export class Clock extends App {
     a2 = new Action<number>(this, Origin.logical);
     a3 = new Action<number>(this, Origin.logical);
 
-    constructor(timeout: TimeInterval,  success: () => void, fail: () => void, name?: string) {
-        super(timeout, name, success, fail);
+    constructor(name: string, timeout: TimeInterval,  success: () => void, fail: () => void) {
+        super(name, timeout, success, fail);
         this.addReaction(new Tick(this, [this.t1], this.check(this.getSchedulable(this.a1))));
         this.addReaction(new Tock(this, [this.t2], this.check(this.getSchedulable(this.a2))));
         //At time 5 seconds, this reaction should be triggered

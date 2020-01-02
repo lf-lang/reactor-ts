@@ -11,7 +11,7 @@ export class OutputResponse<T> extends Reaction<T> {
      * @override
      */
     react() {
-        this.parent._app.success();
+        this.parent.util.success();
     }
 }
 

@@ -7,6 +7,7 @@
         "isolatedModules": true,
         "lib": ["esnext", "dom"],
         "sourceMap": true,
+        "strict": true,
         "moduleResolution": "node",
 	    "strictBindCallApply": true,
         "strictNullChecks": true,

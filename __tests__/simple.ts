@@ -26,7 +26,7 @@ describe('Test names for contained reactors', () => {
         y = new MyActor2(this);
 
         constructor(name: string, someParam: string) {
-            super(null, name);
+            super(name, null);
 
             // Normally _setAllParents would be called as part of the initialization
             // process for starting an app, but we call it directly here to set
@@ -37,7 +37,7 @@ describe('Test names for contained reactors', () => {
             //     expect(this.x._getName()).toBe("MyActor");
             // });
             it('contained actor FQN', () => {
-                expect(this.x.toString()).toBe("Hello World/MyActor");
+                expect(this.x.toString()).toBe("Hello World/x");
             });
 
             it('uncontained actor name', () => {
