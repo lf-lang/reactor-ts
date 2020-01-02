@@ -1572,7 +1572,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._startOfExecution = this._currentLogicalTime;
     }
 
-    static instances: Set<App> = new Set();
+    static instances: Set<App> = new Set(); // FIXME: we have to remove the instance from the set when we're done with it, or this will create a memory leak.
 
     getName(): string {
         var alias = super.getName();
@@ -1590,6 +1590,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         }
         return alias + suffix;
     }
+
     /**
      * Handle the next event on the event queue.
      * ----
