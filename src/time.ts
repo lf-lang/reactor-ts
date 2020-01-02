@@ -5,12 +5,6 @@
  */
 
 /**
- * CommonJS `require` function.
- * @param name The module to import.
- */
-declare function require(name:string);
-
-/**
  * Module used to acquire time from the platform in microsecond precision.
  * @see {@link https://www.npmjs.com/package/microtime}
  */
@@ -210,7 +204,7 @@ export class UnitBasedTimeInterval extends TimeInterval {
  */ 
 export class TimeInstant {
 
-    readonly time;
+    readonly time:TimeInterval;
 
     constructor(timeSinceEpoch: TimeInterval, readonly microstep: number) {
         this.time = timeSinceEpoch;

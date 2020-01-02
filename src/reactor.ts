@@ -14,12 +14,6 @@ import {TimeInterval, TimeInstant, Origin, getCurrentPhysicalTime} from './time'
 //---------------------------------------------------------------------//
 
 /**
- * CommonJS `require` function.
- * @param name The module to import.
- */
-declare function require(name:string);
-
-/**
  * Timer used for precisely timing the triggering of reactions.
  */
 const NanoTimer = require('nanotimer');

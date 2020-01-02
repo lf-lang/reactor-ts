@@ -1,14 +1,16 @@
 {
     "compilerOptions": {
-        "target": "es2018",
+        "allowJs": true,
+        "noEmit": true,
+        "target": "esnext",
         "esModuleInterop": true,
+        "isolatedModules": true,
         "lib": ["esnext", "dom"],
         "sourceMap": true,
-        "alwaysStrict": true,
         "moduleResolution": "node",
-	"strictBindCallApply": true,
+	    "strictBindCallApply": true,
         "strictNullChecks": true,
-        "strictFunctionTypes": true
+        "strictFunctionTypes": true,
     },
     "typedocOptions": {
         "tags": {
