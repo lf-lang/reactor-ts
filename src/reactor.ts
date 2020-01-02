@@ -1580,7 +1580,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         var suffix = "";
         if (alias == this.constructor.name) {
             for (let a of App.instances) {
-                if (alias === a.constructor.name) {
+                if (a !== this && alias === a.constructor.name) {
                     count++;
                 }
             }

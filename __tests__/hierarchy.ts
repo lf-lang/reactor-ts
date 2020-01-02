@@ -59,12 +59,12 @@ describe('Container to Contained', () => {
     
     it('contained reactor name', () => {
         // expect(contained._getName()).toBe("Contained");
-        expect(contained.toString()).toBe("MyApp/Container/Contained");
+        expect(contained.toString()).toBe("App/Container/Contained");
     });
 
     it('container reactor name', () =>{
         // expect(container._getName()).toBe("Container");
-        expect(container.toString()).toBe("MyApp/Container");
+        expect(container.toString()).toBe("App/Container");
 
     })
 
