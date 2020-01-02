@@ -8,7 +8,6 @@
 import {PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph} from './util';
 import {TimeInterval, TimeInstant, Origin, getCurrentPhysicalTime} from './time';
 
-
 //---------------------------------------------------------------------//
 // Modules                                                             //
 //---------------------------------------------------------------------//
@@ -43,8 +42,6 @@ export type Priority = number;
  * `never` otherwise.
  */
 export type VarList<T> = T extends Variable[] ? T : never;
-
-
 
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
@@ -154,6 +151,8 @@ class Descendant implements Named {
                 if (value === this) {
                     return `${key}`;
                 }
+                // Count instantiations of the same object among entries
+                // in order to report unique name for instances among them.
                 if (value && this.constructor === value.constructor) {
                     count++;
                 }
@@ -873,8 +872,11 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * Create a new reactor.
      * @param parent Parent of this reactor.
      */
-    constructor(parent: Reactor | null) {
+    constructor(parent: Reactor | null, name?: string) {
         super(parent);
+        if (name) {
+            this.setAlias(name);
+        }
         if (parent != null) {
             this.app = parent.app;
         } else {
@@ -1523,11 +1525,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     private _keepAlive = false;
 
     /**
-     * The set of timers in this app.
-     */
-    private _timers = new Set<Timer>();
-
-    /**
      * Priority set that keeps track of reactions at the current logical time.
      */
     private _reactionQ = new ReactionQueue();
@@ -1562,14 +1559,16 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
     /**
      * Create a new top-level reactor.
-     * @param executionTimeout Optional parameter to let the execution of the app time out.
      * @param name Optional parameter to assign assign a name to this app.
+     * @param executionTimeout Optional parameter to let the execution of the app time out.
      * @param success Optional callback to be used to indicate a successful execution.
      * @param failure Optional callback to be used to indicate a failed execution.
      */
-    constructor(name:string, executionTimeout: TimeInterval | null = null, public success: ()=> void = () => {}, public failure: ()=>void = () => {}) {
+    constructor(name?:string, executionTimeout: TimeInterval | null = null, public success: ()=> void = () => {}, public failure: ()=>void = () => {}) {
         super(null);
-        this.setAlias(name);
+        if (name) {
+            this.setAlias(name);
+        }
         this._executionTimeout = executionTimeout;
         // NOTE: these will be reset properly during startup.
         this._currentLogicalTime = new TimeInstant(new TimeInterval(0), 0);
