@@ -29,7 +29,7 @@ class DummyReactor extends Reactor {
 describe('Precedence Graph', () => {
 
     var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
-    var reactor = new DummyReactor(new App("MyApp"));
+    var reactor = new DummyReactor(new App());
 
     var nodes = reactor.getNodes();
 
@@ -108,7 +108,7 @@ describe('Precedence Graph', () => {
 describe('ReactionQ', () => {
     
     var graph:PrecedenceGraph<Reaction<unknown>> = new PrecedenceGraph();
-    var reactor = new DummyReactor(new App("MyApp"));
+    var reactor = new DummyReactor(new App());
 
     var nodes = reactor.getNodes();
 

@@ -6,7 +6,8 @@ class DeadlineTest extends App{
     showDeadline: ShowDeadline;
 
     constructor(name:string, timeout: TimeInterval, success: ()=> void, fail: ()=>void){
-        super(name, timeout)
+        super(timeout);
+        this.setAlias(name);
         this.showDeadline = new ShowDeadline(this, success, fail);
     }
 }

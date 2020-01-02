@@ -1,6 +1,6 @@
 import {Reactor, OutPort, InPort, App} from '../src/reactor';
 
-var app = new App("MyApp");
+var app = new App();
 
 class Component extends Reactor {
     a: InPort<string> = new InPort(this);

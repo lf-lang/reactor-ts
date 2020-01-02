@@ -90,7 +90,8 @@ export class Clock extends App {
     a3 = new Action<number>(this, Origin.logical);
 
     constructor(name: string, timeout: TimeInterval,  success: () => void, fail: () => void) {
-        super(name, timeout, success, fail);
+        super(timeout, success, fail);
+        this.setAlias(name);
         this.addReaction(new Tick(this, [this.t1], this.check(this.getSchedulable(this.a1))));
         this.addReaction(new Tock(this, [this.t2], this.check(this.getSchedulable(this.a2))));
         //At time 5 seconds, this reaction should be triggered

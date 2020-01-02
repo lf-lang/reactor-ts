@@ -13,7 +13,7 @@ class MyAdder extends Adder {
     }
 }
 
-var app = new App("MyApp");
+var app = new App();
 
 describe('adder', function () {
     

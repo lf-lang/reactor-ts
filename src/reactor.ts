@@ -872,10 +872,10 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * Create a new reactor.
      * @param parent Parent of this reactor.
      */
-    constructor(parent: Reactor | null, name?: string) {
+    constructor(parent: Reactor | null, alias?: string) {
         super(parent);
-        if (name) {
-            this.setAlias(name);
+        if (alias) {
+            this.setAlias(alias);
         }
         if (parent != null) {
             this.app = parent.app;
@@ -1559,22 +1559,37 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
     /**
      * Create a new top-level reactor.
-     * @param name Optional parameter to assign assign a name to this app.
      * @param executionTimeout Optional parameter to let the execution of the app time out.
      * @param success Optional callback to be used to indicate a successful execution.
      * @param failure Optional callback to be used to indicate a failed execution.
      */
-    constructor(name?:string, executionTimeout: TimeInterval | null = null, public success: ()=> void = () => {}, public failure: ()=>void = () => {}) {
+    constructor(executionTimeout: TimeInterval | null = null, public success: ()=> void = () => {}, public failure: ()=>void = () => {}) {
         super(null);
-        if (name) {
-            this.setAlias(name);
-        }
+        App.instances.add(this);
         this._executionTimeout = executionTimeout;
         // NOTE: these will be reset properly during startup.
         this._currentLogicalTime = new TimeInstant(new TimeInterval(0), 0);
         this._startOfExecution = this._currentLogicalTime;
     }
 
+    static instances: Set<App> = new Set();
+
+    getName(): string {
+        var alias = super.getName();
+        var count = 0;
+        var suffix = "";
+        if (alias == this.constructor.name) {
+            for (let a of App.instances) {
+                if (alias === a.constructor.name) {
+                    count++;
+                }
+            }
+        }
+        if (count > 0) {
+            suffix = "(" + count + ")";
+        }
+        return alias + suffix;
+    }
     /**
      * Handle the next event on the event queue.
      * ----
