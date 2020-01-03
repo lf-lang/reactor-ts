@@ -266,6 +266,7 @@ export class TimeInstant {
     getMicroStepLater() {
         return new TimeInstant(this.time, this.microstep+1);
     }
+    
     getTimeDifference(that: TimeInstant): TimeInterval {
         if (this.isEarlierThan(that)) {
             return that.time.subtract(this.time);

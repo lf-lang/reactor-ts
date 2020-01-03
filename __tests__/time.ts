@@ -25,7 +25,7 @@ describe('time representation', function () {
 
     //TimeInstants
     const tiFiveSeconds0:TimeInstant = new TimeInstant(fiveSeconds, 0);
-    const tiFiveSeconds1:TimeInstant = new TimeInstant(fiveSeconds , 1);
+    const tiFiveSeconds1:TimeInstant = new TimeInstant(fiveSeconds, 1);
 
     const tiZero:TimeInstant = new TimeInstant(straightZero, 0);
     const tiZero1:TimeInstant = new TimeInstant(straightZero, 1);
@@ -173,6 +173,7 @@ describe('time representation', function () {
         expect(straightZero.getNanoTime()).toEqual("0s");
         expect(fiveSFiveUS.getNanoTime()).toEqual("5000005u");
         expect(new TimeInterval(5, 5000000).getNanoTime()).toEqual("5005m");
+        expect(new TimeInterval(5, 5).getNanoTime()).toEqual("5000000005n");
         expect(fortyTwoDays.getNanoTime()).toEqual("3628800s");
         expect(threeHundredUS.getNanoTime()).toEqual("300u");
         expect(sevenPointFiveBillNS.getNanoTime()).toEqual("7500m");
@@ -180,8 +181,14 @@ describe('time representation', function () {
         expect(fiveHundredMilNS.getNanoTime()).toEqual("500m");
         expect(oneThousandMS.getNanoTime()).toEqual("1s");
         expect(aboutTenYears.getNanoTime()).toEqual("315360000s");
-    
     })
+
+    it('getTimeDifference', function() {
+        expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeInterval(0));
+        expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds1)).toEqual(new TimeInterval(0));
+        expect(tiFiveSeconds0.getTimeDifference(tiOne1)).toEqual(new TimeInterval(4));
+        expect(tiOne1.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeInterval(4));
+    });
 
     // it('numericTimeDifference' , function () {
     //     expect(numericTimeDifference(numFortyTwoDays, numFiveHundredMilNS, )).toStrictEqual([42 * 24 * 60 * 60 -1 , 500000000 ]);
@@ -226,10 +233,15 @@ describe('time representation', function () {
     }).toThrowError()
 
     expect(() => {
+        expect(new UnitBasedTimeInterval(-1, TimeUnit.week));
+    }).toThrowError()
+
+    expect(() => {
         expect(new TimeInterval(2,1).subtract(new TimeInterval(4, 3)));
     }).toThrowError()
 
-
+    
+    
     //     expect(() => {
     //         expect(numericTimeMultiple(numFortyTwoDays, -7)).toStrictEqual([0, 0 ]);
     //     }).toThrowError()
