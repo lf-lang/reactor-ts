@@ -1,4 +1,3 @@
-'use strict';
 import {TimeInterval, TimeUnit, TimeInstant, UnitBasedTimeInterval} from "../src/time";
 
 /**
@@ -6,13 +5,13 @@ import {TimeInterval, TimeUnit, TimeInstant, UnitBasedTimeInterval} from "../src
  */
 describe('time representation', function () {
     
-    //Zero TimeIntervals
+    // Zero time intervals.
     const straightZero: TimeInterval = new TimeInterval(0);
     const zeroSeconds: TimeInterval = new UnitBasedTimeInterval(0, TimeUnit.sec);
     const zeroNS: TimeInterval = new UnitBasedTimeInterval(0, TimeUnit.nsec);
     const zeroWeeks: TimeInterval = new UnitBasedTimeInterval(0, TimeUnit.week);
 
-    //Non zero TimeIntervals
+    // Non-zero time intervals.
     const fiveSeconds: TimeInterval = new UnitBasedTimeInterval(5, TimeUnit.sec);
     const fiveSFiveUS: TimeInterval = new UnitBasedTimeInterval(5000005, TimeUnit.usec);
     const fortyTwoDays: TimeInterval = new UnitBasedTimeInterval(42, TimeUnit.days);
@@ -23,7 +22,7 @@ describe('time representation', function () {
     const oneThousandMS: TimeInterval = new UnitBasedTimeInterval(1000, TimeUnit.msec);
     const aboutTenYears: TimeInterval = new UnitBasedTimeInterval(365 * 10, TimeUnit.day);
 
-    //TimeInstants
+    // Time instants.
     const tiFiveSeconds0:TimeInstant = new TimeInstant(fiveSeconds, 0);
     const tiFiveSeconds1:TimeInstant = new TimeInstant(fiveSeconds, 1);
 
@@ -31,6 +30,7 @@ describe('time representation', function () {
     const tiZero1:TimeInstant = new TimeInstant(straightZero, 1);
     const tiOne1:TimeInstant = new TimeInstant(new TimeInterval(1), 1);
     const tiOneNano1:TimeInstant = new TimeInstant(new TimeInterval(0,1), 1);
+    
     /**
      * Test to see if the zero representations for time intervals 
      * are correctly identified by the timeIntervalIsZero function.
@@ -41,7 +41,6 @@ describe('time representation', function () {
         expect( zeroSeconds.isZero()).toBe(true);
         expect( zeroNS.isZero()).toBe(true);
         expect( zeroWeeks.isZero()).toBe(true);
-
         expect( fiveSeconds.isZero()).toBe(false);
         expect( fortyTwoDays.isZero()).toBe(false);
         expect( threeHundredUS.isZero()).toBe(false);
@@ -52,24 +51,16 @@ describe('time representation', function () {
 
     });
 
-
     /**
-     * Test of timeIntervalToNumeric function.
-     * It should convert time intervals with the Lingua Franca [ number, Timeunit ]
-     * into the numeric [seconds, nanoseconds] representation.
+     * Create time intervals by specifying a time value and time unit.
      */
-    it('timeIntervalToNumeric', function () {
+    it('unitBasedTimeIntervals', function () {
 
-        //Non integer time intervals are an error.
+        // Creating time intervals with a non-integer 
+        // time value results in an error.
         expect(() => {
-            new UnitBasedTimeInterval(5.000000005, TimeUnit.sec);
+            new UnitBasedTimeInterval(0.1, TimeUnit.sec);
         }).toThrowError()
-
-        //Negative time intervals are an error.
-        expect(() => {
-            new UnitBasedTimeInterval(5.000000005-5, TimeUnit.sec);
-        }).toThrowError()
-
 
         expect(zeroSeconds.isEqualTo(straightZero)).toBeTruthy();
         expect(zeroSeconds.isEqualTo(zeroNS)).toBeTruthy();
@@ -94,10 +85,9 @@ describe('time representation', function () {
     });
 
     /**
-     * Test of compareNumericTimeIntervals.
-     * It should implement deep comparison t0 < t1. 
+     * Test whether time intervals are equal.
      */
-    it('Compare time intervals', function () {
+    it('TestEqualTimeIntervals', function () {
         expect(fiveSeconds.isEqualTo(fiveSeconds)).toBeTruthy();
         expect(fiveSeconds.isEqualTo(fortyTwoDays)).toBeFalsy();
         expect(fortyTwoDays.isEqualTo(fiveSeconds)).toBeFalsy();
@@ -106,9 +96,8 @@ describe('time representation', function () {
     });
 
     /**
-     * Test of compareTimeInstants.
-     * It should implement deep comparison t0 < t1.
-     * A time instant has [ numericTimeInterval , microstep ]
+     * Report whether one time instant is ealier than another one.
+     * Microstep indices are taken into consideration.
      */
     it('compareTimeInstants', function () {
         expect(tiZero.isEarlierThan(tiZero)).toBeFalsy();
@@ -132,7 +121,7 @@ describe('time representation', function () {
     });
 
     /**
-     * Test of deep equality for time instants.
+     * Test simultaneity of time instants.
      */
     it('timeInstantsAreEqual', function(){
         expect(tiZero.isSimultaneousWith(tiZero1)).toBeFalsy();
@@ -141,12 +130,18 @@ describe('time representation', function () {
         expect(tiOneNano1.isSimultaneousWith(tiOneNano1)).toBeTruthy();
     });
 
+    /**
+     * Add a time interval to a time instant and obtain a new time instant.
+     */
     it('getLaterTime' , function () {
         expect(new TimeInstant(fiveHundredMilNS, 0).getLaterTime(fortyTwoDays).isSimultaneousWith(new TimeInstant(new TimeInterval(42 * 24 * 60 * 60, 500000000), 0))).toBeTruthy();
         expect(new TimeInstant(fiveHundredMilNS, 0).getLaterTime(fiveHundredMilNS).isSimultaneousWith(new TimeInstant(new TimeInterval(1, 0), 0))).toBeTruthy();
         expect(new TimeInstant(oneThousandMS, 0).getLaterTime(straightZero).isSimultaneousWith(new TimeInstant(oneThousandMS, 0))).toBeTruthy();
     });
 
+    /**
+     * Get a time interval in a format that is understood by nanotimer.
+     */
     it('getNanoTime', function() {
         expect(fiveSeconds.getNanoTime()).toEqual("5s");
         expect(straightZero.getNanoTime()).toEqual("0s");
@@ -162,6 +157,11 @@ describe('time representation', function () {
         expect(aboutTenYears.getNanoTime()).toEqual("315360000s");
     })
 
+    /**
+     * Obtain the difference between two time instants.
+     * Microstep indices are ignored in this operation 
+     * (time intervals don't have a microstep).
+     */
     it('getTimeDifference', function() {
         expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeInterval(0));
         expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds1)).toEqual(new TimeInterval(0));
@@ -169,6 +169,9 @@ describe('time representation', function () {
         expect(tiOne1.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeInterval(4));
     });
 
+    /**
+     * See if expected errors happen.
+     */
     it('errors', function() {
         expect(() => {
             expect(new TimeInterval(4.3, 2.1));

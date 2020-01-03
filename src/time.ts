@@ -1,5 +1,5 @@
 /**
- * Types and helper functions relating to time for reactors.
+ * Time-related helper functions for reactors.
  * @author Marten Lohstroh (marten@berkeley.edu)
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
@@ -68,7 +68,7 @@ export class TimeInterval {
         let nanoseconds = this.nanoseconds + other.nanoseconds;
 
         if(nanoseconds >= billion) {
-            //Carry the second
+            // Carry the second.
             seconds += 1;
             nanoseconds -= billion;
         }
@@ -144,62 +144,72 @@ export class TimeInterval {
 
     /**
      * Get a string representation of this time interval that is compatible
-     * with `nanotimer`.
+     * with `nanotimer`. Unit specifiers are `s` for seconds, `m` for 
+     * milliseconds `u` for microseconds, and `n` for nanoseconds.
      * @see {@link https://www.npmjs.com/package/nanotimer} for 
      * further information.
      */
     public getNanoTime(): string {
-        // Unit specifiers are:
-
-        //  s = seconds
-        //  m = milliseconds
-        //  u = microseconds
-        //  n = nanoseconds
-
+        
         if (this.nanoseconds == 0) {
+            // Seconds.
             return this.seconds.toString() + "s";
         } else if (this.nanoseconds % 1000000 == 0) {
-            let milliSecString = (this.nanoseconds / 1000000).toString();
+            // Milliseconds.
+            let msecs = (this.nanoseconds / 1000000).toString();
             if (this.seconds == 0) {
-                return milliSecString + "m";
+                return msecs + "m";
             } else {
                 let padding = "";
-                for (let i = 0; i < 3 - milliSecString.length; i++) {
+                for (let i = 0; i < 3 - msecs.length; i++) {
                     padding += "0";
                 }
-                return this.seconds.toString() + padding + milliSecString + "m";
+                return this.seconds.toString() + padding + msecs + "m";
             }
         } else if (this.nanoseconds % 1000 == 0) {
-            let microSecString = (this.nanoseconds/1000).toString();
+            // Microseconds.
+            let usecs = (this.nanoseconds/1000).toString();
             if (this.seconds == 0) {
-                return microSecString + "u";
+                return usecs + "u";
             } else {
                 let padding = "";
-                for (let i = 0; i < 6 - microSecString.length; i++) {
+                for (let i = 0; i < 6 - usecs.length; i++) {
                     padding += "0";
                 }
-                return this.seconds.toString() + padding + microSecString + "u";
+                return this.seconds.toString() + padding + usecs + "u";
             }
         } else {
-            let nanoSecString = this.nanoseconds.toString();
+            // Nanoseconds.
             if (this.seconds == 0) {
-                return nanoSecString + "n";
+                return this.nanoseconds + "n";
             } else {
+                let nsecs = this.nanoseconds.toString();
                 let padding = "";
-                for (let i = 0; i < 9 - nanoSecString.length; i++) {
+                for (let i = 0; i < 9 - nsecs.length; i++) {
                     padding += "0";
                 }
-                return this.seconds.toString() + padding + nanoSecString + "n";
+                return this.seconds.toString() + padding + nsecs + "n";
             }
         } 
     }
 }
 
 /** 
- * A time interval must be an integer accompanied by a time unit. Decimals or negative values yield errors.
+ * Subclass of `TimeInterval` that is constructed on the basis of a value
+ * accompanied with a time unit. The value is a `number` that is required to be
+ * a positive integer. The time unit must be a member of the `TimeUnit` enum.
  */
 export class UnitBasedTimeInterval extends TimeInterval {
 
+    /**
+     * Construct a new time interval on the basis of a value accompanied with
+     * a time unit. An error is thrown when the given value is negative, 
+     * non-integer, or both.
+     * @param value A number (which must be a positive integer) that denotes 
+     * the length of the specified time interval, expressed as a multiple of
+     * the given time unit.
+     * @param unit The unit of measurement that applies to the given value.
+     */
     constructor(private value: number, private unit:TimeUnit) {
         super(0, 0); 
 
@@ -210,9 +220,8 @@ export class UnitBasedTimeInterval extends TimeInterval {
             throw new Error("Negative time values are illegal.");
         }
         
-        // Store this interval as a TimeSpec for later use.
         const billion = BigInt(TimeUnit.secs);
-    
+        
         // To avoid overflow and floating point errors, work with BigInts.
         let bigT = BigInt(this.value) * BigInt(this.unit);  
         let bigSeconds = bigT / billion;
@@ -236,60 +245,107 @@ export class UnitBasedTimeInterval extends TimeInterval {
 
 
 /** 
- * A superdense time instant, represented as a pair. The first element of the pair represents
- * elapsed time as a NumericTimeInterval. The second element denotes the micro step index.
+ * A superdense time instant, represented as a time interval `time` (i.e., 
+ * time elapsed since Epoch) paired with a microstep index to keep track of 
+ * iterations in superdense time. For each such iteration, `time` remains
+ * the same, but `microstep` is incremented. 
  */ 
 export class TimeInstant {
 
+    /**
+     * Time elapsed since Epoch.
+     */
     readonly time:TimeInterval;
 
+    /**
+     * 
+     * @param timeSinceEpoch Time elapsed since Epoch.
+     * @param microstep Superdense time index.
+     */
     constructor(timeSinceEpoch: TimeInterval, readonly microstep: number) {
         this.time = timeSinceEpoch;
     }
 
-    isEarlierThan(that: TimeInstant) {
-        return this.time.isSmallerThan(that.time) 
-            || (this.time.isEqualTo(that.time) 
-                && this.microstep < that.microstep);
+    /**
+     * Return `true` if this time instant is earlier than the time instant
+     * given as a parameter, false otherwise. For two time instants with
+     * an equal `time`, one instant is earlier than the other if its 
+     * `microstep` is less than the `microstep` of the other.
+     * @param other The time instant to compare against this one.
+     */
+    isEarlierThan(other: TimeInstant): boolean {
+        return this.time.isSmallerThan(other.time) 
+            || (this.time.isEqualTo(other.time) 
+                && this.microstep < other.microstep);
     }
 
-    isSimultaneousWith(that: TimeInstant) {
-        return this.time.isEqualTo(that.time) 
-            && this.microstep == that.microstep;
+    /**
+     * Return `true` if this time instant is simultaneous with the time
+     * instant given as a parameter, false otherwise. Both `time` and 
+     * `microstep` must be equal for two time instants to be simultaneous.
+     * @param other The time instant to compare against this one.
+     */
+    isSimultaneousWith(other: TimeInstant) {
+        return this.time.isEqualTo(other.time) 
+            && this.microstep == other.microstep;
     }
     
-
+    /**
+     * Get a new time instant that represents this time instant plus
+     * the given delay. The `microstep` of this time instant is ignored;
+     * the returned time instant always has a `microstep` of zero.
+     * @param delay The time interval to add to this time instant.
+     */
     getLaterTime(delay: TimeInterval) : TimeInstant {
         return new TimeInstant(delay.add(this.time), 0);   
     }
 
+    /**
+     * Get a new time instant that has the same `time` but a `microstep` that
+     * is incremented by one relative to this time instant's `microstep`.
+     */
     getMicroStepLater() {
         return new TimeInstant(this.time, this.microstep+1);
     }
-    
-    getTimeDifference(that: TimeInstant): TimeInterval {
-        if (this.isEarlierThan(that)) {
-            return that.time.subtract(this.time);
+
+    /**
+     * Obtain a time interval that represents the absolute (i.e., positive)
+     * time difference between this time interval and the time interval given
+     * as a parameter.
+     * @param other The time instant for which to compute the absolute difference
+     * with this time instant.
+     * 
+     */
+    getTimeDifference(other: TimeInstant): TimeInterval {
+        if (this.isEarlierThan(other)) {
+            return other.time.subtract(this.time);
         } else {
-            return this.time.subtract(that.time);
+            return this.time.subtract(other.time);
         }
     }
 
+    /**
+     * Return a human-readable string presentation of this time instant.
+     */
     public toString(): string {
         return "(" + this.time.toString() + ", " + this.microstep + ")"; 
     }
 }
 
 /**
- * A descriptor for a time representation as either refering to the physical (wall)
- * timeline or the logical (execution) timeline. Logical time may get ahead of
- * physical time, or vice versa.
+ * A descriptor to be used when scheduling events to denote as to whether
+ * an event should occur with a delay relative to _physical time_ or _logical
+ * time_.
  */
 export enum Origin {
     physical,
     logical
 }
 
+/**
+ * Return a time instant that reflects the current physical time as reported
+ * by the platform.
+ */
 export function getCurrentPhysicalTime(): TimeInstant {
     let t = Microtime.now();
     let seconds: number = Math.floor(t / 1000000);
