@@ -1,9 +1,9 @@
 'use strict';
 
-import {App} from '../reactor';
-import {TimeInterval} from "../time"
-import {SingleEvent} from '../components/SingleEvent';
-import {Logger} from '../components/Logger';
+import {App} from '../src/core/reactor';
+import {TimeInterval} from "../src/core/time"
+import {SingleEvent} from '../src/share/SingleEvent';
+import {Logger} from '../src/share/Logger';
 
 class SETest extends App {
     singleEvent: SingleEvent<any>;

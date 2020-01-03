@@ -1,9 +1,7 @@
-'use strict';
-
-import {Reactor, OutPort, InPort, App} from '../reactor';
-import {TimeUnit, TimeInterval, UnitBasedTimeInterval} from "../time"
-import { SingleEvent } from '../components/SingleEvent';
-import { Logger } from '../components/Logger';
+import {Reactor, OutPort, InPort, App} from '../src/core/reactor';
+import {TimeInterval} from "../src/core/time"
+import {SingleEvent} from '../src/share/SingleEvent';
+import {Logger} from '../src/share/Logger';
 
 class SEContainer extends Reactor{
     // Made these public to accommodate the test below.

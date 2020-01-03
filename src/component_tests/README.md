@@ -1,1 +1,0 @@
-This directory contains integration tests using components.

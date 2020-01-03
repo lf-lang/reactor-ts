@@ -202,7 +202,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
         var antideps: Set<Variable> = new Set();
         var vars = new Set();
         for (let a of this.args.concat(this.trigs)) {
-            if (a instanceof Port) {
+            if (a instanceof Port) { // FIXME: handle Writers!
                 if (this.parent._isUpstream(a)) {
                     deps.add(a);
                 }

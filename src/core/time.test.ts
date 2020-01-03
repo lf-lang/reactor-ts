@@ -1,4 +1,4 @@
-import {TimeInterval, TimeUnit, TimeInstant, UnitBasedTimeInterval} from "../src/time";
+import {TimeInterval, TimeUnit, TimeInstant, UnitBasedTimeInterval} from "./time";
 
 /**
  * Test of helper functions for time in reactors

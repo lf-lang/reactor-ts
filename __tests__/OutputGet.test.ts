@@ -1,5 +1,5 @@
-import {OutPort, App, Timer, Reaction, Writable} from '../reactor';
-import {TimeInterval} from "../time";
+import {OutPort, App, Timer, Reaction, Writable} from '../src/core/reactor';
+import {TimeInterval} from "../src/core/time";
 
 class OutputGetTest extends App {
 

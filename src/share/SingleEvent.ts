@@ -1,7 +1,6 @@
-'use strict';
 
-import {Reactor, OutPort, Reaction, Timer, Writable, Variable, VarList} from '../reactor';
-export class ProduceOutput<T, S> extends Reaction<T> {
+import {Reactor, OutPort, Reaction, Timer, Writable, Variable, VarList} from '../core/reactor';
+class ProduceOutput<T, S> extends Reaction<T> {
 
     constructor(parent: Reactor, trigs:Variable[], args: VarList<T>, private payload:S) {
         super(parent, trigs, args);

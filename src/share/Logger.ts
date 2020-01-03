@@ -1,6 +1,6 @@
-import {Reactor, InPort, Reaction, Variable, VarList} from '../reactor';
+import {Reactor, InPort, Reaction, Variable, VarList} from '../core/reactor';
 
-export class Print<T> extends Reaction<T> {
+class Print<T> extends Reaction<T> {
 
     expected: any;
 

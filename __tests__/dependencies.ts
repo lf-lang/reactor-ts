@@ -1,6 +1,5 @@
-import {TimeInstant} from '../src/time';
-import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/util';
-import {Reactor, Reaction, Priority, App} from '../src/reactor';
+import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet} from '../src/core/util';
+import {Reactor, Reaction, Priority, App} from '../src/core/reactor';
 
 class DummyReaction<T> extends Reaction<T> {
     

@@ -1,4 +1,4 @@
-import {Reactor, OutPort, InPort, App} from "../src/reactor";
+import {Reactor, OutPort, InPort, App} from "../src/core/reactor";
 
     class MyActor extends Reactor {
      
