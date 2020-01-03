@@ -23,19 +23,6 @@ describe('time representation', function () {
     const oneThousandMS: TimeInterval = new UnitBasedTimeInterval(1000, TimeUnit.msec);
     const aboutTenYears: TimeInterval = new UnitBasedTimeInterval(365 * 10, TimeUnit.day);
 
-    //NumericTimeIntervals
-    // const numFiveSeconds: NumericTimeInterval = timeIntervalToNumeric(fiveSeconds);
-    // const numFortyTwoDays: NumericTimeInterval = timeIntervalToNumeric(fortyTwoDays);
-    // const numFiveSFiveUS: NumericTimeInterval = timeIntervalToNumeric(fiveSFiveUS);
-    // const numThreeHundredUS: NumericTimeInterval = timeIntervalToNumeric(threeHundredUS);
-    // const numSevenPointFiveBillNS: NumericTimeInterval = timeIntervalToNumeric(sevenPointFiveBillNS);
-    // const numTwoHundredFiftyMillMS: NumericTimeInterval = timeIntervalToNumeric(twoHundredFiftyMillMS);
-    // const numFiveHundredMilNS: NumericTimeInterval = timeIntervalToNumeric(fiveHundredMilNS);
-    // const numOneThousandMS: NumericTimeInterval = timeIntervalToNumeric(oneThousandMS);
-    // const numAboutTenYears: NumericTimeInterval = timeIntervalToNumeric(aboutTenYears);
-
-    // const zeroNumeric: NumericTimeInterval = [0, 0];
-
     //TimeInstants
     const tiFiveSeconds0:TimeInstant = new TimeInstant(fiveSeconds, 0);
     const tiFiveSeconds1:TimeInstant = new TimeInstant(fiveSeconds , 1);
@@ -181,6 +168,20 @@ describe('time representation', function () {
         expect(new TimeInstant(oneThousandMS, 0).getLaterTime(straightZero).isSimultaneousWith(new TimeInstant(oneThousandMS, 0))).toBeTruthy();
     });
 
+    it('getNanoTime', function() {
+        expect(fiveSeconds.getNanoTime()).toEqual("5s");
+        expect(straightZero.getNanoTime()).toEqual("0s");
+        expect(fiveSFiveUS.getNanoTime()).toEqual("5000005u");
+        expect(fortyTwoDays.getNanoTime()).toEqual("3628800s");
+        expect(threeHundredUS.getNanoTime()).toEqual("300u");
+        expect(sevenPointFiveBillNS.getNanoTime()).toEqual("7500m");
+        expect(twoHundredFiftyMillMS.getNanoTime()).toEqual("250000s");
+        expect(fiveHundredMilNS.getNanoTime()).toEqual("500m");
+        expect(oneThousandMS.getNanoTime()).toEqual("1s");
+        expect(aboutTenYears.getNanoTime()).toEqual("315360000s");
+    
+    })
+
     // it('numericTimeDifference' , function () {
     //     expect(numericTimeDifference(numFortyTwoDays, numFiveHundredMilNS, )).toStrictEqual([42 * 24 * 60 * 60 -1 , 500000000 ]);
     //     expect(numericTimeDifference(numFiveSFiveUS, numFiveSFiveUS, )).toStrictEqual(zeroNumeric);
@@ -222,6 +223,11 @@ describe('time representation', function () {
     expect(() => {
         expect(new TimeInterval(4.3, 2.1));
     }).toThrowError()
+
+    expect(() => {
+        expect(new TimeInterval(2,1).subtract(new TimeInterval(4, 3)));
+    }).toThrowError()
+
 
     //     expect(() => {
     //         expect(numericTimeMultiple(numFortyTwoDays, -7)).toStrictEqual([0, 0 ]);

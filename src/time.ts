@@ -149,12 +149,49 @@ export class TimeInterval {
      * further information.
      */
     public getNanoTime(): string {
-        let nanoSecString = this.nanoseconds.toString();
-        let padding = "";
-        for (let i = 0; i < 9 - nanoSecString.length; i++) {
-            padding += "0";
-        }
-        return this.seconds.toString() + padding + nanoSecString + "n"; 
+        // Unit specifiers are:
+
+        //  s = seconds
+        //  m = milliseconds
+        //  u = microseconds
+        //  n = nanoseconds
+
+        if (this.nanoseconds == 0) {
+            return this.seconds.toString() + "s";
+        } else if (this.nanoseconds % 1000000 == 0) {
+            let milliSecString = (this.nanoseconds / 1000000).toString();
+            if (this.seconds == 0) {
+                return milliSecString + "m";
+            } else {
+                let padding = "";
+                for (let i = 0; i < 3 - milliSecString.length; i++) {
+                    padding += "0";
+                }
+                return this.seconds.toString() + padding + milliSecString + "m";
+            }
+        } else if (this.nanoseconds % 1000 == 0) {
+            let microSecString = (this.nanoseconds/1000).toString();
+            if (this.seconds == 0) {
+                return microSecString + "u";
+            } else {
+                let padding = "";
+                for (let i = 0; i < 6 - microSecString.length; i++) {
+                    padding += "0";
+                }
+                return this.seconds.toString() + padding + microSecString + "u";
+            }
+        } else {
+            let nanoSecString = this.nanoseconds.toString();
+            if (this.seconds == 0) {
+                return nanoSecString + "n";
+            } else {
+                let padding = "";
+                for (let i = 0; i < 9 - nanoSecString.length; i++) {
+                    padding += "0";
+                }
+                return this.seconds.toString() + padding + nanoSecString + "n";
+            }
+        } 
     }
 }
 
