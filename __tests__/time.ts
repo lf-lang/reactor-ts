@@ -172,6 +172,7 @@ describe('time representation', function () {
         expect(fiveSeconds.getNanoTime()).toEqual("5s");
         expect(straightZero.getNanoTime()).toEqual("0s");
         expect(fiveSFiveUS.getNanoTime()).toEqual("5000005u");
+        expect(new TimeInterval(5, 5000000).getNanoTime()).toEqual("5005m");
         expect(fortyTwoDays.getNanoTime()).toEqual("3628800s");
         expect(threeHundredUS.getNanoTime()).toEqual("300u");
         expect(sevenPointFiveBillNS.getNanoTime()).toEqual("7500m");
