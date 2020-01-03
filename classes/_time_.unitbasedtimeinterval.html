@@ -72,7 +72,9 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A time interval must be an integer accompanied by a time unit. Decimals or negative values yield errors.</p>
+						<p>Subclass of <code>TimeInterval</code> that is constructed on the basis of a value
+							accompanied with a time unit. The value is a <code>number</code> that is required to be
+						a positive integer. The time unit must be a member of the <code>TimeUnit</code> enum.</p>
 					</div>
 				</div>
 			</section>
@@ -136,16 +138,35 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L201">time.ts:201</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L202">time.ts:202</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Construct a new time interval on the basis of a value accompanied with
+										a time unit. An error is thrown when the given value is negative,
+									non-integer, or both.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>value: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>A number (which must be a positive integer) that denotes
+												the length of the specified time interval, expressed as a multiple of
+											the given time unit.</p>
+										</div>
+									</div>
 								</li>
 								<li>
 									<h5>unit: <a href="../enums/_time_.timeunit.html" class="tsd-signature-type">TimeUnit</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>The unit of measurement that applies to the given value.</p>
+										</div>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_time_.unitbasedtimeinterval.html" class="tsd-signature-type">UnitBasedTimeInterval</a></h4>
@@ -162,7 +183,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#nanoseconds">nanoseconds</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L53">time.ts:53</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L53">time.ts:53</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -178,7 +199,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#seconds">seconds</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L53">time.ts:53</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L53">time.ts:53</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -193,9 +214,14 @@
 					<div class="tsd-signature tsd-kind-icon">unit<span class="tsd-signature-symbol">:</span> <a href="../enums/_time_.timeunit.html" class="tsd-signature-type">TimeUnit</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L203">time.ts:203</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L213">time.ts:213</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The unit of measurement that applies to the given value.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="value" class="tsd-anchor"></a>
@@ -203,9 +229,16 @@
 					<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L203">time.ts:203</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L213">time.ts:213</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A number (which must be a positive integer) that denotes
+								the length of the specified time interval, expressed as a multiple of
+							the given time unit.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -221,7 +254,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#add">add</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L64">time.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L64">time.ts:64</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -254,13 +287,14 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#getnanotime">getNanoTime</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L151">time.ts:151</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L152">time.ts:152</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Get a string representation of this time interval that is compatible
-									with <code>nanotimer</code>.</p>
+										with <code>nanotimer</code>. Unit specifiers are <code>s</code> for seconds, <code>m</code> for
+									milliseconds <code>u</code> for microseconds, and <code>n</code> for nanoseconds.</p>
 								</div>
 								<dl class="tsd-comment-tags">
 									<dt>see</dt>
@@ -284,7 +318,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#isequalto">isEqualTo</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L104">time.ts:104</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L104">time.ts:104</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -317,7 +351,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#issmallerthan">isSmallerThan</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L128">time.ts:128</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L128">time.ts:128</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -357,7 +391,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#iszero">isZero</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L112">time.ts:112</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L112">time.ts:112</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -380,7 +414,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#subtract">subtract</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L83">time.ts:83</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L83">time.ts:83</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -413,7 +447,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="_time_.timeinterval.html">TimeInterval</a>.<a href="_time_.timeinterval.html#tostring">toString</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L232">time.ts:232</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L241">time.ts:241</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">

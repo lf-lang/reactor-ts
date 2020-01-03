@@ -72,8 +72,10 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A superdense time instant, represented as a pair. The first element of the pair represents
-						elapsed time as a NumericTimeInterval. The second element denotes the micro step index.</p>
+						<p>A superdense time instant, represented as a time interval <code>time</code> (i.e.,
+							time elapsed since Epoch) paired with a microstep index to keep track of
+							iterations in superdense time. For each such iteration, <code>time</code> remains
+						the same, but <code>microstep</code> is incremented.</p>
 					</div>
 				</div>
 			</section>
@@ -128,16 +130,28 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L244">time.ts:244</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L258">time.ts:258</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>timeSinceEpoch: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Time elapsed since Epoch.</p>
+										</div>
+									</div>
 								</li>
 								<li>
 									<h5>microstep: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Superdense time index.</p>
+										</div>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
@@ -153,9 +167,14 @@
 					<div class="tsd-signature tsd-kind-icon">microstep<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L246">time.ts:246</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L265">time.ts:265</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Superdense time index.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="time" class="tsd-anchor"></a>
@@ -163,9 +182,14 @@
 					<div class="tsd-signature tsd-kind-icon">time<span class="tsd-signature-symbol">:</span> <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L244">time.ts:244</a></li>
+							<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L258">time.ts:258</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Time elapsed since Epoch.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -180,13 +204,23 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L262">time.ts:262</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L299">time.ts:299</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get a new time instant that represents this time instant plus
+										the given delay. The <code>microstep</code> of this time instant is ignored;
+									the returned time instant always has a <code>microstep</code> of zero.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>delay: <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time interval to add to this time instant.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
@@ -203,9 +237,15 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L266">time.ts:266</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L307">time.ts:307</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get a new time instant that has the same <code>time</code> but a <code>microstep</code> that
+									is incremented by one relative to this time instant&#39;s <code>microstep</code>.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h4>
 						</li>
 					</ul>
@@ -214,19 +254,30 @@
 					<a name="gettimedifference" class="tsd-anchor"></a>
 					<h3>get<wbr>Time<wbr>Difference</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Time<wbr>Difference<span class="tsd-signature-symbol">(</span>that<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Time<wbr>Difference<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L270">time.ts:270</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L319">time.ts:319</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Obtain a time interval that represents the absolute (i.e., positive)
+										time difference between this time interval and the time interval given
+									as a parameter.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>that: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+									<h5>other: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time instant for which to compute the absolute difference
+										with this time instant.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
@@ -237,19 +288,30 @@
 					<a name="isearlierthan" class="tsd-anchor"></a>
 					<h3>is<wbr>Earlier<wbr>Than</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">is<wbr>Earlier<wbr>Than<span class="tsd-signature-symbol">(</span>that<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Earlier<wbr>Than<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L250">time.ts:250</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L276">time.ts:276</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return <code>true</code> if this time instant is earlier than the time instant
+										given as a parameter, false otherwise. For two time instants with
+										an equal <code>time</code>, one instant is earlier than the other if its
+									<code>microstep</code> is less than the <code>microstep</code> of the other.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>that: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+									<h5>other: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time instant to compare against this one.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -260,19 +322,29 @@
 					<a name="issimultaneouswith" class="tsd-anchor"></a>
 					<h3>is<wbr>Simultaneous<wbr>With</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">is<wbr>Simultaneous<wbr>With<span class="tsd-signature-symbol">(</span>that<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Simultaneous<wbr>With<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L256">time.ts:256</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L288">time.ts:288</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return <code>true</code> if this time instant is simultaneous with the time
+										instant given as a parameter, false otherwise. Both <code>time</code> and
+									<code>microstep</code> must be equal for two time instants to be simultaneous.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>that: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+									<h5>other: <a href="_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time instant to compare against this one.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -289,9 +361,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/543b1dc/src/time.ts#L278">time.ts:278</a></li>
+									<li>Defined in <a href="https://github.com/lhstrh/wirewrap/blob/8c4979e/src/time.ts#L330">time.ts:330</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return a human-readable string presentation of this time instant.</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
 						</li>
 					</ul>
