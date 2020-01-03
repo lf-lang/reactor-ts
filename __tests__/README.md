@@ -1,1 +1,1 @@
-This directory contains unit tests.
+This directory integration tests.
