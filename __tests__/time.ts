@@ -141,27 +141,6 @@ describe('time representation', function () {
         expect(tiOneNano1.isSimultaneousWith(tiOneNano1)).toBeTruthy();
     });
 
-    // /**
-    //  * Convert between time expressed as a number
-    //  * (as obtained from the microtime module) to a numericTimeInterval
-    //  */
-    // it('microtimeToNumeric', function () {
-    //     expect( microtimeToNumeric(0)).toStrictEqual(zeroNumeric);
-    //     expect( microtimeToNumeric(300)).toStrictEqual(numThreeHundredUS);
-    //     expect( microtimeToNumeric(5000000)).toStrictEqual(numFiveSeconds);
-    //     expect( microtimeToNumeric(5000005)).toStrictEqual(numFiveSFiveUS);
-    // });
-
-
-
-    // it('numericTimeSum' , function () {
-    //     expect(numericTimeSum(numFiveHundredMilNS, numFortyTwoDays)).toStrictEqual([42 * 24 * 60 * 60, 500000000 ]);
-    //     expect(numericTimeSum(numFiveHundredMilNS, numFiveHundredMilNS)).toStrictEqual([1, 0 ]);
-        
-    //     expect(numericTimeSum(numOneThousandMS, zeroNumeric)).toStrictEqual(numOneThousandMS);
-    // });
-
-
     it('getLaterTime' , function () {
         expect(new TimeInstant(fiveHundredMilNS, 0).getLaterTime(fortyTwoDays).isSimultaneousWith(new TimeInstant(new TimeInterval(42 * 24 * 60 * 60, 500000000), 0))).toBeTruthy();
         expect(new TimeInstant(fiveHundredMilNS, 0).getLaterTime(fiveHundredMilNS).isSimultaneousWith(new TimeInstant(new TimeInterval(1, 0), 0))).toBeTruthy();
@@ -190,67 +169,18 @@ describe('time representation', function () {
         expect(tiOne1.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeInterval(4));
     });
 
-    // it('numericTimeDifference' , function () {
-    //     expect(numericTimeDifference(numFortyTwoDays, numFiveHundredMilNS, )).toStrictEqual([42 * 24 * 60 * 60 -1 , 500000000 ]);
-    //     expect(numericTimeDifference(numFiveSFiveUS, numFiveSFiveUS, )).toStrictEqual(zeroNumeric);
-    //     expect(numericTimeDifference(numFiveSeconds, numThreeHundredUS, )).toStrictEqual([ 4 , 999700000 ]);
-
-    //     expect(numericTimeDifference(numFiveSeconds, zeroNumeric, )).toStrictEqual(numFiveSeconds);
-    //     expect(numericTimeDifference(zeroNumeric, zeroNumeric, )).toStrictEqual(zeroNumeric);
-        
-    //     expect(() => {
-    //         numericTimeDifference(zeroNumeric, numFiveSeconds);
-    //     }).toThrowError()
-
-    //     expect(() => {
-    //         numericTimeDifference(numThreeHundredUS, numFiveSeconds);
-    //     }).toThrowError()
-
-    // });
-
-    // it('sum and difference', function () {
-    //     expect(numericTimeDifference(numericTimeSum(numFiveHundredMilNS, numFortyTwoDays ),
-    //         numFiveHundredMilNS)).toStrictEqual(numFortyTwoDays);
-    //     expect(numericTimeDifference(numericTimeSum(numFiveHundredMilNS, numFortyTwoDays ),
-    //         numFortyTwoDays)).toStrictEqual(numFiveHundredMilNS);
-    //     expect(numericTimeDifference(numericTimeSum(numTwoHundredFiftyMillMS, numOneThousandMS ),
-    //         numOneThousandMS)).toStrictEqual(numTwoHundredFiftyMillMS);
-    //     expect(numericTimeDifference(numericTimeSum(numTwoHundredFiftyMillMS, numOneThousandMS ),
-    //         numTwoHundredFiftyMillMS)).toStrictEqual(numOneThousandMS);
-    // });
-
-    // it('numericTimeMultiple', function () {
-    //     expect(numericTimeMultiple(numFiveHundredMilNS, 3)).toStrictEqual([1, 500000000 ]);
-    //     expect(numericTimeMultiple(numFiveHundredMilNS, 10)).toStrictEqual([5, 0 ]);
-    //     expect(numericTimeMultiple(numThreeHundredUS, 1000)).toStrictEqual([0, 300000000 ]);
-        
-    //     expect(numericTimeMultiple(zeroNumeric, 10)).toStrictEqual([0, 0 ]);
-    //     expect(numericTimeMultiple(zeroNumeric, 0)).toStrictEqual([0, 0 ]);
-    //     expect(numericTimeMultiple(numFortyTwoDays, 0)).toStrictEqual([0, 0 ]);
-
-    expect(() => {
-        expect(new TimeInterval(4.3, 2.1));
-    }).toThrowError()
-
-    expect(() => {
-        expect(new UnitBasedTimeInterval(-1, TimeUnit.week));
-    }).toThrowError()
-
-    expect(() => {
-        expect(new TimeInterval(2,1).subtract(new TimeInterval(4, 3)));
-    }).toThrowError()
-
+    it('errors', function() {
+        expect(() => {
+            expect(new TimeInterval(4.3, 2.1));
+        }).toThrowError()
     
+        expect(() => {
+            expect(new UnitBasedTimeInterval(-1, TimeUnit.week));
+        }).toThrowError()
     
-    //     expect(() => {
-    //         expect(numericTimeMultiple(numFortyTwoDays, -7)).toStrictEqual([0, 0 ]);
-    //     }).toThrowError()
-    // });
-
-    // it('numericTimeEquals', function () {
-    //     expect(numericTimeEquals( zeroNumeric, zeroNumeric )).toBe(true);
-    //     expect(numericTimeEquals( zeroNumeric, numFortyTwoDays )).toBe(false);
-    // });
+        expect(() => {
+            expect(new TimeInterval(2,1).subtract(new TimeInterval(4, 3)));
+        }).toThrowError()
+    });
 
 });
-
