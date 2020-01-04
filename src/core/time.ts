@@ -297,7 +297,7 @@ export class TimeInstant {
      * @param delay The time interval to add to this time instant.
      */
     getLaterTime(delay: TimeInterval) : TimeInstant {
-        return new TimeInstant(delay.add(this.time), 0);   
+        return new TimeInstant(delay.add(this.time), 0);
     }
 
     /**

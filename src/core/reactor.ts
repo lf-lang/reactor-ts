@@ -357,7 +357,7 @@ class Event<T> implements PrioritySetNode<TimeInstant> {
 
     updateIfDuplicateOf(node: PrioritySetNode<TimeInstant> | undefined) {
         if (node && node instanceof Event) {
-            if (this.trigger === node.trigger && this.time == node.time) {
+            if (this.trigger === node.trigger && this.time.isSimultaneousWith(node.time)) {
                 node.value = this.value; // update the value
                 return true;
             } 
@@ -365,9 +365,9 @@ class Event<T> implements PrioritySetNode<TimeInstant> {
         return false;
     }
 
-    getID(): [Variable, TimeInstant] {
-        return [this.trigger, this.time];
-    }
+    // getID(): [Variable, TimeInstant] {
+    //     return [this.trigger, this.time];
+    // }
 
     getNext(): Event<unknown> | undefined {
         return this.next;
@@ -609,7 +609,7 @@ export class Timer extends Descendant implements Readable<TimeInstant> {
         }
     }
 
-    public toString(){
+    public toString() {
         return "Timer from " + this.parent.getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
     }
 }
