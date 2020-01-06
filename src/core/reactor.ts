@@ -656,7 +656,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * for further information.
      * @see Reaction
      */
-    readonly check = <X extends Variable[]>(...args: X) => args;
+    readonly check = <X extends (Variable | { [name: string]: Variable})[]>(...args: X) => args;
 
     /** Reactions added by the implemented of derived reactor classes. */
     protected _reactions: Reaction<unknown>[] = [];
