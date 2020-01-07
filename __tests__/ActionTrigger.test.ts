@@ -23,11 +23,11 @@ export class ActionTrigger extends Reactor {
              * @override
              */
             //@ts-ignore
-            react(a1: Schedulable<string>){
+            react(a1: Schedulable<string>) {
                 a1.schedule(0, "goodbye");
                 console.log("Scheduling the overridden action in ScheduleOverriddenAction to trigger RespondToAction");
             }
-        }(this, this.check(this.t1), this.check(this.getSchedulable(this.a1), this.a2)));
+        }(this, this.check(this.t1), this.check(this.getSchedulable(this.a1), {foo: this.a1})));
         
         this.addReaction(new class<T> extends Reaction<T> {
             /**

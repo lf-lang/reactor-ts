@@ -27,7 +27,7 @@ const NanoTimer = require('nanotimer');
  * on a variable, it will return true if the value has been set at the 
  * current logical time, and false otherwise.
  */
-export type Variable = Readable<unknown> | Writable<unknown>;
+export type Variable = Readable<unknown> | Writable<unknown> |  { [name: string]: (Readable<unknown> | Writable<unknown>)};
 
 /**
  * A number that indicates a reaction's position with respect to other
@@ -37,7 +37,7 @@ export type Variable = Readable<unknown> | Writable<unknown>;
 export type Priority = number;
 
 /**
- * Conditional type for lists of variables. If the type variable `T` is
+ * Conditional type for lists of variables. If the type variable `T` is 
  * inferred to be a subtype of `Variable[]`, it will yield that type, 
  * `never` otherwise.
  */
@@ -202,7 +202,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
         var antideps: Set<Variable> = new Set();
         var vars = new Set();
         for (let a of this.args.concat(this.trigs)) {
-            if (a instanceof Port) { // FIXME: handle Writers!
+            if (a instanceof Port) { // FIXME: handle Writers and hierarchical references!
                 if (this.parent._isUpstream(a)) {
                     deps.add(a);
                 }
@@ -645,7 +645,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     private _shutdownActions: Set<Action<unknown>> = new Set();
 
     /**
-     * Generic helper function that turns a list of rest parameters into a tuple.
+     * Generic helper function that turns a list of rest parameters into a VarList.
      * It is necessary to pass `args` given to the constructor of a reaction
      * through this function in order to ensure type safety. Otherwise, the 
      * inferred type will collapse to `Array<T>` where `T` is the union type 
@@ -656,7 +656,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * for further information.
      * @see Reaction
      */
-    readonly check = <X extends (Variable | { [name: string]: Variable})[]>(...args: X) => args;
+    readonly check = <X extends Variable[]>(...args: X) => args;
 
     /** Reactions added by the implemented of derived reactor classes. */
     protected _reactions: Reaction<unknown>[] = [];
