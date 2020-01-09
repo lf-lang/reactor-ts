@@ -12,7 +12,7 @@ class SETest extends App {
     constructor(timeout: TimeInterval, success: ()=> void, failure: ()=>void ) {
         super(timeout, success, failure);
         this.setAlias("SETest");
-        this.singleEvent = new SingleEvent(this, "SingleEvent");
+        this.singleEvent = new SingleEvent(this, "foo");
         this.logger = new Logger(this, "foo");
 
         //Connect output of singleEvent to input of logger.
