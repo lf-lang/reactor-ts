@@ -239,7 +239,7 @@ export class UnitBasedTimeInterval extends TimeInterval {
      * originally created with.
      */
     public toString(): string {
-        return this.value + " " + this.unit;
+        return this.value + " " + TimeUnit[this.unit];
     }
 }
 
