@@ -480,7 +480,7 @@ export class Action<T> extends Descendant implements Readable<T> {
     }
 
     public toString(){
-        return "Action of " + this.parent;
+        return this.getFullyQualifiedName();
     }
 
     public isSchedulable() {
@@ -747,6 +747,8 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             // Record this trigger as a dependency.
             if (t instanceof Port) {
                 this._addDependency(t, reaction);
+            } else {
+                console.log(">>>>>>>> not a dependency:" + t);
             }
         }
 
@@ -845,17 +847,20 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             console.log("No reactions to trigger.")
         }
         // Update all ports that the src is connected to.
-        var dests = this._destinationPorts.get(src); // FIXME: obtain set of writable object from this map
-        if (dests != undefined) {
-            for (let d of dests) {
-                // The following is type safe because we're doing
-                // type checks in connect().
-                //@ts-ignore
-                d.update(this.getWritable(d), value);
+        if (this.parent && this.parent instanceof Reactor) {
+            var dests = this.parent._destinationPorts.get(src); // FIXME: obtain set of writable object from this map
+            if (dests != undefined) {
+                for (let d of dests) {
+                    // The following is type safe because we're doing
+                    // type checks in connect().
+                    //@ts-ignore
+                    d.update(this.getWritable(d), value);
+                }
+            } else {
+                console.log("No downstream receivers.");
             }
-        } else {
-            console.log("No downstream receivers.")
         }
+        
     }
 
     public triggerReactions(e: Event<unknown>) {
@@ -1138,7 +1143,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
 
     /**
-     * Iterate through this reactor's attributes and return its timers.
+     * Set all the timers of this reactor.
      */
     public _setTimers(): void {
         console.log("Setting timers for: " + this);
@@ -1151,7 +1156,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     /**
-     * Iterate through this reactor's attributes and return its timers.
+     * Unset all the timers of this reactor.
      */
     public _unsetTimers(): void {
         // console.log("Getting timers for: " + this)
@@ -1731,7 +1736,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._reactionQ.push(r);
     }
 
-
     public _start():void {
         // Recursively check the parent attribute for this and all contained reactors and
         // and components, i.e. ports, actions, and timers have been set correctly.
@@ -1744,7 +1748,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         } else {
             throw new Error("Cycle in reaction graph.");
         }
-
+        console.log(apg.toString());
         this._startOfExecution = getCurrentPhysicalTime();
         this._currentLogicalTime = this._startOfExecution;
         if(this._executionTimeout != null) {
