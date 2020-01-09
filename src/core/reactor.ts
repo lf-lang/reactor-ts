@@ -17,6 +17,14 @@ import {TimeInterval, TimeInstant, Origin, getCurrentPhysicalTime} from './time'
  */
 const NanoTimer = require('nanotimer');
 
+/**
+ * Logging facilty that has multiple levels of severity.
+ * Set the `LOG` environment variable to the desired log
+ * level prior to running node. For example:
+ * `LOG=info && node ./myapp.js`
+ */
+var log = require('ulog')('reactor');
+
 //---------------------------------------------------------------------//
 // Types and Helper Functions                                          //
 //---------------------------------------------------------------------//
@@ -1336,14 +1344,14 @@ export abstract class Port<T> extends Descendant implements Readable<T> {
             // Only update the value if the proxy has a reference
             // to this port. If it does, the type variables must
             // match; no further checks are needed.
-            console.log("Updating value of " + this.getFullyQualifiedName());
+            log.debug("Updating value of " + this.getFullyQualifiedName());
             //@ts-ignore
             this.value = value;
-            console.log(">> parent: " + this.parent);
+            log.debug(">> parent: " + this.parent);
             this.tag = this.parent.util.getCurrentLogicalTime();
             this.parent._propagateValue(this); // FIXME: should this be a utility function?
         } else {
-            console.log("WARNING: port update denied.");
+            log.warn("WARNING: port update denied.");
         }
     }
 
