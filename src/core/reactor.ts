@@ -200,7 +200,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
     }
 
     public toString(): string {
-        return this.parent.getName() + "[" + this.parent.getIndex(this) + "]";
+        return this.parent.getFullyQualifiedName() + "[" + this.parent.getIndex(this) + "]";
     }
 
     getDependencies(): [Set<Variable>, Set<Variable>] { 
@@ -703,12 +703,13 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * @param port The port to look up its destinations for.
      */
     public getDestinations(port: Port<unknown>): Set<Port<unknown>> {
-        var dests = (this.parent as Reactor)._destinationPorts.get(port);
-        if (dests) {
-            return dests;
-        } else {
-            return new Set();
+        if (this.parent) {
+            let dests = (this.parent as Reactor)._destinationPorts.get(port);
+            if (dests) {
+                return dests;
+            }    
         }
+        return new Set();
     }
 
     /**
@@ -1615,7 +1616,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      */
     constructor(executionTimeout: TimeInterval | null = null, public success: ()=> void = () => {}, public failure: ()=>void = () => {}) {
         super(null);
-        App.instances.add(this);
+        //App.instances.add(this);
         this._executionTimeout = executionTimeout;
         // NOTE: these will be reset properly during startup.
         this._currentLogicalTime = new TimeInstant(new TimeInterval(0), 0);
@@ -1624,22 +1625,22 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
     static instances: Set<App> = new Set(); // FIXME: we have to remove the instance from the set when we're done with it, or this will create a memory leak.
 
-    getName(): string {
-        var alias = super.getName();
-        var count = 0;
-        var suffix = "";
-        if (alias == this.constructor.name) {
-            for (let a of App.instances) {
-                if (a !== this && alias === a.constructor.name) {
-                    count++;
-                }
-            }
-        }
-        if (count > 0) {
-            suffix = "(" + count + ")";
-        }
-        return alias + suffix;
-    }
+    // getName(): string {
+    //     var alias = super.getName();
+    //     var count = 0;
+    //     var suffix = "";
+    //     if (alias == this.constructor.name) {
+    //         for (let a of App.instances) {
+    //             if (a !== this && alias === a.constructor.name) {
+    //                 count++;
+    //             }
+    //         }
+    //     }
+    //     if (count > 0) {
+    //         suffix = "(" + count + ")";
+    //     }
+    //     return alias + suffix;
+    // }
 
     /**
      * Handle the next event on the event queue.
