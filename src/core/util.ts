@@ -1,5 +1,3 @@
-import { LOADIPHLPAPI } from "dns";
-
 const ulog = require("ulog");
 
 /**
@@ -42,6 +40,8 @@ export interface PrioritySetNode<P> {
 export interface PrecedenceGraphNode<P> {
     setPriority(priority: P): void;
     toString(): string;
+    // getSTPUntil(): TimeInstant
+    // setSTPUntil(): TimeInstant
 }
 
 /**
@@ -120,7 +120,11 @@ export class PrioritySet<P> {
 export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
 
   protected graph: Map<T, Set<T>> = new Map(); // Map vertices to set of dependencies
+  // FIXME: if we add a second map dependentNodes, we can cut down on the algorithmic
+  // complexity of the sorting algorithms. Not really a big deal now because the graphs
+  // are small, and sorting is not expected to happen often during the course of execution.
   protected numberOfEdges = 0;
+  
   //protected startNodes: Set<T> = new Set(); 
 
   merge(apg: this) {
@@ -261,27 +265,34 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     var dot = "digraph G {";
     var start: Array<T> = new Array();
     var graph = this.graph;
-    
-    function buildChain(node: T, visited:Set<T>):string {
+    var visitedInGraph: Set<T> = new Set();
+    function buildChain(node: T, visitedInChain:Set<T>):string {
       let dot = "";
       let match = false;
-
       // Mark current node as visited.
-      visited.add(node);
+      visitedInChain.add(node);
+      visitedInGraph.add(node);
       for (let [v,e] of graph) {
         if (e.has(node)) {
-          // Antidependency found.
+          // Found next link in the chain.
           let deps = graph.get(node);
           if (match || !deps || deps.size == 0) {
             // Start a new line when this is not the first match,
             // or when the current node is a start node.
             dot += "\n";
-            visited = new Set();
+            visitedInChain = new Set();
           }
           dot += '"' + node.toString() + '"'
-          if (!visited.has(v)) {
-            dot += "->";
-            dot += buildChain(v, visited);
+          if (!visitedInChain.has(v)) {
+            if (!visitedInGraph.has(v)) {
+              dot += "->";
+              dot += buildChain(v, visitedInChain);
+            } else {
+              // End the recursion.
+              dot += "->";
+              dot += '"' + v.toString() + '";';
+              Log.debug("Overlapping chain detected.");  
+            }
           } else {
             // End the recursion.
             dot += "->";
@@ -295,15 +306,14 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
           dot += '"' + node.toString() + '"' + ";";
       }
       return dot;
-    }  
-  
+    }
+
     for (const [v, e] of this.graph) {
       if (!e || e.size == 0) {
         start.push(v);
       }
     }
     for (let s of start) {
-      Log.debug("startnode: " + s);
       dot += buildChain(s, new Set());
     }
     dot += "\n}"
@@ -311,6 +321,8 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
   }
 
 }
+
+
 
 /**
  * Log levels for `Log`.

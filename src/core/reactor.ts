@@ -96,6 +96,8 @@ export interface Schedulable<T> {
 export interface Writable<T> extends Readable<T> {
     set: (value: T | null) => void;
     isProxyOf: (port: Port<any>) => boolean;
+    getPort(): Port<T>;
+    toString(): string;
 }
 
 /**
@@ -213,6 +215,12 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
                 if (this.parent._isDownstream(a)) {
                     antideps.add(a);
                 }
+            } else if (a instanceof Writer) {
+                if (this.parent._isDownstream(a.getPort())) {
+                    antideps.add(a.getPort());
+                }
+            } else {
+                Log.debug("Found argument that is not a Port or Writer: " + a); // Scheduler
             }
         }
         return [deps, antideps];
@@ -695,7 +703,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * @param port The port to look up its destinations for.
      */
     public getDestinations(port: Port<unknown>): Set<Port<unknown>> {
-        var dests = this._destinationPorts.get(port);
+        var dests = (this.parent as Reactor)._destinationPorts.get(port);
         if (dests) {
             return dests;
         } else {
@@ -704,12 +712,13 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     /**
-     * Return the set of downstream ports that this reactor connects 
-     * to the given port.
-     * @param port The port to look up its destinations for.
+     * Return the upstream port that this reactor connects to the given port.
+     * @param port The port to look up its source for.
      */
     public getSource(port: Port<unknown>): Port<unknown>|undefined {
-        return this._sourcePort.get(port);
+        if (this.parent) {
+            return (this.parent as Reactor)._sourcePort.get(port); // FIXME: weird cast
+        }
     }
 
     /**
@@ -783,6 +792,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             if (a instanceof Scheduler) {
                 // antidep
             }
+            if (a instanceof Writer) {
+                this._addAntiDependency(a.getPort(), reaction);
+            }
         }
 
         return reaction;
@@ -808,12 +820,16 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             for (let d of deps[0]) {
                 if (d instanceof Port) {
                     graph.addEdges(r, d.getUpstreamReactions());
+                } else {
+                    Log.error("Found dependency that is not a port")
                 }
             }
             // look downstream
             for (let d of deps[1]) {
                 if (d instanceof Port) {
                     graph.addBackEdges(r, d.getDownstreamReactions());
+                } else {
+                    Log.error("Found antiependency that is not a port")
                 }
             }
             prev = r;
@@ -827,6 +843,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         let s = this._dependentReactions.get(port);
         if (s == null) {
             s = new Set();    
+            this._dependentReactions.set(port, s);
         }
         s.add(reaction);
     }
@@ -834,7 +851,8 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     private _addAntiDependency(port: Port<unknown>, reaction: Reaction<unknown>): void {
         let s = this._dependsOnReactions.get(port);
         if (s == null) {
-            s = new Set();    
+            s = new Set();
+            this._dependsOnReactions.set(port, s);    
         }
         s.add(reaction);
     }
@@ -1309,10 +1327,15 @@ export abstract class Port<T> extends Descendant implements Readable<T> {
     public getUpstreamReactions(): Set<Reaction<unknown>> {
         var reactions: Set<Reaction<unknown>> = new Set();
         var source = this.parent.getSource(this);
+        Log.debug("Finding upstream reactions for " + this);
         if (source) {
+            Log.debug(">>>");
+            // Reactions upstream (i.e., in other reactors).
             reactions = new Set([...reactions, ...source.getUpstreamReactions()]);
         }
-        reactions = new Set([...reactions, ...this.parent.getUpstreamReactions(this)]); // FIXME
+        // Reactions local (i.e., within the reactor).
+        reactions = new Set([...reactions, ...this.parent.getUpstreamReactions(this)]);
+        Log.debug("Reactions found!");
         return reactions;
     }
 
@@ -1437,6 +1460,14 @@ class Writer<T> implements Writable<T> { // NOTE: don't export this class!
         }
         return false;
     }
+
+    public getPort() {
+        return this.port;
+    }
+
+    public toString() {
+        return "Writable(" + this.port.toString() + ")";
+    }
 }
 
 class EventQueue extends PrioritySet<TimeInstant> {
@@ -1467,6 +1498,7 @@ class ReactionQueue extends PrioritySet<Priority> {
     public peek(): Reaction<unknown> {
         return super.peek() as Reaction<unknown>;
     }
+
 }
 
 export class App extends Reactor { // Perhaps make this an abstract class, like reactor; omit the name parameter.
@@ -1506,7 +1538,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         }
         
     }(this);
-
 
     /**
      * The current time, made available so actions may be scheduled relative to it.
@@ -1756,19 +1787,23 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._checkAllParents(null);
         // Recursively set the app attribute for this and all contained reactors to this.
         // Set reactions using a topological sort of the dependency graph.
+        Log.setLevel(Log.levels.DEBUG);
         var apg = this.getPrecedenceGraph();
         if (apg.updatePriorities()) {
             Log.debug("No cycles.");
         } else {
             throw new Error("Cycle in reaction graph.");
         }
-        //Log.debug(apg.toString());
+        
+        Log.debug(apg.toString());
+        Log.setLevel(Log.levels.INFO);
         this._startOfExecution = getCurrentPhysicalTime();
         this._currentLogicalTime = this._startOfExecution;
         if(this._executionTimeout != null) {
             this._endOfExecution = this._startOfExecution.getLaterTime(this._executionTimeout);
             Log.debug("Execution timeout: " + this._executionTimeout);
         }
+
         // Set in motion the execution of this program.
         this.getSchedulable(this.startup).schedule(0);
     }

@@ -1,8 +1,6 @@
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet, Log} from '../src/core/util';
 import {Reactor, Reaction, Priority, App} from '../src/core/reactor';
 
-Log.setLevel(Log.levels.DEBUG);
-
 class X<T> extends Reaction<T> {
     
     public react(...args: any[]): void {
@@ -27,7 +25,7 @@ class R extends Reactor {
     }
 }
 
-describe('Precedence Graph', () => {
+describe('Manually constructed precedence graphs', () => {
 
     var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
     var reactor = new R(new App());
@@ -240,6 +238,17 @@ describe('ReactionQ', () => {
     it('seventh pop', () => {
         let r = reactionQ.pop();
         expect(r).toBeUndefined();
+    });
+
+});
+
+describe('Automatically constructed precedence graphs', () => {
+    var reactor = new R(new App());
+    it('internal dependencies between reactions', () => {
+        expect(reactor.getPrecedenceGraph().toString()).toBe(
+`digraph G {
+"R[-2]"->"R[-1]"->"R[0]"->"R[1]"->"R[2]"->"R[3]"->"R[4]"->"R[5]"->"R[6]";
+}`);
     });
 
 });
