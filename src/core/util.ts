@@ -1,3 +1,7 @@
+import { LOADIPHLPAPI } from "dns";
+
+const ulog = require("ulog");
+
 /**
  * Utilities for the reactor runtime.
  * 
@@ -15,12 +19,12 @@ export interface PrioritySetNode<P> {
      * @param node Next element in the priority set this node is a part of.
      */
     setNext(node: PrioritySetNode<P> | undefined): void;
-
+    
     /**
      * Return the priority of this node.
      */
     getPriority(): P;
-    
+
     /**
      * Determine whether this node has priority over the given node or not.
      * @param node A node to compare the priority of this node to.
@@ -37,6 +41,7 @@ export interface PrioritySetNode<P> {
 
 export interface PrecedenceGraphNode<P> {
     setPriority(priority: P): void;
+    toString(): string;
 }
 
 /**
@@ -116,6 +121,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
 
   protected graph: Map<T, Set<T>> = new Map(); // Map vertices to set of dependencies
   protected numberOfEdges = 0;
+  //protected startNodes: Set<T> = new Set(); 
 
   merge(apg: this) {
     for (const [k, v] of apg.graph) {
@@ -250,4 +256,114 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
   nodes() {
     return this.graph.keys();
   }
+
+  toString() {
+    var dot = "digraph G {";
+    var start: Array<T> = new Array();
+    var graph = this.graph;
+    
+    function buildChain(node: T, visited:Set<T>):string {
+      let dot = "";
+      let match = false;
+
+      // Mark current node as visited.
+      visited.add(node);
+      for (let [v,e] of graph) {
+        if (e.has(node)) {
+          // Antidependency found.
+          let deps = graph.get(node);
+          if (match || !deps || deps.size == 0) {
+            // Start a new line when this is not the first match,
+            // or when the current node is a start node.
+            dot += "\n";
+            visited = new Set();
+          }
+          dot += '"' + node.toString() + '"'
+          if (!visited.has(v)) {
+            dot += "->";
+            dot += buildChain(v, visited);
+          } else {
+            // End the recursion.
+            dot += "->";
+            dot += '"' + v.toString() + '";';
+            Log.debug("Cycle detected.");
+          }
+          match = true;
+        }
+      }
+      if (!match) {
+          dot += '"' + node.toString() + '"' + ";";
+      }
+      return dot;
+    }  
+  
+    for (const [v, e] of this.graph) {
+      if (!e || e.size == 0) {
+        start.push(v);
+      }
+    }
+    for (let s of start) {
+      Log.debug("startnode: " + s);
+      dot += buildChain(s, new Set());
+    }
+    dot += "\n}"
+    return dot;
+  }
+
+}
+
+/**
+ * Log levels for `Log`.
+ * @see Log
+ */
+enum LogLevel {
+  ERROR = 1, 
+  WARN,  // 2
+  INFO,  // 3
+  LOG,   // 4
+  DEBUG, // 5
+  TRACE, // 6
+}
+
+/**
+ * Global logging facility that has multiple levels of severity.
+ */
+export class Log {
+
+  public static levels = LogLevel;
+
+  private static logger = ulog("reactor-ts");
+  
+  public static debug(msg: string) {
+    this.logger.debug(msg);
+  }
+  
+  public static error(msg: string) {
+    this.logger.error(msg);
+  }
+
+  public static warn(msg: string) {
+    this.logger.warn(msg);
+  }
+
+  public static info(msg: string) {
+    this.logger.info(msg);
+  }
+
+  public static log(msg: string) {
+    this.logger.info(msg);
+  }
+
+  public static trace(msg: string) {
+    this.logger.trace(msg);
+  }
+
+  public static setLevel(level: LogLevel) {
+    this.logger.level = level;
+  }
+
+  public static getLevel(): LogLevel {
+    return this.logger.level;
+  }
+
 }
