@@ -43,10 +43,6 @@ export type Priority = number;
  */
 export type VarList<T> = T extends Variable[] ? T : never;
 
-export type SameAs<X,Y> = X extends (...args: any) => any ? 
-                          Y extends (...args: any) => any ? 
-                        Parameters<Y> extends Parameters<X> ? X : never : never : never;
-
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
 //---------------------------------------------------------------------//
