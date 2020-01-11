@@ -118,8 +118,11 @@ export class PrioritySet<P> {
 }
 
 export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
-
-  protected graph: Map<T, Set<T>> = new Map(); // Map vertices to set of dependencies
+  
+  /**
+   * Map nodes to the set of nodes that they depend on.
+   **/
+  protected graph: Map<T, Set<T>> = new Map(); 
   // FIXME: if we add a second map dependentNodes, we can cut down on the algorithmic
   // complexity of the sorting algorithms. Not really a big deal now because the graphs
   // are small, and sorting is not expected to happen often during the course of execution.
@@ -165,35 +168,35 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
   }
 
   // node -> deps
-  addEdge(node: T, dependency: T) {
+  addEdge(node: T, dependsOn: T) {
     let deps = this.graph.get(node);
     if (!deps) {
-      this.graph.set(node, new Set([dependency]));
+      this.graph.set(node, new Set([dependsOn]));
       this.numberOfEdges++;
     } else {
-      if (!deps.has(dependency)) {
-        deps.add(dependency);
+      if (!deps.has(dependsOn)) {
+        deps.add(dependsOn);
         this.numberOfEdges++;
       }
     }
-    if (!this.graph.has(dependency)) {
-      this.graph.set(dependency, new Set());
+    if (!this.graph.has(dependsOn)) {
+      this.graph.set(dependsOn, new Set());
     }
   }
 
-  addBackEdges(node:T, antidependencies: Set<T>) {
-    for (let a of antidependencies) {
+  addBackEdges(node:T, dependentNodes: Set<T>) {
+    for (let a of dependentNodes) {
       this.addEdge(a, node);
     }
   }
   
-  addEdges(node: T, dependencies: Set<T>) {
+  addEdges(node: T, dependsOn: Set<T>) {
     let deps = this.graph.get(node);
     if (!deps) {
-      this.graph.set(node, new Set(dependencies));
-      this.numberOfEdges += dependencies.size;
+      this.graph.set(node, new Set(dependsOn));
+      this.numberOfEdges += dependsOn.size;
     } else {
-      for (let dependency of dependencies) {
+      for (let dependency of dependsOn) {
         if (!deps.has(dependency)) {
           deps.add(dependency);
           this.numberOfEdges++;
@@ -205,10 +208,10 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     }
   }
 
-  removeEdge(node: T, dependency: T) {
+  removeEdge(node: T, dependsOn: T) {
     let deps = this.graph.get(node);
-    if (deps && deps.has(dependency)) {
-      deps.delete(dependency);
+    if (deps && deps.has(dependsOn)) {
+      deps.delete(dependsOn);
       this.numberOfEdges--;
     }
   }
@@ -230,7 +233,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     /* Populate start set */
     for (const [v, e] of this.graph) {
       if (!e || e.size == 0) {
-        start.push(v);
+        start.push(v); // start nodes have no dependencies
         clone.delete(v);
       }
     }
@@ -266,12 +269,18 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     var start: Array<T> = new Array();
     var graph = this.graph;
     var visitedInGraph: Set<T> = new Set();
-    function buildChain(node: T, visitedInChain:Set<T>):string {
-      let dot = "";
+
+    function printChain(node:T, chain: Array<T>) {
+      dot += "\n";
+      dot += '"' + node + '"'
+      while (chain.length > 0) {
+        dot += "->" + '"' + chain.pop() + '"';
+      }
+      dot += ";";
+    }
+
+    function buildChain(node: T, chain:Array<T>) {
       let match = false;
-      // Mark current node as visited.
-      visitedInChain.add(node);
-      visitedInGraph.add(node);
       for (let [v,e] of graph) {
         if (e.has(node)) {
           // Found next link in the chain.
@@ -279,33 +288,34 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
           if (match || !deps || deps.size == 0) {
             // Start a new line when this is not the first match,
             // or when the current node is a start node.
-            dot += "\n";
-            visitedInChain = new Set();
+            chain = new Array();
+            Log.debug("Starting new chain.")
           }
-          dot += '"' + node.toString() + '"'
-          if (!visitedInChain.has(v)) {
+          
+          // Mark current node as visited.
+          visitedInGraph.add(node);
+          chain.push(node);
+          if (!chain.includes(v)) {
             if (!visitedInGraph.has(v)) {
-              dot += "->";
-              dot += buildChain(v, visitedInChain);
+              buildChain(v, chain);
             } else {
-              // End the recursion.
-              dot += "->";
-              dot += '"' + v.toString() + '";';
+              // End the recursion; print the chain.
+              printChain(v, chain);
               Log.debug("Overlapping chain detected.");  
             }
           } else {
-            // End the recursion.
-            dot += "->";
-            dot += '"' + v.toString() + '";';
+            // End the recursion; print the chain.
+            printChain(v, chain);
             Log.debug("Cycle detected.");
           }
           match = true;
         }
       }
       if (!match) {
-          dot += '"' + node.toString() + '"' + ";";
+        // End the recursion; print the chain.
+        printChain(node, chain);
+        Log.debug("End of chain.");
       }
-      return dot;
     }
 
     for (const [v, e] of this.graph) {
@@ -314,7 +324,8 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
       }
     }
     for (let s of start) {
-      dot += buildChain(s, new Set());
+      Log.debug("start node:" + s);
+      buildChain(s, new Array());
     }
     dot += "\n}"
     return dot;
@@ -363,7 +374,7 @@ export class Log {
   }
 
   public static log(msg: string) {
-    this.logger.info(msg);
+    this.logger.log(msg);
   }
 
   public static trace(msg: string) {
