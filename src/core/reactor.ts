@@ -43,6 +43,10 @@ export type Priority = number;
  */
 export type VarList<T> = T extends Variable[] ? T : never;
 
+export type SameAs<X,Y> = X extends (...args: any) => any ? 
+                          Y extends (...args: any) => any ? 
+                        Parameters<Y> extends Parameters<X> ? X : never : never : never;
+
 //---------------------------------------------------------------------//
 // Runtime Functions                                                   //
 //---------------------------------------------------------------------//
@@ -243,7 +247,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
     }
 
     //A reaction defaults to not having a deadline  FIXME: we want the deadline to have access to the same variables
-    deadline: null| Deadline = null;
+    timeout: TimeInterval | undefined;
 
     /** 
      * Construct a new Reaction by passing in a reference to the reactor that contains it,
@@ -264,11 +268,25 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      */
     public abstract react(...args:VarList<T>): void;
 
+    public late(...args:VarList<T>): void {
+        Log.warn("Deadline violation occurred!")
+    }
+    
 //    private values: Map<Readable<unknown>, unknown> = new Map();
 
     public doReact() {
         Log.debug(">>> Reacting >>>" + this.constructor.name);
-        this.react.apply(this, this.args);
+        // Test if this reaction has a deadline which has been violated.
+        // This is the case if the reaction has a registered deadline and
+        // logical time + timeout < physical time
+        if (this.timeout && 
+                !this.parent.util.getCurrentLogicalTime()
+                .getLaterTime(this.timeout)
+                .isEarlierThan(getCurrentPhysicalTime())) {
+            this.late.apply(this, this.args);
+        } else {
+            this.react.apply(this, this.args); // on time
+        }
     }
 
     /**
@@ -276,11 +294,12 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      * the deadline's timeout will determine whether the reaction's 
      * react function or the deadline's handle function will be invoked.
      * If a deadline has not been set the reaction's react function
-     * will always always be invoked. 
-     * @param deadline The deadline to attach to this reaction.
+     * will be invoked once triggered. 
+     * @param deadline The deadline to set to this reaction.
      */
-    public setDeadline(deadline : Deadline){
-        this.deadline = deadline;
+    setDeadline(timeout: TimeInterval): this {
+        this.timeout = timeout;
+        return this;
     }
 
     /**
@@ -290,52 +309,6 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      */
     public setPriority(priority: number){
         this.priority = priority;
-    }
-}
-
-/**
- * The abstract class for a reaction deadline. A deadline is an optional relation
- * between logical time and physical time for a reaction. A reaction possessing a
- * deadline with a timeout of x seconds will invoke the deadline's handler()
- * function instad of its ordinary react() function if the reaction is invoked with 
- * physical time > logical time + timeout.
- */
-export abstract class Deadline {
-
-    /**
-     * The time after which the deadline miss's handler is invoked.
-     */
-    private timeout: TimeInterval;
-
-    /**
-     * A reference to the reactor this deadline is a part of so it can
-     * access reactor state.
-     */
-    protected state: Reactor;
-
-    /**
-     * Getter for timeout.
-     */
-    public getTimeout(){
-        return this.timeout;
-    }
-
-    /**
-     * This handler function must be overriden by a concrete handler.
-     */
-    handler(){
-        throw new Error("handler function hasn't been defined.")
-    }
-
-    /**
-     * Deadline constructor.
-     * @param state A reference to the state of reactor this deadline is attached to.
-     * @param timeout Time after which the deadline has been missed and the deadline
-     * miss handler should be invoked.
-     */
-    constructor(state: Reactor, timeout: TimeInterval){
-        this.state = state;
-        this.timeout = timeout;
     }
 }
 
@@ -759,6 +732,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         // Ensure that arguments are compatible with implementation of react().
         (function<X>(args: VarList<X>, fun: (...args:VarList<X>) => void): void {
         })(reaction.args, reaction.react);
+        
         this._reactions.push(reaction);
         // Stick this reaction into the trigger map to ensure it gets triggered.
         for (let t of reaction.trigs) {
@@ -809,7 +783,8 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
         
         let prev: Reaction<unknown> | null = null;
-        for (let r of this._reactions) {
+        for (let i=0; i < this._reactions.length; i++) {
+            let r = this._reactions[i];
             graph.addNode(r);
             // Establish dependencies between reactions
             // depending on their ordering inside the reactor.
@@ -830,7 +805,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                 if (d instanceof Port) {
                     graph.addBackEdges(r, d.getDownstreamReactions());
                 } else {
-                    Log.error("Found antiependency that is not a port")
+                    Log.error("Found antidependency that is not a port")
                 }
             }
             prev = r;
@@ -1708,18 +1683,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             }
 
             while(this._reactionQ.size() > 0) {
-                // Test if this reaction has a deadline which has been violated.
-                // This is the case if the reaction has a registered deadline and
-                // logical time + timeout < physical time
-                // FIXME: temporarily disabled deadlines
-                // if(r.deadline && compareNumericTimeIntervals( 
-                //         numericTimeSum(this._currentLogicalTime[0], timeIntervalToNumeric(r.deadline.getTimeout())),
-                //         currentPhysicalTime)){
-                //     Log.debug("handling deadline violation");
-                //     r.deadline.handler();
-                // } else {
                 this._reactionQ.pop().doReact();
-                // }
             }
             nextEvent = this._eventQ.peek();
             if (nextEvent != null) {
