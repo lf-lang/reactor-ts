@@ -155,7 +155,6 @@ describe('ReactionQ', () => {
     reactionQ.push(nodes[1]);
 
     it('first pop', () => {
-        // expect(reactionQ.pop()).toEqual({_id: 6, _next: null, _priority: 0});
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -168,7 +167,6 @@ describe('ReactionQ', () => {
     });
 
     it('second pop', () => {
-        // expect(reactionQ.pop()).toEqual({_id: 4, _next: null, _priority: 100});
         let r = reactionQ.pop();
         
         for (let i = 0; i < 6; i++) {
@@ -182,7 +180,6 @@ describe('ReactionQ', () => {
     });
 
     it('third pop', () => {
-        //expect(reactionQ.pop()).toEqual({_id: 5, _next: null, _priority: 200});
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -195,7 +192,6 @@ describe('ReactionQ', () => {
     });
 
     it('fourth pop', () => {
-        //expect(reactionQ.pop()).toEqual({_id: 3, _next: null, _priority: 300});
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -209,7 +205,6 @@ describe('ReactionQ', () => {
     });
 
     it('fifth pop', () => {
-        // expect(reactionQ.pop()).toEqual({_id: 2, _next: null, _priority: 400});
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -223,7 +218,6 @@ describe('ReactionQ', () => {
     });
     
     it('sixth pop', () => {
-        //expect(reactionQ.pop()).toEqual({_id: 1, _next: null, _priority: 500});
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
