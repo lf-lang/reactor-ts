@@ -12,6 +12,7 @@
 	    "strictBindCallApply": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
+        "noImplicitThis": true
     },
     "typedocOptions": {
         "tags": {
