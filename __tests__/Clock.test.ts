@@ -24,7 +24,7 @@ export class Clock extends App {
     a3 = new Action<number>(this, Origin.logical);
 
     constructor(name: string, timeout: TimeInterval,  success: () => void, fail: () => void) {
-        super(timeout, success, fail);
+        super(timeout, false, success, fail);
         this.setAlias(name);
         this.addReaction(new class<T> extends Reaction<T> {
             /**

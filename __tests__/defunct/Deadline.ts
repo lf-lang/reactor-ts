@@ -1,26 +1,6 @@
-import {Reactor, Reaction, Timer, Deadline, App} from '../../src/core/reactor';
+import {Reactor, Reaction, Timer, App} from '../../src/core/reactor';
 import {TimeInterval} from "../../src/core/time"
 
-// This test is supposed to violate this deadline.
-export class Dead extends Deadline {
-    
-    // In this test the deadline is gauranteed to be violated so this handler should be
-    // invoked. 
-    handler(){
-        (this.state as any).success();
-    }
-}
-
-// This test is supposed to not violate this deadline.
-export class Alive extends Deadline{
-
-    //  In this test the deadline is gauranteed to be violated so this handler should be
-    //  invoked. 
-    handler(){
-        console.log("failing alive");
-        (this.state as any).fail();
-    }
-}
 
 export class SoonDead<T> extends Reaction<T> {
 
@@ -31,7 +11,7 @@ export class SoonDead<T> extends Reaction<T> {
      */
     react(){
         console.log("failing soondead");
-        (this.state as any).fail();
+        
     }
 }
 
@@ -67,9 +47,9 @@ export class ShowDeadline extends Reactor {
         this.fail = fail;
         
         this.waste = new WasteTime(this, [this.t], []);
-        this.waste.setDeadline(new Alive(this, new TimeInterval(10)));
+        //this.waste.setDeadline(new Alive(this, new TimeInterval(10)));
         this.soonDead = new SoonDead(this, [this.t], []);
-        this.soonDead.setDeadline(new Dead(this, new TimeInterval(0)));
+        //this.soonDead.setDeadline(new Dead(this, new TimeInterval(0)));
     }
 
 }

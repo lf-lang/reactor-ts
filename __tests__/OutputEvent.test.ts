@@ -50,7 +50,7 @@ describe('OutputEventTest', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        var oEventTest = new OutputEventTest(new TimeInterval(3), done, fail);
+        var oEventTest = new OutputEventTest(new TimeInterval(3), false, done, fail);
         // Don't give the runtime the done callback because we don't care if it terminates
         oEventTest._start();
     })

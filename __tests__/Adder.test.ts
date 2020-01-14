@@ -1,16 +1,21 @@
 
 import {App, Port, Reactor, InPort, OutPort, Reaction, Readable, Writable} from '../src/core/reactor';
+import { TimeInterval } from '../src/core/time';
+
 export class Adder extends Reactor {    
     
+    state = {a: "", b: 1};
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
 
     constructor(parent:Reactor) {
         super(parent);
+
         this.addReaction(new class<T> extends Reaction<T> {
+            
             //@ts-ignore
-            react(in1: Readable<number>, in2: Readable<number>, out:Writable<number>):void {
+            react(in1: Port<number>, in2: Port<number>, out:Writable<number>):void {
                 let a = in1.get();
                 let b = in2.get();
                 if (a == null) {
@@ -21,7 +26,13 @@ export class Adder extends Reactor {
                 }
                 out.set(a + b);
             }
-        }(this, [this.in1, this.in2], this.check(this.in1, this.in2, this.getWritable(this.out))));
+
+            //@ts-ignore
+            // late(in1: Readable<number>, in2: Readable<number>, out:Writable<number>):void {
+            
+            // }
+            
+        }(this, [this.in1, this.in2], this.check(this.in1, this.in2, this.getWritable(this.out))).setDeadline(new TimeInterval(1)));
     }
 }
 

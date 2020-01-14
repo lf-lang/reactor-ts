@@ -1,5 +1,6 @@
 import {OutPort, App, Timer, Reaction, Writable} from '../src/core/reactor';
 import {TimeInterval} from "../src/core/time";
+import { Log } from '../src/core/util';
 
 class OutputGetTest extends App {
 
@@ -7,7 +8,7 @@ class OutputGetTest extends App {
     t: Timer = new Timer(this, 0, 0);
     
     constructor(timeout: TimeInterval, name:string, success: ()=> void, failure: ()=>void){
-        super(timeout, success, failure);
+        super(timeout, true, success, failure);
         this.setAlias(name);
         this.addReaction(new OutputGetter(this, [this.t], this.check(this.getWritable(this.o))));
     }
@@ -17,6 +18,7 @@ class OutputGetter<T> extends Reaction<T> {
 
     //@ts-ignore
     react(o: Writable<number>) {
+        Log.debug(">>>>>>>>>>being triggered>>>>>>>>>>>")
         if(o.get() != null){
             throw new Error("Calling get on an output before it has been set does not return null");
         }
@@ -24,7 +26,6 @@ class OutputGetter<T> extends Reaction<T> {
         if(o.get() !== 5){
             throw new Error("Calling get on an output after it has been set does not return the set value");
         }
-        this.parent.util.success();
     }
 }
 
@@ -43,9 +44,8 @@ describe('OutputGetTest', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var oGetTest = new OutputGetTest(new TimeInterval(3), "OutputGetTest", done, fail);
+        var oGetTest = new OutputGetTest(new TimeInterval(1), "OutputGetTest", done, fail);
         
-        //Don't give the runtime the done callback because we don't care if it terminates
         oGetTest._start();
     })
 });

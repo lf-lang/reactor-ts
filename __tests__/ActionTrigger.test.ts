@@ -69,7 +69,7 @@ class ActionTriggerTest extends App {
     aTrigger: ActionTrigger;
 
     constructor(name: string, timeout: TimeInterval, success?: ()=> void, fail?: ()=>void){
-        super(timeout, success, fail);
+        super(timeout, false, success, fail);
         this.setAlias(name);
         this.aTrigger = new ActionTrigger(this);
     }

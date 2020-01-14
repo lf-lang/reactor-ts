@@ -26,7 +26,7 @@ describe('Test names for contained reactors', () => {
         y = new MyActor2(this);
 
         constructor(name: string, someParam: string) {
-            super(null);
+            super(undefined);
             this.setAlias(name);
 
             // Normally _setAllParents would be called as part of the initialization

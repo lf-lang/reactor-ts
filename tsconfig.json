@@ -9,7 +9,7 @@
         "sourceMap": true,
         "strict": true,
         "moduleResolution": "node",
-	    "strictBindCallApply": true,
+	"strictBindCallApply": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
         "noImplicitThis": true

@@ -115,6 +115,11 @@ export class PrioritySet<P> {
     size(): number {
         return this.count;
     }
+
+    empty(): void {
+        this.head = undefined;
+        this.count = 0;
+    }
 }
 
 export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
@@ -356,6 +361,7 @@ enum LogLevel {
     ERROR = 1,
     WARN = 2,
     INFO = 3,
+    LOG = 4,
     DEBUG = 5
 }
 
@@ -368,6 +374,11 @@ export class Log {
      * Available log levels.
      */
     public static levels = LogLevel;
+
+    /**
+     * Horizontal rule.
+     */
+    public static hr = "==============================================================================";
 
     /**
      * Instance of ulog that performs the logging.
@@ -390,8 +401,17 @@ export class Log {
     public static error(msg: string) {
         this.logger.error(msg);
     }
+    
     /**
-     * Log a warming message.
+     * Log a log message.
+     * @param msg The message of log.
+     */
+    public static log(msg: string) {
+        this.logger.log(msg);
+    }
+
+    /**
+     * Log a warning message.
      * @param msg The message of log.
      */
     public static warn(msg: string) {
