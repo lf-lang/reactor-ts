@@ -9,6 +9,7 @@ class OutputGetTest extends App {
     
     constructor(timeout: TimeInterval, name:string, success: ()=> void, failure: ()=>void){
         super(timeout, true, success, failure);
+        Log.global.debug(">>>>>>>>----" + this.util)
         this.setAlias(name);
         this.addReaction(new OutputGetter(this, [this.t], this.check(this.getWritable(this.o))));
     }
@@ -18,7 +19,7 @@ class OutputGetter<T> extends Reaction<T> {
 
     //@ts-ignore
     react(o: Writable<number>) {
-        Log.debug(">>>>>>>>>>being triggered>>>>>>>>>>>")
+        Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>")
         if(o.get() != null){
             throw new Error("Calling get on an output before it has been set does not return null");
         }

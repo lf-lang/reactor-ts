@@ -76,15 +76,15 @@ export class Clock extends App {
                 // All timers should fire simultaneously at logical time 5 seconds from the start of execution.
                 // This should tricker tick, tock, and, cuckoo to simultanously schedule actions
                 // 1,2, and 3. 
-                if (this.parent.util.getElapsedLogicalTime().isEqualTo(new TimeInterval(5))) {
+                if (this.util.time.getElapsedLogicalTime().isEqualTo(new TimeInterval(5))) {
                     console.log("reacting in Test");
                     if(a1.get() == 1 && a2.get() == 2 && a3.get() == 3) {
-                        this.parent.util.success();
+                        this.util.exec.success();
                     } else {
                         console.log("a1: " + a1.get());
                         console.log("a2: " + a2.get());
                         console.log("a3: " + a3.get());
-                        this.parent.util.failure();
+                        this.util.exec.failure();
                     }
                 }
             }

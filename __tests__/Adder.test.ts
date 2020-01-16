@@ -1,5 +1,5 @@
 
-import {App, Port, Reactor, InPort, OutPort, Reaction, Readable, Writable} from '../src/core/reactor';
+import {App, Port, Reactor, InPort, OutPort, Reaction, Present, Writable} from '../src/core/reactor';
 import { TimeInterval } from '../src/core/time';
 
 export class Adder extends Reactor {    
@@ -43,7 +43,7 @@ class MyAdder extends Adder {
         }
     }
 
-    public getWriter(port: Port<unknown>) {
+    public getWriter(port: Port<Present>) {
         return this.getWritable(port);
     }
 }

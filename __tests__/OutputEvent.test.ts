@@ -10,7 +10,7 @@ class OutputResponse<T> extends Reaction<T> {
      * @override
      */
     react() {
-        this.parent.util.success();
+        this.util.exec.success();
     }
 }
 
@@ -22,8 +22,8 @@ export class OutputResponder extends Reactor {
 
     se: SingleEvent<string> = new SingleEvent(this, "ContainedSingleEvent");
     
-    constructor(parent: Reactor){
-        super(parent);
+    constructor(__parent__: Reactor){
+        super(__parent__);
         this.addReaction(new OutputResponse(this, [this.se.o], []));
     }
 }

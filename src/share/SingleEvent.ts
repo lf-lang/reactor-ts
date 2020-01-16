@@ -1,5 +1,5 @@
 
-import {Reactor, OutPort, Reaction, Timer, Writable, Variable, VarList} from '../core/reactor';
+import {Reactor, OutPort, Reaction, Timer, Writable, Variable, VarList, Present} from '../core/reactor';
 class ProduceOutput<T, S> extends Reaction<T> {
 
     constructor(parent: Reactor, trigs:Variable[], args: VarList<T>, private payload:S) {
@@ -23,7 +23,7 @@ class ProduceOutput<T, S> extends Reaction<T> {
     }
 }
 
-export class SingleEvent<T> extends Reactor {
+export class SingleEvent<T extends Present> extends Reactor {
 
     o: OutPort<T> = new OutPort<T>(this);
     t1: Timer = new Timer(this, 0, 0);

@@ -308,7 +308,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
                         // Start a new line when this is not the first match,
                         // or when the current node is a start node.
                         chain = new Array();
-                        Log.debug("Starting new chain.")
+                        Log.global.debug("Starting new chain.")
                     }
 
                     // Mark current node as visited.
@@ -317,13 +317,13 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
                     chain.push(node);
 
                     if (chain.includes(v)) {
-                        Log.debug("Cycle detected.");
+                        Log.global.debug("Cycle detected.");
                         printChain(v, chain);
                     } else if (visited.has(v)) {
-                        Log.debug("Overlapping chain detected.");
+                        Log.global.debug("Overlapping chain detected.");
                         printChain(v, chain);
                     } else {
-                        Log.debug("Adding link to the chain.");        
+                        Log.global.debug("Adding link to the chain.");        
                         buildChain(v, chain);
                     }
                     // Indicate that a match has been found.
@@ -331,7 +331,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
                 }
             }
             if (!match) {
-                Log.debug("End of chain.");
+                Log.global.debug("End of chain.");
                 printChain(node, chain);
             }
         }
@@ -381,59 +381,22 @@ export class Log {
     public static hr = "==============================================================================";
 
     /**
-     * Instance of ulog that performs the logging.
+     * Global instance of ulog that performs the logging.
      */
-    private static logger = ulog("reactor-ts");
+    public static global = ulog("reactor-ts");
 
-    /**
-     * Log a debug message.
-     * @param msg The message of log.
-     */
-    public static debug(msg: string) {
-        this.logger.debug(msg);
+    public static getInstance(module: string) {
+        return ulog(module);
     }
-
-    /**
-     * Log an error message.
-     * @param msg The message of log.
-     */
-
-    public static error(msg: string) {
-        this.logger.error(msg);
-    }
-    
-    /**
-     * Log a log message.
-     * @param msg The message of log.
-     */
-    public static log(msg: string) {
-        this.logger.log(msg);
-    }
-
-    /**
-     * Log a warning message.
-     * @param msg The message of log.
-     */
-    public static warn(msg: string) {
-        this.logger.warn(msg);
-    }
-
-    /**
-     * Log an informational message.
-     * @param msg The message of log.
-     */
-    public static info(msg: string) {
-        this.logger.info(msg);
-    }
-    
+    // FIXME: write type declarations for ulog
     /**
      * Set the minimum level of severity a message is required to 
      * have for the logger to display it.
      * @param level The minimum level of severity
      * @see LogLevel
      */
-    public static setLevel(level: LogLevel) {
-        this.logger.level = level;
+    public static setGlobalLevel(level: LogLevel) {
+        this.global.level = level;
     }
 
     /**
@@ -441,8 +404,8 @@ export class Log {
      * have for the logger to display it.
      * @see LogLevel
      */
-    public static getLevel(): LogLevel {
-        return this.logger.level;
+    public static getGlobalLevel(): LogLevel {
+        return this.global.level;
     }
 
 }
