@@ -140,7 +140,7 @@
 					<div class="tsd-signature tsd-kind-icon">Absent<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">null</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L108">core/reactor.ts:108</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L109">core/reactor.ts:109</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -150,7 +150,7 @@
 					<div class="tsd-signature tsd-kind-icon">Effect&lt;T, S&gt;<span class="tsd-signature-symbol">:</span> </div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L673">core/reactor.ts:673</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L674">core/reactor.ts:674</a></li>
 						</ul>
 					</aside>
 					<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -169,7 +169,7 @@
 					<div class="tsd-signature tsd-kind-icon">Port<wbr>OrAction&lt;T, S&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">S extends Present ? T extends Port&lt;S&gt; ? T : T extends Action&lt;S&gt; ? T : never : never</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L681">core/reactor.ts:681</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L682">core/reactor.ts:682</a></li>
 						</ul>
 					</aside>
 					<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -188,7 +188,7 @@
 					<div class="tsd-signature tsd-kind-icon">Present<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">true</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L107">core/reactor.ts:107</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L108">core/reactor.ts:108</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -198,7 +198,7 @@
 					<div class="tsd-signature tsd-kind-icon">Priority<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L49">core/reactor.ts:49</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L50">core/reactor.ts:50</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -219,7 +219,7 @@
 					<div class="tsd-signature tsd-kind-icon">Var<wbr>List&lt;T&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">T extends Variable[] ? T : never</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L56">core/reactor.ts:56</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L57">core/reactor.ts:57</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -242,7 +242,7 @@
 					<div class="tsd-signature tsd-kind-icon">Variable<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_core_reactor_.readable.html" class="tsd-signature-type">Readable</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/_core_reactor_.writable.html" class="tsd-signature-type">Writable</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L42">core/reactor.ts:42</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L43">core/reactor.ts:43</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -253,12 +253,13 @@
 								variable, it will return true if the value is defined at the current
 								logical time, and false otherwise.
 								Variables may also refer to ports of a contained reactors. Such
-								references are represented by an object of which the key denotes
-								the name of the port and the value is the port object. This enables
-								a dotted style of port referencing that is common in Lingua Franca
-								such as <code>Foo.bar</code> where <code>Foo</code> would be the parameter name in the
-								<code>react</code> function, and the corresponding passed-in object would be
-							expected to be of type <code>{bar: Readable&lt;T&gt;|Writable&lt;T&gt;}</code>.</p>
+								references are represented by an object of which the own properties
+								have keys that denote the names of the referenced ports; the
+								corresponding values are port objects. This enables a dotted style of
+								port referencing that is common in Lingua Franca such as <code>Foo.bar</code> where
+								<code>Foo</code> would be the parameter name in the <code>react</code> function, and the
+								corresponding passed-in object would be expected to be of type
+							<code>{bar: Readable&lt;T&gt;|Writable&lt;T&gt;}</code>.</p>
 						</div>
 						<dl class="tsd-comment-tags">
 							<dt>see</dt>
@@ -279,7 +280,7 @@
 					<div class="tsd-signature tsd-kind-icon">Nano<wbr>Timer<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;require(&#x27;nanotimer&#x27;)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L20">core/reactor.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L20">core/reactor.ts:20</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
