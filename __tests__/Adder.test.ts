@@ -25,7 +25,7 @@ export class Adder extends Reactor {
                 }
                 out.set(a + b);
             }
-        }(this, new Triggers(this.in1, this.in2), new Args(this.in1, this.in2, this.getWritable(this.out))).setDeadline(new TimeInterval(1)));
+        }(this, new Triggers(this.in1, this.in2), new Args(this.in1, this.in2, this.getWritable(this.out))));
     }
 }
 

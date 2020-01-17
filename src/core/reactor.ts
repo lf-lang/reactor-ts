@@ -327,6 +327,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
         // Test if this reaction has a deadline which has been violated.
         // This is the case if the reaction has a defined timeout and
         // logical time + timeout < physical time
+        Log.global.debug("Timeout: " + this.timeout);
         if (this.timeout && 
             this.util.time.getCurrentLogicalTime()
                 .getLaterTime(this.timeout)
@@ -464,7 +465,7 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
      * has a value.
      */
     private isPresent() {
-        if(this.timestamp == null){
+        if(this.timestamp == undefined){
             // This action has never been scheduled before.
             return false;
         }
@@ -490,7 +491,7 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
      * If the action was scheduled with no value, this function returns `null`.
      */
     public get(): T | null {
-        if(this.value && this.isPresent()) {
+        if(this.isPresent()) {
             return this.value;
         } else {
             return null;
@@ -1430,6 +1431,10 @@ export abstract class Port<T extends Present> extends Descendant implements Read
      * Returns false otherwise
      */
     public isPresent() {
+        Log.global.debug("In isPresent()...")
+        Log.global.debug("value: " + this.value);
+        Log.global.debug("tag: " + this.tag);
+        Log.global.debug("time: " + this.__parent__.util.time.getCurrentLogicalTime())
         if(this.value != null
             && this.tag != undefined
             && this.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentLogicalTime())) {
