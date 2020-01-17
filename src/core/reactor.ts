@@ -30,12 +30,13 @@ const NanoTimer = require('nanotimer');
  * variable, it will return true if the value is defined at the current
  * logical time, and false otherwise.
  * Variables may also refer to ports of a contained reactors. Such 
- * references are represented by an object of which the key denotes
- * the name of the port and the value is the port object. This enables
- * a dotted style of port referencing that is common in Lingua Franca
- * such as `Foo.bar` where `Foo` would be the parameter name in the
- * `react` function, and the corresponding passed-in object would be 
- * expected to be of type `{bar: Readable<T>|Writable<T>}`.
+ * references are represented by an object of which the own properties
+ * have keys that denote the names of the referenced ports; the 
+ * corresponding values are port objects. This enables a dotted style of 
+ * port referencing that is common in Lingua Franca such as `Foo.bar` where
+ * `Foo` would be the parameter name in the `react` function, and the 
+ * corresponding passed-in object would be expected to be of type 
+ * `{bar: Readable<T>|Writable<T>}`.
  * @see Readable
  * @see Writable
  */
