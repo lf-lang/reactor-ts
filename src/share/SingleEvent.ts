@@ -1,5 +1,5 @@
 
-import {Reactor, OutPort, Reaction, Timer, Writable, Triggers, Args, VarList, Present, State, Parameter, Variable} from '../core/reactor';
+import {Reactor, OutPort, Reaction, Timer, Writable, Triggers, Args, ArgList, Present, State, Parameter, Variable} from '../core/reactor';
 class ProduceOutput<T, S> extends Reaction<T> {
 
     /**

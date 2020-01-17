@@ -20,8 +20,33 @@ import {TimeInterval, TimeInstant, Origin, getCurrentPhysicalTime} from './time'
 const NanoTimer = require('nanotimer');
 
 //---------------------------------------------------------------------//
-// Types and Helper Functions                                          //
+// Types                                        //
 //---------------------------------------------------------------------//
+
+/**
+ * Type that denotes the absence of data exchanged between ports.
+ */
+export type Absent = null; //(null | undefined);
+
+/**
+ * Conditional type for argument lists of reactions. If the type variable
+ * `T` is inferred to be a subtype of `Variable[]` it will yield `T`; it  
+ * will yield `never` if `T` is not a subtype of `Variable[]`.
+ * @see Reaction
+ */
+export type ArgList<T> = T extends Variable[] ? T : never;
+
+/**
+ * Type for data exchanged between ports.
+ */
+export type Present = (number | string | boolean | symbol | object);
+
+/**
+ * A number that indicates a reaction's position with respect to other
+ * reactions in an acyclic precendence graph.
+ * @see ReactionQueue
+ */
+export type Priority = number;
 
 /**
  * A variable is a port, action, or timer (all of which implement the
@@ -40,25 +65,11 @@ const NanoTimer = require('nanotimer');
  * @see Readable
  * @see Writable
  */
-export type Variable = Readable<unknown> | Writable<unknown> |  { [name: string]: (Readable<unknown> | Writable<unknown>)};
+export type Variable = Readable<unknown> | 
+    Writable<unknown> | 
+    { [name: string]: (Readable<unknown> 
+        | Writable<unknown>)};
 
-/**
- * A number that indicates a reaction's position with respect to other
- * reactions in an acyclic precendence graph.
- * @see ReactionQueue
- */
-export type Priority = number;
-
-/**
- * Conditional type for lists of variables. If the type variable `T` is 
- * inferred to be a subtype of `Variable[]`, it will yield that type, 
- * `never` otherwise.
- */
-export type VarList<T> = T extends Variable[] ? T : never;
-
-//---------------------------------------------------------------------//
-// Runtime Functions                                                   //
-//---------------------------------------------------------------------//
 
 //---------------------------------------------------------------------//
 // Interfaces                                                          //
@@ -79,6 +90,9 @@ export interface ExecUtils {
     failure(): void;
 }
 
+/**
+ * Utilities for monitoring the passing of time.
+ */
 export interface TimeUtils {
     getCurrentLogicalTime(): TimeInstant;
     getCurrentPhysicalTime(): TimeInstant;
@@ -86,16 +100,18 @@ export interface TimeUtils {
     getElapsedPhysicalTime(): TimeInterval;
 }
 
+/**
+ * Utilities for scheduling events.
+ */
 export interface EventUtils {
     schedule(e: Event<any>): void;
 }
 
 /**
- * Interface for readable ports or actions.
+ * Interface for readable variables.
  */
 export interface Readable<T> {
     get: () => T | Absent;
-    //toString(): string;
 }
 
 /**
@@ -105,9 +121,6 @@ export interface Schedulable<T> extends Readable<T> {
     schedule: (extraDelay: TimeInterval | 0, value?: T) => void;
 }
 
-export type Present = (number | string | boolean | symbol | object);
-export type Absent = null; //(null | undefined);
-
 /**
  * Interface for writable ports.
  */
@@ -115,6 +128,9 @@ export interface Writable<T> extends Readable<T> {
     set: (value: T) => void;
 }
 
+/**
+ * Interface for proxy objects used to make ports writable.
+ */
 export interface Proxy<T extends Present> extends Writable<T> {
     isProxyOf: (port: Port<any>) => boolean;
     getPort(): Port<T>;
@@ -241,7 +257,18 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
                     antideps.add(a.getPort());
                 }
             } else {
-                Log.global.debug("Found argument that is not a Port or Writer: " + a); // Scheduler
+                // Handle hierarchical references.
+                for (let p of Object.getOwnPropertyNames(a)) {
+                    let prop = Object.getOwnPropertyDescriptor(a, p);
+                    if (prop?.value instanceof Port) {
+                        if (this.__parent__._isUpstream(prop.value)) {
+                            deps.add(prop.value);
+                        }
+                        if (this.__parent__._isDownstream(prop.value)) {
+                            antideps.add(prop.value);
+                        }
+                    }
+                }
             }
         }
         return [deps, antideps];
@@ -271,7 +298,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      * the variables that trigger it, and the arguments passed to the react function.
      * @param state state shared among reactions
      */
-     constructor(protected __parent__:Reactor, public trigs:Triggers, public args:Args<VarList<T>>) { // FIXME: make these private and have getters
+     constructor(protected __parent__:Reactor, public trigs:Triggers, public args:Args<ArgList<T>>) { // FIXME: make these private and have getters
         this.state = __parent__.state;
         this.util = new class implements ReactionUtils {
             constructor(public event: EventUtils, public exec: ExecUtils, public time: TimeUtils) {
@@ -287,9 +314,9 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      * implementations of this method.
      * @param args The arguments to with this function is to be applied.
      */
-    public abstract react(...args:VarList<T>): void;
+    public abstract react(...args:ArgList<T>): void;
 
-    public late(...args:VarList<T>): void {
+    public late(...args:ArgList<T>): void {
         Log.global.warn("Deadline violation occurred!")
     }
     
@@ -298,10 +325,10 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
     public doReact() {
         Log.global.debug(">>> Reacting >>>" + this.constructor.name);
         // Test if this reaction has a deadline which has been violated.
-        // This is the case if the reaction has a registered deadline and
+        // This is the case if the reaction has a defined timeout and
         // logical time + timeout < physical time
         if (this.timeout && 
-                !this.util.time.getCurrentLogicalTime()
+            this.util.time.getCurrentLogicalTime()
                 .getLaterTime(this.timeout)
                 .isEarlierThan(getCurrentPhysicalTime())) {
             this.late.apply(this, this.args.tuple);
@@ -522,23 +549,6 @@ export class State<T> implements Readable<T>, Writable<T> {
 
 }
 
-// type ValueOrTime<T,S> = 
-//     T extends Timer ? 
-//         TimeInstant : 
-//     S extends Present ? 
-//         S : 
-//     never;
-
-// export class Trigger<T extends Readable<ValueOrTime<T,S>>, S extends Present> implements Readable<ValueOrTime<T,S>> {
-    
-//     constructor(private __parent__: Reactor, public variable: T) {    
-//     }
-
-//     get(): ValueOrTime<T,S> | Absent {
-//         return this.variable.get();
-//     }
-// }
-
 export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T> {
     
     constructor(private __parent__: Reactor, private action: Action<T>) {
@@ -548,11 +558,6 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
     get(): T | Absent {
         return this.action.get();
     }
-
-    // isPresent(): boolean {
-    //     return this.action.isPresent();
-    // }
-
 
     /**
      * Schedule this action. An event for this action will be
@@ -571,7 +576,7 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
         if (!(extraDelay instanceof TimeInterval)) {
             extraDelay = new TimeInterval(0);
         }
-        Log.global.debug(">>parent: " + this.__parent__)
+        
         var tag = this.__parent__.util.time.getCurrentLogicalTime();
         var delay = this.action.minDelay.add(extraDelay);
         if (this.action.origin == Origin.physical) {
@@ -581,12 +586,8 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
         if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
             tag = tag.getMicroStepLater();
         }
-        if (!this.__parent__)
-            Log.global.debug(">>>>>>>>>>>>>PARENT IS UNDEFINED!!!!!!")
         this.__parent__.util.event.schedule(new Event(this.action, tag, value));    
     }
-    
-
 }
 
 /**
@@ -662,24 +663,15 @@ export class Timer extends Descendant implements Readable<TimeInstant> {
     }
 }
 
-// export abstract class Mutation<T> extends Reaction<T> {
-//     //@ts-ignore
-//     protected util:ReactorUtils;
+export abstract class Mutation<T> extends Reaction<T> {
 
-//     constructor(__parent__:Reactor, trigs:Variable[], args:VarList<T>) { // FIXME: make these private and have getters
-//         super(__parent__, trigs, args);
-//         this.util = __parent__.util;
-//     }
-// }
-type Effect<T,S> =  S extends Present ? 
-                        (T extends Port<S> ? 
-                            Writer<S> : 
-                            (T extends Action<S> ? 
-                                Scheduler<S> : 
-                                never)): 
-                        never; 
+    readonly util:ReactorUtils;
 
-type PortOrAction<T,S> = S extends Present ? T extends Port<S> ? T : T extends Action<S> ? T : never : never;
+    constructor(__parent__:Reactor, trigs:Triggers, args:Args<ArgList<T>>) { // FIXME: make these private and have getters
+        super(__parent__, trigs, args);
+        this.util = __parent__.util;
+    }
+}
 
 export class Args<T extends Variable[]> {
     tuple : T;
@@ -837,7 +829,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     protected addReaction<T>(reaction: Reaction<T>) : Reaction<T> {
         // Ensure that arguments are compatible with implementation of react().
-        (function<X>(args: VarList<X>, fun: (...args:VarList<X>) => void): void {
+        (function<X>(args: ArgList<X>, fun: (...args:ArgList<X>) => void): void {
         })(reaction.args.tuple, reaction.react);
         
         this._reactions.push(reaction);
@@ -1437,9 +1429,9 @@ export abstract class Port<T extends Present> extends Descendant implements Read
      * an output port or an input port with a value set at the current logical time
      * Returns false otherwise
      */
-    public isPresent(){
-        if(this.value 
-            && this.tag 
+    public isPresent() {
+        if(this.value != null
+            && this.tag != undefined
             && this.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentLogicalTime())) {
             return true;
         } else {
@@ -1470,7 +1462,7 @@ export abstract class Port<T extends Present> extends Descendant implements Read
      * logical time.
      */
     public get(): T | null {
-        if (this.value && this.isPresent()){
+        if (this.isPresent()){
             return this.value;
         } else {
             return null;
