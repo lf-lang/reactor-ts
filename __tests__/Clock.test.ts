@@ -26,50 +26,49 @@ export class Clock extends App {
     constructor(name: string, timeout: TimeInterval,  success: () => void, fail: () => void) {
         super(timeout, false, success, fail);
         this.setAlias(name);
-        this.addReaction(new class<T> extends Reaction<T> {
+        this.addReaction(
+            new Triggers(this.t1),
+            new Args(this.getSchedulable(this.a1)),
             /**
              * Print tick and schedule a1
-             * @override
-             *
              */
-            //@ts-ignore
-            react(a1: Schedulable<number>){
+            function(this, a1){
                 a1.schedule(0, 1);
                 console.log("Tick");
             }
-        }(this, new Triggers(this.t1), new Args(this.getSchedulable(this.a1))));
-        this.addReaction(new class<T> extends Reaction<T> {
+        );
+        this.addReaction(
+            new Triggers(this.t2), 
+            new Args(this.getSchedulable(this.a2)),
             /**
              * Print tock and schedule a2.
-             * @override
              */
-            //@ts-ignore
-            react(a2: Schedulable<number>){
+            function(this, a2){
                 a2.schedule(0, 2);
                 console.log("Tock");
             }
-        }(this, new Triggers(this.t2), new Args(this.getSchedulable(this.a2))));
+        );
         //At time 5 seconds, this reaction should be triggered
         //simultaneosly by both timers, "Cuckoo" should only
         //print once.
-        this.addReaction(new class<T> extends Reaction<T> {
+        this.addReaction(
+            new Triggers(this.t1, this.t2), 
+            new Args(this.getSchedulable(this.a3)),
             /**
              * Print cuckoo and schedule a3.
-             * @override
              */
-            //@ts-ignore
-            react(a3: Schedulable<number>) {
+            function(this, a3: Schedulable<number>) {
                 a3.schedule(0, 3);
                 console.log("Cuckoo");
             }
-        }(this, new Triggers(this.t1, this.t2), new Args(this.getSchedulable(this.a3))));
-        this.addReaction(new class<T> extends Reaction<T> {
+        );
+        this.addReaction(
+            new Triggers(this.a1, this.a2, this.a3),
+            new Args(this.a1, this.a2, this.a3),
             /**
              * If all the actions are available at logical time 5 seconds from start, the test is successful.
-             * @override
              */
-            //@ts-ignore
-            react(a1: Action<number>, a2: Action<number>, a3: Action<number>) {
+            function(this, a1: Action<number>, a2: Action<number>, a3: Action<number>) {
                 console.log("Before check in test");
                 // console.log("does current logical time: " + globals.currentLogicalTime[0] + " equal " + numericTimeSum( globals.startingWallTime , [5, 0]));
                         
@@ -88,7 +87,7 @@ export class Clock extends App {
                     }
                 }
             }
-        }(this, new Triggers(this.a1, this.a2, this.a3), new Args(this.a1, this.a2, this.a3)));
+        );
     }
 }
 

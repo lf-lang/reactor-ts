@@ -1,5 +1,5 @@
 
-import {App, Port, Reactor, InPort, OutPort, Reaction, Present, Writable, Args, Timer, Action, Triggers} from '../src/core/reactor';
+import {App, Port, Reactor, InPort, OutPort, Reaction, Present, Writable, Args, Timer, Action, Triggers, Variable, Readable} from '../src/core/reactor';
 import { TimeInterval, Origin} from '../src/core/time';
 
 export class Adder extends Reactor {    
@@ -11,21 +11,24 @@ export class Adder extends Reactor {
     constructor(parent:Reactor) {
         super(parent);
         
-        this.addReaction(new class<T> extends Reaction<T> {
-            
-            //@ts-ignore
-            react(in1: Port<number>, in2: Port<number>, out:Writable<number>):void {
-                let a = in1.get();
-                let b = in2.get();
-                if (a == null) {
-                    a = 0;
-                }
-                if (b == null) {
-                    b = 0;
-                }
-                out.set(a + b);
-            }
-        }(this, new Triggers(this.in1, this.in2), new Args(this.in1, this.in2, this.getWritable(this.out))));
+        // this.addReaction(
+        //     new Triggers(this.in1, this.in2), 
+        //     new Args(this.in1, this.in2, this.getWritable(this.out)),
+        //     (in1, in2, out) => {
+        //         // Type assertions allow coercion of null to 0.
+        //         out.set(in1.get() as number + (in2.get() as number));
+                
+        //     }, new TimeInterval(0)
+        // );
+
+        this.addReaction(
+            new Triggers(this.in1, this.in2), 
+            new Args(this.in1, this.in2, this.getWritable(this.out)),
+            function (this, in1, in2, out) {
+                // Type assertions allow coercion of null to 0.
+                out.set(in1.get() as number + (in2.get() as number));
+            }, new TimeInterval(0)
+        );
     }
 }
 

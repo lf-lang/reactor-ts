@@ -17,39 +17,39 @@ export class ActionTrigger extends Reactor {
     constructor(parent:Reactor|null) {
         super(parent);
         //Reaction priorities matter here. The overridden reaction must go first.
-        this.addReaction(new class<T> extends Reaction<T> {
+        this.addReaction(
+            new Triggers(this.t1), new Args(this.getSchedulable(this.a1), {foo: this.a1}),
             /**
              * Schedule the incorrect payload for action a1.
-             * @override
              */
-            //@ts-ignore
-            react(a1: Schedulable<string>) {
+            function(this, a1: Schedulable<string>) {
                 a1.schedule(0, "goodbye");
                 console.log("Scheduling the overridden action in ScheduleOverriddenAction to trigger RespondToAction");
             }
-        }(this, new Triggers(this.t1), new Args(this.getSchedulable(this.a1), {foo: this.a1})));
+        );
         
-        this.addReaction(new class<T> extends Reaction<T> {
-            /**
+        this.addReaction(
+           new Triggers(this.t1), 
+           new Args(this.getSchedulable(this.a1), this.a2),
+           /**
              * Schedule the correct payload for action a1.
-             * @override
              */
-            //@ts-ignore
-            react(a1: Schedulable<string>){
+            function(this, a1){
                 a1.schedule(0, "hello");
                 console.log("Scheduling the final action in ScheduleAction to trigger RespondToAction");
             }
-        }(this, new Triggers(this.t1), new Args(this.getSchedulable(this.a1), this.a2)));
+        );
 
-        this.addReaction(new class<T> extends Reaction<T> {
+        
+        this.addReaction(
+            new Triggers(this.a1),
+            new Args(this.a1, this.a2),
             /**
              * If the action payload is correct, test is successful. Otherwise it fails.
              * Since a2 was not scheduled it should return null on a call to get() and
              * should return false for isPresent().
-             * @override
              */
-            //@ts-ignore
-            react(a1: Action<string>, a2: Action<string>){
+            function(this, a1: Action<string>, a2: Action<string>){
                 const msg = a1.get();
                 const absent = !a2.get();
                 if(msg == "hello" && absent) {
@@ -60,7 +60,7 @@ export class ActionTrigger extends Reactor {
                 }
                 console.log("Response to action is reacting. String payload is: " + msg);
             }
-        }(this, new Triggers(this.a1), new Args(this.a1, this.a2)));
+        );
     }
 }
 

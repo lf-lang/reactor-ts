@@ -2,18 +2,6 @@ import {App, Reactor, Reaction, Parameter, Args, Triggers} from '../src/core/rea
 import {TimeInterval} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 
-class OutputResponse<T> extends Reaction<T> {
-
-    /**
-     * If this reaction is triggered by an output event from the contained reactor,
-     * succeed the test.
-     * @override
-     */
-    react() {
-        this.util.exec.success();
-    }
-}
-
 /**
  * This reactor calls the success callback if it triggers a reaction in response
  * to a value being set to a contained reactor's output port.
@@ -24,12 +12,19 @@ export class OutputResponder extends Reactor {
     
     constructor(__parent__: Reactor){
         super(__parent__);
-        this.addReaction(new OutputResponse(this, new Triggers(this.se.o), new Args()));
+        this.addReaction(
+            new Triggers(this.se.o),
+            new Args(),
+            /**
+             * If this reaction is triggered by an output event from the contained reactor,
+             * succeed the test.
+             */
+            function (this) {
+                this.util.exec.success();
+            }
+        );
     }
 }
-
-
-
 
 class OutputEventTest extends App {
     oResponder: OutputResponder = new OutputResponder(this);

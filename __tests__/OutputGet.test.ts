@@ -11,22 +11,20 @@ class OutputGetTest extends App {
         super(timeout, true, success, failure);
         Log.global.debug(">>>>>>>>----" + this.util)
         this.setAlias(name);
-        this.addReaction(new OutputGetter(this, new Triggers(this.t), new Args(this.getWritable(this.o))));
-    }
-}
-
-class OutputGetter<T> extends Reaction<T> {
-
-    //@ts-ignore
-    react(o: Writable<number>) {
-        Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>")
-        if(o.get() != null){
-            throw new Error("Calling get on an output before it has been set does not return null");
-        }
-        o.set(5);
-        if(o.get() !== 5){
-            throw new Error("Calling get on an output after it has been set does not return the set value");
-        }
+        this.addReaction(
+            new Triggers(this.t), 
+            new Args(this.getWritable(this.o)),
+            function(this, o) {
+                Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>")
+                if(o.get() != null){
+                    throw new Error("Calling get on an output before it has been set does not return null");
+                }
+                o.set(5);
+                if(o.get() !== 5){
+                    throw new Error("Calling get on an output after it has been set does not return the set value");
+                }
+            }
+        );
     }
 }
 

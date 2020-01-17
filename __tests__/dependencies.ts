@@ -1,29 +1,25 @@
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet, Log} from '../src/core/util';
-import {Reactor, Reaction, Priority, App, Triggers, InPort, Args} from '../src/core/reactor';
+import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown} from '../src/core/reactor';
 
 Log.setGlobalLevel(Log.levels.DEBUG);
 
-class X<T> extends Reaction<T> {
-    public react(...args: any[]): void {
-        throw new Error("Method not implemented.");
-    }
-
-}
-
 class R extends Reactor {
     protected in = new InPort(this);
-    public nodes: Array<X<unknown>> = [];
     constructor(parent: Reactor|null) {
         super(parent);
         for (let i = 0; i < 7; i++) {
-            let r = new X(this, new Triggers(this.in), new Args());
-            this.nodes.push(r);
-            this.addReaction(r);
+            this.addReaction(
+                new Triggers(this.in), 
+                new Args(), 
+                function(this) {
+                    throw new Error("Method not implemented.");
+                }
+            );
         }
     }
 
     getNodes() {
-        return this.nodes;
+        return this._reactions; // TODO: make default start and shutdown mutations so they don't appear here.
     }
 }
 
@@ -241,7 +237,7 @@ describe('Automatically constructed precedence graphs', () => {
     it('internal dependencies between reactions', () => {
         expect(reactor.getPrecedenceGraph().toString()).toBe(
 `digraph G {
-"App/R[6]"->"App/R[5]"->"App/R[4]"->"App/R[3]"->"App/R[2]"->"App/R[1]"->"App/R[0]"->"App/R[-1]"->"App/R[-2]";
+"App/R[6]"->"App/R[5]"->"App/R[4]"->"App/R[3]"->"App/R[2]"->"App/R[1]"->"App/R[0]";
 }`);
     });
 

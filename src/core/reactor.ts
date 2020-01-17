@@ -214,7 +214,7 @@ class Descendant implements Named {
  * type of the argument list that the function `react` is applied to when
  * this reaction gets triggered.
  */
-export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNode<Priority> {
+export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNode<Priority> {
 
     /** Priority derived from this reaction's location in 
      *  the directed acyclic precedence graph. */
@@ -224,9 +224,9 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
 
     private next: PrioritySetNode<Priority> | undefined;
 
-    getID(): Reaction<unknown> {
-        return this;
-    }
+    // getID(): Reaction<unknown> {
+    //     return this;
+    // }
 
     getNext(): PrioritySetNode<Priority> | undefined {
         return this.next;
@@ -239,7 +239,9 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
     public toString(): string {
         return this.__parent__.getFullyQualifiedName() + "[" + this.__parent__.getIndex(this) + "]";
     }
-
+    public setReact(r: (...args:ArgList<T>) => void): this {
+        return this;
+    }
     getDependencies(): [Set<Variable>, Set<Variable>] { 
         var deps:Set<Variable> = new Set();
         var antideps: Set<Variable> = new Set();
@@ -298,7 +300,13 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      * the variables that trigger it, and the arguments passed to the react function.
      * @param state state shared among reactions
      */
-     constructor(protected __parent__:Reactor, public trigs:Triggers, public args:Args<ArgList<T>>) { // FIXME: make these private and have getters
+     constructor(
+        protected __parent__:Reactor, 
+        public trigs:Triggers, 
+        public args:Args<ArgList<T>>, 
+        public react:(...args:ArgList<T>) => void, 
+        public deadline?: TimeInterval,
+        public late: (...args:ArgList<T>) => void = () => {Log.global.warn("Deadline violation occurred!")}) { // FIXME: make these private and have getters
         this.state = __parent__.state;
         this.util = new class implements ReactionUtils {
             constructor(public event: EventUtils, public exec: ExecUtils, public time: TimeUtils) {
@@ -314,11 +322,11 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      * implementations of this method.
      * @param args The arguments to with this function is to be applied.
      */
-    public abstract react(...args:ArgList<T>): void;
+    //public abstract react(...args:ArgList<T>): void;
 
-    public late(...args:ArgList<T>): void {
-        Log.global.warn("Deadline violation occurred!")
-    }
+    // public late(...args:ArgList<T>): void {
+    //     Log.global.warn("Deadline violation occurred!")
+    // }
     
 //    private values: Map<Readable<unknown>, unknown> = new Map();
 
@@ -524,7 +532,15 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
 }
 
 export class Startup extends Action<Present> {
+    constructor(__parent__: Reactor) {
+        super(__parent__, Origin.logical)
+    }
+}
 
+export class Shutdown extends Action<Present> {
+    constructor(__parent__: Reactor) {
+        super(__parent__, Origin.logical)
+    }
 }
 
 export class Parameter<T> implements Readable<T> {
@@ -664,12 +680,19 @@ export class Timer extends Descendant implements Readable<TimeInstant> {
     }
 }
 
-export abstract class Mutation<T> extends Reaction<T> {
+export class Mutation<T> extends Reaction<T> {
 
     readonly util:ReactorUtils;
 
-    constructor(__parent__:Reactor, trigs:Triggers, args:Args<ArgList<T>>) { // FIXME: make these private and have getters
-        super(__parent__, trigs, args);
+    constructor(
+        public __parent__:Reactor, 
+        public trigs:Triggers, 
+        public args:Args<ArgList<T>>, 
+        public react:(...args:ArgList<T>) => void, 
+        public deadline?: TimeInterval,
+        public late: (...args:ArgList<T>) => void = () => {Log.global.warn("Deadline violation occurred!")}
+    ) { // FIXME: make these private and have getters
+        super(__parent__, trigs, args, react, deadline, late);
         this.util = __parent__.util;
     }
 }
@@ -702,7 +725,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     public state = {};
 
-    private _triggerMap: Map<Variable, Set<Reaction<unknown>>> = new Map();
+    private _triggerMap: Map<Variable, Set<Reaction<any>>> = new Map();
 
     private _dependsOnReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
 
@@ -739,19 +762,19 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     //readonly check = <X extends Variable[]>(...args: X) => args;
     
     /** Reactions added by the implemented of derived reactor classes. */
-    protected _reactions: Reaction<unknown>[] = [];
+    protected _reactions: Reaction<any>[] = [];
 
-    private _mutations: Reaction<unknown>[] = []; // FIXME: introduce mutations
+    private _mutations: Mutation<any>[] = []; // FIXME: introduce mutations
     
-    public startup: Startup = new Startup(this, Origin.logical);
+    public startup = new Startup(this);
 
-    public shutdown: Action<Present> = new Action(this, Origin.logical);
+    public shutdown =  new Shutdown(this);
 
     protected app: App;
 
     public util: ReactorUtils;
 
-    protected getWritable<T extends Present>(port: Port<T>): Writer<T> {
+    protected getWritable<T extends Present>(port: Port<T>): Writable<T> {
         // FIXME: Implement checks to ensure that port is allowed to be written to.
         return new Writer(port);
     }
@@ -760,11 +783,11 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     //     return new Trigger(this, variable);
     // }
     
-    public getIndex(reaction: Reaction<unknown>): number {
+    public getIndex(reaction: Reaction<any>): number {
         
         for (let i = 0; i < this._reactions.length; i++) {
             if (Object.is(reaction, this._reactions[i])) {
-                return i-2; // subtract two for default startup and shutdown
+                return i;
             }
         }
         throw new Error("Reaction is not listed.");
@@ -824,16 +847,59 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
 
-    protected getSchedulable<T extends Present>(action: Action<T>) {
+    protected getSchedulable<T extends Present>(action: Action<T>): Schedulable<T> {
         return new Scheduler(this, action);
     }
 
-    protected addReaction<T>(reaction: Reaction<T>) : Reaction<T> {
-        // Ensure that arguments are compatible with implementation of react().
-        (function<X>(args: ArgList<X>, fun: (...args:ArgList<X>) => void): void {
-        })(reaction.args.tuple, reaction.react);
+    // protected addReaction<T>(reaction: Reaction<T>): void {
+    //     // FIXME: We could also construct the reaction in this function.
+    //     // That saves having to pass in a reference to `this`.
+    //     // Ensure that arguments are compatible with implementation of react().
+    //     (function<X>(args: ArgList<X>, fun: (...args:ArgList<X>) => void): void {
+    //     })(reaction.args.tuple, reaction.react);
         
-        this._reactions.push(reaction);
+    //     this._reactions.push(reaction);
+    //     // Stick this reaction into the trigger map to ensure it gets triggered.
+    //     for (let t of reaction.trigs.list) {
+    //         let s = this._triggerMap.get(t);
+    //         if (s == null) {
+    //             s = new Set();
+    //             this._triggerMap.set(t, s);
+    //         }
+    //         s.add(reaction);
+    //         // Record this trigger as a dependency.
+    //         if (t instanceof Port) {
+    //             this._addDependency(t, reaction);
+    //         } else {
+    //             Log.global.debug(">>>>>>>> not a dependency:" + t); // FIXME: Handle hierarchical references!
+    //         }
+    //     }
+    //     for (let a of reaction.args.tuple) {
+    //         if (a instanceof Port) {
+    //             if (this._isUpstream(a)) {
+    //                 this._addDependency(a, reaction);
+    //             } else if (this._isDownstream(a)) {
+    //                 this._addAntiDependency(a, reaction);
+    //             } else {
+    //                 throw new Error("Encountered argument that is neither a dependency nor an antidependency.");
+    //             }
+    //         }
+    //         // Only necessary if we want to add actions to the dependency graph.
+    //         if (a instanceof Action) {
+    //             // dep
+    //         }
+    //         if (a instanceof Scheduler) {
+    //             // antidep
+    //         }
+    //         if (a instanceof Writer) {
+    //             this._addAntiDependency(a.getPort(), reaction);
+    //         }
+    //     }
+
+    //     //return reaction;
+    // }
+
+    private recordDeps(reaction : Reaction<any>) {
         // Stick this reaction into the trigger map to ensure it gets triggered.
         for (let t of reaction.trigs.list) {
             let s = this._triggerMap.get(t);
@@ -870,8 +936,24 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                 this._addAntiDependency(a.getPort(), reaction);
             }
         }
+    }
 
-        return reaction;
+    public addReaction<T>(trigs:Triggers, args:Args<ArgList<T>>, 
+        react:(this:Reaction<T>, ...args:ArgList<T>) => void, deadline?: TimeInterval,
+        late: (this:Reaction<T>, ...args:ArgList<T>) => void = 
+            () => {Log.global.warn("Deadline violation occurred!")}) {
+        let reaction = new Reaction(this, trigs, args, react, deadline, late);
+        this._reactions.push(reaction);
+        this.recordDeps(reaction);
+    }
+
+    public addMutation<T>(trigs:Triggers, args:Args<ArgList<T>>, 
+        react:(this:Mutation<T>, ...args:ArgList<T>) => void, deadline?: TimeInterval,
+        late: (this:Mutation<T>, ...args:ArgList<T>) => void = 
+            () => {Log.global.warn("Deadline violation occurred!")}) {
+        let mutation = new Mutation(this, trigs, args, react, deadline, late);
+        this._mutations.push(mutation);
+        this.recordDeps(mutation);
     }
 
     public getPrecedenceGraph(): PrecedenceGraph<Reaction<unknown>> {
@@ -914,7 +996,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     }
 
-    private _addDependency(port: Port<Present>, reaction: Reaction<unknown>): void {
+    private _addDependency(port: Port<Present>, reaction: Reaction<any>): void {
         let s = this._dependentReactions.get(port);
         if (s == null) {
             s = new Set();    
@@ -923,7 +1005,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         s.add(reaction);
     }
 
-    private _addAntiDependency(port: Port<Present>, reaction: Reaction<unknown>): void {
+    private _addAntiDependency(port: Port<Present>, reaction: Reaction<any>): void {
         let s = this._dependsOnReactions.get(port);
         if (s == null) {
             s = new Set();
@@ -1007,28 +1089,33 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         // Do not attempt to reference during the construction of an App.
         if (!(this instanceof App)) {
             // Add default startup reaction.
-            this.addReaction(new class <T> extends Reaction<T> {
-                // @ts-ignore
-                react(): void {
-                    Log.global.log("*** Starting up reactor " + this.__parent__.getFullyQualifiedName());
+            this.addMutation(
+                new Triggers(this.startup), 
+                new Args(),
+                function(this) {
+                    var reactor = (this.__parent__ as Reactor); // FIXME: make parent private and add
+                                                                // function below part of ReactorUtils
+                    //Log.global.log("*** Starting up reactor " + reactor.getFullyQualifiedName());
                     // Schedule startup for all contained reactors.
-                    this.__parent__._startupChildren();
-                    this.__parent__._setTimers();
-                    this.__parent__._isActive = true;
+                    reactor._startupChildren();
+                    reactor._setTimers();
+                    reactor._isActive = true;
                 }
-            }(this, new Triggers(this.startup), new Args()));
+            );
 
             // Add default shutdown reaction.
-            this.addReaction(new class <T> extends Reaction<T> {
-                // @ts-ignore
-                react(): void {
-                    Log.global.log("*** Shutting down reactor " + this.__parent__.getFullyQualifiedName());
-                    this.__parent__._unsetTimers();
+            this.addMutation(
+                new Triggers(this.shutdown), 
+                new Args(),
+                function(this) {
+                    var reactor = (this.__parent__ as Reactor);
+                    Log.global.log("*** Shutting down reactor " + reactor.getFullyQualifiedName());
+                    reactor._unsetTimers();
                     // Schedule shutdown for all contained reactors.
-                    this.__parent__._shutdownChildren();
-                    this.__parent__._isActive = false;
+                    reactor._shutdownChildren();
+                    reactor._isActive = false;
                 }
-            }(this, new Triggers(this.shutdown), new Args()));
+            );
         }
     }
 
@@ -1738,10 +1825,11 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._startOfExecution = this._currentLogicalTime;
         
         // Add default startup reaction.
-        this.addReaction(new class <T> extends Reaction<T> {
-            // @ts-ignore
-            react(): void {
-                Log.global.log("*** Starting up reactor " + this.__parent__.getFullyQualifiedName());
+        this.addMutation(
+            new Triggers(this.startup), 
+            new Args(),
+            function (this) {
+                //Log.global.log("*** Starting up reactor " + (this.__parent__ as Reactor).getFullyQualifiedName());
                 // If the end of execution is known at startup, schedule a 
                 // shutdown event to that effect.
                 // Note that we schedule shutdown one microstep later, so that
@@ -1757,20 +1845,21 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                 app._setTimers();
                 app._isActive = true;
             }
-        }(this, new Triggers(this.startup), new Args()));
+        );
 
         // Add default shutdown reaction.
-        this.addReaction(new class <T> extends Reaction<T> {
-            // @ts-ignore
-            react(): void {
-                Log.global.log("*** Shutting down reactor " + this.__parent__.getFullyQualifiedName());
+        this.addMutation(
+            new Triggers(this.shutdown), 
+            new Args(),
+            function (this) {
                 var app = (this.__parent__ as App);
+                //Log.global.log("*** Shutting down reactor " + app.getFullyQualifiedName());
                 app._unsetTimers();
                 // Schedule shutdown for all contained reactors.
                 app._shutdownChildren();
-                app._isActive = false;
+                app._isActive = false;    
             }
-        }(this, new Triggers(this.shutdown), new Args()));
+        );
     }
 
     static instances: Set<App> = new Set(); // FIXME: we have to remove the instance from the set when we're done with it, or this will create a memory leak.

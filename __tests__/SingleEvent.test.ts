@@ -1,5 +1,3 @@
-'use strict';
-
 import {App, Parameter} from '../src/core/reactor';
 import {TimeInterval} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
