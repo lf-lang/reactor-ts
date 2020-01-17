@@ -7,9 +7,8 @@
 
 import {PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
 import {TimeInterval, TimeInstant, Origin, getCurrentPhysicalTime} from './time';
-import { LOADIPHLPAPI } from 'dns';
 
-Log.setGlobalLevel(Log.levels.DEBUG);
+//Log.setGlobalLevel(Log.levels.DEBUG);
 
 //---------------------------------------------------------------------//
 // Modules                                                             //
@@ -94,27 +93,30 @@ export interface EventUtils {
  * Interface for readable ports or actions.
  */
 export interface Readable<T> {
-    get: () => T | null;
+    get: () => T | Absent;
+    //toString(): string;
 }
 
 /**
  * Interface for schedulable actions.
  */
-export interface Schedulable<T> {
+export interface Schedulable<T> extends Readable<T> {
     schedule: (extraDelay: TimeInterval | 0, value?: T) => void;
 }
 
 export type Present = (number | string | boolean | symbol | object);
-export type Absent = (null | undefined);
+export type Absent = null; //(null | undefined);
 
 /**
  * Interface for writable ports.
  */
-export interface Writable<T> extends Readable<T> { // We might as well call these Set and Get
+export interface Writable<T> extends Readable<T> {
     set: (value: T) => void;
-    //isProxyOf: (port: Port<unknown>) => boolean; // Move these
-    //getPort(): Port<T>;
-    //toString(): string;
+}
+
+export interface Proxy<T extends Present> extends Writable<T> {
+    isProxyOf: (port: Port<any>) => boolean;
+    getPort(): Port<T>;
 }
 
 /**
@@ -225,7 +227,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
         var deps:Set<Variable> = new Set();
         var antideps: Set<Variable> = new Set();
         var vars = new Set();
-        for (let a of this.args.concat(this.trigs)) {
+        for (let a of this.args.tuple.concat(this.trigs.list)) {
             if (a instanceof Port) { // FIXME: handle Writers and hierarchical references!
                 if (this.__parent__._isUpstream(a)) {
                     deps.add(a);
@@ -268,7 +270,7 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
      * the variables that trigger it, and the arguments passed to the react function.
      * @param state state shared among reactions
      */
-    constructor(protected __parent__:Reactor, public trigs:Variable[], public args:VarList<T>) { // FIXME: make these private and have getters
+     constructor(protected __parent__:Reactor, public trigs:Triggers, public args:Args<VarList<T>>) { // FIXME: make these private and have getters
         this.state = __parent__.state;
         this.util = new class implements ReactionUtils {
             constructor(public event: EventUtils, public exec: ExecUtils, public time: TimeUtils) {
@@ -301,9 +303,9 @@ export abstract class Reaction<T> implements PrecedenceGraphNode<Priority>, Prio
                 !this.util.time.getCurrentLogicalTime()
                 .getLaterTime(this.timeout)
                 .isEarlierThan(getCurrentPhysicalTime())) {
-            this.late.apply(this, this.args);
+            this.late.apply(this, this.args.tuple);
         } else {
-            this.react.apply(this, this.args); // on time
+            this.react.apply(this, this.args.tuple); // on time
         }
     }
 
@@ -347,7 +349,7 @@ class Event<T> implements PrioritySetNode<TimeInstant> {
      * @param value The value associated with this event. 
      * 
      */
-    constructor(public trigger: Action<unknown> | Timer, public time: TimeInstant, public value:T) {
+    constructor(public trigger: Action<Present> | Timer, public time: TimeInstant, public value:T) {
     }
 
     hasPriorityOver(node: PrioritySetNode<TimeInstant> | undefined) {
@@ -394,7 +396,7 @@ class Event<T> implements PrioritySetNode<TimeInstant> {
  * scheduled by a reactor by invoking the schedule function in a reaction
  * or in an asynchronous callback that has been set up in a reaction.
  */
-export class Action<T> extends Descendant implements Readable<T> {
+export class Action<T extends Present> extends Descendant implements Readable<T> {
 
     origin: Origin;
     minDelay: TimeInterval;
@@ -405,7 +407,7 @@ export class Action<T> extends Descendant implements Readable<T> {
     // every action needs a timestamp (for _isPresent()) and only
     // some actions carry values. 
     
-    value: T | undefined;
+    value: T | null = null;
     
     // The most recent time this action was scheduled.
     // Used by the isPresent function to tell if this action
@@ -433,7 +435,7 @@ export class Action<T> extends Descendant implements Readable<T> {
      * logical time. This result is not affected by whether it
      * has a value.
      */
-    public isPresent() {
+    private isPresent() {
         if(this.timestamp == null){
             // This action has never been scheduled before.
             return false;
@@ -492,7 +494,7 @@ export class Action<T> extends Descendant implements Readable<T> {
 
 }
 
-export class Startup extends Action<undefined> {
+export class Startup extends Action<Present> {
 
 }
 
@@ -503,7 +505,7 @@ export class Parameter<T> implements Readable<T> {
         return this.value;
     }
 }
-// Transient
+
 export class State<T> implements Readable<T>, Writable<T> {
     
     constructor(private value:T) {
@@ -519,19 +521,36 @@ export class State<T> implements Readable<T>, Writable<T> {
 
 }
 
-export class Scheduler<T> implements Readable<T>, Schedulable<T> {
+// type ValueOrTime<T,S> = 
+//     T extends Timer ? 
+//         TimeInstant : 
+//     S extends Present ? 
+//         S : 
+//     never;
+
+// export class Trigger<T extends Readable<ValueOrTime<T,S>>, S extends Present> implements Readable<ValueOrTime<T,S>> {
+    
+//     constructor(private __parent__: Reactor, public variable: T) {    
+//     }
+
+//     get(): ValueOrTime<T,S> | Absent {
+//         return this.variable.get();
+//     }
+// }
+
+export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T> {
     
     constructor(private __parent__: Reactor, private action: Action<T>) {
     
     }
     
-    get(): T | null {
+    get(): T | Absent {
         return this.action.get();
     }
 
-    isPresent(): boolean {
-        return this.action.isPresent();
-    }
+    // isPresent(): boolean {
+    //     return this.action.isPresent();
+    // }
 
 
     /**
@@ -651,6 +670,29 @@ export class Timer extends Descendant implements Readable<TimeInstant> {
 //         this.util = __parent__.util;
 //     }
 // }
+type Effect<T,S> =  S extends Present ? 
+                        (T extends Port<S> ? 
+                            Writer<S> : 
+                            (T extends Action<S> ? 
+                                Scheduler<S> : 
+                                never)): 
+                        never; 
+
+type PortOrAction<T,S> = S extends Present ? T extends Port<S> ? T : T extends Action<S> ? T : never : never;
+
+export class Args<T extends Variable[]> {
+    tuple : T;
+    constructor(...args:T) {
+        this.tuple = args;
+    }
+}
+
+export class Triggers {
+    list: Variable[];
+    constructor(trigger: Variable, ...triggers: Variable[]) {
+        this.list = triggers.concat(trigger)
+    }
+}
 
 /**
  * A reactor is a software component that reacts to input events,
@@ -682,7 +724,11 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     private _startupActions: Set<Startup> = new Set(); // FIXME: use these so we can make startup and shutdown private
 
-    private _shutdownActions: Set<Action<unknown>> = new Set();
+    private _shutdownActions: Set<Action<Present>> = new Set();
+
+    private isTrigger<T extends Present>(trigger: Port<T> | Action<T> | Timer) {
+        
+    }
 
     /**
      * Generic helper function that turns a list of rest parameters into a VarList.
@@ -696,8 +742,8 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * for further information.
      * @see Reaction
      */
-    readonly check = <X extends Variable[]>(...args: X) => args;
-
+    //readonly check = <X extends Variable[]>(...args: X) => args;
+    
     /** Reactions added by the implemented of derived reactor classes. */
     protected _reactions: Reaction<unknown>[] = [];
 
@@ -705,16 +751,21 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     
     public startup: Startup = new Startup(this, Origin.logical);
 
-    public shutdown: Action<undefined> = new Action(this, Origin.logical);
+    public shutdown: Action<Present> = new Action(this, Origin.logical);
 
     protected app: App;
 
     public util: ReactorUtils;
 
     protected getWritable<T extends Present>(port: Port<T>): Writer<T> {
+        // FIXME: Implement checks to ensure that port is allowed to be written to.
         return new Writer(port);
     }
 
+    // protected getTrigger<T extends Readable<ValueOrTime<T,S>>, S extends Present>(variable: T): Readable<ValueOrTime<T,S>> {
+    //     return new Trigger(this, variable);
+    // }
+    
     public getIndex(reaction: Reaction<unknown>): number {
         
         for (let i = 0; i < this._reactions.length; i++) {
@@ -779,18 +830,18 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
 
-    protected getSchedulable<T>(action: Action<T>) {
+    protected getSchedulable<T extends Present>(action: Action<T>) {
         return new Scheduler(this, action);
     }
 
     protected addReaction<T>(reaction: Reaction<T>) : Reaction<T> {
         // Ensure that arguments are compatible with implementation of react().
         (function<X>(args: VarList<X>, fun: (...args:VarList<X>) => void): void {
-        })(reaction.args, reaction.react);
+        })(reaction.args.tuple, reaction.react);
         
         this._reactions.push(reaction);
         // Stick this reaction into the trigger map to ensure it gets triggered.
-        for (let t of reaction.trigs) {
+        for (let t of reaction.trigs.list) {
             let s = this._triggerMap.get(t);
             if (s == null) {
                 s = new Set();
@@ -801,11 +852,10 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             if (t instanceof Port) {
                 this._addDependency(t, reaction);
             } else {
-                Log.global.debug(">>>>>>>> not a dependency:" + t);
+                Log.global.debug(">>>>>>>> not a dependency:" + t); // FIXME: Handle hierarchical references!
             }
         }
-
-        for (let a of reaction.args) {
+        for (let a of reaction.args.tuple) {
             if (a instanceof Port) {
                 if (this._isUpstream(a)) {
                     this._addDependency(a, reaction);
@@ -954,7 +1004,6 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                 throw new Error("Cannot instantate reactor without a parent.");
             }
         }
-        Log.global.debug(this.app.util)
         
         // Even though TypeScript doesn't catch it, the following statement
         // will assign `undefined` if the this is an instance of App.
@@ -973,7 +1022,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                     this.__parent__._setTimers();
                     this.__parent__._isActive = true;
                 }
-            }(this, [this.startup], []));
+            }(this, new Triggers(this.startup), new Args()));
 
             // Add default shutdown reaction.
             this.addReaction(new class <T> extends Reaction<T> {
@@ -985,7 +1034,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                     this.__parent__._shutdownChildren();
                     this.__parent__._isActive = false;
                 }
-            }(this, [this.shutdown], []));
+            }(this, new Triggers(this.shutdown), new Args()));
         }
     }
 
@@ -1457,7 +1506,7 @@ export class InPort<T extends Present> extends Port<T> {
 
 }
 
-class Writer<T extends Present> implements Writable<T> { // NOTE: don't export this class!
+class Writer<T extends Present> implements Proxy<T> { // NOTE: don't export this class!
 
     constructor(private port: Port<T>) {
     }
@@ -1468,14 +1517,14 @@ class Writer<T extends Present> implements Writable<T> { // NOTE: don't export t
     * null.
     * @param value The value to be written.
     */
-    public set(value: T | null):void {
+    public set(value: T):void {
         Log.global.debug("set() has been called on " + this.port.getFullyQualifiedName());
         if (value != null) {
             this.port.update(this, value);
         }
     }
 
-    public get(): T | null {
+    public get(): T | Absent {
         return this.port.get();
     }
 
@@ -1710,7 +1759,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                 app._setTimers();
                 app._isActive = true;
             }
-        }(this, [this.startup], this.check(this.startup, this.shutdown)));
+        }(this, new Triggers(this.startup), new Args()));
 
         // Add default shutdown reaction.
         this.addReaction(new class <T> extends Reaction<T> {
@@ -1723,7 +1772,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                 app._shutdownChildren();
                 app._isActive = false;
             }
-        }(this, [this.shutdown], []));
+        }(this, new Triggers(this.shutdown), new Args()));
     }
 
     static instances: Set<App> = new Set(); // FIXME: we have to remove the instance from the set when we're done with it, or this will create a memory leak.

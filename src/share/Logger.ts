@@ -1,24 +1,17 @@
-import {Reactor, InPort, Reaction, Variable, VarList, Readable} from '../core/reactor';
+import {Reactor, InPort, Reaction, Readable, Triggers, Args, State, Present} from '../core/reactor';
 
 class Print<T> extends Reaction<T> {
-
-    expected: T;
-
-    constructor(parent: Reactor, triggers: Variable[], args:VarList<T>, expected:T) {
-        super(parent, triggers, args);
-        this.expected = expected;
-    }
 
     /**
      * Call console.log on the input, and test if it matches expected.
      * @override
      */
     //@ts-ignore
-    react(i: Readable<T> ) {
+    react(i: Readable<unknown>, expected: State<unknown>) {
         const received = i.get();
-        if(received) {
+        if (received) {
             console.log("Logging: " + received);
-            if(received == this.expected){
+            if(received == expected.get()) {
                 this.util.exec.success();
             } else {
                 this.util.exec.failure();
@@ -32,11 +25,11 @@ class Print<T> extends Reaction<T> {
 
 export class Logger extends Reactor {
 
-    i: InPort<any> = new InPort<any>(this);
+    i = new InPort(this);
 
-    constructor(parent:Reactor, expected:any) {
+    constructor(parent:Reactor, expected:Present) {
         super(parent);
-        this.addReaction(new Print(this, [this.i], this.check(this.i), expected));
+        this.addReaction(new Print(this, new Triggers(this.i), new Args(this.i, new State(expected))));
     }
 
 }

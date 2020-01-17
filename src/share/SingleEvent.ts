@@ -1,18 +1,14 @@
 
-import {Reactor, OutPort, Reaction, Timer, Writable, Variable, VarList, Present} from '../core/reactor';
+import {Reactor, OutPort, Reaction, Timer, Writable, Triggers, Args, VarList, Present, State, Parameter, Variable} from '../core/reactor';
 class ProduceOutput<T, S> extends Reaction<T> {
-
-    constructor(parent: Reactor, trigs:Variable[], args: VarList<T>, private payload:S) {
-        super(parent, trigs, args);
-    }
 
     /**
      * Produce an output event
      * @override
      */
     //@ts-ignore
-    react(o: Writable<S>) {
-        o.set(this.payload);
+    react(o: Writable<S>, payload:Parameter<S>) {
+        o.set(payload.get());
 
         // FIXME: create a test that actually tests double sets.
         // It's confusing to have SingleEvent be a DoubleEvent.
@@ -28,9 +24,9 @@ export class SingleEvent<T extends Present> extends Reactor {
     o: OutPort<T> = new OutPort<T>(this);
     t1: Timer = new Timer(this, 0, 0);
 
-    constructor(parent:Reactor, private payload:T) {
+    constructor(parent:Reactor, private payload:Parameter<T>) {
         super(parent);
-        this.addReaction(new ProduceOutput(this, [this.t1], this.check(this.getWritable(this.o)), payload));
+        this.addReaction(new ProduceOutput<Variable[], T>(this, new Triggers(this.t1), new Args(this.getWritable(this.o), this.payload)));
     }
 }
 

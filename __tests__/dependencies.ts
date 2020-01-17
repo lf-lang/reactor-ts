@@ -1,10 +1,9 @@
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet, Log} from '../src/core/util';
-import {Reactor, Reaction, Priority, App} from '../src/core/reactor';
+import {Reactor, Reaction, Priority, App, Triggers, InPort, Args} from '../src/core/reactor';
 
 Log.setGlobalLevel(Log.levels.DEBUG);
 
 class X<T> extends Reaction<T> {
-    
     public react(...args: any[]): void {
         throw new Error("Method not implemented.");
     }
@@ -12,11 +11,12 @@ class X<T> extends Reaction<T> {
 }
 
 class R extends Reactor {
+    protected in = new InPort(this);
     public nodes: Array<X<unknown>> = [];
     constructor(parent: Reactor|null) {
         super(parent);
         for (let i = 0; i < 7; i++) {
-            let r = new X(this, [], []);
+            let r = new X(this, new Triggers(this.in), new Args());
             this.nodes.push(r);
             this.addReaction(r);
         }

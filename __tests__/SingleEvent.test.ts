@@ -1,6 +1,6 @@
 'use strict';
 
-import {App} from '../src/core/reactor';
+import {App, Parameter} from '../src/core/reactor';
 import {TimeInterval} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 import {Logger} from '../src/share/Logger';
@@ -12,7 +12,7 @@ class SETest extends App {
     constructor(timeout: TimeInterval, success: ()=> void, failure: ()=>void ) {
         super(timeout, false, success, failure);
         this.setAlias("SETest");
-        this.singleEvent = new SingleEvent(this, "foo");
+        this.singleEvent = new SingleEvent(this, new Parameter("foo"));
         this.logger = new Logger(this, "foo");
 
         //Connect output of singleEvent to input of logger.

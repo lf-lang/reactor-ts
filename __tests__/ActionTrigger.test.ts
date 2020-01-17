@@ -1,4 +1,4 @@
-import {App} from '../src/core/reactor';
+import {App, Triggers, Args} from '../src/core/reactor';
 import {Origin, TimeInterval} from '../src/core/time';
 import {Reactor, Reaction, Timer, Action, Schedulable} from '../src/core/reactor';
 
@@ -27,7 +27,7 @@ export class ActionTrigger extends Reactor {
                 a1.schedule(0, "goodbye");
                 console.log("Scheduling the overridden action in ScheduleOverriddenAction to trigger RespondToAction");
             }
-        }(this, this.check(this.t1), this.check(this.getSchedulable(this.a1), {foo: this.a1})));
+        }(this, new Triggers(this.t1), new Args(this.getSchedulable(this.a1), {foo: this.a1})));
         
         this.addReaction(new class<T> extends Reaction<T> {
             /**
@@ -39,7 +39,7 @@ export class ActionTrigger extends Reactor {
                 a1.schedule(0, "hello");
                 console.log("Scheduling the final action in ScheduleAction to trigger RespondToAction");
             }
-        }(this, this.check(this.t1), this.check(this.getSchedulable(this.a1), this.a2)));
+        }(this, new Triggers(this.t1), new Args(this.getSchedulable(this.a1), this.a2)));
 
         this.addReaction(new class<T> extends Reaction<T> {
             /**
@@ -51,8 +51,8 @@ export class ActionTrigger extends Reactor {
             //@ts-ignore
             react(a1: Action<string>, a2: Action<string>){
                 const msg = a1.get();
-                const nothing = a2.get();
-                if(msg == "hello" && nothing === null && ! a2.isPresent()) {
+                const absent = !a2.get();
+                if(msg == "hello" && absent) {
                     this.util.exec.success();
                     console.log("success")
                 } else {
@@ -60,7 +60,7 @@ export class ActionTrigger extends Reactor {
                 }
                 console.log("Response to action is reacting. String payload is: " + msg);
             }
-        }(this, this.check(this.a1), this.check(this.a1, this.a2)));
+        }(this, new Triggers(this.a1), new Args(this.a1, this.a2)));
     }
 }
 

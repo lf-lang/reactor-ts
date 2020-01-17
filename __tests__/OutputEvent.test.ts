@@ -1,4 +1,4 @@
-import {App, Reactor, Reaction} from '../src/core/reactor';
+import {App, Reactor, Reaction, Parameter, Args, Triggers} from '../src/core/reactor';
 import {TimeInterval} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 
@@ -20,11 +20,11 @@ class OutputResponse<T> extends Reaction<T> {
  */
 export class OutputResponder extends Reactor {
 
-    se: SingleEvent<string> = new SingleEvent(this, "ContainedSingleEvent");
+    se: SingleEvent<string> = new SingleEvent(this, new Parameter("ContainedSingleEvent"));
     
     constructor(__parent__: Reactor){
         super(__parent__);
-        this.addReaction(new OutputResponse(this, [this.se.o], []));
+        this.addReaction(new OutputResponse(this, new Triggers(this.se.o), new Args()));
     }
 }
 

@@ -1,4 +1,4 @@
-import {Reactor, OutPort, InPort, App} from '../src/core/reactor';
+import {Reactor, OutPort, InPort, App, Parameter} from '../src/core/reactor';
 import {TimeInterval} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 import {Logger} from '../src/share/Logger';
@@ -6,7 +6,7 @@ import {Logger} from '../src/share/Logger';
 class SEContainer extends Reactor{
     // Made these public to accommodate the test below.
     public o: OutPort<any>= new OutPort<any>(this);
-    public child: SingleEvent<string> = new SingleEvent(this, "SingleEvent");
+    public child: SingleEvent<string> = new SingleEvent(this, new Parameter("SingleEvent"));
 
     constructor(parent: Reactor) {
         super(parent);

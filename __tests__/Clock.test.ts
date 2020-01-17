@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reaction, Timer, Action,  App, Schedulable} from '../src/core/reactor';
+import {Reaction, Timer, Action,  App, Schedulable, Triggers, Args} from '../src/core/reactor';
 import {TimeInterval, TimeUnit, Origin, UnitBasedTimeInterval} from "../src/core/time"
 
 /**
@@ -37,7 +37,7 @@ export class Clock extends App {
                 a1.schedule(0, 1);
                 console.log("Tick");
             }
-        }(this, [this.t1], this.check(this.getSchedulable(this.a1))));
+        }(this, new Triggers(this.t1), new Args(this.getSchedulable(this.a1))));
         this.addReaction(new class<T> extends Reaction<T> {
             /**
              * Print tock and schedule a2.
@@ -48,7 +48,7 @@ export class Clock extends App {
                 a2.schedule(0, 2);
                 console.log("Tock");
             }
-        }(this, [this.t2], this.check(this.getSchedulable(this.a2))));
+        }(this, new Triggers(this.t2), new Args(this.getSchedulable(this.a2))));
         //At time 5 seconds, this reaction should be triggered
         //simultaneosly by both timers, "Cuckoo" should only
         //print once.
@@ -62,7 +62,7 @@ export class Clock extends App {
                 a3.schedule(0, 3);
                 console.log("Cuckoo");
             }
-        }(this, [this.t1, this.t2], this.check(this.getSchedulable(this.a3))));
+        }(this, new Triggers(this.t1, this.t2), new Args(this.getSchedulable(this.a3))));
         this.addReaction(new class<T> extends Reaction<T> {
             /**
              * If all the actions are available at logical time 5 seconds from start, the test is successful.
@@ -88,7 +88,7 @@ export class Clock extends App {
                     }
                 }
             }
-        }(this, [this.a1, this.a2, this.a3], this.check(this.a1, this.a2, this.a3)));
+        }(this, new Triggers(this.a1, this.a2, this.a3), new Args(this.a1, this.a2, this.a3)));
     }
 }
 

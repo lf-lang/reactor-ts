@@ -1,4 +1,4 @@
-import {OutPort, App, Timer, Reaction, Writable} from '../src/core/reactor';
+import {OutPort, App, Timer, Reaction, Writable, Triggers, Args} from '../src/core/reactor';
 import {TimeInterval} from "../src/core/time";
 import { Log } from '../src/core/util';
 
@@ -11,7 +11,7 @@ class OutputGetTest extends App {
         super(timeout, true, success, failure);
         Log.global.debug(">>>>>>>>----" + this.util)
         this.setAlias(name);
-        this.addReaction(new OutputGetter(this, [this.t], this.check(this.getWritable(this.o))));
+        this.addReaction(new OutputGetter(this, new Triggers(this.t), new Args(this.getWritable(this.o))));
     }
 }
 
