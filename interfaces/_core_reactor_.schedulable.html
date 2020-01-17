@@ -88,7 +88,12 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Schedulable</span>
+						<a href="_core_reactor_.readable.html" class="tsd-signature-type">Readable</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">Schedulable</span>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</section>
@@ -105,6 +110,7 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="_core_reactor_.schedulable.html#get" class="tsd-kind-icon">get</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_reactor_.schedulable.html#schedule" class="tsd-kind-icon">schedule</a></li>
 							</ul>
 						</section>
@@ -113,13 +119,42 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+					<a name="get" class="tsd-anchor"></a>
+					<h3>get</h3>
+					<div class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="_core_reactor_.readable.html">Readable</a>.<a href="_core_reactor_.readable.html#get">get</a></p>
+						<ul>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L96">core/reactor.ts:96</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-siganture">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-property tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol"> | </span><a href="../modules/_core_reactor_.html#absent" class="tsd-signature-type">Absent</a></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span>
+											<span class="tsd-signature-symbol"> | </span>
+											<a href="../modules/_core_reactor_.html#absent" class="tsd-signature-type">Absent</a>
+										</h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="schedule" class="tsd-anchor"></a>
 					<h3>schedule</h3>
 					<div class="tsd-signature tsd-kind-icon">schedule<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e22b270/src/core/reactor.ts#L104">core/reactor.ts:104</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/1422c6c/src/core/reactor.ts#L104">core/reactor.ts:104</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -183,6 +218,9 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/_core_reactor_.app.html" class="tsd-kind-icon">App</a>
 					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_core_reactor_.args.html" class="tsd-kind-icon">Args</a>
+					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../classes/_core_reactor_.descendant.html" class="tsd-kind-icon">Descendant</a>
 					</li>
@@ -225,6 +263,9 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/_core_reactor_.timer.html" class="tsd-kind-icon">Timer</a>
 					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/_core_reactor_.triggers.html" class="tsd-kind-icon">Triggers</a>
+					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="../classes/_core_reactor_.writer.html" class="tsd-kind-icon">Writer</a>
 					</li>
@@ -240,6 +281,9 @@
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
 						<a href="_core_reactor_.named.html" class="tsd-kind-icon">Named</a>
 					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="_core_reactor_.proxy.html" class="tsd-kind-icon">Proxy</a>
+					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="_core_reactor_.reactionutils.html" class="tsd-kind-icon">Reaction<wbr>Utils</a>
 					</li>
@@ -254,6 +298,9 @@
 					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="_core_reactor_.schedulable.html" class="tsd-kind-icon">Schedulable</a>
 						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+								<a href="_core_reactor_.schedulable.html#get" class="tsd-kind-icon">get</a>
+							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="_core_reactor_.schedulable.html#schedule" class="tsd-kind-icon">schedule</a>
 							</li>
@@ -272,6 +319,12 @@
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="../modules/_core_reactor_.html#absent" class="tsd-kind-icon">Absent</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="../modules/_core_reactor_.html#effect" class="tsd-kind-icon">Effect</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="../modules/_core_reactor_.html#portoraction" class="tsd-kind-icon">Port<wbr>OrAction</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="../modules/_core_reactor_.html#present" class="tsd-kind-icon">Present</a>
