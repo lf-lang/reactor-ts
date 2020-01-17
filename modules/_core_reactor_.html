@@ -80,6 +80,7 @@
 								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported"><a href="../classes/_core_reactor_.event.html" class="tsd-kind-icon">Event</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported"><a href="../classes/_core_reactor_.eventqueue.html" class="tsd-kind-icon">Event<wbr>Queue</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter"><a href="../classes/_core_reactor_.inport.html" class="tsd-kind-icon">In<wbr>Port</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter"><a href="../classes/_core_reactor_.mutation.html" class="tsd-kind-icon">Mutation</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter"><a href="../classes/_core_reactor_.outport.html" class="tsd-kind-icon">Out<wbr>Port</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter"><a href="../classes/_core_reactor_.parameter.html" class="tsd-kind-icon">Parameter</a></li>
 								<li class="tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter"><a href="../classes/_core_reactor_.port.html" class="tsd-kind-icon">Port</a></li>
@@ -115,11 +116,9 @@
 							<h3>Type aliases</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-type-alias tsd-parent-kind-external-module"><a href="_core_reactor_.html#absent" class="tsd-kind-icon">Absent</a></li>
-								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported"><a href="_core_reactor_.html#effect" class="tsd-kind-icon">Effect</a></li>
-								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported"><a href="_core_reactor_.html#portoraction" class="tsd-kind-icon">Port<wbr>OrAction</a></li>
+								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter"><a href="_core_reactor_.html#arglist" class="tsd-kind-icon">Arg<wbr>List</a></li>
 								<li class="tsd-kind-type-alias tsd-parent-kind-external-module"><a href="_core_reactor_.html#present" class="tsd-kind-icon">Present</a></li>
 								<li class="tsd-kind-type-alias tsd-parent-kind-external-module"><a href="_core_reactor_.html#priority" class="tsd-kind-icon">Priority</a></li>
-								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter"><a href="_core_reactor_.html#varlist" class="tsd-kind-icon">Var<wbr>List</a></li>
 								<li class="tsd-kind-type-alias tsd-parent-kind-external-module"><a href="_core_reactor_.html#variable" class="tsd-kind-icon">Variable</a></li>
 							</ul>
 						</section>
@@ -140,45 +139,40 @@
 					<div class="tsd-signature tsd-kind-icon">Absent<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">null</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L109">core/reactor.ts:109</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/05f92b0/src/core/reactor.ts#L29">core/reactor.ts:29</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Type that denotes the absence of data exchanged between ports.</p>
+						</div>
+					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-					<a name="effect" class="tsd-anchor"></a>
-					<h3>Effect</h3>
-					<div class="tsd-signature tsd-kind-icon">Effect&lt;T, S&gt;<span class="tsd-signature-symbol">:</span> </div>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter">
+					<a name="arglist" class="tsd-anchor"></a>
+					<h3>Arg<wbr>List</h3>
+					<div class="tsd-signature tsd-kind-icon">Arg<wbr>List&lt;T&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">T extends Variable[] ? T : never</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L674">core/reactor.ts:674</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/05f92b0/src/core/reactor.ts#L37">core/reactor.ts:37</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Conditional type for argument lists of reactions. If the type variable
+								<code>T</code> is inferred to be a subtype of <code>Variable[]</code> it will yield <code>T</code>; it
+							will yield <code>never</code> if <code>T</code> is not a subtype of <code>Variable[]</code>.</p>
+						</div>
+						<dl class="tsd-comment-tags">
+							<dt>see</dt>
+							<dd><p>Reaction</p>
+							</dd>
+						</dl>
+					</div>
 					<h4 class="tsd-type-parameters-title">Type parameters</h4>
 					<ul class="tsd-type-parameters">
 						<li>
 							<h4>T</h4>
-						</li>
-						<li>
-							<h4>S</h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-					<a name="portoraction" class="tsd-anchor"></a>
-					<h3>Port<wbr>OrAction</h3>
-					<div class="tsd-signature tsd-kind-icon">Port<wbr>OrAction&lt;T, S&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">S extends Present ? T extends Port&lt;S&gt; ? T : T extends Action&lt;S&gt; ? T : never : never</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L682">core/reactor.ts:682</a></li>
-						</ul>
-					</aside>
-					<h4 class="tsd-type-parameters-title">Type parameters</h4>
-					<ul class="tsd-type-parameters">
-						<li>
-							<h4>T</h4>
-						</li>
-						<li>
-							<h4>S</h4>
 						</li>
 					</ul>
 				</section>
@@ -188,9 +182,14 @@
 					<div class="tsd-signature tsd-kind-icon">Present<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">true</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L108">core/reactor.ts:108</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/05f92b0/src/core/reactor.ts#L42">core/reactor.ts:42</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Type for data exchanged between ports.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module">
 					<a name="priority" class="tsd-anchor"></a>
@@ -198,7 +197,7 @@
 					<div class="tsd-signature tsd-kind-icon">Priority<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L50">core/reactor.ts:50</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/05f92b0/src/core/reactor.ts#L49">core/reactor.ts:49</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -213,36 +212,13 @@
 						</dl>
 					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter">
-					<a name="varlist" class="tsd-anchor"></a>
-					<h3>Var<wbr>List</h3>
-					<div class="tsd-signature tsd-kind-icon">Var<wbr>List&lt;T&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">T extends Variable[] ? T : never</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L57">core/reactor.ts:57</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Conditional type for lists of variables. If the type variable <code>T</code> is
-								inferred to be a subtype of <code>Variable[]</code>, it will yield that type,
-							<code>never</code> otherwise.</p>
-						</div>
-					</div>
-					<h4 class="tsd-type-parameters-title">Type parameters</h4>
-					<ul class="tsd-type-parameters">
-						<li>
-							<h4>T</h4>
-						</li>
-					</ul>
-				</section>
 				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module">
 					<a name="variable" class="tsd-anchor"></a>
 					<h3>Variable</h3>
 					<div class="tsd-signature tsd-kind-icon">Variable<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_core_reactor_.readable.html" class="tsd-signature-type">Readable</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/_core_reactor_.writable.html" class="tsd-signature-type">Writable</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L43">core/reactor.ts:43</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/05f92b0/src/core/reactor.ts#L68">core/reactor.ts:68</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -280,7 +256,7 @@
 					<div class="tsd-signature tsd-kind-icon">Nano<wbr>Timer<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;require(&#x27;nanotimer&#x27;)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/cca5603/src/core/reactor.ts#L20">core/reactor.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/05f92b0/src/core/reactor.ts#L20">core/reactor.ts:20</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -339,6 +315,9 @@
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../classes/_core_reactor_.inport.html" class="tsd-kind-icon">In<wbr>Port</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_core_reactor_.mutation.html" class="tsd-kind-icon">Mutation</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../classes/_core_reactor_.outport.html" class="tsd-kind-icon">Out<wbr>Port</a>
@@ -415,20 +394,14 @@
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="_core_reactor_.html#absent" class="tsd-kind-icon">Absent</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="_core_reactor_.html#effect" class="tsd-kind-icon">Effect</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
-						<a href="_core_reactor_.html#portoraction" class="tsd-kind-icon">Port<wbr>OrAction</a>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="_core_reactor_.html#arglist" class="tsd-kind-icon">Arg<wbr>List</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="_core_reactor_.html#present" class="tsd-kind-icon">Present</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="_core_reactor_.html#priority" class="tsd-kind-icon">Priority</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_core_reactor_.html#varlist" class="tsd-kind-icon">Var<wbr>List</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="_core_reactor_.html#variable" class="tsd-kind-icon">Variable</a>
