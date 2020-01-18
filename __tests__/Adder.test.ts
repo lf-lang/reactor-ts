@@ -7,27 +7,16 @@ export class Adder extends Reactor {
     in1: InPort<number> = new InPort(this);
     in2: InPort<number> = new InPort(this);
     out: OutPort<number> = new OutPort(this);
-    
     constructor(parent:Reactor) {
         super(parent);
         
-        // this.addReaction(
-        //     new Triggers(this.in1, this.in2), 
-        //     new Args(this.in1, this.in2, this.getWritable(this.out)),
-        //     (in1, in2, out) => {
-        //         // Type assertions allow coercion of null to 0.
-        //         out.set(in1.get() as number + (in2.get() as number));
-                
-        //     }, new TimeInterval(0)
-        // );
-
         this.addReaction(
             new Triggers(this.in1, this.in2), 
             new Args(this.in1, this.in2, this.getWritable(this.out)),
             function (this, in1, in2, out) {
                 // Type assertions allow coercion of null to 0.
                 out.set(in1.get() as number + (in2.get() as number));
-            }, new TimeInterval(0)
+            }
         );
     }
 }

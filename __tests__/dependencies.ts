@@ -19,7 +19,7 @@ class R extends Reactor {
     }
 
     getNodes() {
-        return this._reactions; // TODO: make default start and shutdown mutations so they don't appear here.
+        return this._reactions;
     }
 }
 
