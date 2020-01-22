@@ -8,7 +8,7 @@ export class Foo extends Reactor {
     constructor (parent:Reactor, bar: number = 42) {
         super(parent);
         this.bar = new Parameter(bar); // Parameter
-        this.baz = new State(new UnitBasedTimeInterval(0, TimeUnit.msec));
+        this.baz = new State(new UnitBasedTimeInterval(500, TimeUnit.msec));
         this.addReaction(
             new Triggers(this.startup),
             new Args(this.bar, this.baz),
