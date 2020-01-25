@@ -785,7 +785,6 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     // }
     
     public getIndex(reaction: Reaction<any>): number {
-        
         for (let i = 0; i < this._reactions.length; i++) {
             if (Object.is(reaction, this._reactions[i])) {
                 return i;
@@ -1781,6 +1780,12 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     private _reactionQ = new ReactionQueue();
 
     /**
+     * Indicates whether the app is shutting down.
+     * It is important not to schedule multiple/infinite shutdown events for the app.
+     */
+    private _shutdownStarted : boolean = false;
+
+    /**
      * Report a timer to the app so that it gets scheduled.
      * @param timer The timer to report to the app.
      */
@@ -1992,7 +1997,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                 // but there is nothing else to do.
                 Log.global.info("Preponing shutdown.")
                 this._eventQ.pop();
-                this.getSchedulable(this.shutdown).schedule(0);
+                this._shutdown();
             }
             
         } else {
@@ -2020,7 +2025,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             } else {
                 // Don't keep alive: initiate shutdown.
                 Log.global.debug("Initiating shutdown.")
-                this.getSchedulable(this.shutdown).schedule(0);
+                this._shutdown();
             }
         }
     }
@@ -2061,9 +2066,18 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._reactionQ.push(r);
     }
 
+    /**
+     * Schedule a shutdown event for the app if a shutdown event.
+     * has not already been scheduled.
+     */
     public _shutdown(): void {
-        Log.global.info("Initiating shutdown sequence.")
-        this.getSchedulable(this.shutdown).schedule(0);
+        if (! this._shutdownStarted) {
+            this._shutdownStarted = true;
+            Log.global.info("Initiating shutdown sequence.");
+            this.getSchedulable(this.shutdown).schedule(0);     
+        } else {
+            Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
+        }
     }
 
     public _start():void {
