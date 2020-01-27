@@ -2110,5 +2110,4 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         // Set in motion the execution of this program by scheduling startup at the current logical time.
         this.getSchedulable(this.startup).schedule(0);
     }
-
 }
