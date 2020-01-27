@@ -38,11 +38,11 @@
     },
     "jest": {
         "globals": {
-      		"ts-jest": {
-        		"babelConfig": "<rootDir>/.babelrc"
-      		}
-	},
-	"testPathIgnorePatterns": [
+            "ts-jest": {
+                "babelConfig": "<rootDir>/.babelrc"
+            }
+        },
+        "testPathIgnorePatterns": [
             "node_modules",
             "defunct"
         ],
