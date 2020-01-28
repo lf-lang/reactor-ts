@@ -902,17 +902,41 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     private recordDeps(reaction : Reaction<any>) {
         // Stick this reaction into the trigger map to ensure it gets triggered.
         for (let t of reaction.trigs.list) {
-            let s = this._triggerMap.get(t);
-            if (s == null) {
+            // If a reaction is triggered by a child reactor's port,
+            // it needs to be inserted into the child reactor's trigger map
+            // instead of this reactor's trigger map
+            let tMap : Map<Variable, Set<Reaction<any>>>;
+            let portParent : Reactor | undefined;
+            if (t instanceof Port && !t.isChildOf(this)) {
+                // Obtain the child reactor's trigger map
+                for (let childReactor of this._getChildren()) {
+                    if (t.isChildOf(childReactor)) {
+                        portParent = childReactor;
+                        break;
+                    }
+                }
+                if (portParent === undefined) {
+                    throw new Error("Port " + t + " is a trigger for reaction " + reaction
+                        + " but is neither a child of the reactor containing the reaction"
+                        + " or that reactor's children.")
+                }
+                tMap = portParent._triggerMap
+            } else {
+                // Use this reactor's trigger map
+                tMap = this._triggerMap
+            }
+            let s = tMap.get(t);
+            if (s == undefined) {
                 s = new Set();
-                this._triggerMap.set(t, s);
+                tMap.set(t, s);
             }
             s.add(reaction);
             // Record this trigger as a dependency.
             if (t instanceof Port) {
+                // The ports of hierarchical references are still given as ports
                 this._addDependency(t, reaction);
             } else {
-                Log.global.debug(">>>>>>>> not a dependency:" + t); // FIXME: Handle hierarchical references!
+                Log.global.debug(">>>>>>>> not a dependency: " + t); 
             }
         }
         for (let a of reaction.args.tuple) {
