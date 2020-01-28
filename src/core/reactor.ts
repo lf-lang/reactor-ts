@@ -1710,7 +1710,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                 return this.app.success();
             }
             public failure() {
-                return this.app.success();
+                return this.app.failure();
             }
         }(this),
         new class implements GraphUtils {
@@ -1819,7 +1819,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * @param success Optional callback to be used to indicate a successful execution.
      * @param failure Optional callback to be used to indicate a failed execution.
      */
-    constructor(executionTimeout: TimeInterval | undefined = undefined, keepAlive: boolean = false, public success: ()=> void = () => {}, public failure: ()=>void = () => {}) {
+    constructor(executionTimeout: TimeInterval | undefined = undefined, keepAlive: boolean = false, public success: ()=> void = () => {}, public failure: ()=>void = () => {throw new Error("Default app failure callback")}) {
         super(null);
 
         //App.instances.add(this);
