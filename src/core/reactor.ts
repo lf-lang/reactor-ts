@@ -552,16 +552,18 @@ export class Parameter<T> implements Readable<T> {
     }
 }
 
-export class State<T> implements Readable<T>, Writable<T> {
+// It's valid to create state for a reactor without initializing it to a value,
+// so the type of State is T | undefined.
+export class State<T> implements Readable<T | undefined>, Writable<T | undefined> {
     
-    constructor(private value:T) {
+    constructor(private value?:T) {
     }
 
-    get(): T {
+    get(): T | undefined {
         return this.value;
     };
     
-    set(value: T) {
+    set(value: T | undefined) {
         this.value = value;
     };
 
