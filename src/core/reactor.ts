@@ -88,6 +88,7 @@ export interface GraphUtils {
 export interface ExecUtils {
     success(): void;
     failure(): void;
+    requestShutdown(): void;
 }
 
 /**
@@ -1709,6 +1710,8 @@ export interface Util {
 
     failure(): void; // ...
 
+    requestShutdown(): void;
+
     schedule(e: Event<any>): void;
 }
 export class App extends Reactor { // Perhaps make this an abstract class, like reactor; omit the name parameter.
@@ -1732,7 +1735,11 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             constructor(private app: App) {
             
             }
-            public success() { // FIXME: turn this into shutdown! 
+            public requestShutdown() {
+                this.app._shutdown();
+            }
+
+            public success() {
                 return this.app.success();
             }
             public failure() {
