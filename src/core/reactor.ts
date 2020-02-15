@@ -1844,7 +1844,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     }
 
     //private heartbeat: Timer = new Timer(this, 0, new TimeInterval(5));
-    private snooze: Action<TimeInstant> = new Action(this, Origin.logical, new TimeInterval(5, 0));
+    private snooze: Action<TimeInstant> = new Action(this, Origin.logical, new TimeInterval(1, 0));
 
     /**
      * Create a new top-level reactor.
@@ -2051,7 +2051,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             this.success();
         } else {
             // No end of execution has been specified.
-            if (this._keepAlive) {
+            if (this._keepAlive && !this._shutdownStarted) {
                 // Keep alive: snooze and wake up later.
                 Log.global.debug("Going to sleep.");
                 this.getSchedulable(this.snooze).schedule(0, this._currentLogicalTime);
