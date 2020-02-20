@@ -238,7 +238,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
     }
 
     public toString(): string {
-        return this.__parent__.getFullyQualifiedName() + "[" + this.__parent__.getIndex(this) + "]";
+        return this.__parent__.getFullyQualifiedName() + "[R" + this.__parent__.getReactionIndex(this) + "]";
     }
     public setReact(r: (...args:ArgList<T>) => void): this {
         return this;
@@ -333,7 +333,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
 //    private values: Map<Readable<unknown>, unknown> = new Map();
 
     public doReact() {
-        Log.global.debug(">>> Reacting >>>" + this.constructor.name);
+        Log.global.debug(">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
         // Test if this reaction has a deadline which has been violated.
         // This is the case if the reaction has a defined timeout and
         // logical time + timeout < physical time
@@ -688,6 +688,13 @@ export class Mutation<T> extends Reaction<T> {
 
     readonly util:ReactorUtils;
 
+    /**
+     * @override
+     */
+    public toString(): string {
+        return this.__parent__.getFullyQualifiedName() + "[M" + this.__parent__.getMutationIndex(this) + "]";
+    }
+
     constructor(
         public __parent__:Reactor, 
         public trigs:Triggers, 
@@ -787,13 +794,22 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     //     return new Trigger(this, variable);
     // }
     
-    public getIndex(reaction: Reaction<any>): number {
+    public getReactionIndex(reaction: Reaction<any>): number {
         for (let i = 0; i < this._reactions.length; i++) {
             if (Object.is(reaction, this._reactions[i])) {
                 return i;
             }
         }
         throw new Error("Reaction is not listed.");
+    }
+
+    public getMutationIndex(mutation: Mutation<any>): number {
+        for (let i = 0; i < this._mutations.length; i++) {
+            if (Object.is(mutation, this._mutations[i])) {
+                return i;
+            }
+        }
+        throw new Error("Mutation is not listed.");
     }
 
     /**
@@ -1154,7 +1170,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     public _shutdownChildren() {
-        Log.global.debug("SHUTDOWN CHILDREN WAS CALLED")
+        Log.global.debug("Shutdown children was called")
         for (let r of this._getChildren()) {
             Log.global.debug("Propagating shutdown: " + r.shutdown);
             this.getSchedulable(r.shutdown).schedule(0);
@@ -1779,6 +1795,10 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
     private alarm = new NanoTimer();
 
+    /**
+     * The identifier for the timeout used to ensure alarms execute asynchronously.
+     */
+    private _alarmTimeoutID: ReturnType<typeof setTimeout> | undefined;
 
     /**
      * The time when the alarm's timeout will occur.
@@ -1805,10 +1825,10 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     private _endOfExecution: TimeInstant | undefined;
 
     /**
-     * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
-     * Initialized in start().
+     * If false, execute with normal delays to allow physical time to catch up to logical time.
+     * If true, don't wait for physical time to match logical time.
      */
-    private _startOfExecution: TimeInstant;
+    private _fast: boolean;
 
     /**
      * Indicates whether the program should continue running once the event 
@@ -1826,6 +1846,12 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * It is important not to schedule multiple/infinite shutdown events for the app.
      */
     private _shutdownStarted : boolean = false;
+
+    /**
+     * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
+     * Initialized in start().
+     */
+    private _startOfExecution: TimeInstant;
 
     /**
      * Report a timer to the app so that it gets scheduled.
@@ -1858,15 +1884,18 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     /**
      * Create a new top-level reactor.
      * @param executionTimeout Optional parameter to let the execution of the app time out.
+     * @param keepAlive Optional parameter, if true allows execution to continue with an empty event queue.
+     * @param fast Optional parameter, if true does not wait for physical time to catch up to logical time.
      * @param success Optional callback to be used to indicate a successful execution.
      * @param failure Optional callback to be used to indicate a failed execution.
      */
-    constructor(executionTimeout: TimeInterval | undefined = undefined, keepAlive: boolean = false, public success: ()=> void = () => {}, public failure: ()=>void = () => {throw new Error("Default app failure callback")}) {
+    constructor(executionTimeout: TimeInterval | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, public success: ()=> void = () => {}, public failure: ()=>void = () => {throw new Error("Default app failure callback")}) {
         super(null);
 
         //App.instances.add(this);
         this._executionTimeout = executionTimeout;
         this._keepAlive = keepAlive;
+        this._fast = fast;
 
         // NOTE: these will be reset properly during startup.
         this._currentLogicalTime = new TimeInstant(new TimeInterval(0), 0);
@@ -1959,10 +1988,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             this._eventQ.empty();
             // Clear timeouts, if any.
             this.clearAlarm();
-            Log.global.info(Log.hr);
-            Log.global.info(">>> End of execution: " + this._currentLogicalTime);
-            Log.global.info(Log.hr);
-            this.success();
+            this._terminateWithSuccess()
             return;
         }
     
@@ -1971,7 +1997,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         }
     
         let currentPhysicalTime = getCurrentPhysicalTime()
-        if (currentPhysicalTime.isEarlierThan(event.time)) {
+        if (currentPhysicalTime.isEarlierThan(event.time) && !this._fast) {
             Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Too early to handle next event.");
             Log.global.debug("Time difference: " + currentPhysicalTime.getTimeDifference(event.time).getNanoTime());
             this.setAlarm(event);
@@ -2055,9 +2081,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             // An end of execution was specified;
             // all shutdown events must have been consumed.
             this.clearAlarm();
-            Log.global.info("Concluded shutdown sequence.")
-            Log.global.debug("<<< END OF EXECUTION <<<")
-            this.success();
+            this._terminateWithSuccess();
         } else {
             // No end of execution has been specified.
             if (this._keepAlive) {
@@ -2084,12 +2108,16 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         Log.global.debug("Elapsed physical time in schedule: " + this.util.time.getElapsedPhysicalTime());
         if (head == undefined || e.time.isEarlierThan(head.time)) {
             this.setAlarm(e);
-        }        
+        }      
     }
 
     public clearAlarm () {
         this._currentAlarmTime = undefined;
-        this.alarm.clearTimeout()
+        if (this._alarmTimeoutID) {
+            clearTimeout(this._alarmTimeoutID);
+            this._alarmTimeoutID = undefined;
+        }
+        this.alarm.clearTimeout();
     }
 
     public setAlarm (e : Event<unknown>) {
@@ -2098,17 +2126,37 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             Log.global.debug("Ignoring call to set alarm for event with trigger: " + e.trigger
                 + " because the event's time: " + e.time + " is after the end of execution (plus a microstep): " 
                 + this._endOfExecution.getMicroStepLater());
+            this._terminateWithSuccess();
+            
         } else {
             this.clearAlarm()
             this._currentAlarmTime = e.time
             Log.global.debug("Setting alarm for event with trigger: " + e.trigger);
             let physicalTime = getCurrentPhysicalTime();
-            if (physicalTime.isEarlierThan(e.time)) {
+            if (physicalTime.isEarlierThan(e.time) && ! this._fast) {
                 let timeout = e.time.getTimeDifference(physicalTime);
-                this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
+                
+                // The line below looks funny, but there's an important explanation.
+                // Inspecting nanotimer's source at 
+                // https://github.com/Krb686/nanotimer/blob/master/lib/nanotimer.js 
+                // reveals it internally uses window.setTimeout() for delays over 25ms
+                // and synchronously invokes the task for delays less than that.
+
+                // Synchronously calling next is very bad here because it can produce
+                // bugs involving the reaction queue not being emptied before starting 
+                // _next again resulting in out-of-order reaction execution.
+                // It can also lead to a stack overflow. Wrapping alarm.setTimeout
+                // in a window.setTimeout with a timeout of 0 forces nanotimer to always
+                // act asynchronously.
+
+                this._alarmTimeoutID = setTimeout(() => {
+                    this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
+                }, 0);
                 Log.global.debug("Timeout: " + timeout.getNanoTime());
             } else {
-                this.alarm.setTimeout(this._next.bind(this), [e], "0n");
+                this._alarmTimeoutID = setTimeout(() => {
+                    this.alarm.setTimeout(this._next.bind(this), [e], "0s");
+                }, 0);
             }
         }
     }
@@ -2117,7 +2165,8 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * Public method to push reaction on the reaction queue. 
      * @param e Prioritized reaction to push onto the reaction queue.
      */
-    public _triggerReaction(r: Reaction<unknown>){  
+    public _triggerReaction(r: Reaction<unknown>){
+        Log.global.debug("Pushing " + r + " onto the reaction queue.")  
         this._reactionQ.push(r);
     }
 
@@ -2126,7 +2175,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * has not already been scheduled. Clear the alarm, and set
      * the end of execution to one microstep in the future. 
      */
-    public _shutdown(): void {
+    private _shutdown(): void {
         if (! this._shutdownStarted) {
             this._shutdownStarted = true;
             Log.global.info("Initiating shutdown sequence.");
@@ -2139,6 +2188,14 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
         }
+    }
+
+    private _terminateWithSuccess(): void {
+        Log.global.info(Log.hr);
+        Log.global.info(">>> End of execution at (logical) time: " + this.util.time.getCurrentLogicalTime());
+        Log.global.info(">>> Elapsed physical time: " + this.util.time.getElapsedPhysicalTime());
+        Log.global.info(Log.hr);
+        this.success();
     }
 
     public _start():void {
