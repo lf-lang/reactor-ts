@@ -1779,6 +1779,12 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
     private alarm = new NanoTimer();
 
+
+    /**
+     * The time when the alarm's timeout will occur.
+     */
+    private _currentAlarmTime: TimeInstant | undefined;
+
     /**
      * Priority set that keeps track of scheduled events.
      */
@@ -1791,7 +1797,10 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     private _executionTimeout: TimeInterval | undefined;
 
     /**
-     * 
+     * The time at which normal execution should terminate. Note: execution continues for one 
+     * more microstep, to give shutdown reactions a chance to execute.
+     * Is initially set to the app's timeout + _startOfExecution or undefined if no timeout
+     * is given. When _shutdown is called, _endOfExecution is updated to the current time.
      */
     private _endOfExecution: TimeInstant | undefined;
 
@@ -1949,7 +1958,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             // Remove remaining items from the event queue, if any.
             this._eventQ.empty();
             // Clear timeouts, if any.
-            this.alarm.clearTimeout();
+            this.clearAlarm();
             Log.global.info(Log.hr);
             Log.global.info(">>> End of execution: " + this._currentLogicalTime);
             Log.global.info(Log.hr);
@@ -2018,7 +2027,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         
         if (nextEvent) {
             Log.global.debug("Event queue not empty.")
-            if (nextEvent.trigger !== this.shutdown || this._keepAlive || this._currentLogicalTime.time == event.time.time) {
+            if (nextEvent.trigger !== this.shutdown || this._keepAlive || this._currentLogicalTime.time.isEqualTo(event.time.time)) {
                 // Set an alarm to handle the next event.
                 Log.global.debug("Setting alarm to wake up for next event.")
                 Log.global.log(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
@@ -2045,13 +2054,13 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         if (this._endOfExecution) {
             // An end of execution was specified;
             // all shutdown events must have been consumed.
-            this.alarm.clearTimeout();
+            this.clearAlarm();
             Log.global.info("Concluded shutdown sequence.")
             Log.global.debug("<<< END OF EXECUTION <<<")
             this.success();
         } else {
             // No end of execution has been specified.
-            if (this._keepAlive && !this._shutdownStarted) {
+            if (this._keepAlive) {
                 // Keep alive: snooze and wake up later.
                 Log.global.debug("Going to sleep.");
                 this.getSchedulable(this.snooze).schedule(0, this._currentLogicalTime);
@@ -2078,16 +2087,29 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         }        
     }
 
-    public setAlarm(e : Event<unknown>) {
-        this.alarm.clearTimeout();
-        Log.global.debug("Setting alarm for event with trigger: " + e.trigger);
-        let physicalTime = getCurrentPhysicalTime();
-        if (physicalTime.isEarlierThan(e.time)) {
-            let timeout = e.time.getTimeDifference(physicalTime);
-            this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
-            Log.global.debug("Timeout: " + timeout.getNanoTime());
+    public clearAlarm () {
+        this._currentAlarmTime = undefined;
+        this.alarm.clearTimeout()
+    }
+
+    public setAlarm (e : Event<unknown>) {
+        // Note, end of execution is currently set by the app timeout or _shutdown
+        if (this._endOfExecution && this._endOfExecution.getMicroStepLater().isEarlierThan(e.time)) {
+            Log.global.debug("Ignoring call to set alarm for event with trigger: " + e.trigger
+                + " because the event's time: " + e.time + " is after the end of execution (plus a microstep): " 
+                + this._endOfExecution.getMicroStepLater());
         } else {
-            this.alarm.setTimeout(this._next.bind(this), [e], "0n");
+            this.clearAlarm()
+            this._currentAlarmTime = e.time
+            Log.global.debug("Setting alarm for event with trigger: " + e.trigger);
+            let physicalTime = getCurrentPhysicalTime();
+            if (physicalTime.isEarlierThan(e.time)) {
+                let timeout = e.time.getTimeDifference(physicalTime);
+                this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
+                Log.global.debug("Timeout: " + timeout.getNanoTime());
+            } else {
+                this.alarm.setTimeout(this._next.bind(this), [e], "0n");
+            }
         }
     }
 
@@ -2101,12 +2123,18 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
     /**
      * Schedule a shutdown event for the app if a shutdown event.
-     * has not already been scheduled.
+     * has not already been scheduled. Clear the alarm, and set
+     * the end of execution to one microstep in the future. 
      */
     public _shutdown(): void {
         if (! this._shutdownStarted) {
             this._shutdownStarted = true;
             Log.global.info("Initiating shutdown sequence.");
+            this._endOfExecution = this._currentLogicalTime;
+            Log.global.debug("Setting end of execution to: " + this._endOfExecution);
+            if (this._currentAlarmTime && this._endOfExecution.getMicroStepLater().isEarlierThan(this._currentAlarmTime)) {
+                this.clearAlarm();
+            }
             this.getSchedulable(this.shutdown).schedule(0);     
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
