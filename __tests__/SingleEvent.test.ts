@@ -8,7 +8,7 @@ class SETest extends App {
     logger: Logger;
 
     constructor(timeout: TimeInterval, success: ()=> void, failure: ()=>void ) {
-        super(timeout, false, success, failure);
+        super(timeout, false, false, success, failure);
         this.setAlias("SETest");
         this.singleEvent = new SingleEvent(this, new Parameter("foo"));
         this.logger = new Logger(this, "foo");

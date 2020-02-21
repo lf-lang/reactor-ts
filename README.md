@@ -1,7 +1,7 @@
 A Reactor-Oriented Programming Framework in TypeScript
 ---
 
-[![Build Status](https://api.travis-ci.com/icyphy/reactor-ts.svg?branch=master)](https://travis-ci.com/lhstrh/wirewrap)
+[![Build Status](https://api.travis-ci.com/icyphy/reactor-ts.svg?branch=master)](https://travis-ci.com/icyphy/reactor-ts)
 
 [Documentation](https://lhstrh.github.io/wirewrap)
 

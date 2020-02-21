@@ -8,7 +8,7 @@ class OutputGetTest extends App {
     t: Timer = new Timer(this, 0, 0);
     
     constructor(timeout: TimeInterval, name:string, success: ()=> void, failure: ()=>void){
-        super(timeout, true, success, failure);
+        super(timeout, true, false, success, failure);
         Log.global.debug(">>>>>>>>----" + this.util)
         this.setAlias(name);
         this.addReaction(
