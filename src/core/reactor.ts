@@ -2130,13 +2130,13 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             
         } else {
             this.clearAlarm()
-            this._currentAlarmTime = e.time
             Log.global.debug("Setting alarm for event with trigger: " + e.trigger);
+            this._currentAlarmTime = e.time
             let physicalTime = getCurrentPhysicalTime();
             if (physicalTime.isEarlierThan(e.time) && ! this._fast) {
                 let timeout = e.time.getTimeDifference(physicalTime);
-                
-                // The line below looks funny, but there's an important explanation.
+
+                // The code below looks funny, but there's an important explanation.
                 // Inspecting nanotimer's source at 
                 // https://github.com/Krb686/nanotimer/blob/master/lib/nanotimer.js 
                 // reveals it internally uses window.setTimeout() for delays over 25ms
@@ -2144,19 +2144,23 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
                 // Synchronously calling next is very bad here because it can produce
                 // bugs involving the reaction queue not being emptied before starting 
-                // _next again resulting in out-of-order reaction execution.
+                // _next again resulting in reaction execution at the wrong logical time.
                 // It can also lead to a stack overflow. Wrapping alarm.setTimeout
                 // in a window.setTimeout with a timeout of 0 forces nanotimer to always
                 // act asynchronously.
 
-                this._alarmTimeoutID = setTimeout(() => {
-                    this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
-                }, 0);
+                this._alarmTimeoutID = setTimeout(
+                    function(this: App) {
+                        let physicalTime = getCurrentPhysicalTime();
+                        let timeout = e.time.getTimeDifference(physicalTime);
+                        this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
+                }.bind(this), 0);
                 Log.global.debug("Timeout: " + timeout.getNanoTime());
             } else {
-                this._alarmTimeoutID = setTimeout(() => {
-                    this.alarm.setTimeout(this._next.bind(this), [e], "0s");
-                }, 0);
+                this._alarmTimeoutID = setTimeout(
+                    function(this: App){
+                        this._next(e)
+                    }.bind(this), 0);
             }
         }
     }
@@ -2178,7 +2182,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     private _shutdown(): void {
         if (! this._shutdownStarted) {
             this._shutdownStarted = true;
-            Log.global.info("Initiating shutdown sequence.");
+            Log.global.debug("Initiating shutdown sequence.");
             this._endOfExecution = this._currentLogicalTime;
             Log.global.debug("Setting end of execution to: " + this._endOfExecution);
             if (this._currentAlarmTime && this._endOfExecution.getMicroStepLater().isEarlierThan(this._currentAlarmTime)) {
