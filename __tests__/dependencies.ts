@@ -47,9 +47,9 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.size()[1]).toEqual(7); // E
         expect(graph.toString()).toBe(
 `digraph G {
-"App/R[0]"->"App/R[1]"->"App/R[4]"->"App/R[3]"->"App/R[5]";
-"App/R[0]"->"App/R[4]";
-"App/R[1]"->"App/R[2]"->"App/R[3]";
+"App/R[R0]"->"App/R[R1]"->"App/R[R4]"->"App/R[R3]"->"App/R[R5]";
+"App/R[R0]"->"App/R[R4]";
+"App/R[R1]"->"App/R[R2]"->"App/R[R3]";
 }`);
     });
 
@@ -69,9 +69,9 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.size()[1]).toEqual(6); // E
         expect(graph.toString()).toBe(
 `digraph G {
-"App/R[0]"->"App/R[1]"->"App/R[2]"->"App/R[3]"->"App/R[5]";
-"App/R[1]"->"App/R[4]";
-"App/R[0]"->"App/R[4]";
+"App/R[R0]"->"App/R[R1]"->"App/R[R2]"->"App/R[R3]"->"App/R[R5]";
+"App/R[R1]"->"App/R[R4]";
+"App/R[R0]"->"App/R[R4]";
 }`);
     });
 
@@ -82,8 +82,8 @@ describe('Manually constructed precedence graphs', () => {
         Log.global.debug(graph.toString());
         expect(graph.toString()).toBe(
 `digraph G {
-"App/R[2]"->"App/R[3]"->"App/R[5]";
-"App/R[0]"->"App/R[4]";
+"App/R[R2]"->"App/R[R3]"->"App/R[R5]";
+"App/R[R0]"->"App/R[R4]";
 }`);
     });
 
@@ -95,9 +95,9 @@ describe('Manually constructed precedence graphs', () => {
         Log.global.debug(graph.toString());
         expect(graph.toString()).toBe(
 `digraph G {
-"App/R[2]"->"App/R[3]"->"App/R[5]";
-"App/R[0]"->"App/R[4]";
-"App/R[2]"->"App/R[6]";
+"App/R[R2]"->"App/R[R3]"->"App/R[R5]";
+"App/R[R0]"->"App/R[R4]";
+"App/R[R2]"->"App/R[R6]";
 }`);
     });
 
@@ -237,7 +237,7 @@ describe('Automatically constructed precedence graphs', () => {
     it('internal dependencies between reactions', () => {
         expect(reactor.getPrecedenceGraph().toString()).toBe(
 `digraph G {
-"App/R[6]"->"App/R[5]"->"App/R[4]"->"App/R[3]"->"App/R[2]"->"App/R[1]"->"App/R[0]";
+"App/R[R6]"->"App/R[R5]"->"App/R[R4]"->"App/R[R3]"->"App/R[R2]"->"App/R[R1]"->"App/R[R0]";
 }`);
     });
 
