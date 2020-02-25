@@ -1,5 +1,5 @@
 import {Reactor, OutPort, InPort, App, Parameter} from '../src/core/reactor';
-import {TimeInterval} from "../src/core/time"
+import {TimeValue} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 import {Logger} from '../src/share/Logger';
 
@@ -31,7 +31,7 @@ class SETest extends App {
     seContainer: SEContainer;
     logContainer: LogContainer;
 
-    constructor(name:string, timeout: TimeInterval, keepAlive: boolean = false, fast: boolean = false, success: ()=> void, fail: ()=>void ){
+    constructor(name:string, timeout: TimeValue, keepAlive: boolean = false, fast: boolean = false, success: ()=> void, fail: ()=>void ){
         super(timeout, keepAlive, fast, success, fail)
         this.setAlias(name);
         this.seContainer = new SEContainer(this);
@@ -61,7 +61,7 @@ describe('HierarchicalSingleEvent', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        let seTest = new SETest("SingleEventTesterApp", new TimeInterval(3), false, false, done, failReactor);
+        let seTest = new SETest("SingleEventTesterApp", new TimeValue(3), false, false, done, failReactor);
 
         // Normally _setAllParents would be called as part of the initialization
         // process for starting an app, but we call it directly here to set

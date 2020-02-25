@@ -6,7 +6,7 @@
  */
 
 import {PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
-import {TimeInterval, TimeInstant, Origin, getCurrentPhysicalTime} from './time';
+import {TimeValue, Tag, Origin, getCurrentPhysicalTime} from './time';
 
 //Log.setGlobalLevel(Log.levels.DEBUG);
 
@@ -95,10 +95,11 @@ export interface ExecUtils {
  * Utilities for monitoring the passing of time.
  */
 export interface TimeUtils {
-    getCurrentLogicalTime(): TimeInstant;
-    getCurrentPhysicalTime(): TimeInstant;
-    getElapsedLogicalTime(): TimeInterval;
-    getElapsedPhysicalTime(): TimeInterval;
+    getCurrentTag(): Tag;
+    getCurrentLogicalTime(): TimeValue;
+    getCurrentPhysicalTime(): TimeValue;
+    getElapsedLogicalTime(): TimeValue;
+    getElapsedPhysicalTime(): TimeValue;
 }
 
 /**
@@ -119,7 +120,7 @@ export interface Readable<T> {
  * Interface for schedulable actions.
  */
 export interface Schedulable<T> extends Readable<T> {
-    schedule: (extraDelay: TimeInterval | 0, value?: T) => void;
+    schedule: (extraDelay: TimeValue | 0, value?: T) => void;
 }
 
 /**
@@ -294,7 +295,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
     }
 
     //A reaction defaults to not having a deadline  FIXME: we want the deadline to have access to the same variables
-    timeout: TimeInterval | undefined;
+    timeout: TimeValue | undefined;
 
     /** 
      * Construct a new Reaction by passing in a reference to the reactor that contains it,
@@ -306,7 +307,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         public trigs:Triggers, 
         public args:Args<ArgList<T>>, 
         public react:(...args:ArgList<T>) => void, 
-        public deadline?: TimeInterval,
+        public deadline?: TimeValue,
         public late: (...args:ArgList<T>) => void = () => {Log.global.warn("Deadline violation occurred!")}) { // FIXME: make these private and have getters
         this.state = __parent__.state;
         this.util = new class implements ReactionUtils {
@@ -339,9 +340,9 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         // logical time + timeout < physical time
         Log.global.debug("Timeout: " + this.timeout);
         if (this.timeout && 
-            this.util.time.getCurrentLogicalTime()
-                .getLaterTime(this.timeout)
-                .isEarlierThan(getCurrentPhysicalTime())) {
+            this.util.time.getCurrentTag()
+                .getLaterTag(this.timeout)
+                .isEarlierThan(new Tag(getCurrentPhysicalTime(), 0))) {
             this.late.apply(this, this.args.tuple);
         } else {
             this.react.apply(this, this.args.tuple); // on time
@@ -356,7 +357,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
      * will be invoked once triggered. 
      * @param deadline The deadline to set to this reaction.
      */
-    setDeadline(timeout: TimeInterval): this {
+    setDeadline(timeout: TimeValue): this {
         this.timeout = timeout;
         return this;
     }
@@ -377,21 +378,21 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
  * of arbitrary type. The tag will determine the event's position
  * with respect to other events in the event queue.
  */
-class Event<T> implements PrioritySetNode<TimeInstant> {
+class Event<T> implements PrioritySetNode<Tag> {
 
     private next: Event<unknown> | undefined;
 
     /**
      * Constructor for an event.
      * @param trigger The trigger of this event.
-     * @param time The time instant when this event occurs.
+     * @param tag The tag at which this event occurs.
      * @param value The value associated with this event. 
      * 
      */
-    constructor(public trigger: Action<Present> | Timer, public time: TimeInstant, public value:T) {
+    constructor(public trigger: Action<Present> | Timer, public tag: Tag, public value:T) {
     }
 
-    hasPriorityOver(node: PrioritySetNode<TimeInstant> | undefined) {
+    hasPriorityOver(node: PrioritySetNode<Tag> | undefined) {
         if (node) {
             return this.getPriority().isEarlierThan(node.getPriority());
         } else {
@@ -399,9 +400,9 @@ class Event<T> implements PrioritySetNode<TimeInstant> {
         }
     }
 
-    updateIfDuplicateOf(node: PrioritySetNode<TimeInstant> | undefined) {
+    updateIfDuplicateOf(node: PrioritySetNode<Tag> | undefined) {
         if (node && node instanceof Event) {
-            if (this.trigger === node.trigger && this.time.isSimultaneousWith(node.time)) {
+            if (this.trigger === node.trigger && this.tag.isSimultaneousWith(node.tag)) {
                 node.value = this.value; // update the value
                 return true;
             } 
@@ -421,8 +422,8 @@ class Event<T> implements PrioritySetNode<TimeInstant> {
         this.next = node;
     }
     
-    getPriority(): TimeInstant {
-        return this.time;
+    getPriority(): Tag {
+        return this.tag;
     }
  }
 
@@ -438,7 +439,7 @@ class Event<T> implements PrioritySetNode<TimeInstant> {
 export class Action<T extends Present> extends Descendant implements Readable<T> {
 
     origin: Origin;
-    minDelay: TimeInterval;
+    minDelay: TimeValue;
     //name: string;
 
     // A value is available to any reaction triggered by this action.
@@ -452,17 +453,17 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
     // Used by the isPresent function to tell if this action
     // has been scheduled for the current logical time.
     
-    private timestamp: TimeInstant | undefined;
+    private timestamp: Tag | undefined;
 
     public update(e: Event<unknown>) {
         
-        if (!e.time.isSimultaneousWith(this.__parent__.util.time.getCurrentLogicalTime())) {
+        if (!e.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
         }
         if (e.trigger == this) {
             //@ts-ignore
             this.value = e.value;
-            this.timestamp = e.time;
+            this.timestamp = e.tag;
             this.__parent__.triggerReactions(e);
         } else {
             throw new Error("Attempt to update action using incompatible event.");
@@ -479,7 +480,7 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
             // This action has never been scheduled before.
             return false;
         }
-        if(this.timestamp.isSimultaneousWith(this.__parent__.util.time.getCurrentLogicalTime())){
+        if(this.timestamp.isSimultaneousWith(this.__parent__.util.time.getCurrentTag())){
             return true;
         } else {
             return false;
@@ -517,7 +518,7 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
      * @param minDelay Optional. Defaults to 0. Specifies the intrisic delay of
      * any events resulting from scheduling this action.
      */
-    constructor(protected __parent__: Reactor, origin: Origin, minDelay: TimeInterval = new TimeInterval(0)){
+    constructor(protected __parent__: Reactor, origin: Origin, minDelay: TimeValue = new TimeValue(0)){
         super(__parent__);
         this.origin = origin;
         this.minDelay = minDelay;
@@ -592,18 +593,18 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
      * @param value An optional value to be attached to this action.
      * The value will be available to reactions depending on this action.
      */
-    schedule(extraDelay: TimeInterval | 0, value?: T) {
+    schedule(extraDelay: TimeValue | 0, value?: T) {
         Log.global.debug("Scheduling action " + this.action.getName());
-        if (!(extraDelay instanceof TimeInterval)) {
-            extraDelay = new TimeInterval(0);
+        if (!(extraDelay instanceof TimeValue)) {
+            extraDelay = new TimeValue(0);
         }
         
-        var tag = this.__parent__.util.time.getCurrentLogicalTime();
+        var tag = this.__parent__.util.time.getCurrentTag();
         var delay = this.action.minDelay.add(extraDelay);
         if (this.action.origin == Origin.physical) {
-            tag = getCurrentPhysicalTime();
+            tag = new Tag(getCurrentPhysicalTime(), 0);
         }
-        tag = tag.getLaterTime(delay);
+        tag = tag.getLaterTag(delay);
         if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
             tag = tag.getMicroStepLater();
         }
@@ -619,12 +620,12 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
  * reschedule the event at the current logical time + period in the future. A 0 
  * period indicates the timer's event is a one-off and should not be rescheduled.
  */
-export class Timer extends Descendant implements Readable<TimeInstant> {
+export class Timer extends Descendant implements Readable<Tag> {
     
-    private tag: TimeInstant | undefined;
+    private tag: Tag | undefined;
 
-    get(): TimeInstant | null {
-        if (this.tag && this.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentLogicalTime())) {
+    get(): Tag | null {
+        if (this.tag && this.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentTag())) {
             return this.tag;
         } else {
             return null;
@@ -638,8 +639,8 @@ export class Timer extends Descendant implements Readable<TimeInstant> {
         return false;
     }
 
-    period: TimeInterval;
-    offset: TimeInterval;
+    period: TimeValue;
+    offset: TimeValue;
 
     /**
      * Timer constructor. 
@@ -649,16 +650,16 @@ export class Timer extends Descendant implements Readable<TimeInstant> {
      * @param period The interval between rescheduled timer events. If 0, will
      * not reschedule. Cannot be negative.
      */
-    constructor(protected __parent__: Reactor, offset: TimeInterval | 0, period:TimeInterval | 0) {
+    constructor(protected __parent__: Reactor, offset: TimeValue | 0, period:TimeValue | 0) {
         super(__parent__);
-        if (!(offset instanceof TimeInterval)) {
-            this.offset = new TimeInterval(0);
+        if (!(offset instanceof TimeValue)) {
+            this.offset = new TimeValue(0);
         } else {
             this.offset = offset;
         }
 
-        if (!(period instanceof TimeInterval)) {
-            this.period = new TimeInterval(0);
+        if (!(period instanceof TimeValue)) {
+            this.period = new TimeValue(0);
         } else {
             this.period = period;
         }
@@ -670,11 +671,11 @@ export class Timer extends Descendant implements Readable<TimeInstant> {
      * @param e Timestamped event.
      */
     public update(e: Event<unknown>) {
-        if (!e.time.isSimultaneousWith(this.__parent__.util.time.getCurrentLogicalTime())) {
+        if (!e.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
         }
         if (e.trigger == this) {
-            this.tag = e.time;
+            this.tag = e.tag;
             this.__parent__.triggerReactions(e);
         }
     }
@@ -700,7 +701,7 @@ export class Mutation<T> extends Reaction<T> {
         public trigs:Triggers, 
         public args:Args<ArgList<T>>, 
         public react:(...args:ArgList<T>) => void, 
-        public deadline?: TimeInterval,
+        public deadline?: TimeValue,
         public late: (...args:ArgList<T>) => void = () => {Log.global.warn("Deadline violation occurred!")}
     ) { // FIXME: make these private and have getters
         super(__parent__, trigs, args, react, deadline, late);
@@ -982,7 +983,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     public addReaction<T>(trigs:Triggers, args:Args<ArgList<T>>, 
-        react:(this:Reaction<T>, ...args:ArgList<T>) => void, deadline?: TimeInterval,
+        react:(this:Reaction<T>, ...args:ArgList<T>) => void, deadline?: TimeValue,
         late: (this:Reaction<T>, ...args:ArgList<T>) => void = 
             () => {Log.global.warn("Deadline violation occurred!")}) {
         let reaction = new Reaction(this, trigs, args, react, deadline, late);
@@ -991,7 +992,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     public addMutation<T>(trigs:Triggers, args:Args<ArgList<T>>, 
-        react:(this:Mutation<T>, ...args:ArgList<T>) => void, deadline?: TimeInterval,
+        react:(this:Mutation<T>, ...args:ArgList<T>) => void, deadline?: TimeValue,
         late: (this:Mutation<T>, ...args:ArgList<T>) => void = 
             () => {Log.global.warn("Deadline violation occurred!")}) {
         let mutation = new Mutation(this, trigs, args, react, deadline, late);
@@ -1502,7 +1503,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 export abstract class Port<T extends Present> extends Descendant implements Readable<T> {
     
     /** The time stamp associated with this port's value. */  
-    protected tag: TimeInstant | undefined;
+    protected tag: Tag | undefined;
 
     /** The value associated with this port. */  
     protected value: T | null = null;
@@ -1567,7 +1568,7 @@ export abstract class Port<T extends Present> extends Descendant implements Read
         Log.global.debug("time: " + this.__parent__.util.time.getCurrentLogicalTime())
         if(this.value != null
             && this.tag != undefined
-            && this.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentLogicalTime())) {
+            && this.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -1583,7 +1584,7 @@ export abstract class Port<T extends Present> extends Descendant implements Read
             //@ts-ignore
             this.value = value;
             Log.global.debug(">> parent: " + this.__parent__);
-            this.tag = this.__parent__.util.time.getCurrentLogicalTime();
+            this.tag = this.__parent__.util.time.getCurrentTag();
             this.__parent__._propagateValue(this); // FIXME: should this be a utility function?
         } else {
             Log.global.warn("WARNING: port update denied.");
@@ -1672,7 +1673,7 @@ class Writer<T extends Present> implements Proxy<T> { // NOTE: don't export this
     }
 }
 
-class EventQueue extends PrioritySet<TimeInstant> {
+class EventQueue extends PrioritySet<Tag> {
 
     public push(event: Event<unknown>) {
         return super.push(event);
@@ -1714,13 +1715,13 @@ interface ReactionUtils {
 }
 
 export interface Util {
-    getCurrentLogicalTime(): TimeInstant;
+    getCurrentLogicalTime(): Tag;
 
-    getCurrentPhysicalTime(): TimeInstant;
+    getCurrentPhysicalTime(): Tag;
 
-    getElapsedLogicalTime(): TimeInterval;
+    getElapsedLogicalTime(): TimeValue;
 
-    getElapsedPhysicalTime(): TimeInterval;
+    getElapsedPhysicalTime(): TimeValue;
 
     success(): void; // Not convinced that these should go here
 
@@ -1773,17 +1774,20 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         new class implements TimeUtils {
             constructor(private app: App) {
             }
-            getCurrentLogicalTime(): TimeInstant {
-                return this.app._currentLogicalTime;
+            getCurrentTag(): Tag {
+                return this.app._currentTag;
             }
-            getCurrentPhysicalTime(): TimeInstant {
+            getCurrentLogicalTime(): TimeValue {
+                return this.app._currentTag.time;
+            }
+            getCurrentPhysicalTime(): TimeValue {
                 return getCurrentPhysicalTime();
             }
-            getElapsedLogicalTime(): TimeInterval {
-                return this.app._currentLogicalTime.getTimeDifference(this.app._startOfExecution);
+            getElapsedLogicalTime(): TimeValue {
+                return this.app._currentTag.getTimeDifference(this.app._startOfExecution);
             }
-            getElapsedPhysicalTime(): TimeInterval {
-                return getCurrentPhysicalTime().getTimeDifference(this.app._startOfExecution);
+            getElapsedPhysicalTime(): TimeValue {
+                return getCurrentPhysicalTime().subtract(this.app._startOfExecution.time);
             }
         }(this)
     );
@@ -1791,7 +1795,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     /**
      * The current time, made available so actions may be scheduled relative to it.
      */
-    private _currentLogicalTime: TimeInstant;
+    private _currentTag: Tag;
 
     private alarm = new NanoTimer();
 
@@ -1803,7 +1807,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     /**
      * The time when the alarm's timeout will occur.
      */
-    private _currentAlarmTime: TimeInstant | undefined;
+    private _currentAlarmTime: Tag | undefined;
 
     /**
      * Priority set that keeps track of scheduled events.
@@ -1814,7 +1818,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * If not null, finish execution with success, this time interval after
      * the start of execution.
      */
-    private _executionTimeout: TimeInterval | undefined;
+    private _executionTimeout: TimeValue | undefined;
 
     /**
      * The time at which normal execution should terminate. Note: execution continues for one 
@@ -1822,7 +1826,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * Is initially set to the app's timeout + _startOfExecution or undefined if no timeout
      * is given. When _shutdown is called, _endOfExecution is updated to the current time.
      */
-    private _endOfExecution: TimeInstant | undefined;
+    private _endOfExecution: Tag | undefined;
 
     /**
      * If false, execute with normal delays to allow physical time to catch up to logical time.
@@ -1851,7 +1855,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
      * Initialized in start().
      */
-    private _startOfExecution: TimeInstant;
+    private _startOfExecution: Tag;
 
     /**
      * Report a timer to the app so that it gets scheduled.
@@ -1860,7 +1864,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     public _setTimer(timer: Timer) {
         Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
         this.schedule(new Event(timer, 
-            this.util.time.getCurrentLogicalTime().getLaterTime(timer.offset), 
+            this.util.time.getCurrentTag().getLaterTag(timer.offset), 
             null));
     }
 
@@ -1879,7 +1883,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     }
 
     //private heartbeat: Timer = new Timer(this, 0, new TimeInterval(5));
-    private snooze: Action<TimeInstant> = new Action(this, Origin.logical, new TimeInterval(1, 0));
+    private snooze: Action<Tag> = new Action(this, Origin.logical, new TimeValue(1, 0));
 
     /**
      * Create a new top-level reactor.
@@ -1889,7 +1893,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * @param success Optional callback to be used to indicate a successful execution.
      * @param failure Optional callback to be used to indicate a failed execution.
      */
-    constructor(executionTimeout: TimeInterval | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, public success: ()=> void = () => {}, public failure: ()=>void = () => {throw new Error("Default app failure callback")}) {
+    constructor(executionTimeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, public success: ()=> void = () => {}, public failure: ()=>void = () => {throw new Error("Default app failure callback")}) {
         super(null);
 
         //App.instances.add(this);
@@ -1898,8 +1902,8 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._fast = fast;
 
         // NOTE: these will be reset properly during startup.
-        this._currentLogicalTime = new TimeInstant(new TimeInterval(0), 0);
-        this._startOfExecution = this._currentLogicalTime;
+        this._currentTag = new Tag(new TimeValue(0), 0);
+        this._startOfExecution = this._currentTag;
         
         // Add default startup reaction.
         this.addMutation(
@@ -1983,7 +1987,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         // Log.global.info(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
         Log.global.debug("{{{ Triggered by event: " + event.trigger + " }}}");
     
-        if (this._endOfExecution && this._endOfExecution.isEarlierThan(this._currentLogicalTime) && !this._endOfExecution.getTimeDifference(event.time).isZero()) {
+        if (this._endOfExecution && this._endOfExecution.isEarlierThan(this._currentTag) && !this._endOfExecution.getTimeDifference(event.tag).isZero()) {
             // Remove remaining items from the event queue, if any.
             this._eventQ.empty();
             // Clear timeouts, if any.
@@ -1996,23 +2000,23 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             Log.global.debug("Woken up after suspend.");
         }
     
-        let currentPhysicalTime = getCurrentPhysicalTime()
-        if (currentPhysicalTime.isEarlierThan(event.time) && !this._fast) {
+        let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
+        if (physicalTimeTag.isEarlierThan(event.tag) && !this._fast) {
             Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Too early to handle next event.");
-            Log.global.debug("Time difference: " + currentPhysicalTime.getTimeDifference(event.time).getNanoTime());
+            Log.global.debug("Time difference: " + physicalTimeTag.getTimeDifference(event.tag).getNanoTime());
             this.setAlarm(event);
             return;
         }
         
         // Store the previous tag.
-        let previousTag = this._currentLogicalTime;
+        let previousTag = this._currentTag;
         
         // Advance logical time.
-        this._currentLogicalTime = event.time;
+        this._currentTag = event.tag;
 
-        if (previousTag.isEarlierThan(event.time)) {
+        if (previousTag.isEarlierThan(event.tag)) {
             Log.global.log(Log.hr);
-            Log.global.log(">>> Next event time: " + event.time);
+            Log.global.log(">>> Next event time: " + event.tag);
             Log.global.log(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
             Log.global.log(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
             Log.global.log(Log.hr);
@@ -2020,7 +2024,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         
         Log.global.debug("Processing events.");
         var nextEvent : Event<unknown> | undefined = event;
-        while (nextEvent != null && nextEvent.time.isSimultaneousWith(this._currentLogicalTime)) {
+        while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
             this._eventQ.pop();
             Log.global.debug("Popped off the event queue: " + nextEvent.trigger);
             // Handle timers.
@@ -2029,7 +2033,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                     Log.global.debug("Rescheduling timer " + nextEvent.trigger);
                     // reschedule
                     this.schedule(new Event(nextEvent.trigger, 
-                        this._currentLogicalTime.getLaterTime(nextEvent.trigger.period), 
+                        this._currentTag.getLaterTag(nextEvent.trigger.period), 
                         null));
                 }
             }
@@ -2053,7 +2057,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         
         if (nextEvent) {
             Log.global.debug("Event queue not empty.")
-            if (nextEvent.trigger !== this.shutdown || this._keepAlive || this._currentLogicalTime.time.isEqualTo(event.time.time)) {
+            if (nextEvent.trigger !== this.shutdown || this._keepAlive || this._currentTag.time.isEqualTo(event.tag.time)) {
                 // Set an alarm to handle the next event.
                 Log.global.debug("Setting alarm to wake up for next event.")
                 Log.global.log(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
@@ -2087,7 +2091,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             if (this._keepAlive) {
                 // Keep alive: snooze and wake up later.
                 Log.global.debug("Going to sleep.");
-                this.getSchedulable(this.snooze).schedule(0, this._currentLogicalTime);
+                this.getSchedulable(this.snooze).schedule(0, this._currentTag);
             } else {
                 // Don't keep alive: initiate shutdown.
                 Log.global.debug("Initiating shutdown.")
@@ -2106,7 +2110,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         Log.global.debug("Scheduling with trigger: " + e.trigger);
         Log.global.debug("Elapsed logical time in schedule: " + this.util.time.getElapsedLogicalTime());
         Log.global.debug("Elapsed physical time in schedule: " + this.util.time.getElapsedPhysicalTime());
-        if (head == undefined || e.time.isEarlierThan(head.time)) {
+        if (head == undefined || e.tag.isEarlierThan(head.tag)) {
             this.setAlarm(e);
         }      
     }
@@ -2122,19 +2126,19 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
     public setAlarm (e : Event<unknown>) {
         // Note, end of execution is currently set by the app timeout or _shutdown
-        if (this._endOfExecution && this._endOfExecution.getMicroStepLater().isEarlierThan(e.time)) {
+        if (this._endOfExecution && this._endOfExecution.getMicroStepLater().isEarlierThan(e.tag)) {
             Log.global.debug("Ignoring call to set alarm for event with trigger: " + e.trigger
-                + " because the event's time: " + e.time + " is after the end of execution (plus a microstep): " 
+                + " because the event's time: " + e.tag + " is after the end of execution (plus a microstep): " 
                 + this._endOfExecution.getMicroStepLater());
             this._terminateWithSuccess();
             
         } else {
             this.clearAlarm()
             Log.global.debug("Setting alarm for event with trigger: " + e.trigger);
-            this._currentAlarmTime = e.time
-            let physicalTime = getCurrentPhysicalTime();
-            if (physicalTime.isEarlierThan(e.time) && ! this._fast) {
-                let timeout = e.time.getTimeDifference(physicalTime);
+            this._currentAlarmTime = e.tag
+            let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
+            if (physicalTimeTag.isEarlierThan(e.tag) && ! this._fast) {
+                let timeout = e.tag.getTimeDifference(physicalTimeTag);
 
                 // The code below looks funny, but there's an important explanation.
                 // Inspecting nanotimer's source at 
@@ -2151,8 +2155,8 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
 
                 this._alarmTimeoutID = setTimeout(
                     function(this: App) {
-                        let physicalTime = getCurrentPhysicalTime();
-                        let timeout = e.time.getTimeDifference(physicalTime);
+                        let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
+                        let timeout = e.tag.getTimeDifference(physicalTimeTag);
                         this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
                 }.bind(this), 0);
                 Log.global.debug("Timeout: " + timeout.getNanoTime());
@@ -2183,7 +2187,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         if (! this._shutdownStarted) {
             this._shutdownStarted = true;
             Log.global.debug("Initiating shutdown sequence.");
-            this._endOfExecution = this._currentLogicalTime;
+            this._endOfExecution = this._currentTag;
             Log.global.debug("Setting end of execution to: " + this._endOfExecution);
             if (this._currentAlarmTime && this._endOfExecution.getMicroStepLater().isEarlierThan(this._currentAlarmTime)) {
                 this.clearAlarm();
@@ -2219,15 +2223,15 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         Log.global.debug(apg.toString());
         
         // Let the start of the execution be the current physical time.
-        this._startOfExecution = getCurrentPhysicalTime();
-        this._currentLogicalTime = this._startOfExecution;
+        this._startOfExecution = new Tag(getCurrentPhysicalTime(), 0);
+        this._currentTag = this._startOfExecution;
 
         if(this._executionTimeout != null) {
-            this._endOfExecution = this._startOfExecution.getLaterTime(this._executionTimeout)
+            this._endOfExecution = this._startOfExecution.getLaterTag(this._executionTimeout)
             Log.global.debug("Execution timeout: " + this._executionTimeout);
         }
         Log.global.info(Log.hr);
-        Log.global.info(">>> Start of execution: " + this._currentLogicalTime);
+        Log.global.info(">>> Start of execution: " + this._currentTag);
         Log.global.info(Log.hr);
         // Set in motion the execution of this program by scheduling startup at the current logical time.
         this.getSchedulable(this.startup).schedule(0);

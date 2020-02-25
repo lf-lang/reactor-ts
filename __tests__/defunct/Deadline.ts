@@ -1,5 +1,5 @@
 import {Reactor, Reaction, Timer, App} from '../../src/core/reactor';
-import {TimeInterval} from "../../src/core/time"
+import {TimeValue} from "../../src/core/time"
 
 
 export class SoonDead<T> extends Reaction<T> {
@@ -58,7 +58,7 @@ export class ShowDeadline extends Reactor {
 class DeadlineTest extends App{
     showDeadline: ShowDeadline;
 
-    constructor(name:string, timeout: TimeInterval, success: ()=> void, fail: ()=>void){
+    constructor(name:string, timeout: TimeValue, success: ()=> void, fail: ()=>void){
         super(timeout);
         this.setAlias(name);
         this.showDeadline = new ShowDeadline(this, success, fail);
@@ -85,7 +85,7 @@ describe('OutputEventTest', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        var sDeadline = new DeadlineTest("ShowDeadline", new TimeInterval(3), done, failReactor);
+        var sDeadline = new DeadlineTest("ShowDeadline", new TimeValue(3), done, failReactor);
         sDeadline._start();
     })
 });

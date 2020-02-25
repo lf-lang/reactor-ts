@@ -1,5 +1,5 @@
 import {OutPort, App, Timer, Reaction, Writable, Triggers, Args} from '../src/core/reactor';
-import {TimeInterval} from "../src/core/time";
+import {TimeValue} from "../src/core/time";
 import { Log } from '../src/core/util';
 
 class OutputGetTest extends App {
@@ -7,7 +7,7 @@ class OutputGetTest extends App {
     o: OutPort<number> = new OutPort<number>(this);
     t: Timer = new Timer(this, 0, 0);
     
-    constructor(timeout: TimeInterval, name:string, success: ()=> void, failure: ()=>void){
+    constructor(timeout: TimeValue, name:string, success: ()=> void, failure: ()=>void){
         super(timeout, true, false, success, failure);
         Log.global.debug(">>>>>>>>----" + this.util)
         this.setAlias(name);
@@ -43,7 +43,7 @@ describe('OutputGetTest', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var oGetTest = new OutputGetTest(new TimeInterval(1), "OutputGetTest", done, fail);
+        var oGetTest = new OutputGetTest(new TimeValue(1), "OutputGetTest", done, fail);
         
         oGetTest._start();
     })

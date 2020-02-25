@@ -1,4 +1,4 @@
-import {TimeInterval, TimeUnit, TimeInstant, UnitBasedTimeInterval} from "./time";
+import {TimeValue, TimeUnit, Tag, UnitBasedTimeValue} from "./time";
 
 /**
  * Test of helper functions for time in reactors
@@ -6,30 +6,30 @@ import {TimeInterval, TimeUnit, TimeInstant, UnitBasedTimeInterval} from "./time
 describe('time representation', function () {
     
     // Zero time intervals.
-    const straightZero: TimeInterval = new TimeInterval(0);
-    const zeroSeconds: TimeInterval = new UnitBasedTimeInterval(0, TimeUnit.sec);
-    const zeroNS: TimeInterval = new UnitBasedTimeInterval(0, TimeUnit.nsec);
-    const zeroWeeks: TimeInterval = new UnitBasedTimeInterval(0, TimeUnit.week);
+    const straightZero: TimeValue = new TimeValue(0);
+    const zeroSeconds: TimeValue = new UnitBasedTimeValue(0, TimeUnit.sec);
+    const zeroNS: TimeValue = new UnitBasedTimeValue(0, TimeUnit.nsec);
+    const zeroWeeks: TimeValue = new UnitBasedTimeValue(0, TimeUnit.week);
 
     // Non-zero time intervals.
-    const fiveSeconds: TimeInterval = new UnitBasedTimeInterval(5, TimeUnit.sec);
-    const fiveSFiveUS: TimeInterval = new UnitBasedTimeInterval(5000005, TimeUnit.usec);
-    const fortyTwoDays: TimeInterval = new UnitBasedTimeInterval(42, TimeUnit.days);
-    const threeHundredUS: TimeInterval = new UnitBasedTimeInterval(300, TimeUnit.usec);
-    const sevenPointFiveBillNS: TimeInterval = new UnitBasedTimeInterval(7500000000, TimeUnit.nsec);
-    const twoHundredFiftyMillMS: TimeInterval = new UnitBasedTimeInterval(250000000, TimeUnit.msec);
-    const fiveHundredMilNS: TimeInterval = new UnitBasedTimeInterval(500000000, TimeUnit.nsec);
-    const oneThousandMS: TimeInterval = new UnitBasedTimeInterval(1000, TimeUnit.msec);
-    const aboutTenYears: TimeInterval = new UnitBasedTimeInterval(365 * 10, TimeUnit.day);
+    const fiveSeconds: TimeValue = new UnitBasedTimeValue(5, TimeUnit.sec);
+    const fiveSFiveUS: TimeValue = new UnitBasedTimeValue(5000005, TimeUnit.usec);
+    const fortyTwoDays: TimeValue = new UnitBasedTimeValue(42, TimeUnit.days);
+    const threeHundredUS: TimeValue = new UnitBasedTimeValue(300, TimeUnit.usec);
+    const sevenPointFiveBillNS: TimeValue = new UnitBasedTimeValue(7500000000, TimeUnit.nsec);
+    const twoHundredFiftyMillMS: TimeValue = new UnitBasedTimeValue(250000000, TimeUnit.msec);
+    const fiveHundredMilNS: TimeValue = new UnitBasedTimeValue(500000000, TimeUnit.nsec);
+    const oneThousandMS: TimeValue = new UnitBasedTimeValue(1000, TimeUnit.msec);
+    const aboutTenYears: TimeValue = new UnitBasedTimeValue(365 * 10, TimeUnit.day);
 
     // Time instants.
-    const tiFiveSeconds0:TimeInstant = new TimeInstant(fiveSeconds, 0);
-    const tiFiveSeconds1:TimeInstant = new TimeInstant(fiveSeconds, 1);
+    const tiFiveSeconds0:Tag = new Tag(fiveSeconds, 0);
+    const tiFiveSeconds1:Tag = new Tag(fiveSeconds, 1);
 
-    const tiZero:TimeInstant = new TimeInstant(straightZero, 0);
-    const tiZero1:TimeInstant = new TimeInstant(straightZero, 1);
-    const tiOne1:TimeInstant = new TimeInstant(new TimeInterval(1), 1);
-    const tiOneNano1:TimeInstant = new TimeInstant(new TimeInterval(0,1), 1);
+    const tiZero:Tag = new Tag(straightZero, 0);
+    const tiZero1:Tag = new Tag(straightZero, 1);
+    const tiOne1:Tag = new Tag(new TimeValue(1), 1);
+    const tiOneNano1:Tag = new Tag(new TimeValue(0,1), 1);
     
     /**
      * Test to see if the zero representations for time intervals 
@@ -59,27 +59,27 @@ describe('time representation', function () {
         // Creating time intervals with a non-integer 
         // time value results in an error.
         expect(() => {
-            new UnitBasedTimeInterval(0.1, TimeUnit.sec);
+            new UnitBasedTimeValue(0.1, TimeUnit.sec);
         }).toThrowError()
 
         expect(zeroSeconds.isEqualTo(straightZero)).toBeTruthy();
         expect(zeroSeconds.isEqualTo(zeroNS)).toBeTruthy();
         expect(zeroSeconds.isEqualTo(zeroWeeks)).toBeTruthy();
 
-        expect(oneThousandMS.isEqualTo(new TimeInterval(1, 0)));
-        expect(threeHundredUS.isEqualTo(new TimeInterval(1, 300000)));
-        expect(fiveSFiveUS.isEqualTo(new TimeInterval(5, 5000)));
-        expect(threeHundredUS.isEqualTo(new TimeInterval(0, 300000)));
-        expect(sevenPointFiveBillNS.isEqualTo(new TimeInterval(7, 500000000)));
-        expect(twoHundredFiftyMillMS.isEqualTo(new TimeInterval(250000, 0)));
-        expect(fiveHundredMilNS.isEqualTo(new TimeInterval(0, 500000000)));
-        expect(oneThousandMS.isEqualTo(new TimeInterval(1, 0)));
-        expect(aboutTenYears.isEqualTo(new TimeInterval(10 * 365 * 24 * 60 * 60 , 0)));
+        expect(oneThousandMS.isEqualTo(new TimeValue(1, 0)));
+        expect(threeHundredUS.isEqualTo(new TimeValue(1, 300000)));
+        expect(fiveSFiveUS.isEqualTo(new TimeValue(5, 5000)));
+        expect(threeHundredUS.isEqualTo(new TimeValue(0, 300000)));
+        expect(sevenPointFiveBillNS.isEqualTo(new TimeValue(7, 500000000)));
+        expect(twoHundredFiftyMillMS.isEqualTo(new TimeValue(250000, 0)));
+        expect(fiveHundredMilNS.isEqualTo(new TimeValue(0, 500000000)));
+        expect(oneThousandMS.isEqualTo(new TimeValue(1, 0)));
+        expect(aboutTenYears.isEqualTo(new TimeValue(10 * 365 * 24 * 60 * 60 , 0)));
 
         // This test should generate an error because we're trying to convert
         // a number which can't be represented as a numeric time interval.
         expect(() => {
-            new UnitBasedTimeInterval(Number.MAX_SAFE_INTEGER, TimeUnit.weeks);
+            new UnitBasedTimeValue(Number.MAX_SAFE_INTEGER, TimeUnit.weeks);
         }).toThrowError();
 
     });
@@ -134,9 +134,9 @@ describe('time representation', function () {
      * Add a time interval to a time instant and obtain a new time instant.
      */
     it('getLaterTime' , function () {
-        expect(new TimeInstant(fiveHundredMilNS, 0).getLaterTime(fortyTwoDays).isSimultaneousWith(new TimeInstant(new TimeInterval(42 * 24 * 60 * 60, 500000000), 0))).toBeTruthy();
-        expect(new TimeInstant(fiveHundredMilNS, 0).getLaterTime(fiveHundredMilNS).isSimultaneousWith(new TimeInstant(new TimeInterval(1, 0), 0))).toBeTruthy();
-        expect(new TimeInstant(oneThousandMS, 0).getLaterTime(straightZero).isSimultaneousWith(new TimeInstant(oneThousandMS, 0))).toBeTruthy();
+        expect(new Tag(fiveHundredMilNS, 0).getLaterTag(fortyTwoDays).isSimultaneousWith(new Tag(new TimeValue(42 * 24 * 60 * 60, 500000000), 0))).toBeTruthy();
+        expect(new Tag(fiveHundredMilNS, 0).getLaterTag(fiveHundredMilNS).isSimultaneousWith(new Tag(new TimeValue(1, 0), 0))).toBeTruthy();
+        expect(new Tag(oneThousandMS, 0).getLaterTag(straightZero).isSimultaneousWith(new Tag(oneThousandMS, 0))).toBeTruthy();
     });
 
     /**
@@ -146,8 +146,8 @@ describe('time representation', function () {
         expect(fiveSeconds.getNanoTime()).toEqual("5s");
         expect(straightZero.getNanoTime()).toEqual("0s");
         expect(fiveSFiveUS.getNanoTime()).toEqual("5000005u");
-        expect(new TimeInterval(5, 5000000).getNanoTime()).toEqual("5005m");
-        expect(new TimeInterval(5, 5).getNanoTime()).toEqual("5000000005n");
+        expect(new TimeValue(5, 5000000).getNanoTime()).toEqual("5005m");
+        expect(new TimeValue(5, 5).getNanoTime()).toEqual("5000000005n");
         expect(fortyTwoDays.getNanoTime()).toEqual("3628800s");
         expect(threeHundredUS.getNanoTime()).toEqual("300u");
         expect(sevenPointFiveBillNS.getNanoTime()).toEqual("7500m");
@@ -163,10 +163,10 @@ describe('time representation', function () {
      * (time intervals don't have a microstep).
      */
     it('getTimeDifference', function() {
-        expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeInterval(0));
-        expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds1)).toEqual(new TimeInterval(0));
-        expect(tiFiveSeconds0.getTimeDifference(tiOne1)).toEqual(new TimeInterval(4));
-        expect(tiOne1.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeInterval(4));
+        expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeValue(0));
+        expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds1)).toEqual(new TimeValue(0));
+        expect(tiFiveSeconds0.getTimeDifference(tiOne1)).toEqual(new TimeValue(4));
+        expect(tiOne1.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeValue(4));
     });
 
     /**
@@ -174,15 +174,15 @@ describe('time representation', function () {
      */
     it('errors', function() {
         expect(() => {
-            expect(new TimeInterval(4.3, 2.1));
+            expect(new TimeValue(4.3, 2.1));
         }).toThrowError()
     
         expect(() => {
-            expect(new UnitBasedTimeInterval(-1, TimeUnit.week));
+            expect(new UnitBasedTimeValue(-1, TimeUnit.week));
         }).toThrowError()
     
         expect(() => {
-            expect(new TimeInterval(2,1).subtract(new TimeInterval(4, 3)));
+            expect(new TimeValue(2,1).subtract(new TimeValue(4, 3)));
         }).toThrowError()
     });
 
