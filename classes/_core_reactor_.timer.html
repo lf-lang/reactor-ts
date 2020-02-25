@@ -98,7 +98,7 @@
 				<h3>Implements</h3>
 				<ul class="tsd-hierarchy">
 					<li><a href="../interfaces/_core_reactor_.named.html" class="tsd-signature-type">Named</a></li>
-					<li><a href="../interfaces/_core_reactor_.readable.html" class="tsd-signature-type">Readable</a><span class="tsd-signature-symbol">&lt;</span><a href="_core_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol">&gt;</span></li>
+					<li><a href="../interfaces/_core_reactor_.readable.html" class="tsd-signature-type">Readable</a><span class="tsd-signature-symbol">&lt;</span><a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a><span class="tsd-signature-symbol">&gt;</span></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -141,14 +141,14 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Timer<span class="tsd-signature-symbol">(</span>__parent__<span class="tsd-signature-symbol">: </span><a href="_core_reactor_.reactor.html" class="tsd-signature-type">Reactor</a>, offset<span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span>, period<span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_reactor_.timer.html" class="tsd-signature-type">Timer</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Timer<span class="tsd-signature-symbol">(</span>__parent__<span class="tsd-signature-symbol">: </span><a href="_core_reactor_.reactor.html" class="tsd-signature-type">Reactor</a>, offset<span class="tsd-signature-symbol">: </span><a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span>, period<span class="tsd-signature-symbol">: </span><a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_reactor_.timer.html" class="tsd-signature-type">Timer</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Overrides <a href="_core_reactor_.descendant.html">Descendant</a>.<a href="_core_reactor_.descendant.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L642">core/reactor.ts:642</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L643">core/reactor.ts:643</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -167,7 +167,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>offset: <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span></h5>
+									<h5>offset: <a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
 											<p>The interval between the start of execution and the first
@@ -176,7 +176,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>period: <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span></h5>
+									<h5>period: <a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">0</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
 											<p>The interval between rescheduled timer events. If 0, will
@@ -199,7 +199,7 @@
 					<aside class="tsd-sources">
 						<p>Overrides <a href="_core_reactor_.descendant.html">Descendant</a>.<a href="_core_reactor_.descendant.html#__parent__">__parent__</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L652">core/reactor.ts:652</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L653">core/reactor.ts:653</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -211,30 +211,30 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="offset" class="tsd-anchor"></a>
 					<h3>offset</h3>
-					<div class="tsd-signature tsd-kind-icon">offset<span class="tsd-signature-symbol">:</span> <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></div>
+					<div class="tsd-signature tsd-kind-icon">offset<span class="tsd-signature-symbol">:</span> <a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L642">core/reactor.ts:642</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L643">core/reactor.ts:643</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="period" class="tsd-anchor"></a>
 					<h3>period</h3>
-					<div class="tsd-signature tsd-kind-icon">period<span class="tsd-signature-symbol">:</span> <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></div>
+					<div class="tsd-signature tsd-kind-icon">period<span class="tsd-signature-symbol">:</span> <a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L641">core/reactor.ts:641</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L642">core/reactor.ts:642</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="tag" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> tag</h3>
-					<div class="tsd-signature tsd-kind-icon">tag<span class="tsd-signature-symbol">:</span> <a href="_core_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
+					<div class="tsd-signature tsd-kind-icon">tag<span class="tsd-signature-symbol">:</span> <a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L624">core/reactor.ts:624</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L625">core/reactor.ts:625</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -245,16 +245,16 @@
 					<a name="get" class="tsd-anchor"></a>
 					<h3>get</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L626">core/reactor.ts:626</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L627">core/reactor.ts:627</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="_core_time_.timeinstant.html" class="tsd-signature-type">TimeInstant</a>
+							<h4 class="tsd-returns-title">Returns <a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a>
 								<span class="tsd-signature-symbol"> | </span>
 								<span class="tsd-signature-type">null</span>
 							</h4>
@@ -273,7 +273,7 @@
 								<p>Implementation of <a href="../interfaces/_core_reactor_.named.html">Named</a>.<a href="../interfaces/_core_reactor_.named.html#getfullyqualifiedname">getFullyQualifiedName</a></p>
 								<p>Inherited from <a href="_core_reactor_.descendant.html">Descendant</a>.<a href="_core_reactor_.descendant.html#getfullyqualifiedname">getFullyQualifiedName</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L169">core/reactor.ts:169</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L170">core/reactor.ts:170</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -298,7 +298,7 @@
 								<p>Implementation of <a href="../interfaces/_core_reactor_.named.html">Named</a>.<a href="../interfaces/_core_reactor_.named.html#getname">getName</a></p>
 								<p>Inherited from <a href="_core_reactor_.descendant.html">Descendant</a>.<a href="_core_reactor_.descendant.html#getname">getName</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L183">core/reactor.ts:183</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L184">core/reactor.ts:184</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -315,7 +315,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L634">core/reactor.ts:634</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L635">core/reactor.ts:635</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -334,7 +334,7 @@
 								<p>Implementation of <a href="../interfaces/_core_reactor_.named.html">Named</a>.<a href="../interfaces/_core_reactor_.named.html#setalias">setAlias</a></p>
 								<p>Inherited from <a href="_core_reactor_.descendant.html">Descendant</a>.<a href="_core_reactor_.descendant.html#setalias">setAlias</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L207">core/reactor.ts:207</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L208">core/reactor.ts:208</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -357,7 +357,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L682">core/reactor.ts:682</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L683">core/reactor.ts:683</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -374,7 +374,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/reactor.ts#L672">core/reactor.ts:672</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/reactor.ts#L673">core/reactor.ts:673</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">

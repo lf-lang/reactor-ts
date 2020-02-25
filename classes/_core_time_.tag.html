@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>TimeInterval | wirewrap - v0.0.1</title>
+	<title>Tag | wirewrap - v0.0.1</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,10 +59,10 @@
 					<a href="../modules/_core_time_.html">&quot;core/time&quot;</a>
 				</li>
 				<li>
-					<a href="_core_time_.timeinterval.html">TimeInterval</a>
+					<a href="_core_time_.tag.html">Tag</a>
 				</li>
 			</ul>
-			<h1>Class TimeInterval</h1>
+			<h1>Class Tag</h1>
 		</div>
 	</div>
 </header>
@@ -72,36 +72,18 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A time interval given in nanosecond precision. To prevent overflow
-							(which would occur for time intervals spanning more than 0.29 years
-							if a single JavaScript number, which has 2^53 bits of precision, were
-							to be used), we use <em>two</em> numbers to store a time interval. The first
-							number denotes the number of whole seconds in the interval; the second
-							number denotes the remaining number of nanoseconds in the interval.
-							This class serves as a base class for <code>UnitBasedTimeInterval</code>, which
-							provides the convenience of defining time intervals as a single number
-						accompanied by a unit.</p>
+						<p>A superdense time instant, represented as a time value <code>time</code> (i.e.,
+							time elapsed since Epoch) paired with a microstep index to keep track of
+							iterations in superdense time. For each such iteration, <code>time</code> remains
+						the same, but <code>microstep</code> is incremented.</p>
 					</div>
-					<dl class="tsd-comment-tags">
-						<dt>see</dt>
-						<dd><p>TimeUnit</p>
-						</dd>
-						<dt>see</dt>
-						<dd><p>UnitBasedTimeInterval</p>
-						</dd>
-					</dl>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">TimeInterval</span>
-						<ul class="tsd-hierarchy">
-							<li>
-								<a href="_core_time_.unitbasedtimeinterval.html" class="tsd-signature-type">UnitBasedTimeInterval</a>
-							</li>
-						</ul>
+						<span class="target">Tag</span>
 					</li>
 				</ul>
 			</section>
@@ -112,26 +94,25 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_core_time_.timeinterval.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_core_time_.tag.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-private-protected">
+						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_core_time_.timeinterval.html#nanoseconds" class="tsd-kind-icon">nanoseconds</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_core_time_.timeinterval.html#seconds" class="tsd-kind-icon">seconds</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_core_time_.tag.html#microstep" class="tsd-kind-icon">microstep</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_core_time_.tag.html#time" class="tsd-kind-icon">time</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.timeinterval.html#add" class="tsd-kind-icon">add</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.timeinterval.html#getnanotime" class="tsd-kind-icon">get<wbr>Nano<wbr>Time</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.timeinterval.html#isequalto" class="tsd-kind-icon">is<wbr>Equal<wbr>To</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.timeinterval.html#issmallerthan" class="tsd-kind-icon">is<wbr>Smaller<wbr>Than</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.timeinterval.html#iszero" class="tsd-kind-icon">is<wbr>Zero</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.timeinterval.html#subtract" class="tsd-kind-icon">subtract</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.timeinterval.html#tostring" class="tsd-kind-icon">to<wbr>String</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.tag.html#getlatertag" class="tsd-kind-icon">get<wbr>Later<wbr>Tag</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.tag.html#getmicrosteplater" class="tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.tag.html#gettimedifference" class="tsd-kind-icon">get<wbr>Time<wbr>Difference</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.tag.html#isearlierthan" class="tsd-kind-icon">is<wbr>Earlier<wbr>Than</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.tag.html#issimultaneouswith" class="tsd-kind-icon">is<wbr>Simultaneous<wbr>With</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_core_time_.tag.html#tostring" class="tsd-kind-icon">to<wbr>String</a></li>
 							</ul>
 						</section>
 					</div>
@@ -143,74 +124,70 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Time<wbr>Interval<span class="tsd-signature-symbol">(</span>seconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, nanoseconds<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Tag<span class="tsd-signature-symbol">(</span>timeSinceEpoch<span class="tsd-signature-symbol">: </span><a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a>, microstep<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L45">core/time.ts:45</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L260">core/time.ts:260</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Create a new time interval. Both parameters must be non-zero integers;
-									an error will be thrown otherwise. The second parameter is optional.</p>
-								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>seconds: <span class="tsd-signature-type">number</span></h5>
+									<h5>timeSinceEpoch: <a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>Number of seconds in the interval.</p>
+											<p>Time elapsed since Epoch.</p>
 										</div>
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> nanoseconds: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> microstep: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
-											<p>Remaining number of nanoseconds (defaults to zero).</p>
+											<p>Superdense time index.</p>
 										</div>
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></h4>
 						</li>
 					</ul>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
-					<a name="nanoseconds" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagProtected">Protected</span> nanoseconds</h3>
-					<div class="tsd-signature tsd-kind-icon">nanoseconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="microstep" class="tsd-anchor"></a>
+					<h3>microstep</h3>
+					<div class="tsd-signature tsd-kind-icon">microstep<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L53">core/time.ts:53</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L267">core/time.ts:267</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Remaining number of nanoseconds (defaults to zero).</p>
+							<p>Superdense time index.</p>
 						</div>
 					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
-					<a name="seconds" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagProtected">Protected</span> seconds</h3>
-					<div class="tsd-signature tsd-kind-icon">seconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="time" class="tsd-anchor"></a>
+					<h3>time</h3>
+					<div class="tsd-signature tsd-kind-icon">time<span class="tsd-signature-symbol">:</span> <a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L53">core/time.ts:53</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L260">core/time.ts:260</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Number of seconds in the interval.</p>
+							<p>Time elapsed since Epoch.</p>
 						</div>
 					</div>
 				</section>
@@ -218,131 +195,121 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="add" class="tsd-anchor"></a>
-					<h3>add</h3>
+					<a name="getlatertag" class="tsd-anchor"></a>
+					<h3>get<wbr>Later<wbr>Tag</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Later<wbr>Tag<span class="tsd-signature-symbol">(</span>delay<span class="tsd-signature-symbol">: </span><a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L64">core/time.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L307">core/time.ts:307</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return a new time interval that denotes the duration of this
-									time interval plus the time interval given as a parameter.</p>
+									<p>Get a new time instant that represents this time instant plus
+										the given delay. The <code>microstep</code> of this time instant is ignored;
+									the returned time instant always has a <code>microstep</code> of zero.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>other: <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<h5>delay: <a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h5>
 									<div class="tsd-comment tsd-typography">
-										<p>The time interval to add to this one.</p>
+										<p>The time interval to add to this time instant.</p>
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="getnanotime" class="tsd-anchor"></a>
-					<h3>get<wbr>Nano<wbr>Time</h3>
+					<a name="getmicrosteplater" class="tsd-anchor"></a>
+					<h3>get<wbr>Micro<wbr>Step<wbr>Later</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Nano<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L152">core/time.ts:152</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L315">core/time.ts:315</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Get a string representation of this time interval that is compatible
-										with <code>nanotimer</code>. Unit specifiers are <code>s</code> for seconds, <code>m</code> for
-									milliseconds <code>u</code> for microseconds, and <code>n</code> for nanoseconds.</p>
+									<p>Get a new time instant that has the same <code>time</code> but a <code>microstep</code> that
+									is incremented by one relative to this time instant&#39;s <code>microstep</code>.</p>
 								</div>
-								<dl class="tsd-comment-tags">
-									<dt>see</dt>
-									<dd><p><a href="https://www.npmjs.com/package/nanotimer" class="external">https://www.npmjs.com/package/nanotimer</a> for
-										further information.</p>
-									</dd>
-								</dl>
 							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="isequalto" class="tsd-anchor"></a>
-					<h3>is<wbr>Equal<wbr>To</h3>
+					<a name="gettimedifference" class="tsd-anchor"></a>
+					<h3>get<wbr>Time<wbr>Difference</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">is<wbr>Equal<wbr>To<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Time<wbr>Difference<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L104">core/time.ts:104</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L325">core/time.ts:325</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return true this denotes a time interval equal of equal
-									length as the time interval given as a parameter.</p>
+									<p>Obtain a time interval that represents the absolute (i.e., positive) time
+									difference between this time interval and the tag given as a parameter.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>other: <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<h5>other: <a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></h5>
 									<div class="tsd-comment tsd-typography">
-										<p>The time interval to compare to this one.</p>
+										<p>The time instant for which to compute the absolute
+										difference with this time instant.</p>
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="issmallerthan" class="tsd-anchor"></a>
-					<h3>is<wbr>Smaller<wbr>Than</h3>
+					<a name="isearlierthan" class="tsd-anchor"></a>
+					<h3>is<wbr>Earlier<wbr>Than</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">is<wbr>Smaller<wbr>Than<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Earlier<wbr>Than<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L128">core/time.ts:128</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L284">core/time.ts:284</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return true if this time interval is of smaller length than the time
-										interval given as a parameter, return false otherwise.
-										NOTE: Performing this comparison involves a conversion to a big integer
-									and is therefore relatively costly.</p>
+									<p>Return <code>true</code> if this time instant is earlier than the time instant
+										given as a parameter, false otherwise. For two time instants with
+										an equal <code>time</code>, one instant is earlier than the other if its
+									<code>microstep</code> is less than the <code>microstep</code> of the other.</p>
 								</div>
-								<dl class="tsd-comment-tags">
-									<dt>see</dt>
-									<dd><p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt" class="external">BigInt</a> for further information.</p>
-									</dd>
-								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>other: <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<h5>other: <a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></h5>
 									<div class="tsd-comment tsd-typography">
-										<p>The time interval to compare to this one.</p>
+										<p>The time instant to compare against this one.</p>
 									</div>
 								</li>
 							</ul>
@@ -351,56 +318,35 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="iszero" class="tsd-anchor"></a>
-					<h3>is<wbr>Zero</h3>
+					<a name="issimultaneouswith" class="tsd-anchor"></a>
+					<h3>is<wbr>Simultaneous<wbr>With</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">is<wbr>Zero<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Simultaneous<wbr>With<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L112">core/time.ts:112</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L296">core/time.ts:296</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return true if this denotes a zero time interval.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="subtract" class="tsd-anchor"></a>
-					<h3>subtract</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">subtract<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L83">core/time.ts:83</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Return a new time interval that denotes the duration of this
-									time interval minus the time interval given as a parameter.</p>
+									<p>Return <code>true</code> if this time instant is simultaneous with the time
+										instant given as a parameter, false otherwise. Both <code>time</code> and
+									<code>microstep</code> must be equal for two time instants to be simultaneous.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>other: <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h5>
+									<h5>other: <a href="_core_time_.tag.html" class="tsd-signature-type">Tag</a></h5>
 									<div class="tsd-comment tsd-typography">
-										<p>The time interval to subtract from this one.</p>
+										<p>The time instant to compare against this one.</p>
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_core_time_.timeinterval.html" class="tsd-signature-type">TimeInterval</a></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -414,12 +360,12 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/bc8c9e4/src/core/time.ts#L141">core/time.ts:141</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/511176e/src/core/time.ts#L336">core/time.ts:336</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Print the number of seconds and nanoseconds in this time interval.</p>
+									<p>Return a human-readable string presentation of this time instant.</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -462,50 +408,47 @@
 					<li class=" tsd-kind-enum tsd-parent-kind-external-module">
 						<a href="../enums/_core_time_.timeunit.html" class="tsd-kind-icon">Time<wbr>Unit</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_core_time_.timeinstant.html" class="tsd-kind-icon">Time<wbr>Instant</a>
-					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_core_time_.timeinterval.html" class="tsd-kind-icon">Time<wbr>Interval</a>
+						<a href="_core_time_.tag.html" class="tsd-kind-icon">Tag</a>
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="_core_time_.timeinterval.html#constructor" class="tsd-kind-icon">constructor</a>
+								<a href="_core_time_.tag.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
-								<a href="_core_time_.timeinterval.html#nanoseconds" class="tsd-kind-icon">nanoseconds</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_core_time_.tag.html#microstep" class="tsd-kind-icon">microstep</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
-								<a href="_core_time_.timeinterval.html#seconds" class="tsd-kind-icon">seconds</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_core_time_.timeinterval.html#add" class="tsd-kind-icon">add</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_core_time_.tag.html#time" class="tsd-kind-icon">time</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_core_time_.timeinterval.html#getnanotime" class="tsd-kind-icon">get<wbr>Nano<wbr>Time</a>
+								<a href="_core_time_.tag.html#getlatertag" class="tsd-kind-icon">get<wbr>Later<wbr>Tag</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_core_time_.timeinterval.html#isequalto" class="tsd-kind-icon">is<wbr>Equal<wbr>To</a>
+								<a href="_core_time_.tag.html#getmicrosteplater" class="tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_core_time_.timeinterval.html#issmallerthan" class="tsd-kind-icon">is<wbr>Smaller<wbr>Than</a>
+								<a href="_core_time_.tag.html#gettimedifference" class="tsd-kind-icon">get<wbr>Time<wbr>Difference</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_core_time_.timeinterval.html#iszero" class="tsd-kind-icon">is<wbr>Zero</a>
+								<a href="_core_time_.tag.html#isearlierthan" class="tsd-kind-icon">is<wbr>Earlier<wbr>Than</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_core_time_.timeinterval.html#subtract" class="tsd-kind-icon">subtract</a>
+								<a href="_core_time_.tag.html#issimultaneouswith" class="tsd-kind-icon">is<wbr>Simultaneous<wbr>With</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_core_time_.timeinterval.html#tostring" class="tsd-kind-icon">to<wbr>String</a>
+								<a href="_core_time_.tag.html#tostring" class="tsd-kind-icon">to<wbr>String</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_core_time_.unitbasedtimeinterval.html" class="tsd-kind-icon">Unit<wbr>Based<wbr>Time<wbr>Interval</a>
+						<a href="_core_time_.timevalue.html" class="tsd-kind-icon">Time<wbr>Value</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_core_time_.unitbasedtimevalue.html" class="tsd-kind-icon">Unit<wbr>Based<wbr>Time<wbr>Value</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="../modules/_core_time_.html#microtime" class="tsd-kind-icon">Microtime</a>
