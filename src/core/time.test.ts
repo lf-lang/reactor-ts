@@ -137,6 +137,7 @@ describe('time representation', function () {
         expect(new Tag(fiveHundredMilNS, 0).getLaterTag(fortyTwoDays).isSimultaneousWith(new Tag(new TimeValue(42 * 24 * 60 * 60, 500000000), 0))).toBeTruthy();
         expect(new Tag(fiveHundredMilNS, 0).getLaterTag(fiveHundredMilNS).isSimultaneousWith(new Tag(new TimeValue(1, 0), 0))).toBeTruthy();
         expect(new Tag(oneThousandMS, 0).getLaterTag(straightZero).isSimultaneousWith(new Tag(oneThousandMS, 0))).toBeTruthy();
+        expect(new Tag(oneThousandMS, 1).getLaterTag(straightZero).isSimultaneousWith(new Tag(oneThousandMS, 1))).toBeTruthy();
     });
 
     /**

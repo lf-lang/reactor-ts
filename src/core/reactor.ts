@@ -594,7 +594,6 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
      * The value will be available to reactions depending on this action.
      */
     schedule(extraDelay: TimeValue | 0, value?: T) {
-        Log.global.debug("Scheduling action " + this.action.getName());
         if (!(extraDelay instanceof TimeValue)) {
             extraDelay = new TimeValue(0);
         }
@@ -608,7 +607,16 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
         if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
             tag = tag.getMicroStepLater();
         }
-        this.__parent__.util.event.schedule(new Event(this.action, tag, value));    
+        this.__parent__.util.event.schedule(new Event(this.action, tag, value));
+        
+        // For logging
+        let actionType;
+        if (this.action.origin == Origin.logical) {
+            actionType = "logical";
+        } else {
+            actionType = "physical";
+        }
+        Log.global.debug("Scheduling " + actionType + " action " + this.action.getName() + " with tag: " + tag);  
     }
 }
 
