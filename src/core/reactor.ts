@@ -1079,20 +1079,22 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             Log.global.debug("No reactions to trigger.")
         }
         // Update all ports that the src is connected to.
-        if (this.__parent__ && this.__parent__ instanceof Reactor) {
-            var dests = this.__parent__._destinationPorts.get(src); // FIXME: obtain set of writable object from this map
-            if (dests != undefined) {
-                for (let d of dests) {
-                    // The following is type safe because we're doing
-                    // type checks in connect().
-                    //@ts-ignore
-                    d.update(this.getWritable(d), value);
-                }
-            } else {
-                Log.global.debug("No downstream receivers.");
-            }
+        var dests = undefined; 
+        if (src instanceof InPort) {
+            dests = this._destinationPorts.get(src);
+        } else if (this.__parent__ && this.__parent__ instanceof Reactor) {
+            dests = this.__parent__._destinationPorts.get(src); // FIXME: obtain set of writable object from this map
         }
-        
+        if (dests != undefined) {
+            for (let d of dests) {
+                // The following is type safe because we're doing
+                // type checks in connect().
+                //@ts-ignore
+                d.update(this.getWritable(d), value);
+            }
+        } else {
+            Log.global.debug("No downstream receivers.");
+        }
     }
 
     public triggerReactions(e: Event<unknown>) {
@@ -1165,6 +1167,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     public _startupChildren() {
         for (let r of this._getChildren()) {
             Log.global.debug("Propagating startup: " + r.startup);
+            // Note that startup reactions are scheduled without a microstep delay
             this.getSchedulable(r.startup).schedule(0);
         }
     }
@@ -1339,7 +1342,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             this._destinationPorts.set(src, dests);
             this._sourcePort.set(dst, src);
         } else {
-            console.error("ERROR connecting.");
+            throw new Error("ERROR connecting " + src + " to " + dst);
         }
     }
 
@@ -1859,9 +1862,15 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      */
     public _setTimer(timer: Timer) {
         Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
-        this.schedule(new Event(timer, 
-            this.util.time.getCurrentLogicalTime().getLaterTime(timer.offset), 
-            null));
+        let startTime;
+        if (timer.offset.isZero()) {
+            // getLaterTime always returns a microstep of zero, so handle the
+            // zero offset case explicitly.
+            startTime = this.util.time.getCurrentLogicalTime().getMicroStepLater();
+        } else {
+            startTime = this.util.time.getCurrentLogicalTime().getLaterTime(timer.offset);
+        }
+        this.schedule(new Event(timer, startTime, null));
     }
 
     /**
