@@ -1,6 +1,5 @@
 
-import {App, Port, Reactor, InPort, OutPort, Reaction, Present, Writable, Args, Timer, Action, Triggers, Variable, Readable} from '../src/core/reactor';
-import { TimeInterval, Origin} from '../src/core/time';
+import {App, Port, Reactor, InPort, OutPort, Present, Args, Triggers} from '../src/core/reactor';
 
 export class Adder extends Reactor {    
     

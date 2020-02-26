@@ -1,5 +1,5 @@
 import {App, Triggers, Args} from '../src/core/reactor';
-import {Origin, TimeInterval} from '../src/core/time';
+import {Origin, TimeValue} from '../src/core/time';
 import {Reactor, Reaction, Timer, Action, Schedulable} from '../src/core/reactor';
 
 //Upon initialization, this reactor should produce an
@@ -68,7 +68,7 @@ export class ActionTrigger extends Reactor {
 class ActionTriggerTest extends App {
     aTrigger: ActionTrigger;
 
-    constructor(name: string, timeout: TimeInterval, success?: ()=> void, fail?: ()=>void){
+    constructor(name: string, timeout: TimeValue, success?: ()=> void, fail?: ()=>void){
         super(timeout, false, false, success, fail);
         this.setAlias(name);
         this.aTrigger = new ActionTrigger(this);
@@ -87,7 +87,7 @@ describe('ActionTrigger', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var aTriggerTest = new ActionTriggerTest("ActionTriggerTest", new TimeInterval(3), done, failure);
+        var aTriggerTest = new ActionTriggerTest("ActionTriggerTest", new TimeValue(3), done, failure);
         //Don't give the runtime the done callback because we don't care if it terminates
         aTriggerTest._start();
 

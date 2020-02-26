@@ -1,5 +1,5 @@
 import {App, Parameter} from '../src/core/reactor';
-import {TimeInterval} from "../src/core/time"
+import {TimeValue} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 import {Logger} from '../src/share/Logger';
 
@@ -7,7 +7,7 @@ class SETest extends App {
     singleEvent: SingleEvent<any>;
     logger: Logger;
 
-    constructor(timeout: TimeInterval, success: ()=> void, failure: ()=>void ) {
+    constructor(timeout: TimeValue, success: ()=> void, failure: ()=>void ) {
         super(timeout, false, false, success, failure);
         this.setAlias("SETest");
         this.singleEvent = new SingleEvent(this, new Parameter("foo"));
@@ -30,7 +30,7 @@ describe('SingleEvent', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        let seTest = new SETest(new TimeInterval(3), done, failure);
+        let seTest = new SETest(new TimeValue(3), done, failure);
 
         expect(expect(seTest.singleEvent).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logger).toBeInstanceOf(Logger));

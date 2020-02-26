@@ -1,7 +1,7 @@
 'use strict';
 
 import {Reaction, Timer, Action,  App, Schedulable, Triggers, Args} from '../src/core/reactor';
-import {TimeInterval, TimeUnit, Origin, UnitBasedTimeInterval} from "../src/core/time"
+import {TimeValue, TimeUnit, Origin, UnitBasedTimeValue} from "../src/core/time"
 
 /**
  * This app tests simultaneous events.
@@ -15,15 +15,15 @@ import {TimeInterval, TimeUnit, Origin, UnitBasedTimeInterval} from "../src/core
  */
 export class Clock extends App {
 
-    t1: Timer = new Timer(this, new TimeInterval(3), new TimeInterval(1));
-    t2: Timer = new Timer(this, new UnitBasedTimeInterval(3500, TimeUnit.msec), 
-                                new UnitBasedTimeInterval(1500, TimeUnit.msec));
+    t1: Timer = new Timer(this, new TimeValue(3), new TimeValue(1));
+    t2: Timer = new Timer(this, new UnitBasedTimeValue(3500, TimeUnit.msec), 
+                                new UnitBasedTimeValue(1500, TimeUnit.msec));
 
     a1 = new Action<number>(this, Origin.logical);
     a2 = new Action<number>(this, Origin.logical);
     a3 = new Action<number>(this, Origin.logical);
 
-    constructor(name: string, timeout: TimeInterval,  success: () => void, fail: () => void) {
+    constructor(name: string, timeout: TimeValue,  success: () => void, fail: () => void) {
         super(timeout, false, false, success, fail);
         this.setAlias(name);
         this.addReaction(
@@ -75,7 +75,7 @@ export class Clock extends App {
                 // All timers should fire simultaneously at logical time 5 seconds from the start of execution.
                 // This should tricker tick, tock, and, cuckoo to simultanously schedule actions
                 // 1,2, and 3. 
-                if (this.util.time.getElapsedLogicalTime().isEqualTo(new TimeInterval(5))) {
+                if (this.util.time.getElapsedLogicalTime().isEqualTo(new TimeValue(5))) {
                     console.log("reacting in Test");
                     if(a1.get() == 1 && a2.get() == 2 && a3.get() == 3) {
                         this.util.exec.success();
@@ -102,7 +102,7 @@ describe('clock', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 6 seconds.
-        var clock = new Clock("Clock", new TimeInterval(6), done, fail);
+        var clock = new Clock("Clock", new TimeValue(6), done, fail);
 
         //Don't give the runtime the done callback because we don't care if it terminates
         clock._start();

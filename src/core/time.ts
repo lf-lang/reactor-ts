@@ -5,7 +5,7 @@
  */
 
 /**
- * Module used to acquire time from the platform in microsecond precision.
+ * Module used to acquire time values from the platform in microsecond precision.
  * @see {@link https://www.npmjs.com/package/microtime}
  */
 const Microtime = require("microtime");
@@ -30,22 +30,21 @@ export enum TimeUnit {
 }
 
 /**
- * A time interval given in nanosecond precision. To prevent overflow
- * (which would occur for time intervals spanning more than 0.29 years
- * if a single JavaScript number, which has 2^53 bits of precision, were
- * to be used), we use _two_ numbers to store a time interval. The first
- * number denotes the number of whole seconds in the interval; the second
- * number denotes the remaining number of nanoseconds in the interval.
- * This class serves as a base class for `UnitBasedTimeInterval`, which 
- * provides the convenience of defining time intervals as a single number
- * accompanied by a unit.
+ * A time value given in nanosecond precision. To prevent overflow (which would
+ * occur for time intervals spanning more than 0.29 years if a single JavaScript
+ * number, which has 2^53 bits of precision, were to be used), we use _two_
+ * numbers to store a time value. The first number denotes the number of whole
+ * seconds in the interval; the second number denotes the remaining number of
+ * nanoseconds in the interval. This class serves as a base class for
+ * `UnitBasedTimeValue`, which provides the convenience of defining time values
+ * as a single number accompanied by a unit.
  * @see TimeUnit
- * @see UnitBasedTimeInterval
+ * @see UnitBasedTimeValue
  */
-export class TimeInterval {
+export class TimeValue {
 
     /**
-     * Create a new time interval. Both parameters must be non-zero integers;
+     * Create a new time value. Both parameters must be non-zero integers;
      * an error will be thrown otherwise. The second parameter is optional.
      * @param seconds Number of seconds in the interval.
      * @param nanoseconds Remaining number of nanoseconds (defaults to zero).
@@ -57,11 +56,12 @@ export class TimeInterval {
     }
 
     /**
-     * Return a new time interval that denotes the duration of this 
-     * time interval plus the time interval given as a parameter.
-     * @param other The time interval to add to this one.
+     * Return a new time value that denotes the duration of the time interval
+     * encoded by this time value plus the time interval encoded by the time
+     * value given as a parameter.
+     * @param other The time value to add to this one.
      */
-    add(other: TimeInterval): TimeInterval {
+    add(other: TimeValue): TimeValue {
         const billion = 1000000000;
 
         let seconds = this.seconds + other.seconds;
@@ -72,15 +72,16 @@ export class TimeInterval {
             seconds += 1;
             nanoseconds -= billion;
         }
-        return new TimeInterval(seconds, nanoseconds);
+        return new TimeValue(seconds, nanoseconds);
     }
 
     /**
-     * Return a new time interval that denotes the duration of this 
-     * time interval minus the time interval given as a parameter.
-     * @param other The time interval to subtract from this one.
+     * Return a new time value that denotes the duration of the time interval
+     * encoded by this time value minus the time interval encoded by the time
+     * value given as a parameter.
+     * @param other The time value to subtract from this one.
      */
-    subtract(other: TimeInterval): TimeInterval {
+    subtract(other: TimeValue): TimeValue {
         var s = this.seconds - other.seconds;;
         var ns = this.nanoseconds - other.nanoseconds;
 
@@ -93,21 +94,21 @@ export class TimeInterval {
         if(s < 0){
             throw new Error("Negative time value.");
         }
-        return new TimeInterval(s, ns);
+        return new TimeValue(s, ns);
     }
 
     /**
-     * Return true this denotes a time interval equal of equal
-     * length as the time interval given as a parameter.
-     * @param other The time interval to compare to this one.
+     * Return true if this time value denotes a time interval of equal length as
+     * the interval encoded by the time value given as a parameter.
+     * @param other The time value to compare to this one.
      */
-    isEqualTo(other: TimeInterval): boolean {
+    isEqualTo(other: TimeValue): boolean {
         return this.seconds == other.seconds 
             && this.nanoseconds == other.nanoseconds;
     }
 
     /**
-     * Return true if this denotes a zero time interval.
+     * Return true if this denotes a time interval of length zero.
      */
     isZero() {
         if(this.seconds == 0 && this.nanoseconds == 0) {
@@ -118,14 +119,15 @@ export class TimeInterval {
     }
 
     /**
-     * Return true if this time interval is of smaller length than the time
-     * interval given as a parameter, return false otherwise.
+     * Return true if this time value denotes a time interval of smaller length
+     * than the time interval encoded by the time value given as a parameter;
+     * return false otherwise.
      * NOTE: Performing this comparison involves a conversion to a big integer
      * and is therefore relatively costly.
-     * @param other The time interval to compare to this one.
+     * @param other The time value to compare to this one.
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt|BigInt} for further information.
      */
-    isSmallerThan(other: TimeInterval) {
+    isSmallerThan(other: TimeValue) {
         if (this.seconds < other.seconds) {
             return true;
         }
@@ -136,18 +138,19 @@ export class TimeInterval {
     }
 
     /**
-     * Print the number of seconds and nanoseconds in this time interval.
+     * Print the number of seconds and nanoseconds in the time interval encoded
+     * by this time value.
      */
     public toString(): string {
         return "(" + this.seconds + " secs; " + this.nanoseconds + " nsecs)";
     }
 
     /**
-     * Get a string representation of this time interval that is compatible
-     * with `nanotimer`. Unit specifiers are `s` for seconds, `m` for 
-     * milliseconds `u` for microseconds, and `n` for nanoseconds.
-     * @see {@link https://www.npmjs.com/package/nanotimer} for 
-     * further information.
+     * Get a string representation of this time value that is compatible with
+     * `nanotimer`. Unit specifiers are `s` for seconds, `m` for milliseconds
+     * `u` for microseconds, and `n` for nanoseconds.
+     * @see {@link https://www.npmjs.com/package/nanotimer} for further
+     * information.
      */
     public getNanoTime(): string {
         
@@ -195,16 +198,15 @@ export class TimeInterval {
 }
 
 /** 
- * Subclass of `TimeInterval` that is constructed on the basis of a value
+ * Subclass of `TimeValue` that is constructed on the basis of a value
  * accompanied with a time unit. The value is a `number` that is required to be
  * a positive integer. The time unit must be a member of the `TimeUnit` enum.
  */
-export class UnitBasedTimeInterval extends TimeInterval {
+export class UnitBasedTimeValue extends TimeValue {
 
     /**
-     * Construct a new time interval on the basis of a value accompanied with
-     * a time unit. An error is thrown when the given value is negative, 
-     * non-integer, or both.
+     * Construct a new time value on the basis of a given a time unit. An error
+     * is thrown when the given value is negative, non-integer, or both.
      * @param value A number (which must be a positive integer) that denotes 
      * the length of the specified time interval, expressed as a multiple of
      * the given time unit.
@@ -235,8 +237,8 @@ export class UnitBasedTimeInterval extends TimeInterval {
     }
 
     /**
-     * Print a string representation of this time interval using the time unit it was
-     * originally created with.
+     * Print a string representation of this time value using the time unit it
+     * was originally created with.
      */
     public toString(): string {
         return this.value + " " + TimeUnit[this.unit];
@@ -245,24 +247,24 @@ export class UnitBasedTimeInterval extends TimeInterval {
 
 
 /** 
- * A superdense time instant, represented as a time interval `time` (i.e., 
+ * A superdense time instant, represented as a time value `time` (i.e., 
  * time elapsed since Epoch) paired with a microstep index to keep track of 
  * iterations in superdense time. For each such iteration, `time` remains
  * the same, but `microstep` is incremented. 
  */ 
-export class TimeInstant {
+export class Tag {
 
     /**
      * Time elapsed since Epoch.
      */
-    readonly time:TimeInterval;
+    readonly time:TimeValue;
 
     /**
      * 
      * @param timeSinceEpoch Time elapsed since Epoch.
      * @param microstep Superdense time index.
      */
-    constructor(timeSinceEpoch: TimeInterval, readonly microstep: number=0) {
+    constructor(timeSinceEpoch: TimeValue, readonly microstep: number=0) {
         if (!Number.isInteger(microstep)) {
             throw new Error("Microstep must be integer.");
         }
@@ -279,7 +281,7 @@ export class TimeInstant {
      * `microstep` is less than the `microstep` of the other.
      * @param other The time instant to compare against this one.
      */
-    isEarlierThan(other: TimeInstant): boolean {
+    isEarlierThan(other: Tag): boolean {
         return this.time.isSmallerThan(other.time) 
             || (this.time.isEqualTo(other.time) 
                 && this.microstep < other.microstep);
@@ -291,7 +293,7 @@ export class TimeInstant {
      * `microstep` must be equal for two time instants to be simultaneous.
      * @param other The time instant to compare against this one.
      */
-    isSimultaneousWith(other: TimeInstant) {
+    isSimultaneousWith(other: Tag) {
         return this.time.isEqualTo(other.time) 
             && this.microstep == other.microstep;
     }
@@ -302,8 +304,8 @@ export class TimeInstant {
      * the returned time instant always has a `microstep` of zero.
      * @param delay The time interval to add to this time instant.
      */
-    getLaterTime(delay: TimeInterval) : TimeInstant {
-        return new TimeInstant(delay.add(this.time), 0);
+    getLaterTag(delay: TimeValue) : Tag {
+        return new Tag(delay.add(this.time), 0);
     }
 
     /**
@@ -311,18 +313,16 @@ export class TimeInstant {
      * is incremented by one relative to this time instant's `microstep`.
      */
     getMicroStepLater() {
-        return new TimeInstant(this.time, this.microstep+1);
+        return new Tag(this.time, this.microstep+1);
     }
 
     /**
-     * Obtain a time interval that represents the absolute (i.e., positive)
-     * time difference between this time interval and the time interval given
-     * as a parameter.
-     * @param other The time instant for which to compute the absolute difference
-     * with this time instant.
-     * 
+     * Obtain a time interval that represents the absolute (i.e., positive) time
+     * difference between this time interval and the tag given as a parameter.
+     * @param other The time instant for which to compute the absolute
+     * difference with this time instant.
      */
-    getTimeDifference(other: TimeInstant): TimeInterval {
+    getTimeDifference(other: Tag): TimeValue {
         if (this.isEarlierThan(other)) {
             return other.time.subtract(this.time);
         } else {
@@ -349,12 +349,12 @@ export enum Origin {
 }
 
 /**
- * Return a time instant that reflects the current physical time as reported
+ * Return a time value that reflects the current physical time as reported
  * by the platform.
  */
-export function getCurrentPhysicalTime(): TimeInstant {
+export function getCurrentPhysicalTime(): TimeValue {
     let t = Microtime.now();
     let seconds: number = Math.floor(t / 1000000);
     let nseconds: number = t * 1000 - seconds * 1000000000;
-    return new TimeInstant(new TimeInterval(seconds, nseconds), 0);
+    return new TimeValue(seconds, nseconds);
 }

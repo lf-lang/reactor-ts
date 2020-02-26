@@ -1,5 +1,5 @@
 import {App, Reactor, Reaction, Parameter, Args, Triggers} from '../src/core/reactor';
-import {TimeInterval} from "../src/core/time"
+import {TimeValue} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 
 /**
@@ -45,7 +45,7 @@ describe('OutputEventTest', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        var oEventTest = new OutputEventTest(new TimeInterval(3), false, false, done, fail);
+        var oEventTest = new OutputEventTest(new TimeValue(3), false, false, done, fail);
         // Don't give the runtime the done callback because we don't care if it terminates
         oEventTest._start();
     })
