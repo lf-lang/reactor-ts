@@ -534,6 +534,12 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
 
 }
 
+export class Setup extends Action<Present> {
+    constructor(__parent__: Reactor) {
+        super(__parent__, Origin.logical)
+    }
+}
+
 export class Startup extends Action<Present> {
     constructor(__parent__: Reactor) {
         super(__parent__, Origin.logical)
@@ -604,7 +610,7 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
             tag = new Tag(getCurrentPhysicalTime(), 0);
         }
         tag = tag.getLaterTag(delay);
-        if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
+        if (this.action.origin == Origin.logical && !(this.action instanceof Setup)) {
             tag = tag.getMicroStepLater();
         }
         this.__parent__.util.event.schedule(new Event(this.action, tag, value));
@@ -759,10 +765,6 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     private _destinationPorts: Map<Port<Present>, Set<Port<Present>>> = new Map();
 
-    private _startupActions: Set<Startup> = new Set(); // FIXME: use these so we can make startup and shutdown private
-
-    private _shutdownActions: Set<Action<Present>> = new Set();
-
     private isTrigger<T extends Present>(trigger: Port<T> | Action<T> | Timer) {
         
     }
@@ -786,6 +788,8 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     private _mutations: Mutation<any>[] = []; // FIXME: introduce mutations
     
+    public setup = new Setup(this);
+
     public startup = new Startup(this);
 
     public shutdown =  new Shutdown(this);
@@ -1142,18 +1146,20 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         // NOTE: beware, if this is an instance of App, `this.util` will be `undefined`.
         // Do not attempt to reference during the construction of an App.
         if (!(this instanceof App)) {
-            // Add default startup reaction.
+            // Add default setup reaction.
             this.addMutation(
-                new Triggers(this.startup), 
+                new Triggers(this.setup), 
                 new Args(),
                 function(this) {
                     var reactor = (this.__parent__ as Reactor); // FIXME: make parent private and add
                                                                 // function below part of ReactorUtils
                     //Log.global.log("*** Starting up reactor " + reactor.getFullyQualifiedName());
-                    // Schedule startup for all contained reactors.
-                    reactor._startupChildren();
+                    // Schedule setup for all contained reactors.
+                    reactor._setupChildren();
                     reactor._setTimers();
                     reactor._isActive = true;
+                    // Schedule startup action for the next microstep
+                    this.__parent__.app.schedule(new Event(this.__parent__.startup, this.util.time.getCurrentTag().getMicroStepLater(), null));
                 }
             );
 
@@ -1173,11 +1179,11 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
     }
 
-    public _startupChildren() {
+    public _setupChildren() {
         for (let r of this._getChildren()) {
-            Log.global.debug("Propagating startup: " + r.startup);
-            // Note that startup reactions are scheduled without a microstep delay
-            this.getSchedulable(r.startup).schedule(0);
+            Log.global.debug("Propagating setup: " + r.setup);
+            // Note that setup reactions are scheduled without a microstep delay
+            this.getSchedulable(r.setup).schedule(0);
         }
     }
 
@@ -1221,12 +1227,6 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
         return children;
     }
-
-    // public _registerStartupShutdown(startup: Startup, shutdown: Action<unknown>) {
-    //     // FIXME: do hierarchy check to ensure that this reactors should have access to these actions.
-    //     this._startupActions.add(startup);
-    //     this._shutdownActions.add(shutdown);
-    // }
     
     /**
      * Returns the set of reactions owned by this reactor.
@@ -1443,15 +1443,6 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
         return actions;
     }
-
-
-
-
-    //A reactor's priority represents its order in the topological sort.
-    //The default value of -1 indicates a priority has not been set.
-    _priority: number = -1;
-
-    //FIXME: assign in constructor?
  
     toString(): string {
         return this.getFullyQualifiedName();
@@ -1923,13 +1914,13 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._currentTag = new Tag(new TimeValue(0), 0);
         this._startOfExecution = this._currentTag;
         
-        // Add default startup reaction.
+        // Add default setup reaction.
         this.addMutation(
-            new Triggers(this.startup), 
+            new Triggers(this.setup), 
             new Args(),
             function (this) {
                 //Log.global.log("*** Starting up reactor " + (this.__parent__ as Reactor).getFullyQualifiedName());
-                // If the end of execution is known at startup, schedule a 
+                // If the end of execution is known at setup, schedule a 
                 // shutdown event to that effect.
                 // Note that we schedule shutdown one microstep later, so that
                 // any event scheduled exactly at the end of execution will be
@@ -1939,10 +1930,12 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                 if (eoe) {
                     app.schedule(new Event(app.shutdown, eoe.getMicroStepLater(), null));
                 }
-                // Schedule startup for all contained reactors.
-                app._startupChildren();
+                // Schedule setup for all contained reactors.
+                app._setupChildren();
                 app._setTimers();
                 app._isActive = true;
+                // Schedule startup action for the next microstep
+                app.schedule(new Event(app.startup, app._currentTag.getMicroStepLater(), null));
             }
         );
 
@@ -2251,7 +2244,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         Log.global.info(Log.hr);
         Log.global.info(">>> Start of execution: " + this._currentTag);
         Log.global.info(Log.hr);
-        // Set in motion the execution of this program by scheduling startup at the current logical time.
-        this.getSchedulable(this.startup).schedule(0);
+        // Set in motion the execution of this program by scheduling setup at the current logical time.
+        this.getSchedulable(this.setup).schedule(0);
     }
 }
