@@ -1825,7 +1825,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     /**
      * The identifier for the timeout used to ensure alarms execute asynchronously.
      */
-    private _alarmTimeoutID: ReturnType<typeof setTimeout> | undefined;
+    private _alarmTimeoutID: ReturnType<typeof setImmediate> | undefined;
 
     /**
      * The time when the alarm's timeout will occur.
@@ -2139,7 +2139,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     public clearAlarm () {
         this._currentAlarmTime = undefined;
         if (this._alarmTimeoutID) {
-            clearTimeout(this._alarmTimeoutID);
+            clearImmediate(this._alarmTimeoutID);
             this._alarmTimeoutID = undefined;
         }
         this.alarm.clearTimeout();
@@ -2171,21 +2171,20 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                 // bugs involving the reaction queue not being emptied before starting 
                 // _next again resulting in reaction execution at the wrong logical time.
                 // It can also lead to a stack overflow. Wrapping alarm.setTimeout
-                // in a window.setTimeout with a timeout of 0 forces nanotimer to always
-                // act asynchronously.
+                // in a setImmediate forces nanotimer to always act asynchronously.
 
-                this._alarmTimeoutID = setTimeout(
+                this._alarmTimeoutID = setImmediate(
                     function(this: App) {
                         let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
                         let timeout = e.tag.getTimeDifference(physicalTimeTag);
                         this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
-                }.bind(this), 0);
+                }.bind(this));
                 Log.global.debug("Timeout: " + timeout.getNanoTime());
             } else {
-                this._alarmTimeoutID = setTimeout(
+                this._alarmTimeoutID = setImmediate(
                     function(this: App){
                         this._next(e)
-                    }.bind(this), 0);
+                    }.bind(this));
             }
         }
     }
