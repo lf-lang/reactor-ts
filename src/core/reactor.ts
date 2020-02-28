@@ -249,7 +249,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         var antideps: Set<Variable> = new Set();
         var vars = new Set();
         for (let a of this.args.tuple.concat(this.trigs.list)) {
-            if (a instanceof Port) { // FIXME: handle Writers and hierarchical references!
+            if (a instanceof Port) {
                 if (this.__parent__._isUpstream(a)) {
                     deps.add(a);
                 }
@@ -594,7 +594,6 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
      * The value will be available to reactions depending on this action.
      */
     schedule(extraDelay: TimeValue | 0, value?: T) {
-        
         if (!(extraDelay instanceof TimeValue)) {
             extraDelay = new TimeValue(0);
         }
@@ -611,20 +610,17 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
         if (this.action.origin == Origin.physical) {
             tag = new Tag(getCurrentPhysicalTime(), 0);
         }
+        
         tag = tag.getLaterTag(delay);
+        
         if (this.action.origin == Origin.logical) {
             tag = tag.getMicroStepLater();
         }
-        this.__parent__.util.event.schedule(new Event(this.action, tag, value));
         
-        // For logging
-        let actionType;
-        if (this.action.origin == Origin.logical) {
-            actionType = "logical";
-        } else {
-            actionType = "physical";
-        }
-        Log.global.debug("Scheduling " + actionType + " action " + this.action.getName() + " with tag: " + tag);  
+        Log.global.info("Scheduling " + this.action.origin + 
+        " action " + this.action.getName() + " with tag: " + tag);  
+
+        this.__parent__.util.event.schedule(new Event(this.action, tag, value));
     }
 }
 
@@ -1016,16 +1012,26 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         this.recordDeps(mutation);
     }
 
-    public getPrecedenceGraph(): PrecedenceGraph<Reaction<unknown>> {
-        var graph:PrecedenceGraph<Reaction<unknown>> = new PrecedenceGraph();
+    public getPrecedenceGraph(): PrecedenceGraph<Reaction<unknown>|Mutation<unknown>> {
+        var graph:PrecedenceGraph<Reaction<unknown>|Mutation<unknown>> = new PrecedenceGraph();
 
         for (let r of this._getChildren()) {
             graph.merge(r.getPrecedenceGraph());
         }
         
-        let prev: Reaction<unknown> | null = null;
-        for (let i=0; i < this._reactions.length; i++) {
-            let r = this._reactions[i];
+        let prev: Reaction<unknown> | Mutation<unknown> | null = null;
+        prev = this.collectDependencies(graph, this._mutations, prev);
+        prev = this.collectDependencies(graph, this._reactions, prev);
+
+        return graph;
+
+    }
+
+    private collectDependencies(graph: PrecedenceGraph<Reaction<unknown>|Mutation<unknown>>, 
+                                nodes: Reaction<unknown>[]|Mutation<unknown>[], 
+                                prev: Reaction<unknown>|Mutation<unknown>|null) {
+        for (let i=0; i < nodes.length; i++) {
+            let r = nodes[i];
             graph.addNode(r);
             // Establish dependencies between reactions
             // depending on their ordering inside the reactor.
@@ -1051,9 +1057,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             }
             prev = r;
         }
-
-        return graph;
-
+        return prev;              
     }
 
     private _addDependency(port: Port<Present>, reaction: Reaction<any>): void {
@@ -2260,6 +2264,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         Log.global.info(">>> Start of execution: " + this._currentTag);
         Log.global.info(Log.hr);
         // Set in motion the execution of this program by scheduling startup at the current logical time.
-        this.getSchedulable(this.startup).schedule(0);
+        this.util.event.schedule(new Event(this.startup, this._currentTag, null));
+        //this.getSchedulable(this.startup).schedule(0);
     }
 }

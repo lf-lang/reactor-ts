@@ -1,7 +1,7 @@
 import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet, Log} from '../src/core/util';
 import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown} from '../src/core/reactor';
 
-Log.setGlobalLevel(Log.levels.DEBUG);
+//Log.setGlobalLevel(Log.levels.DEBUG);
 
 class R extends Reactor {
     protected in = new InPort(this);
@@ -237,7 +237,7 @@ describe('Automatically constructed precedence graphs', () => {
     it('internal dependencies between reactions', () => {
         expect(reactor.getPrecedenceGraph().toString()).toBe(
 `digraph G {
-"App/R[R6]"->"App/R[R5]"->"App/R[R4]"->"App/R[R3]"->"App/R[R2]"->"App/R[R1]"->"App/R[R0]";
+"App/R[R6]"->"App/R[R5]"->"App/R[R4]"->"App/R[R3]"->"App/R[R2]"->"App/R[R1]"->"App/R[R0]"->"App/R[M1]"->"App/R[M0]";
 }`);
     });
 

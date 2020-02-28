@@ -350,8 +350,8 @@ export class Tag {
  * time_.
  */
 export enum Origin {
-    physical,
-    logical
+    physical = "physical",
+    logical = "logical"
 }
 
 /**
