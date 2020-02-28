@@ -1886,16 +1886,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      */
     public _setTimer(timer: Timer) {
         Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
-        let startTime;
-        if (timer.offset.isZero()) {
-            // getLaterTime always returns a microstep of zero, so handle the
-            // zero offset case explicitly.
-            startTime = this.util.time.getCurrentTag().getMicroStepLater();
-        } else {
-            startTime = this.util.time.getCurrentTag().getLaterTag(timer.offset);
-        }
-        this.schedule(new Event(timer, startTime, null));
-
+        this.schedule(new Event(timer, this.util.time.getCurrentTag().getLaterTag(timer.offset), null));
     }
 
     /**
