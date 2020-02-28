@@ -594,17 +594,25 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
      * The value will be available to reactions depending on this action.
      */
     schedule(extraDelay: TimeValue | 0, value?: T) {
+        
         if (!(extraDelay instanceof TimeValue)) {
             extraDelay = new TimeValue(0);
         }
-        
+
         var tag = this.__parent__.util.time.getCurrentTag();
         var delay = this.action.minDelay.add(extraDelay);
+        
+        if (this.action instanceof Startup) {
+            // Add all reactions triggered by startup directly to the reaction queue.
+            this.action.update(new Event(this.action, tag, value));
+            return;
+        }
+        
         if (this.action.origin == Origin.physical) {
             tag = new Tag(getCurrentPhysicalTime(), 0);
         }
         tag = tag.getLaterTag(delay);
-        if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
+        if (this.action.origin == Origin.logical) {
             tag = tag.getMicroStepLater();
         }
         this.__parent__.util.event.schedule(new Event(this.action, tag, value));
