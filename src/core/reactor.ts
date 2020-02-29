@@ -334,11 +334,14 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
 //    private values: Map<Readable<unknown>, unknown> = new Map();
 
     public doReact() {
-        Log.global.debug(">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug(">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
+            Log.global.debug("Timeout: " + this.timeout);
+        }
         // Test if this reaction has a deadline which has been violated.
         // This is the case if the reaction has a defined timeout and
         // logical time + timeout < physical time
-        Log.global.debug("Timeout: " + this.timeout);
+        
         if (this.timeout && 
             this.util.time.getCurrentTag()
                 .getLaterTag(this.timeout)
@@ -617,9 +620,10 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
             tag = tag.getMicroStepLater();
         }
         
-        Log.global.info("Scheduling " + this.action.origin + 
-        " action " + this.action.getName() + " with tag: " + tag);  
-
+        if (Log.getGlobalLevel() >= Log.levels.INFO) {
+            Log.global.info("Scheduling " + this.action.origin + 
+            " action " + this.action.getName() + " with tag: " + tag);  
+        }
         this.__parent__.util.event.schedule(new Event(this.action, tag, value));
     }
 }
@@ -968,7 +972,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                 // The ports of hierarchical references are still given as ports
                 this._addDependency(t, reaction);
             } else {
-                Log.global.debug(">>>>>>>> not a dependency: " + t); 
+                if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                    Log.global.debug(">>>>>>>> not a dependency: " + t);
+                }
             }
         }
         for (let a of reaction.args.tuple) {
@@ -1087,7 +1093,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     public _propagateValue<T extends Present>(src: Port<T>): void {
         var value = src.get();
         if (value == null) {
-            Log.global.debug("Retrieving null value from " + src.getFullyQualifiedName());
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Retrieving null value from " + src.getFullyQualifiedName());
+            }
             return;
         }
         var reactions = this._triggerMap.get(src);
@@ -1119,7 +1127,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     public triggerReactions(e: Event<unknown>) {
-        Log.global.debug("Triggering reactions sensitive to " + e.trigger);
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("Triggering reactions sensitive to " + e.trigger);
+        }
         let reactions = this._triggerMap.get(e.trigger);
         if (reactions) {
             for (let r of reactions) {
@@ -1175,7 +1185,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                 new Args(),
                 function(this) {
                     var reactor = (this.__parent__ as Reactor);
-                    Log.global.log("*** Shutting down reactor " + reactor.getFullyQualifiedName());
+                    if (Log.getGlobalLevel() >= Log.levels.LOG) {
+                        Log.global.log("*** Shutting down reactor " + reactor.getFullyQualifiedName());
+                    }
                     reactor._unsetTimers();
                     // Schedule shutdown for all contained reactors.
                     reactor._shutdownChildren();
@@ -1187,7 +1199,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     public _startupChildren() {
         for (let r of this._getChildren()) {
-            Log.global.debug("Propagating startup: " + r.startup);
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Propagating startup: " + r.startup);
+            }
             // Note that startup reactions are scheduled without a microstep delay
             this.getSchedulable(r.startup).schedule(0);
         }
@@ -1196,7 +1210,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     public _shutdownChildren() {
         Log.global.debug("Shutdown children was called")
         for (let r of this._getChildren()) {
-            Log.global.debug("Propagating shutdown: " + r.shutdown);
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Propagating shutdown: " + r.shutdown);
+            }
             this.getSchedulable(r.shutdown).schedule(0);
         }
     }
@@ -1354,7 +1370,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     protected _connect<D extends Present, S extends D>(src:Port<S>, dst:Port<D>) {
         //***********
         if (this.canConnect(src, dst)) {
-            Log.global.debug("connecting " + src + " and " + dst);
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("connecting " + src + " and " + dst);
+            }
             let dests = this._destinationPorts.get(src);
             if (dests == null) {
                 dests = new Set();
@@ -1368,7 +1386,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     protected _disconnect(src:Port<Present>, dst: Port<Present>) {
-        Log.global.debug("disconnecting " + src + " and " + dst);
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("disconnecting " + src + " and " + dst);
+        }
         let dests = this._destinationPorts.get(src);
         if (dests != null) {
             dests.delete(dst);
@@ -1404,7 +1424,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * Set all the timers of this reactor.
      */
     public _setTimers(): void {
-        Log.global.debug("Setting timers for: " + this);
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("Setting timers for: " + this);
+        }
         let timers = new Set<Timer>();
         for (const [k, v] of Object.entries(this)) {
             if (v instanceof Timer) {
@@ -1553,7 +1575,9 @@ export abstract class Port<T extends Present> extends Descendant implements Read
     public getUpstreamReactions(): Set<Reaction<unknown>> {
         var reactions: Set<Reaction<unknown>> = new Set();
         var source = this.__parent__.getSource(this);
-        Log.global.debug("Finding upstream reactions for " + this);
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("Finding upstream reactions for " + this);
+        }
         if (source) {
             Log.global.debug(">>>");
             // Reactions upstream (i.e., in other reactors).
@@ -1585,10 +1609,12 @@ export abstract class Port<T extends Present> extends Descendant implements Read
      * Returns false otherwise
      */
     public isPresent() {
-        Log.global.debug("In isPresent()...")
-        Log.global.debug("value: " + this.value);
-        Log.global.debug("tag: " + this.tag);
-        Log.global.debug("time: " + this.__parent__.util.time.getCurrentLogicalTime())
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("In isPresent()...")
+            Log.global.debug("value: " + this.value);
+            Log.global.debug("tag: " + this.tag);
+            Log.global.debug("time: " + this.__parent__.util.time.getCurrentLogicalTime())
+        }
         if(this.value != null
             && this.tag != undefined
             && this.tag.isSimultaneousWith(this.__parent__.util.time.getCurrentTag())) {
@@ -1603,10 +1629,14 @@ export abstract class Port<T extends Present> extends Descendant implements Read
             // Only update the value if the proxy has a reference
             // to this port. If it does, the type variables must
             // match; no further checks are needed.
-            Log.global.debug("Updating value of " + this.getFullyQualifiedName());
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Updating value of " + this.getFullyQualifiedName());
+            }
             //@ts-ignore
             this.value = value;
-            Log.global.debug(">> parent: " + this.__parent__);
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug(">> parent: " + this.__parent__);
+            }
             this.tag = this.__parent__.util.time.getCurrentTag();
             this.__parent__._propagateValue(this); // FIXME: should this be a utility function?
         } else {
@@ -1670,7 +1700,9 @@ class Writer<T extends Present> implements Proxy<T> { // NOTE: don't export this
     * @param value The value to be written.
     */
     public set(value: T):void {
-        Log.global.debug("set() has been called on " + this.port.getFullyQualifiedName());
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("set() has been called on " + this.port.getFullyQualifiedName());
+        }
         if (value != null) {
             this.port.update(this, value);
         }
@@ -1885,7 +1917,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * @param timer The timer to report to the app.
      */
     public _setTimer(timer: Timer) {
-        Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
+        }
         this.schedule(new Event(timer, this.util.time.getCurrentTag().getLaterTag(timer.offset), null));
     }
 
@@ -2002,11 +2036,13 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * allowed to continue indefinitely.
      */
     private _next(event: Event<unknown>) {
-        
-        Log.global.debug("New invocation of next().");
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("New invocation of next().");
+            Log.global.debug("{{{ Triggered by event: " + event.trigger + " }}}");
+        }
         // Log.global.info(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
         // Log.global.info(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
-        Log.global.debug("{{{ Triggered by event: " + event.trigger + " }}}");
+        
     
         if (this._endOfExecution && this._endOfExecution.isEarlierThan(this._currentTag) && !this._endOfExecution.getTimeDifference(event.tag).isZero()) {
             // Remove remaining items from the event queue, if any.
@@ -2023,8 +2059,10 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     
         let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
         if (physicalTimeTag.isEarlierThan(event.tag) && !this._fast) {
-            Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Too early to handle next event.");
-            Log.global.debug("Time difference: " + physicalTimeTag.getTimeDifference(event.tag).getNanoTime());
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Too early to handle next event.");
+                Log.global.debug("Time difference: " + physicalTimeTag.getTimeDifference(event.tag).getNanoTime());
+            }
             this.setAlarm(event);
             return;
         }
@@ -2036,22 +2074,28 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._currentTag = event.tag;
 
         if (previousTag.isEarlierThan(event.tag)) {
-            Log.global.log(Log.hr);
-            Log.global.log(">>> Next event time: " + event.tag);
-            Log.global.log(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
-            Log.global.log(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
-            Log.global.log(Log.hr);
+            if (Log.getGlobalLevel() >= Log.levels.LOG) {
+                Log.global.log(Log.hr);
+                Log.global.log(">>> Next event time: " + event.tag);
+                Log.global.log(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
+                Log.global.log(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
+                Log.global.log(Log.hr);
+            }
         }
         
         Log.global.debug("Processing events.");
         var nextEvent : Event<unknown> | undefined = event;
         while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
             this._eventQ.pop();
-            Log.global.debug("Popped off the event queue: " + nextEvent.trigger);
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Popped off the event queue: " + nextEvent.trigger);
+            }
             // Handle timers.
             if (nextEvent.trigger instanceof Timer) {
                 if (!nextEvent.trigger.period.isZero()) {
-                    Log.global.debug("Rescheduling timer " + nextEvent.trigger);
+                    if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                        Log.global.debug("Rescheduling timer " + nextEvent.trigger);
+                    }
                     // reschedule
                     this.schedule(new Event(nextEvent.trigger, 
                         this._currentTag.getLaterTag(nextEvent.trigger.period), 
@@ -2081,8 +2125,10 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             if (nextEvent.trigger !== this.shutdown || this._keepAlive || this._currentTag.time.isEqualTo(event.tag.time)) {
                 // Set an alarm to handle the next event.
                 Log.global.debug("Setting alarm to wake up for next event.")
-                Log.global.log(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
-                Log.global.log(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
+                if (Log.getGlobalLevel() >= Log.levels.LOG) {
+                    Log.global.log(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
+                    Log.global.log(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
+                }
                 this.setAlarm(nextEvent);
             } else {
                 // The next event is shutdown, 
@@ -2128,9 +2174,11 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     public schedule(e: Event<any>) {
         let head = this._eventQ.peek();
         this._eventQ.push(e);
-        Log.global.debug("Scheduling with trigger: " + e.trigger);
-        Log.global.debug("Elapsed logical time in schedule: " + this.util.time.getElapsedLogicalTime());
-        Log.global.debug("Elapsed physical time in schedule: " + this.util.time.getElapsedPhysicalTime());
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("Scheduling with trigger: " + e.trigger);
+            Log.global.debug("Elapsed logical time in schedule: " + this.util.time.getElapsedLogicalTime());
+            Log.global.debug("Elapsed physical time in schedule: " + this.util.time.getElapsedPhysicalTime());
+        }
         if (head == undefined || e.tag.isEarlierThan(head.tag)) {
             this.setAlarm(e);
         }      
@@ -2148,14 +2196,18 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     public setAlarm (e : Event<unknown>) {
         // Note, end of execution is currently set by the app timeout or _shutdown
         if (this._endOfExecution && this._endOfExecution.getMicroStepLater().isEarlierThan(e.tag)) {
-            Log.global.debug("Ignoring call to set alarm for event with trigger: " + e.trigger
-                + " because the event's time: " + e.tag + " is after the end of execution (plus a microstep): " 
-                + this._endOfExecution.getMicroStepLater());
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Ignoring call to set alarm for event with trigger: " + e.trigger
+                    + " because the event's time: " + e.tag + " is after the end of execution (plus a microstep): " 
+                    + this._endOfExecution.getMicroStepLater());
+            }
             this._terminateWithSuccess();
             
         } else {
             this.clearAlarm()
-            Log.global.debug("Setting alarm for event with trigger: " + e.trigger);
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Setting alarm for event with trigger: " + e.trigger);
+            }
             this._currentAlarmTime = e.tag
             let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
             if (physicalTimeTag.isEarlierThan(e.tag) && ! this._fast) {
@@ -2179,7 +2231,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                         let timeout = e.tag.getTimeDifference(physicalTimeTag);
                         this.alarm.setTimeout(this._next.bind(this), [e], timeout.getNanoTime());
                 }.bind(this));
-                Log.global.debug("Timeout: " + timeout.getNanoTime());
+                if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                    Log.global.debug("Timeout: " + timeout.getNanoTime());
+                }
             } else {
                 this._alarmTimeoutID = setImmediate(
                     function(this: App){
@@ -2194,7 +2248,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * @param e Prioritized reaction to push onto the reaction queue.
      */
     public _triggerReaction(r: Reaction<unknown>){
-        Log.global.debug("Pushing " + r + " onto the reaction queue.")  
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("Pushing " + r + " onto the reaction queue.")
+        }  
         this._reactionQ.push(r);
     }
 
@@ -2206,9 +2262,11 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     private _shutdown(): void {
         if (! this._shutdownStarted) {
             this._shutdownStarted = true;
-            Log.global.debug("Initiating shutdown sequence.");
             this._endOfExecution = this._currentTag;
-            Log.global.debug("Setting end of execution to: " + this._endOfExecution);
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Initiating shutdown sequence.");
+                Log.global.debug("Setting end of execution to: " + this._endOfExecution);
+            }
             if (this._currentAlarmTime && this._endOfExecution.getMicroStepLater().isEarlierThan(this._currentAlarmTime)) {
                 this.clearAlarm();
             }
@@ -2219,10 +2277,12 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     }
 
     private _terminateWithSuccess(): void {
-        Log.global.info(Log.hr);
-        Log.global.info(">>> End of execution at (logical) time: " + this.util.time.getCurrentLogicalTime());
-        Log.global.info(">>> Elapsed physical time: " + this.util.time.getElapsedPhysicalTime());
-        Log.global.info(Log.hr);
+        if (Log.getGlobalLevel() >= Log.levels.INFO) {
+            Log.global.info(Log.hr);
+            Log.global.info(">>> End of execution at (logical) time: " + this.util.time.getCurrentLogicalTime());
+            Log.global.info(">>> Elapsed physical time: " + this.util.time.getElapsedPhysicalTime());
+            Log.global.info(Log.hr);
+        }
         this.success();
     }
 
@@ -2240,19 +2300,25 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             throw new Error("Cycle in reaction graph.");
         }
         
-        Log.global.debug(apg.toString());
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug(apg.toString());
+        }
         
         // Let the start of the execution be the current physical time.
         this._startOfExecution = new Tag(getCurrentPhysicalTime(), 0);
         this._currentTag = this._startOfExecution;
 
         if(this._executionTimeout != null) {
-            this._endOfExecution = this._startOfExecution.getLaterTag(this._executionTimeout)
-            Log.global.debug("Execution timeout: " + this._executionTimeout);
+            this._endOfExecution = this._startOfExecution.getLaterTag(this._executionTimeout);
+            if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+                Log.global.debug("Execution timeout: " + this._executionTimeout);
+            }
         }
-        Log.global.info(Log.hr);
-        Log.global.info(">>> Start of execution: " + this._currentTag);
-        Log.global.info(Log.hr);
+        if (Log.getGlobalLevel() >= Log.levels.INFO) {
+            Log.global.info(Log.hr);
+            Log.global.info(">>> Start of execution: " + this._currentTag);
+            Log.global.info(Log.hr);
+        }
         // Set in motion the execution of this program by scheduling startup at the current logical time.
         this.util.event.schedule(new Event(this.startup, this._currentTag, null));
         //this.getSchedulable(this.startup).schedule(0);
