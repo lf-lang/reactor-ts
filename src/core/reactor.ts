@@ -620,8 +620,8 @@ export class Scheduler<T  extends Present> implements Readable<T>, Schedulable<T
             tag = tag.getMicroStepLater();
         }
         
-        if (Log.getGlobalLevel() >= Log.levels.INFO) {
-            Log.global.info("Scheduling " + this.action.origin + 
+        if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
+            Log.global.debug("Scheduling " + this.action.origin + 
             " action " + this.action.getName() + " with tag: " + tag);  
         }
         this.__parent__.util.event.schedule(new Event(this.action, tag, value));
@@ -2052,15 +2052,15 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             this._terminateWithSuccess()
             return;
         }
-    
+
         if (event.trigger === this.snooze) {
             Log.global.debug("Woken up after suspend.");
         }
-    
+
         let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
         if (physicalTimeTag.isEarlierThan(event.tag) && !this._fast) {
             if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
-                Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Too early to handle next event.");
+                Log.global.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Too early to handle next event.");
                 Log.global.debug("Time difference: " + physicalTimeTag.getTimeDifference(event.tag).getNanoTime());
             }
             this.setAlarm(event);
@@ -2114,7 +2114,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             // Check whether the reactor is active or not
             // If it is inactive, all reactions, except for those
             // in response to startup actions, should be ignored.
-            this._reactionQ.pop().doReact();
+            this._reactionQ.pop().doReact();  
         }
         Log.global.debug("Finished handling all events at current time.");
         // Peek at the event queue again since it may have changed.
@@ -2143,7 +2143,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             // Or suspend/terminate.
             Log.global.debug("Empty event queue.")
             this.suspendOrTerminate();
-        }   
+        }
     }
 
     private suspendOrTerminate() {
@@ -2287,6 +2287,12 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     }
 
     public _start():void {
+        let initStart;
+        if (Log.getGlobalLevel() >= Log.levels.INFO) {
+            Log.global.info(Log.hr);
+            initStart = getCurrentPhysicalTime();
+            Log.global.info(">>> Initializing");
+        }
         Log.global.debug("Initiating startup sequence.")
         // Recursively check the parent attribute for this and all contained reactors and
         // and components, i.e. ports, actions, and timers have been set correctly.
@@ -2315,6 +2321,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             }
         }
         if (Log.getGlobalLevel() >= Log.levels.INFO) {
+            Log.global.info(">>> Spent " + this._currentTag.time.subtract(initStart as TimeValue)
+                + " initializing.");
+            Log.global.info(Log.hr);
             Log.global.info(Log.hr);
             Log.global.info(">>> Start of execution: " + this._currentTag);
             Log.global.info(Log.hr);
