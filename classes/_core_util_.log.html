@@ -94,14 +94,17 @@
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#global" class="tsd-kind-icon">global</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#hr" class="tsd-kind-icon">hr</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#levels" class="tsd-kind-icon">levels</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#loggers" class="tsd-kind-icon">loggers</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#getgloballevel" class="tsd-kind-icon">get<wbr>Global<wbr>Level</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#debug" class="tsd-kind-icon">debug</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#getinstance" class="tsd-kind-icon">get<wbr>Instance</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#setgloballevel" class="tsd-kind-icon">set<wbr>Global<wbr>Level</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#info" class="tsd-kind-icon">info</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#log" class="tsd-kind-icon">log</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_core_util_.log.html#setalllevels" class="tsd-kind-icon">set<wbr>All<wbr>Levels</a></li>
 							</ul>
 						</section>
 					</div>
@@ -115,7 +118,7 @@
 					<div class="tsd-signature tsd-kind-icon">global<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;ulog(&quot;reactor-ts&quot;)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5c35c52/src/core/util.ts#L386">core/util.ts:386</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L388">core/util.ts:388</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -130,7 +133,7 @@
 					<div class="tsd-signature tsd-kind-icon">hr<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5c35c52/src/core/util.ts#L381">core/util.ts:381</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L383">core/util.ts:383</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -145,7 +148,7 @@
 					<div class="tsd-signature tsd-kind-icon">levels<span class="tsd-signature-symbol">:</span> <a href="../enums/_core_util_.loglevel.html" class="tsd-signature-type">LogLevel</a><span class="tsd-signature-symbol"> =&nbsp;LogLevel</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5c35c52/src/core/util.ts#L376">core/util.ts:376</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L376">core/util.ts:376</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -154,34 +157,71 @@
 						</div>
 					</div>
 				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-static">
+					<a name="loggers" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> loggers</h3>
+					<div class="tsd-signature tsd-kind-icon">loggers<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Map()</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L378">core/util.ts:378</a></li>
+						</ul>
+					</aside>
+				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="getgloballevel" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> get<wbr>Global<wbr>Level</h3>
+					<a name="debug" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> debug</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Global<wbr>Level<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../enums/_core_util_.loglevel.html" class="tsd-signature-type">LogLevel</a></li>
+						<li class="tsd-signature tsd-kind-icon">debug<span class="tsd-signature-symbol">(</span>obj<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">unknown</span>, message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span>, module<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5c35c52/src/core/util.ts#L407">core/util.ts:407</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L411">core/util.ts:411</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Get the minimum level of severity a message is required to
-									have for the logger to display it.</p>
+									<p>Log a message with severity <code>debug</code>.</p>
 								</div>
-								<dl class="tsd-comment-tags">
-									<dt>see</dt>
-									<dd><p>LogLevel</p>
-									</dd>
-								</dl>
 							</div>
-							<h4 class="tsd-returns-title">Returns <a href="../enums/_core_util_.loglevel.html" class="tsd-signature-type">LogLevel</a></h4>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>obj: <span class="tsd-signature-type">unknown</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The object to call the message callback on.</p>
+									</div>
+								</li>
+								<li>
+									<h5>message: <span class="tsd-signature-type">function</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Callback that returns a message string.</p>
+									</div>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> module: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The name associated with the logger.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -195,13 +235,22 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5c35c52/src/core/util.ts#L388">core/util.ts:388</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L395">core/util.ts:395</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get the logger instance associated with the given module.
+									If it does not exist, it is created.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>module: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The name associated with the logger</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
@@ -209,22 +258,134 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="setgloballevel" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> set<wbr>Global<wbr>Level</h3>
+					<a name="info" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> info</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">set<wbr>Global<wbr>Level<span class="tsd-signature-symbol">(</span>level<span class="tsd-signature-symbol">: </span><a href="../enums/_core_util_.loglevel.html" class="tsd-signature-type">LogLevel</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">info<span class="tsd-signature-symbol">(</span>obj<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">unknown</span>, message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span>, module<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5c35c52/src/core/util.ts#L398">core/util.ts:398</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L421">core/util.ts:421</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Set the minimum level of severity a message is required to
-									have for the logger to display it.</p>
+									<p>Log a message with severity <code>info</code>.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>obj: <span class="tsd-signature-type">unknown</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The object to call the message callback on.</p>
+									</div>
+								</li>
+								<li>
+									<h5>message: <span class="tsd-signature-type">function</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Callback that returns a message string.</p>
+									</div>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> module: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The name associated with the logger.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="log" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> log</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">log<span class="tsd-signature-symbol">(</span>obj<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">unknown</span>, message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">function</span>, module<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, severity<span class="tsd-signature-symbol">?: </span><a href="../enums/_core_util_.loglevel.html" class="tsd-signature-type">LogLevel</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L431">core/util.ts:431</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Log a message with severity <code>log</code>.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>obj: <span class="tsd-signature-type">unknown</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The object to call the message callback on.</p>
+									</div>
+								</li>
+								<li>
+									<h5>message: <span class="tsd-signature-type">function</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Callback that returns a message string.</p>
+									</div>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-siganture">
+											<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> module: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The name associated with the logger.</p>
+									</div>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> severity: <a href="../enums/_core_util_.loglevel.html" class="tsd-signature-type">LogLevel</a><span class="tsd-signature-symbol"> =&nbsp;LogLevel.LOG</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="setalllevels" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> set<wbr>All<wbr>Levels</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">set<wbr>All<wbr>Levels<span class="tsd-signature-symbol">(</span>level<span class="tsd-signature-symbol">: </span><a href="../enums/_core_util_.loglevel.html" class="tsd-signature-type">LogLevel</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5e58884/src/core/util.ts#L450">core/util.ts:450</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Set the severity level for all loggers.</p>
 								</div>
 								<dl class="tsd-comment-tags">
 									<dt>see</dt>
@@ -237,7 +398,7 @@
 								<li>
 									<h5>level: <a href="../enums/_core_util_.loglevel.html" class="tsd-signature-type">LogLevel</a></h5>
 									<div class="tsd-comment tsd-typography">
-										<p>The minimum level of severity</p>
+										<p>The minimum level of severity required for a message appear.</p>
 									</div>
 								</li>
 							</ul>
@@ -292,14 +453,23 @@
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static">
 								<a href="_core_util_.log.html#levels" class="tsd-kind-icon">levels</a>
 							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static">
+								<a href="_core_util_.log.html#loggers" class="tsd-kind-icon">loggers</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="_core_util_.log.html#getgloballevel" class="tsd-kind-icon">get<wbr>Global<wbr>Level</a>
+								<a href="_core_util_.log.html#debug" class="tsd-kind-icon">debug</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
 								<a href="_core_util_.log.html#getinstance" class="tsd-kind-icon">get<wbr>Instance</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="_core_util_.log.html#setgloballevel" class="tsd-kind-icon">set<wbr>Global<wbr>Level</a>
+								<a href="_core_util_.log.html#info" class="tsd-kind-icon">info</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_core_util_.log.html#log" class="tsd-kind-icon">log</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_core_util_.log.html#setalllevels" class="tsd-kind-icon">set<wbr>All<wbr>Levels</a>
 							</li>
 						</ul>
 					</li>
