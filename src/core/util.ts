@@ -375,6 +375,8 @@ export class Log {
      */
     public static levels = LogLevel;
 
+    public static loggers: Map<string, unknown> = new Map();
+
     /**
      * Horizontal rule.
      */
@@ -385,27 +387,77 @@ export class Log {
      */
     public static global = ulog("reactor-ts");
 
-    public static getInstance(module: string) {
-        return ulog(module);
-    }
-    // FIXME: write type declarations for ulog
     /**
-     * Set the minimum level of severity a message is required to 
-     * have for the logger to display it.
-     * @param level The minimum level of severity
-     * @see LogLevel
+     * Get the logger instance associated with the given module.
+     * If it does not exist, it is created.
+     * @param module The name associated with the logger
      */
-    public static setGlobalLevel(level: LogLevel) {
-        this.global.level = level;
+    public static getInstance(module: string) {
+        if (this.loggers.has(module)) {
+            return this.loggers.get(module)
+        } else {
+            let logger = ulog(module);
+            this.loggers.set(module, logger);
+            return logger;
+        }
     }
 
     /**
-     * Get the minimum level of severity a message is required to 
-     * have for the logger to display it.
+     * Log a message with severity `debug`.
+     * @param obj The object to call the message callback on.
+     * @param message Callback that returns a message string.
+     * @param module The name associated with the logger.
+     */    
+    public static debug(obj:unknown, message: () => string, module?: string) {
+        return Log.log(obj, message, module, LogLevel.DEBUG);
+    }
+
+    /**
+     * Log a message with severity `info`.
+     * @param obj The object to call the message callback on.
+     * @param message Callback that returns a message string.
+     * @param module The name associated with the logger.
+     */    
+    public static info(obj:unknown, message: () => string, module?: string) {
+        return Log.log(obj, message, module, LogLevel.INFO);
+    }
+
+    /**
+     * Log a message with severity `log`.
+     * @param obj The object to call the message callback on.
+     * @param message Callback that returns a message string.
+     * @param module The name associated with the logger.
+     */    
+    public static log(obj:unknown, message: () => string, module?: string, severity=LogLevel.LOG) {
+        if (module) {
+            if (Log.global.level >= severity) {
+                Log.getInstance(module).debug(message.call(obj));
+            }
+        } else {
+            if (Log.global.level >= severity) {
+                Log.global.debug(message.call(obj));
+            } 
+        }
+    }
+
+    // FIXME: write type declarations for ulog
+
+    /**
+     * Set the severity level for all loggers.
+     * @param level The minimum level of severity required for a message appear.
      * @see LogLevel
      */
-    public static getGlobalLevel(): LogLevel {
-        return this.global.level;
+    public static setAllLevels(level: LogLevel) {
+        this.global.level = level;
     }
+
+    // /**
+    //  * Get the minimum level of severity a message is required to 
+    //  * have for the logger to display it.
+    //  * @see LogLevel
+    //  */
+    // public static getGlobalLevel(): LogLevel {
+    //     return this.global.level;
+    // }
 
 }
