@@ -375,7 +375,10 @@ export class Log {
      */
     public static levels = LogLevel;
 
-    public static loggers: Map<string, unknown> = new Map();
+    /**
+     * Global instance of ulog that performs the logging.
+     */
+    public static global = ulog("reactor-ts");
 
     /**
      * Horizontal rule.
@@ -383,9 +386,9 @@ export class Log {
     public static hr = "==============================================================================";
 
     /**
-     * Global instance of ulog that performs the logging.
+     * Map that keeps track of active loggers.
      */
-    public static global = ulog("reactor-ts");
+    private static loggers: Map<string, unknown> = new Map();
 
     /**
      * Get the logger instance associated with the given module.
@@ -403,32 +406,54 @@ export class Log {
     }
 
     /**
-     * Log a message with severity `debug`.
+     * Log a message with severity `LogLevel.DEBUG`. The `message` callback
+     * is only invoked if the ulog instance has a log level higher than
+     * `LogLevel.DEBUG`.
      * @param obj The object to call the message callback on.
      * @param message Callback that returns a message string.
      * @param module The name associated with the logger.
+     * @see LogLevel
      */    
     public static debug(obj:unknown, message: () => string, module?: string) {
-        return Log.log(obj, message, module, LogLevel.DEBUG);
+        return Log.lazyLog(obj, message, LogLevel.DEBUG, module);
     }
 
     /**
-     * Log a message with severity `info`.
+     * Log a message with severity `LogLevel.ERROR`. The `message` callback
+     * is only invoked if the ulog instance has a log level higher than
+     * `LogLevel.ERROR`.
      * @param obj The object to call the message callback on.
      * @param message Callback that returns a message string.
      * @param module The name associated with the logger.
+     * @see LogLevel
      */    
+    public static error(obj:unknown, message: () => string, module?: string) {
+        return Log.lazyLog(obj, message, LogLevel.ERROR, module);
+    }
+
+    /**
+     * Log a message with severity `LogLevel.INFO`. The `message` callback
+     * is only invoked if the ulog instance has a log level higher than
+     * `LogLevel.INFO`.
+     * @param obj The object to call the message callback on.
+     * @param message Callback that returns a message string.
+     * @param module The name associated with the logger.
+     * @see LogLevel
+     */      
     public static info(obj:unknown, message: () => string, module?: string) {
-        return Log.log(obj, message, module, LogLevel.INFO);
+        return Log.lazyLog(obj, message, LogLevel.INFO, module);
     }
 
     /**
-     * Log a message with severity `log`.
+     * Log a message with given severity. The `message` callback is only invoked
+     * if the ulog instance has a log level higher than the severity indicated.
      * @param obj The object to call the message callback on.
      * @param message Callback that returns a message string.
+     * @param severity Severity associated with the message.
      * @param module The name associated with the logger.
+     * @see LogLevel
      */    
-    public static log(obj:unknown, message: () => string, module?: string, severity=LogLevel.LOG) {
+    private static lazyLog(obj:unknown, message: () => string, severity: LogLevel, module?: string) {
         if (module) {
             if (Log.global.level >= severity) {
                 Log.getInstance(module).debug(message.call(obj));
@@ -440,24 +465,32 @@ export class Log {
         }
     }
 
-    // FIXME: write type declarations for ulog
-
     /**
-     * Set the severity level for all loggers.
-     * @param level The minimum level of severity required for a message appear.
+     * Log a message with severity `LogLevel.LOG`. The `message` callback
+     * is only invoked if the ulog instance has a log level higher than
+     * `LogLevel.LOG`.
+     * @param obj The object to call the message callback on.
+     * @param message Callback that returns a message string.
+     * @param module The name associated with the logger.
      * @see LogLevel
-     */
-    public static setAllLevels(level: LogLevel) {
-        this.global.level = level;
+     */      
+    public static log(obj:unknown, message: () => string, module?: string) {
+        return Log.lazyLog(obj, message, LogLevel.LOG, module);
     }
 
-    // /**
-    //  * Get the minimum level of severity a message is required to 
-    //  * have for the logger to display it.
-    //  * @see LogLevel
-    //  */
-    // public static getGlobalLevel(): LogLevel {
-    //     return this.global.level;
-    // }
+    /**
+     * Log a message with severity `LogLevel.WARN`. The `message` callback
+     * is only invoked if the ulog instance has a log level higher than
+     * `LogLevel.WARN`.
+     * @param obj The object to call the message callback on.
+     * @param message Callback that returns a message string.
+     * @param module The name associated with the logger.
+     * @see LogLevel
+     */     
+    public static warn(obj:unknown, message: () => string, module?: string) {
+        return Log.lazyLog(obj, message, LogLevel.WARN, module);
+    }
+    
+    // FIXME: write type declarations for ulog
 
 }
