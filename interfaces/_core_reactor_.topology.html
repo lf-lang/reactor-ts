@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>TimeUtils | wirewrap - v0.0.1</title>
+	<title>Topology | wirewrap - v0.0.1</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,28 +59,21 @@
 					<a href="../modules/_core_reactor_.html">&quot;core/reactor&quot;</a>
 				</li>
 				<li>
-					<a href="_core_reactor_.timeutils.html">TimeUtils</a>
+					<a href="_core_reactor_.topology.html">Topology</a>
 				</li>
 			</ul>
-			<h1>Interface TimeUtils</h1>
+			<h1>Interface Topology</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>Utilities for monitoring the passing of time.</p>
-					</div>
-				</div>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">TimeUtils</span>
+						<span class="target">Topology</span>
 					</li>
 				</ul>
 			</section>
@@ -88,103 +81,49 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section ">
+						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_reactor_.timeutils.html#getcurrentlogicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Logical<wbr>Time</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_reactor_.timeutils.html#getcurrentphysicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_reactor_.timeutils.html#getcurrenttag" class="tsd-kind-icon">get<wbr>Current<wbr>Tag</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_reactor_.timeutils.html#getelapsedlogicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Logical<wbr>Time</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_reactor_.timeutils.html#getelapsedphysicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Physical<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface tsd-has-type-parameter tsd-is-not-exported"><a href="_core_reactor_.topology.html#connect" class="tsd-kind-icon">connect</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group ">
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="getcurrentlogicaltime" class="tsd-anchor"></a>
-					<h3>get<wbr>Current<wbr>Logical<wbr>Time</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Current<wbr>Logical<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></li>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-has-type-parameter tsd-is-not-exported">
+					<a name="connect" class="tsd-anchor"></a>
+					<h3>connect</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-has-type-parameter tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">connect&lt;D, S&gt;<span class="tsd-signature-symbol">(</span>src<span class="tsd-signature-symbol">: </span><a href="../classes/_core_reactor_.port.html" class="tsd-signature-type">Port</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span>, dst<span class="tsd-signature-symbol">: </span><a href="../classes/_core_reactor_.port.html" class="tsd-signature-type">Port</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">D</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/80d75de/src/core/reactor.ts#L99">core/reactor.ts:99</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/5c35c52/src/core/reactor.ts#L1736">core/reactor.ts:1736</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="../classes/_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="getcurrentphysicaltime" class="tsd-anchor"></a>
-					<h3>get<wbr>Current<wbr>Physical<wbr>Time</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/80d75de/src/core/reactor.ts#L100">core/reactor.ts:100</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="../classes/_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="getcurrenttag" class="tsd-anchor"></a>
-					<h3>get<wbr>Current<wbr>Tag</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Current<wbr>Tag<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_core_time_.tag.html" class="tsd-signature-type">Tag</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/80d75de/src/core/reactor.ts#L98">core/reactor.ts:98</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="../classes/_core_time_.tag.html" class="tsd-signature-type">Tag</a></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="getelapsedlogicaltime" class="tsd-anchor"></a>
-					<h3>get<wbr>Elapsed<wbr>Logical<wbr>Time</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Elapsed<wbr>Logical<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/80d75de/src/core/reactor.ts#L101">core/reactor.ts:101</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="../classes/_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="getelapsedphysicaltime" class="tsd-anchor"></a>
-					<h3>get<wbr>Elapsed<wbr>Physical<wbr>Time</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Elapsed<wbr>Physical<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/80d75de/src/core/reactor.ts#L102">core/reactor.ts:102</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="../classes/_core_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>D<span class="tsd-signature-symbol">: </span><a href="../modules/_core_reactor_.html#present" class="tsd-signature-type">Present</a></h4>
+								</li>
+								<li>
+									<h4>S<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">D</span></h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>src: <a href="../classes/_core_reactor_.port.html" class="tsd-signature-type">Port</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+								<li>
+									<h5>dst: <a href="../classes/_core_reactor_.port.html" class="tsd-signature-type">Port</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">D</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -282,22 +221,10 @@
 						<a href="../classes/_core_reactor_.writer.html" class="tsd-kind-icon">Writer</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_core_reactor_.eventutils.html" class="tsd-kind-icon">Event<wbr>Utils</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_core_reactor_.executils.html" class="tsd-kind-icon">Exec<wbr>Utils</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_core_reactor_.graphutils.html" class="tsd-kind-icon">Graph<wbr>Utils</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
 						<a href="_core_reactor_.named.html" class="tsd-kind-icon">Named</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="_core_reactor_.proxy.html" class="tsd-kind-icon">Proxy</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_core_reactor_.reactionutils.html" class="tsd-kind-icon">Reaction<wbr>Utils</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="_core_reactor_.reactorutils.html" class="tsd-kind-icon">Reactor<wbr>Utils</a>
@@ -310,31 +237,16 @@
 					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_core_reactor_.timeutils.html" class="tsd-kind-icon">Time<wbr>Utils</a>
+					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_core_reactor_.topology.html" class="tsd-kind-icon">Topology</a>
 						<ul>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_core_reactor_.timeutils.html#getcurrentlogicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Logical<wbr>Time</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_core_reactor_.timeutils.html#getcurrentphysicaltime" class="tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_core_reactor_.timeutils.html#getcurrenttag" class="tsd-kind-icon">get<wbr>Current<wbr>Tag</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_core_reactor_.timeutils.html#getelapsedlogicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Logical<wbr>Time</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_core_reactor_.timeutils.html#getelapsedphysicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Physical<wbr>Time</a>
+							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-has-type-parameter tsd-is-not-exported">
+								<a href="_core_reactor_.topology.html#connect" class="tsd-kind-icon">connect</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_core_reactor_.util.html" class="tsd-kind-icon">Util</a>
-					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="_core_reactor_.writable.html" class="tsd-kind-icon">Writable</a>
 					</li>
