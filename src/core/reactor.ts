@@ -26,7 +26,7 @@ const NanoTimer = require('nanotimer');
 /**
  * Type that denotes the absence of data exchanged between ports.
  */
-export type Absent = null; //(null | undefined); // FIXME: make this undefined
+export type Absent = undefined; //(null | undefined); // FIXME: make this undefined
 
 /**
  * Conditional type for argument lists of reactions. If the type variable
@@ -39,7 +39,7 @@ export type ArgList<T> = T extends Variable[] ? T : never;
 /**
  * Type for data exchanged between ports.
  */
-export type Present = (number | string | boolean | symbol | object); // FIXME: add null?
+export type Present = (number | string | boolean | symbol | object | null);
 
 /**
  * A number that indicates a reaction's position with respect to other
@@ -409,7 +409,7 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
     // every action needs a timestamp (for _isPresent()) and only
     // some actions carry values. 
     
-    value: T | null = null;
+    value: T | Absent = undefined;
     
     // The most recent time this action was scheduled.
     // Used by the isPresent function to tell if this action
@@ -438,7 +438,7 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
      * has a value.
      */
     private isPresent() {
-        if(this.timestamp == undefined){
+        if(this.timestamp === undefined){
             // This action has never been scheduled before.
             return false;
         }
@@ -463,11 +463,11 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
      * advances, that previously available value is now unavailable.
      * If the action was scheduled with no value, this function returns `null`.
      */
-    public get(): T | null {
+    public get(): T | Absent {
         if(this.isPresent()) {
             return this.value;
         } else {
-            return null;
+            return undefined;
         }
     }
 
@@ -599,16 +599,16 @@ export class Timer extends Descendant implements Readable<Tag> {
     
     private tag: Tag | undefined;
 
-    get(): Tag | null {
+    get(): Tag | Absent {
         if (this.tag && this.tag.isSimultaneousWith(this.__parent__.util.getCurrentTag())) {
             return this.tag;
         } else {
-            return null;
+            return undefined;
         }
     }
 
     isPresent(): boolean {
-        if (this.get() != null) {
+        if (this.get() !== undefined) {
             return true;
         }
         return false;
@@ -1053,7 +1053,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      */
     public _propagateValue<T extends Present>(src: Port<T>): void {
         var value = src.get();
-        if (value == null) {
+        if (value === undefined) {
             if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
                 Log.global.debug("Retrieving null value from " + src.getFullyQualifiedName());
             }
@@ -1201,7 +1201,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             // excluded (eg. value != this.parent) this function will loop forever.
             if (value instanceof Reactor && value != this.__parent__ && !(value instanceof App)) {
                 // A reactor may not be a child of itself.
-                if (value == this){
+                if (value === this){
                     throw new Error("A reactor may not have itself as an attribute." +
                                     " Reactor attributes of a reactor represent children" +
                                     " and a reactor may not be a child of itself");
@@ -1513,7 +1513,7 @@ export abstract class Port<T extends Present> extends Descendant implements Read
     protected tag: Tag | undefined;
 
     /** The value associated with this port. */  
-    protected value: T | null = null;
+    protected value: T | Absent = undefined;
     
     // public _connectedSinkPorts: Set<Port<unknown>> = new Set<Port<T>>(); // FIXME: change this into a private map hosted in the reactor
     // public _connectedSourcePort: Port<T>| null = null; // FIXME: change this into a private map hosted in the reactor
@@ -1566,9 +1566,7 @@ export abstract class Port<T extends Present> extends Descendant implements Read
     }    
 
     /**
-     * Returns true if the connected port's value has been set.
-     * an output port or an input port with a value set at the current logical time
-     * Returns false otherwise
+     * Returns true if the connected port's value has been set; false otherwise
      */
     public isPresent() {
         if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
@@ -1577,8 +1575,8 @@ export abstract class Port<T extends Present> extends Descendant implements Read
             Log.global.debug("tag: " + this.tag);
             Log.global.debug("time: " + this.__parent__.util.getCurrentLogicalTime())
         }
-        if(this.value != null
-            && this.tag != undefined
+        if(this.value !== undefined
+            && this.tag !== undefined
             && this.tag.isSimultaneousWith(this.__parent__.util.getCurrentTag())) {
             return true;
         } else {
@@ -1612,11 +1610,11 @@ export abstract class Port<T extends Present> extends Descendant implements Read
      * Will return null if the connected output did not have its value set at the current
      * logical time.
      */
-    public get(): T | null {
+    public get(): T | Absent {
         if (this.isPresent()){
             return this.value;
         } else {
-            return null;
+            return undefined;
         }
     }
 
@@ -1665,7 +1663,7 @@ class Writer<T extends Present> implements Proxy<T> { // NOTE: don't export this
         if (Log.getGlobalLevel() >= Log.levels.DEBUG) {
             Log.global.debug("set() has been called on " + this.port.getFullyQualifiedName());
         }
-        if (value != null) {
+        if (value !== undefined) {
             this.port.update(this, value);
         }
     }
