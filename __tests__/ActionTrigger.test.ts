@@ -53,10 +53,10 @@ export class ActionTrigger extends Reactor {
                 const msg = a1.get();
                 const absent = !a2.get();
                 if(msg == "hello" && absent) {
-                    this.util.exec.success();
+                    this.util.success();
                     console.log("success")
                 } else {
-                    this.util.exec.failure();
+                    this.util.failure();
                 }
                 console.log("Response to action is reacting. String payload is: " + msg);
             }

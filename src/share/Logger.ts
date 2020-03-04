@@ -5,9 +5,9 @@ function print(this:Reaction<any>, i: Readable<unknown>, expected: State<unknown
     if (received) {
         console.log("Logging: " + received);
         if(received == expected.get()) {
-            this.util.exec.success();
+            this.util.success();
         } else {
-            this.util.exec.failure();
+            this.util.failure();
         }
     } else {
         throw new Error("Log had no input available. This shouldn't happen because the logging reaction is triggered by the input");
