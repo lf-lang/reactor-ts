@@ -415,7 +415,15 @@ export class Log {
      * @see LogLevel
      */    
     public static debug(obj:unknown, message: () => string, module?: string) {
-        return Log.lazyLog(obj, message, LogLevel.DEBUG, module);
+        if (module) {
+            if (Log.global.level >= LogLevel.DEBUG) {
+                Log.getInstance(module).debug(message.call(obj));
+            }
+        } else {
+            if (Log.global.level >= LogLevel.DEBUG) {
+                Log.global.debug(message.call(obj));
+            } 
+        }
     }
 
     /**
@@ -428,7 +436,15 @@ export class Log {
      * @see LogLevel
      */    
     public static error(obj:unknown, message: () => string, module?: string) {
-        return Log.lazyLog(obj, message, LogLevel.ERROR, module);
+        if (module) {
+            if (Log.global.level >= LogLevel.ERROR) {
+                Log.getInstance(module).error(message.call(obj));
+            }
+        } else {
+            if (Log.global.level >= LogLevel.ERROR) {
+                Log.global.error(message.call(obj));
+            } 
+        }
     }
 
     /**
@@ -441,26 +457,13 @@ export class Log {
      * @see LogLevel
      */      
     public static info(obj:unknown, message: () => string, module?: string) {
-        return Log.lazyLog(obj, message, LogLevel.INFO, module);
-    }
-
-    /**
-     * Log a message with given severity. The `message` callback is only invoked
-     * if the ulog instance has a log level higher than the severity indicated.
-     * @param obj The object to call the message callback on.
-     * @param message Callback that returns a message string.
-     * @param severity Severity associated with the message.
-     * @param module The name associated with the logger.
-     * @see LogLevel
-     */    
-    private static lazyLog(obj:unknown, message: () => string, severity: LogLevel, module?: string) {
         if (module) {
-            if (Log.global.level >= severity) {
-                Log.getInstance(module).debug(message.call(obj));
+            if (Log.global.level >= LogLevel.INFO) {
+                Log.getInstance(module).info(message.call(obj));
             }
         } else {
-            if (Log.global.level >= severity) {
-                Log.global.debug(message.call(obj));
+            if (Log.global.level >= LogLevel.INFO) {
+                Log.global.info(message.call(obj));
             } 
         }
     }
@@ -475,7 +478,15 @@ export class Log {
      * @see LogLevel
      */      
     public static log(obj:unknown, message: () => string, module?: string) {
-        return Log.lazyLog(obj, message, LogLevel.LOG, module);
+        if (module) {
+            if (Log.global.level >= LogLevel.LOG) {
+                Log.getInstance(module).log(message.call(obj));
+            }
+        } else {
+            if (Log.global.level >= LogLevel.LOG) {
+                Log.global.log(message.call(obj));
+            } 
+        }
     }
 
     /**
@@ -488,7 +499,15 @@ export class Log {
      * @see LogLevel
      */     
     public static warn(obj:unknown, message: () => string, module?: string) {
-        return Log.lazyLog(obj, message, LogLevel.WARN, module);
+        if (module) {
+            if (Log.global.level >= LogLevel.WARN) {
+                Log.getInstance(module).warn(message.call(obj));
+            }
+        } else {
+            if (Log.global.level >= LogLevel.WARN) {
+                Log.global.warn(message.call(obj));
+            } 
+        }
     }
     
     // FIXME: write type declarations for ulog
