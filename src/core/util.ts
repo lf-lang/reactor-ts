@@ -1,4 +1,4 @@
-const ulog = require("ulog");
+import ULog from 'ulog';
 
 /**
  * Utilities for the reactor runtime.
@@ -378,7 +378,7 @@ export class Log {
     /**
      * Global instance of ulog that performs the logging.
      */
-    public static global = ulog("reactor-ts");
+    public static global = ULog("reactor-ts");
 
     /**
      * Horizontal rule.
@@ -388,21 +388,20 @@ export class Log {
     /**
      * Map that keeps track of active loggers.
      */
-    private static loggers: Map<string, unknown> = new Map();
+    private static loggers: Map<string, ULog> = new Map();
 
     /**
      * Get the logger instance associated with the given module.
      * If it does not exist, it is created.
      * @param module The name associated with the logger
      */
-    public static getInstance(module: string) {
-        if (this.loggers.has(module)) {
-            return this.loggers.get(module)
-        } else {
-            let logger = ulog(module);
-            this.loggers.set(module, logger);
-            return logger;
-        }
+    public static getInstance(module: string): ULog {
+        var logger = Log.loggers.get(module);
+        if (!logger) {
+            logger = ULog(module);
+            Log.loggers.set(module, logger);
+        } 
+        return logger;
     }
 
     /**
@@ -508,8 +507,5 @@ export class Log {
                 Log.global.warn(message.call(obj));
             } 
         }
-    }
-    
-    // FIXME: write type declarations for ulog
-
+    }    
 }
