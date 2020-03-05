@@ -258,7 +258,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
     }
 
     //A reaction defaults to not having a deadline  FIXME: we want the deadline to have access to the same variables
-    timeout: TimeValue | undefined;
+    //timeout: TimeValue | undefined;
 
     /** 
      * Construct a new Reaction by passing in a reference to the reactor that contains it,
@@ -295,15 +295,15 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
     public doReact() {
         
         Log.debug(this, () => ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
-        Log.debug(this, () =>  "Timeout: " + this.timeout);
-        
+        Log.debug(this, () =>  "Reaction deadline: " + this.deadline);
+
         // Test if this reaction has a deadline which has been violated.
         // This is the case if the reaction has a defined timeout and
         // logical time + timeout < physical time
         
-        if (this.timeout && 
+        if (this.deadline && 
             this.util.getCurrentTag()
-                .getLaterTag(this.timeout)
+                .getLaterTag(this.deadline)
                 .isEarlierThan(new Tag(getCurrentPhysicalTime(), 0))) {
             this.late.apply(this, this.args.tuple);
         } else {
@@ -319,8 +319,8 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
      * will be invoked once triggered. 
      * @param deadline The deadline to set to this reaction.
      */
-    setDeadline(timeout: TimeValue): this {
-        this.timeout = timeout;
+    setDeadline(deadline: TimeValue): this {
+        this.deadline = deadline;
         return this;
     }
 
