@@ -1,3 +1,7 @@
+/**
+ * Timer used for precisely timing the triggering of reactions.
+ * @see {@link https://www.npmjs.com/package/nanotimer}
+ */
 declare module 'nanotimer' {
     export default class NanoTimer {
         constructor();

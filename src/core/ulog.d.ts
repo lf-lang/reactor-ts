@@ -1,3 +1,7 @@
+/**
+ * Microscopically small universal logging library.
+ * @see {@link https://www.npmjs.com/package/ulog}
+ */
 declare module 'ulog' {
     export default function ULog(module: string): ULog;
 }
@@ -6,6 +10,10 @@ declare module 'ulog' {
  * Typed interface for the NPM ulog module.
  */
 interface ULog {
+    
+    /**
+     * Level of severity required for messages to be displayed.
+     */
     level: number;
     
     /**

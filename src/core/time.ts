@@ -3,12 +3,7 @@
  * @author Marten Lohstroh (marten@berkeley.edu)
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
-
-/**
- * Module used to acquire time values from the platform in microsecond precision.
- * @see {@link https://www.npmjs.com/package/microtime}
- */
-const Microtime = require("microtime");
+import MicroTime from 'microtime';
 
 /**
  * Units (and conversion factors from nanoseconds) for time values.
@@ -359,7 +354,7 @@ export enum Origin {
  * by the platform.
  */
 export function getCurrentPhysicalTime(): TimeValue {
-    let t = Microtime.now();
+    let t = MicroTime.now();
     let seconds: number = Math.floor(t / 1000000);
     let nseconds: number = t * 1000 - seconds * 1000000000;
     return new TimeValue(seconds, nseconds);
