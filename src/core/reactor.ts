@@ -257,9 +257,6 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         return Object.is(this, node);
     }
 
-    //A reaction defaults to not having a deadline  FIXME: we want the deadline to have access to the same variables
-    //timeout: TimeValue | undefined;
-
     /** 
      * Construct a new Reaction by passing in a reference to the reactor that contains it,
      * the variables that trigger it, and the arguments passed to the react function.
