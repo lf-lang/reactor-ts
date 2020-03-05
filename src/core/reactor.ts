@@ -7,17 +7,8 @@
 
 import {PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
 import {TimeValue, Tag, Origin, getCurrentPhysicalTime} from './time';
-
-//Log.setAllLevels(Log.levels.DEBUG);
-
-//---------------------------------------------------------------------//
-// Modules                                                             //
-//---------------------------------------------------------------------//
-
-/**
- * Timer used for precisely timing the triggering of reactions.
- */
-const NanoTimer = require('nanotimer');
+import NanoTimer from 'nanotimer';
+//Log.global.level = Log.levels.DEBUG;
 
 //---------------------------------------------------------------------//
 // Types                                        //
@@ -26,7 +17,7 @@ const NanoTimer = require('nanotimer');
 /**
  * Type that denotes the absence of data exchanged between ports.
  */
-export type Absent = undefined; //(null | undefined); // FIXME: make this undefined
+export type Absent = undefined;
 
 /**
  * Conditional type for argument lists of reactions. If the type variable
