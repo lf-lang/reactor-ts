@@ -1818,12 +1818,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     private _startOfExecution: Tag;
 
     /**
-     * Parameter that determines the maximum number of consecutive iterations of _next
-     * to perform without giving up control of the event loop back to Node.js.
-     */
-    private _nextLimit = 1000;
-
-    /**
      * Report a timer to the app so that it gets scheduled.
      * @param timer The timer to report to the app.
      */
@@ -1953,139 +1947,107 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * allowed to continue indefinitely.
      */
     private _next(event: Event<unknown>) {
+        Log.debug(this, () => "New invocation of next().");
+        Log.debug(this, () => "{{{ Triggered by event: " + event.trigger + " }}}");
+        // Log.global.info(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
+        // Log.global.info(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
         
-        let triggeringEvent : Event<unknown> = event;
+    
+        if (this._endOfExecution && this._endOfExecution.isEarlierThan(this._currentTag) && !this._endOfExecution.getTimeDifference(event.tag).isZero()) {
+            // Remove remaining items from the event queue, if any.
+            this._eventQ.empty();
+            // Clear timeouts, if any.
+            this.clearAlarm();
+            this._terminateWithSuccess()
+            return;
+        }
+
+        if (event.trigger === this.snooze) {
+            Log.global.debug("Woken up after suspend.");
+        }
+
+        let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
+        if (physicalTimeTag.isEarlierThan(event.tag) && !this._fast) {
+            
+            Log.debug(this, () => ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Too early to handle next event.");
+            Log.debug(this, () => "Time difference: " + physicalTimeTag.getTimeDifference(event.tag).getNanoTime());
+            
+            this.setAlarm(event);
+            return;
+        }
         
-        // To optimize performance when possible, loop into the next iteration of _next
-        // directly instead of setting a timeout. After this._nextLimit always set a timeout
-        // to allow Node's event loop a chance to execute.
-        for (let nextCycles = 0; nextCycles < this._nextLimit; nextCycles++) {
-            Log.debug(this, () => "New invocation of next().");
-            Log.debug(this, () => "{{{ Triggered by event: " + triggeringEvent.trigger + " }}}");
-            // Log.global.info(">>> Logical time elapsed: " + this.util.time.getElapsedLogicalTime().getNanoTime());
-            // Log.global.info(">>> Physical time elapsed: " + this.util.time.getElapsedPhysicalTime().getNanoTime());
-            
+        // Store the previous tag.
+        let previousTag = this._currentTag;
         
-            if (this._endOfExecution && this._endOfExecution.isEarlierThan(this._currentTag) && !this._endOfExecution.getTimeDifference(triggeringEvent.tag).isZero()) {
-                // Remove remaining items from the event queue, if any.
-                this._eventQ.empty();
-                // Clear timeouts, if any.
-                this.clearAlarm();
-                this._terminateWithSuccess()
-                return;
-            }
+        // Advance logical time.
+        this._currentTag = event.tag;
 
-            if (triggeringEvent.trigger === this.snooze) {
-                Log.global.debug("Woken up after suspend.");
-            }
-
-            let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
-            if (physicalTimeTag.isEarlierThan(triggeringEvent.tag) && !this._fast) {
-                
-                Log.debug(this, () => ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Too early to handle next event.");
-                Log.debug(this, () => "Time difference: " + physicalTimeTag.getTimeDifference(triggeringEvent.tag).getNanoTime());
-                
-                this.setAlarm(triggeringEvent);
-                return;
-            }
+        if (previousTag.isEarlierThan(event.tag)) {
+            Log.log(this, () => Log.hr);
+            Log.log(this, () =>">>> Next event time: " + event.tag);
+            Log.log(this, () =>">>> Logical time elapsed: " + this.util.getElapsedLogicalTime().getNanoTime());
+            Log.log(this, () =>">>> Physical time elapsed: " + this.util.getElapsedPhysicalTime().getNanoTime());
+            Log.log(this, () =>Log.hr);
+        }
+        
+        Log.global.debug("Processing events.");
+        var nextEvent : Event<unknown> | undefined = event;
+        while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
+            var trigger = nextEvent.trigger;
+            this._eventQ.pop();
+            Log.debug(this, () => "Popped off the event queue: " + trigger);
             
-            // Store the previous tag.
-            let previousTag = this._currentTag;
-            
-            // Advance logical time.
-            this._currentTag = triggeringEvent.tag;
-
-            if (previousTag.isEarlierThan(triggeringEvent.tag)) {
-                Log.log(this, () => Log.hr);
-                Log.log(this, () =>">>> Next event time: " + triggeringEvent.tag);
-                Log.log(this, () =>">>> Logical time elapsed: " + this.util.getElapsedLogicalTime().getNanoTime());
-                Log.log(this, () =>">>> Physical time elapsed: " + this.util.getElapsedPhysicalTime().getNanoTime());
-                Log.log(this, () =>Log.hr);
-            }
-            
-            Log.global.debug("Processing events.");
-            var nextEvent : Event<unknown> | undefined = triggeringEvent;
-            while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
-                var trigger = nextEvent.trigger;
-                this._eventQ.pop();
-                Log.debug(this, () => "Popped off the event queue: " + trigger);
-                
-                // Handle timers.
-                if (trigger instanceof Timer) {
-                    if (!trigger.period.isZero()) {
-                        Log.debug(this, () => "Rescheduling timer " + trigger);
-                        
-                        // reschedule
-                        this.schedule(new Event(trigger, 
-                            this._currentTag.getLaterTag(trigger.period), 
-                            null));
-                    }
+            // Handle timers.
+            if (trigger instanceof Timer) {
+                if (!trigger.period.isZero()) {
+                    Log.debug(this, () => "Rescheduling timer " + trigger);
+                    
+                    // reschedule
+                    this.schedule(new Event(trigger, 
+                        this._currentTag.getLaterTag(trigger.period), 
+                        null));
                 }
-                
-                // Load reactions onto the reaction queue.
-                nextEvent.trigger.update(nextEvent);
-                // Look at the next event on the queue.
-                nextEvent = this._eventQ.peek();
             }
-
-            while (this._reactionQ.size() > 0) {
-                // FIXME: relevant for mutations:
-                // Check whether the reactor is active or not
-                // If it is inactive, all reactions, except for those
-                // in response to startup actions, should be ignored.
-                this._reactionQ.pop().doReact();  
-            }
-            Log.global.debug("Finished handling all events at current time.");
-            // Peek at the event queue again since it may have changed.
+            
+            // Load reactions onto the reaction queue.
+            nextEvent.trigger.update(nextEvent);
+            // Look at the next event on the queue.
             nextEvent = this._eventQ.peek();
-            
-            if (nextEvent) {
-                Log.global.debug("Event queue not empty.")
-                if (nextEvent.trigger !== this.shutdown || this._keepAlive || this._currentTag.time.isEqualTo(triggeringEvent.tag.time)) {
-                    
-                    Log.log(this, () => ">>> Logical time elapsed: " + this.util.getElapsedLogicalTime().getNanoTime());
-                    Log.log(this, () => ">>> Physical time elapsed: " + this.util.getElapsedPhysicalTime().getNanoTime());
+        }
 
-                    // If the next event requires a timeout set an alarm. Otherwise fall into the next 
-                    // iteration of _next
-                    let physicalTimeTag = new Tag(getCurrentPhysicalTime(), 0);
-                    if (physicalTimeTag.isEarlierThan(nextEvent.tag) && ! this._fast) {
-                        // Set an alarm to handle the next event.
-                        Log.global.debug("Setting alarm to wake up for next event.")
-                        this.setAlarm(nextEvent);
-                        return;
-                    } else {
-                        Log.global.debug("Next event does not require a timeout so falling into next iteration of _next.")
-                        // nextEvent will be the triggering event for the next iteration.
-                        triggeringEvent = nextEvent;
-                    }
-                    
-                } else {
-                    // The next event is shutdown, 
-                    // and is scheduled in the future, 
-                    // but there is nothing else to do.
-                    Log.global.info("Preponing shutdown.")
-                    this._eventQ.pop();
-                    this._shutdown();
-                    return;
-                }
-                
-            } else {
-                // Or suspend/terminate.
-                Log.global.debug("Empty event queue.")
-                this.suspendOrTerminate();
-                return;
-            }
+        while (this._reactionQ.size() > 0) {
+            // FIXME: relevant for mutations:
+            // Check whether the reactor is active or not
+            // If it is inactive, all reactions, except for those
+            // in response to startup actions, should be ignored.
+            this._reactionQ.pop().doReact();  
         }
-        // Reached end of for loop. Set an alarm for the next execution of _next
-        Log.global.debug("Fell out of _next's for loop.")
+        Log.global.debug("Finished handling all events at current time.");
+        // Peek at the event queue again since it may have changed.
+        nextEvent = this._eventQ.peek();
         
-        // Note: nextEvent is assumed not to have changed from the end of the last iteration
         if (nextEvent) {
-            Log.global.debug("Setting alarm to wake up for next event.")
-            this.setAlarm(nextEvent);
+            Log.global.debug("Event queue not empty.")
+            if (nextEvent.trigger !== this.shutdown || this._keepAlive || this._currentTag.time.isEqualTo(event.tag.time)) {
+                // Set an alarm to handle the next event.
+                Log.global.debug("Setting alarm to wake up for next event.")
+                Log.log(this, () => ">>> Logical time elapsed: " + this.util.getElapsedLogicalTime().getNanoTime());
+                Log.log(this, () => ">>> Physical time elapsed: " + this.util.getElapsedPhysicalTime().getNanoTime());
+                this.setAlarm(nextEvent);
+            } else {
+                // The next event is shutdown, 
+                // and is scheduled in the future, 
+                // but there is nothing else to do.
+                Log.global.info("Preponing shutdown.")
+                this._eventQ.pop();
+                this._shutdown();
+            }
+            
+        } else {
+            // Or suspend/terminate.
+            Log.global.debug("Empty event queue.")
+            this.suspendOrTerminate();
         }
-        return;
     }
 
     private suspendOrTerminate() {
