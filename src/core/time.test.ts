@@ -100,23 +100,23 @@ describe('time representation', function () {
      * Microstep indices are taken into consideration.
      */
     it('compareTimeInstants', function () {
-        expect(tiZero.isEarlierThan(tiZero)).toBeFalsy();
-        expect(tiZero.isEarlierThan(tiZero1)).toBeTruthy();
-        expect(tiZero1.isEarlierThan(tiZero)).toBeFalsy();
+        expect(tiZero.isSmallerThan(tiZero)).toBeFalsy();
+        expect(tiZero.isSmallerThan(tiZero1)).toBeTruthy();
+        expect(tiZero1.isSmallerThan(tiZero)).toBeFalsy();
 
-        expect(tiFiveSeconds0.isEarlierThan(tiFiveSeconds0)).toBeFalsy();
-        expect(tiFiveSeconds0.isEarlierThan(tiFiveSeconds1)).toBeTruthy();
-        expect(tiFiveSeconds1.isEarlierThan(tiFiveSeconds0)).toBeFalsy();
+        expect(tiFiveSeconds0.isSmallerThan(tiFiveSeconds0)).toBeFalsy();
+        expect(tiFiveSeconds0.isSmallerThan(tiFiveSeconds1)).toBeTruthy();
+        expect(tiFiveSeconds1.isSmallerThan(tiFiveSeconds0)).toBeFalsy();
 
-        expect(tiZero.isEarlierThan(tiFiveSeconds0)).toBeTruthy();
-        expect(tiZero.isEarlierThan(tiFiveSeconds1)).toBeTruthy();
-        expect(tiZero1.isEarlierThan(tiFiveSeconds0)).toBeTruthy();
-        expect(tiZero1.isEarlierThan(tiFiveSeconds1)).toBeTruthy();
+        expect(tiZero.isSmallerThan(tiFiveSeconds0)).toBeTruthy();
+        expect(tiZero.isSmallerThan(tiFiveSeconds1)).toBeTruthy();
+        expect(tiZero1.isSmallerThan(tiFiveSeconds0)).toBeTruthy();
+        expect(tiZero1.isSmallerThan(tiFiveSeconds1)).toBeTruthy();
         
-        expect(tiFiveSeconds0.isEarlierThan(tiZero)).toBeFalsy();
-        expect(tiFiveSeconds1.isEarlierThan(tiZero)).toBeFalsy();
-        expect(tiFiveSeconds0.isEarlierThan(tiZero1)).toBeFalsy();
-        expect(tiFiveSeconds1.isEarlierThan(tiZero1)).toBeFalsy();
+        expect(tiFiveSeconds0.isSmallerThan(tiZero)).toBeFalsy();
+        expect(tiFiveSeconds1.isSmallerThan(tiZero)).toBeFalsy();
+        expect(tiFiveSeconds0.isSmallerThan(tiZero1)).toBeFalsy();
+        expect(tiFiveSeconds1.isSmallerThan(tiZero1)).toBeFalsy();
 
     });
 

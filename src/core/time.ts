@@ -57,15 +57,13 @@ export class TimeValue {
      * @param other The time value to add to this one.
      */
     add(other: TimeValue): TimeValue {
-        const billion = 1000000000;
-
         let seconds = this.seconds + other.seconds;
         let nanoseconds = this.nanoseconds + other.nanoseconds;
 
-        if(nanoseconds >= billion) {
+        if(nanoseconds >= TimeUnit.sec) {
             // Carry the second.
             seconds += 1;
-            nanoseconds -= billion;
+            nanoseconds -= TimeUnit.sec;
         }
         return new TimeValue(seconds, nanoseconds);
     }
@@ -83,7 +81,7 @@ export class TimeValue {
         if(ns < 0) {
             // Borrow a second
             s -= 1;
-            ns += 1000000000;
+            ns += TimeUnit.sec;
         }
 
         if(s < 0){
@@ -91,6 +89,15 @@ export class TimeValue {
         }
         return new TimeValue(s, ns);
     }
+
+    difference(other: TimeValue): TimeValue {
+        if (this.isEarlierThan(other)) {
+            return other.subtract(this);
+        } else {
+            return this.subtract(other);
+        }
+    }
+
 
     /**
      * Return true if this time value denotes a time interval of equal length as
@@ -122,7 +129,7 @@ export class TimeValue {
      * @param other The time value to compare to this one.
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt|BigInt} for further information.
      */
-    isSmallerThan(other: TimeValue) {
+    isEarlierThan(other: TimeValue) {
         if (this.seconds < other.seconds) {
             return true;
         }
@@ -133,11 +140,26 @@ export class TimeValue {
     }
 
     /**
+     * Return a millisecond representation of this time value.
+     */
+    public toMilliseconds(): number {
+        return this.seconds * 1000 + Math.ceil(this.nanoseconds / 1000000);
+    }
+
+    /**
      * Print the number of seconds and nanoseconds in the time interval encoded
      * by this time value.
      */
     public toString(): string {
         return "(" + this.seconds + " secs; " + this.nanoseconds + " nsecs)";
+    }
+
+    /**
+     * Return a tuple that holds the seconds and remaining nanoseconds that
+     * jointly represent this time value.
+     */
+    public toTimeTuple(): [number, number] {
+        return [this.seconds, this.nanoseconds];
     }
 
     /**
@@ -255,7 +277,7 @@ export class Tag {
     readonly time:TimeValue;
 
     /**
-     * 
+     * Create a new tag using a time value and a microstep.
      * @param timeSinceEpoch Time elapsed since Epoch.
      * @param microstep Superdense time index.
      */
@@ -270,22 +292,22 @@ export class Tag {
     }
 
     /**
-     * Return `true` if this time instant is earlier than the time instant
-     * given as a parameter, false otherwise. For two time instants with
-     * an equal `time`, one instant is earlier than the other if its 
-     * `microstep` is less than the `microstep` of the other.
+     * Return `true` if this time instant is earlier than the tag given as a
+     * parameter, false otherwise. For two tags with an equal `time`, one
+     * instant is earlier than the other if its `microstep` is less than the
+     * `microstep` of the other.
      * @param other The time instant to compare against this one.
      */
-    isEarlierThan(other: Tag): boolean {
-        return this.time.isSmallerThan(other.time) 
+    isSmallerThan(other: Tag): boolean {
+        return this.time.isEarlierThan(other.time) 
             || (this.time.isEqualTo(other.time) 
                 && this.microstep < other.microstep);
     }
 
     /**
-     * Return `true` if this time instant is simultaneous with the time
-     * instant given as a parameter, false otherwise. Both `time` and 
-     * `microstep` must be equal for two time instants to be simultaneous.
+     * Return `true` if this tag is simultaneous with the tag given as
+     * a parameter, false otherwise. Both `time` and `microstep` must be equal
+     * for two tags to be simultaneous.
      * @param other The time instant to compare against this one.
      */
     isSimultaneousWith(other: Tag) {
@@ -324,7 +346,7 @@ export class Tag {
      * difference with this time instant.
      */
     getTimeDifference(other: Tag): TimeValue {
-        if (this.isEarlierThan(other)) {
+        if (this.isSmallerThan(other)) {
             return other.time.subtract(this.time);
         } else {
             return this.time.subtract(other.time);
@@ -356,6 +378,150 @@ export enum Origin {
 export function getCurrentPhysicalTime(): TimeValue {
     let t = MicroTime.now();
     let seconds: number = Math.floor(t / 1000000);
-    let nseconds: number = t * 1000 - seconds * 1000000000;
+    let nseconds: number = t * 1000 - seconds * TimeUnit.sec;
     return new TimeValue(seconds, nseconds);
+}
+
+/**
+ * Simple but accurate alarm that makes use of high-resolution timer.
+ * The algorithm is inspired by nanotimer, written by Kevin Briggs.
+ * @author Marten Lohstroh (marten@berkeley.edu)
+ */
+export class Alarm {
+
+    /**
+     * Handle for regular timeout, used for delays > 25 ms.
+     */
+    deferredRef: NodeJS.Timeout | undefined;
+
+    /**
+     * Handle for immediate, used for polling once the remaining delay is < 25
+     * ms.
+     */
+    immediateRef: NodeJS.Immediate | undefined;
+
+    /**
+     * Delay in terms of milliseconds, used when deferring to regular timeout.
+     */
+    loResDelay: number = 0;
+
+    /**
+     * Start of the delay interval; tuple of seconds and nanoseconds.
+     */
+    hiResStart: [number, number] = [0,0];
+
+    /**
+     * The delay interval in high resolution; tuple of seconds and nanoseconds.
+     */
+    hiResDelay: [number, number] = [0,0];
+
+    /**
+     * Indicates whether the alarm has been set or not.
+     */
+    active: boolean = false;
+
+    /**
+     * Disable any scheduled timeouts or immediate events, and set the timer to
+     * inactive.
+     */
+    unset() {
+        if(this.deferredRef) {
+            clearTimeout(this.deferredRef);
+            this.deferredRef = undefined;
+        }
+
+        if(this.immediateRef) {
+            clearImmediate(this.immediateRef);
+            this.immediateRef = undefined;
+        }
+        
+        this.active = false;
+    }
+
+    /**
+     * Once the alarm has been initialized, see if the task can be performed or
+     * a longer wait is necessary.
+     * @param task The task to perform.
+     * @param callback Optional callback used to report the wait time.
+     */
+    private try(task: () => void, callback?: (waitTime:TimeValue) => void) {
+        // Record the current time.
+        var hiResDif = process.hrtime(this.hiResStart);
+        
+        // Keep reference to the class.
+        var thisTimer = this;
+        
+        // See whether the requested delay has elapsed.
+        if (this.hiResDelay[0] < hiResDif[0] || 
+            (this.hiResDelay[0] == hiResDif[0] && this.hiResDelay[1] < hiResDif[1])) {
+            
+            // No more immediates a scheduled.
+            this.immediateRef = undefined;
+            
+            // The delay has elapsed; perform the task.
+            if (thisTimer.active) {
+                // If this attempt is the result of a deferred request, perform
+                // the task synchronously.
+                this.active = false;
+                task();
+                if (callback) {
+                    callback(new TimeValue(...hiResDif));
+                }
+            } else {
+                // If this attempt is the result of a direct call to `set`, push
+                // task onto the nextTick queue. This unwinds the stack, but it
+                // bypasses the regular event queue. If events are recursively
+                // requested to be performed with zero or near zero delay, this
+                // will not cause the call stack to exceed its maximum size, but
+                // it will starve I/O.
+                this.active = true;
+                process.nextTick(function() {
+                    if (thisTimer.active) {
+                        thisTimer.active = false;
+                        task();
+                        if (callback) {
+                            callback(new TimeValue(...hiResDif));
+                        }
+                    }
+                });
+                
+            }
+        } else {
+            // The delay has not yet elapsed.
+            // The following logic is based on the implementation of nanotimer.
+            if (this.loResDelay > 25) {
+
+                if (!this.active) {
+                    this.deferredRef = setTimeout(() => thisTimer.try(task, callback), this.loResDelay-25);
+                } else {
+                    this.deferredRef = undefined;
+                    this.immediateRef = setImmediate(() => thisTimer.try(task, callback));
+                }
+            } else {
+                this.immediateRef = setImmediate(() => thisTimer.try(task, callback));
+            }
+            this.active = true;
+        }
+    }
+
+    /**
+     * Set the alarm.
+     * @param task The task to be performed.
+     * @param delay The time has to elapse before the task can be performed.
+     * @param callback Optional callback used to report the wait time.
+     */
+    public set(task: () => void, delay: TimeValue, callback?: (waitTime:TimeValue) => void) {
+        
+        // Reset the alarm if it was already active.
+        if (this.active) {
+            this.unset();
+        }
+        // Compute the delay
+        this.hiResDelay = delay.toTimeTuple();
+        this.loResDelay = delay.toMilliseconds();
+        
+        // Record the beginning of the delay interval.
+        this.hiResStart = process.hrtime();
+        this.try(task, callback);
+    }
 }

@@ -28,7 +28,7 @@ declare module 'nanotimer' {
          * @param interval 
          * @param callback 
          */
-        setInterval(task: Function, args:[unknown]|"", interval:string, callback?: (err: string) => {}):void;
+        setInterval(task: Function, args:[]|[unknown]|"", interval:string, callback?: (data: {waitTime: number}) => void):void;
 
         /**
          * 
@@ -37,7 +37,7 @@ declare module 'nanotimer' {
          * @param timeout 
          * @param callback 
          */
-        setTimeout(task: Function, args:[unknown]|"", timeout:string, callback?: (err: string) => {}):void;
+        setTimeout(task: Function, args:[]|[unknown]|"", timeout:string, callback?: (data: {waitTime: number}) => void):void;
 
         /**
          * 
@@ -46,7 +46,7 @@ declare module 'nanotimer' {
          * @param format 
          * @param callback 
          */
-        time(task: Function, args:[unknown]|"", format:"s"|"m"|"u"|"n", callback?: (err: string) => {}): void;
+        time(task: Function, args:[]|[unknown]|"", format:"s"|"m"|"u"|"n", callback?: (data: {waitTime: number}) => void): void;
 
     }
 }
