@@ -579,7 +579,7 @@ export class Scheduler<T extends Present> implements Readable<T>, Schedulable<T>
         if (this.action.origin == Origin.logical) {
             tag = tag.getMicroStepLater();
         }
-
+        
         Log.debug(this, () => "Scheduling " + this.action.origin +
             " action " + this.action.getName() + " with tag: " + tag);
 
@@ -1956,7 +1956,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      */
     private _next() {
         var nextEvent = this._eventQ.peek();
-
         if (nextEvent) {
             // There is an event at the head of the event queue.
 
@@ -2060,7 +2059,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      */
     public schedule(e: Event<any>) {
         let head = this._eventQ.peek();
-        this._eventQ.push(e);
+        
+        if (!this._shutdownStarted || e.trigger instanceof Shutdown)
+            this._eventQ.push(e);
 
         Log.debug(this, () => "Scheduling with trigger: " + e.trigger);
         Log.debug(this, () => "Elapsed logical time in schedule: " + this.util.getElapsedLogicalTime());
@@ -2140,6 +2141,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                 this._cancelNext();
             }
             this.getSchedulable(this.shutdown).schedule(0);
+
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
         }
