@@ -64,6 +64,12 @@ export type Variable = Readable<unknown> |
 
 
 //---------------------------------------------------------------------//
+// Constants                                                           //
+//---------------------------------------------------------------------//
+
+const DefaultMinInterarrival = new UnitBasedTimeValue(1, TimeUnit.nsec);
+
+//---------------------------------------------------------------------//
 // Interfaces                                                          //
 //---------------------------------------------------------------------//
 
@@ -403,6 +409,7 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
 
     origin: Origin;
     minDelay: TimeValue;
+    minInterArrival: TimeValue = DefaultMinInterarrival;
     //name: string;
 
     // A value is available to any reaction triggered by this action.
@@ -478,10 +485,12 @@ export class Action<T extends Present> extends Descendant implements Readable<T>
      * @param origin Optional. If physical, then the hardware clock on the local 
      * platform is used to determine the tag of the resulting event. If logical, 
      * the current logical time (plus one microstep) is used as the offset.
-     * @param minDelay Optional. Defaults to 0. Specifies the intrisic delay of
+     * @param minDelay Optional. Defaults to 0. Specifies the intrinsic delay of
      * any events resulting from scheduling this action.
+     * @param minInterArrival Optional. Defaults to 1 nsec. Specifies the minimum
+     * intrinsic delay between to occurrences of this action.
      */
-    constructor(protected __parent__: Reactor, origin: Origin, minDelay: TimeValue = new TimeValue(0)) {
+    constructor(protected __parent__: Reactor, origin: Origin, minDelay: TimeValue = new TimeValue(0), minInterArrival: TimeValue = DefaultMinInterarrival) {
         super(__parent__);
         this.origin = origin;
         this.minDelay = minDelay;
@@ -560,7 +569,7 @@ export class Scheduler<T extends Present> implements Readable<T>, Schedulable<T>
         if (!(extraDelay instanceof TimeValue)) {
             extraDelay = new TimeValue(0);
         }
-
+        
         var tag = this.__parent__.util.getCurrentTag();
         var delay = this.action.minDelay.add(extraDelay);
 
@@ -2060,8 +2069,11 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     public schedule(e: Event<any>) {
         let head = this._eventQ.peek();
         
-        if (!this._shutdownStarted || e.trigger instanceof Shutdown)
-            this._eventQ.push(e);
+        // Ignore request if shutdown has started and the event is not tied to a shutdown action.
+        if (this._shutdownStarted && !(e.trigger instanceof Shutdown)) 
+            return
+        
+        this._eventQ.push(e);
 
         Log.debug(this, () => "Scheduling with trigger: " + e.trigger);
         Log.debug(this, () => "Elapsed logical time in schedule: " + this.util.getElapsedLogicalTime());
@@ -2084,7 +2096,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             clearImmediate(this._immediateRef);
             this._immediateRef = undefined;
         }
-        
     }
 
     /**
@@ -2109,10 +2120,13 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             }.bind(this), timeout)
         } else {
             // Either we're in "fast" mode, or we're lagging behind.
-            setImmediate(function (this: App) {
-                this._immediateRef = undefined;
-                this._next()
-            }.bind(this));
+            // Only schedule an immediate if none is already pending.
+            if (!this._immediateRef) {
+                this._immediateRef = setImmediate(function (this: App) {
+                    this._immediateRef = undefined;
+                    this._next()
+                }.bind(this));
+            }
         }
     }
 
