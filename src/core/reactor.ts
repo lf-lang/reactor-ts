@@ -1920,7 +1920,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             new Args(),
             function (this) {
                 var app = (this.parent as App);
-                //Log.global.log("*** Shutting down reactor " + app.getFullyQualifiedName());
+                app._shutdownStarted = true;
+                app._cancelNext();
+                Log.global.log("*** Shutting down reactor " + app.getFullyQualifiedName());
                 app._unsetTimers();
                 // Schedule shutdown for all contained reactors.
                 app._shutdownChildren();
@@ -2096,6 +2098,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             clearImmediate(this._immediateRef);
             this._immediateRef = undefined;
         }
+        this._eventQ.empty()
     }
 
     /**
@@ -2145,15 +2148,11 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      */
     private _shutdown(): void {
         if (!this._shutdownStarted) {
-            this._shutdownStarted = true;
             this._endOfExecution = this._currentTag.time;
 
             Log.debug(this, () => "Initiating shutdown sequence.");
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
 
-            if (this._nextTime && this._endOfExecution.isEarlierThan(this._nextTime)) {
-                this._cancelNext();
-            }
             this.getSchedulable(this.shutdown).schedule(0);
 
         } else {
@@ -2212,7 +2211,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             this._endOfExecution = this._startOfExecution.add(this._executionTimeout);
             Log.debug(this, () => "Execution timeout: " + this._executionTimeout);
             // If there is a known end of execution, schedule a shutdown reaction to that effect.
-            this.schedule(new Event(this.shutdown, new Tag(this._endOfExecution, 0), null));
+            this.schedule(new Event(this.shutdown, new Tag(this._endOfExecution, 1), null));
         }
 
         Log.info(this, () => ">>> Spent " + this._currentTag.time.subtract(initStart as TimeValue)
