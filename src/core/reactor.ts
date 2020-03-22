@@ -84,7 +84,7 @@ export interface Readable<T> {
  * Interface for schedulable actions.
  */
 export interface Schedulable<T> extends Readable<T> {
-    schedule: (extraDelay: TimeValue | 0, value?: T) => void;
+    schedule: (extraDelay: TimeValue | 0, value: T) => void;
 }
 
 /**
@@ -565,7 +565,7 @@ export class Scheduler<T extends Present> implements Readable<T>, Schedulable<T>
      * @param value An optional value to be attached to this action.
      * The value will be available to reactions depending on this action.
      */
-    schedule(extraDelay: TimeValue | 0, value?: T) {
+    schedule(extraDelay: TimeValue | 0, value: T) {
         if (!(extraDelay instanceof TimeValue)) {
             extraDelay = new TimeValue(0);
         }
@@ -1165,7 +1165,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating startup: " + r.startup);
             // Note that startup reactions are scheduled without a microstep delay
-            this.getSchedulable(r.startup).schedule(0);
+            this.getSchedulable(r.startup).schedule(0, null);
         }
     }
 
@@ -1173,7 +1173,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         Log.global.debug("Shutdown children was called")
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating shutdown: " + r.shutdown);
-            this.getSchedulable(r.shutdown).schedule(0);
+            this.getSchedulable(r.shutdown).schedule(0, null);
         }
     }
 
@@ -2153,7 +2153,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             Log.debug(this, () => "Initiating shutdown sequence.");
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
 
-            this.getSchedulable(this.shutdown).schedule(0);
+            this.getSchedulable(this.shutdown).schedule(0, null);
 
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
