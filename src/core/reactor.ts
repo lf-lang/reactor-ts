@@ -83,7 +83,7 @@ export interface Readable<T> {
 /**
  * Interface for schedulable actions.
  */
-export interface Schedulable<T> extends Readable<T> {
+export interface Schedulable<T extends Present> extends Readable<T> {
     schedule: (extraDelay: TimeValue | 0, value: T) => void;
 }
 
