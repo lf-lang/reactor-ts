@@ -1843,6 +1843,19 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     private _startOfExecution: TimeValue;
 
     /**
+     * The next physical time after which the app will yield the event loop at the soonest 
+     * opportunity. Only used if _maxYieldPeriod is not null.
+     */
+    private _nextYield: TimeValue;
+
+    /**
+     * The maximum period the app will execute before yielding the event loop at
+     * the soonest opportunity. If null, the app will not use a period to determine
+     * when to yield.
+     */
+    private _yieldPeriod: TimeValue | null =  null; //new UnitBasedTimeValue(30, TimeUnit.msec);
+
+    /**
      * Report a timer to the app so that it gets scheduled.
      * @param timer The timer to report to the app.
      */
@@ -1894,6 +1907,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         // NOTE: these will be reset properly during startup.
         this._currentTag = new Tag(new TimeValue(0), 0);
         this._startOfExecution = this._currentTag.time;
+        this._nextYield = this._startOfExecution;
 
         // Add default startup reaction.
         this.addMutation(
@@ -1967,13 +1981,14 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      */
     private _next() {
         var nextEvent = this._eventQ.peek();
-        if (nextEvent) {
-            // There is an event at the head of the event queue.
+        if (nextEvent || this._reactionQ.size() > 0) {
+            // There is an event at the head of the event queue or reactions
+            // left unfinished from the last yield.
 
             // If it is too early to handle the next event, set a timer for it
             // (unless the "fast" option is enabled), and give back control to
             // the JS event loop.
-            if (getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time) && !this._fast) {
+            if (this._reactionQ.size() == 0 && nextEvent && getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time) && !this._fast) {
                 this.setAlarmOrYield(nextEvent.tag);
                 return;
             }
@@ -1987,30 +2002,32 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             // typically reported via physical actions, the tags of the
             // resulting events would be in the future, anyway.
             do {
-                // Advance logical time.
-                this._currentTag = nextEvent.tag;
+                if (this._reactionQ.size() == 0 && nextEvent) {
+                    // Advance logical time.
+                    this._currentTag = nextEvent.tag;
 
-                // Keep popping the event queue until the next event has a different tag.
-                while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
-                    var trigger = nextEvent.trigger;
-                    this._eventQ.pop();
-                    Log.debug(this, () => "Popped off the event queue: " + trigger);
+                    // Keep popping the event queue until the next event has a different tag.
+                    while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
+                        var trigger = nextEvent.trigger;
+                        this._eventQ.pop();
+                        Log.debug(this, () => "Popped off the event queue: " + trigger);
 
-                    // Handle timers.
-                    if (trigger instanceof Timer) {
-                        if (!trigger.period.isZero()) {
-                            Log.debug(this, () => "Rescheduling timer " + trigger);
+                        // Handle timers.
+                        if (trigger instanceof Timer) {
+                            if (!trigger.period.isZero()) {
+                                Log.debug(this, () => "Rescheduling timer " + trigger);
 
-                            this.schedule(new Event(trigger,
-                                this._currentTag.getLaterTag(trigger.period),
-                                null));
+                                this.schedule(new Event(trigger,
+                                    this._currentTag.getLaterTag(trigger.period),
+                                    null));
+                            }
                         }
-                    }
 
-                    // Load reactions onto the reaction queue.
-                    nextEvent.trigger.update(nextEvent);
-                    // Look at the next event on the queue.
-                    nextEvent = this._eventQ.peek();
+                        // Load reactions onto the reaction queue.
+                        nextEvent.trigger.update(nextEvent);
+                        // Look at the next event on the queue.
+                        nextEvent = this._eventQ.peek();
+                    }
                 }
 
                 while (this._reactionQ.size() > 0) {
@@ -2025,6 +2042,17 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                         Log.info(this, () => "Exception occurred in reaction: " + r);
                     }
                     
+                    // Note: this._nextYield.isEarlierThan(getCurrentPhysicalTime()) is
+                    // a relatively expensive operation, so it's important it not be the first
+                    // condition in the if statement.
+                    if (this._yieldPeriod && this._nextYield.isEarlierThan(getCurrentPhysicalTime())) {
+                        Log.debug(this, () => "Yielding event loop because _maxYieldPeriod has been exceeded");
+                        this._immediateRef = setImmediate(function (this: App) {
+                            this._setNextYield();
+                            this._immediateRef = undefined;
+                            this._next()
+                        }.bind(this));
+                    }
                 }
                 Log.global.debug("Finished handling all events at current time.");
 
@@ -2078,8 +2106,8 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._eventQ.push(e);
 
         Log.debug(this, () => "Scheduling with trigger: " + e.trigger);
-        Log.debug(this, () => "Elapsed logical time in schedule: " + this.util.getElapsedLogicalTime());
-        Log.debug(this, () => "Elapsed physical time in schedule: " + this.util.getElapsedPhysicalTime());
+        // Log.debug(this, () => "Elapsed logical time in schedule: " + this.util.getElapsedLogicalTime());
+        // Log.debug(this, () => "Elapsed physical time in schedule: " + this.util.getElapsedPhysicalTime());
         
         // If the scheduled event has an earlier tag than whatever is at the
         // head of the queue, set a new alarm.
@@ -2116,16 +2144,21 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         let physicalTime = getCurrentPhysicalTime();
         let timeout = physicalTime.difference(tag.time);
         if (physicalTime.isEarlierThan(tag.time) && !this._fast) {
+            Log.debug(this, () => "Setting alarm for tag: " + tag);
+            Log.debug(this, () => "Yielding event loop");
             // Set an alarm to be woken up when the event's tag matches physical
             // time.
             this.alarm.set(function (this: App) {
+                this._setNextYield();
                 this._next();
             }.bind(this), timeout)
         } else {
+            Log.debug(this, () => "Yielding event loop");
             // Either we're in "fast" mode, or we're lagging behind.
             // Only schedule an immediate if none is already pending.
             if (!this._immediateRef) {
                 this._immediateRef = setImmediate(function (this: App) {
+                    this._setNextYield();
                     this._immediateRef = undefined;
                     this._next()
                 }.bind(this));
@@ -2142,6 +2175,15 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._reactionQ.push(r);
     }
 
+    /**
+     * Increment _nextYield by _maxYieldPeriod
+     */
+    private _setNextYield(): void {
+        if (this._yieldPeriod) {
+            this._nextYield = this._nextYield.add(this._yieldPeriod);
+        }
+    }
+    
     /**
      * Schedule a shutdown event at the current time if no such action has been taken yet. 
      * Clear the alarm, and set the end of execution to be the current tag. 
@@ -2204,6 +2246,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         // Let the start of the execution be the current physical time.
         this._startOfExecution = getCurrentPhysicalTime();
         this._currentTag = new Tag(this._startOfExecution, 0);
+        if (this._yieldPeriod) {
+            this._nextYield = this._startOfExecution.add(this._yieldPeriod);
+        }
 
         // If an execution timeout is defined, the end of execution be the start time plus
         // the execution timeout.
