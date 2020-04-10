@@ -2,9 +2,6 @@ import {App, Triggers, Args} from '../src/core/reactor';
 import {Origin, TimeValue} from '../src/core/time';
 import {Reactor, Reaction, Timer, Action, Schedulable} from '../src/core/reactor';
 
-// Prevent any of Jest's command line arguments from reaching the tested code.
-process.argv = process.argv.slice(0,2);
-
 //Upon initialization, this reactor should produce an
 //output event
 export class ActionTrigger extends Reactor {

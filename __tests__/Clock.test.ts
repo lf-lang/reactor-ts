@@ -3,9 +3,6 @@
 import {Reaction, Timer, Action,  App, Schedulable, Triggers, Args} from '../src/core/reactor';
 import {TimeValue, TimeUnit, Origin, UnitBasedTimeValue} from "../src/core/time"
 
-// Prevent any of Jest's command line arguments from reaching the tested code.
-process.argv = process.argv.slice(0,2);
-
 /**
  * This app tests simultaneous events.
  * It creates two timers: t1 and t2 which should simultaneously have events at time
