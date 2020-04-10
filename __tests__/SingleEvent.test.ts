@@ -3,6 +3,9 @@ import {TimeValue} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 import {Logger} from '../src/share/Logger';
 
+// Prevent any of Jest's command line arguments from reaching the tested code.
+process.argv = process.argv.slice(0,2);
+
 class SETest extends App {
     singleEvent: SingleEvent<any>;
     logger: Logger;
