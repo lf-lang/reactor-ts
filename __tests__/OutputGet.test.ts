@@ -2,6 +2,9 @@ import {OutPort, App, Timer, Reaction, Writable, Triggers, Args} from '../src/co
 import {TimeValue} from "../src/core/time";
 import { Log } from '../src/core/util';
 
+// Prevent any of Jest's command line arguments from reaching the tested code.
+process.argv = process.argv.slice(0,2);
+
 class OutputGetTest extends App {
 
     o: OutPort<number> = new OutPort<number>(this);

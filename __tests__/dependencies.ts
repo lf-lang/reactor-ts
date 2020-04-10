@@ -3,6 +3,10 @@ import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Start
 
 //Log.setGlobalLevel(Log.levels.DEBUG);
 
+// Prevent any of Jest's command line arguments from reaching the tested code.
+process.argv = process.argv.slice(0,2);
+
+
 class R extends Reactor {
     protected in = new InPort(this);
     constructor(parent: Reactor|null) {

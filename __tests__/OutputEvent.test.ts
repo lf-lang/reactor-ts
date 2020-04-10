@@ -2,6 +2,9 @@ import {App, Reactor, Reaction, Parameter, Args, Triggers} from '../src/core/rea
 import {TimeValue} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 
+// Prevent any of Jest's command line arguments from reaching the tested code.
+process.argv = process.argv.slice(0,2);
+
 /**
  * This reactor calls the success callback if it triggers a reaction in response
  * to a value being set to a contained reactor's output port.

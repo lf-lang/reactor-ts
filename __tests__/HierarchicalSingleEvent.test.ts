@@ -3,6 +3,9 @@ import {TimeValue} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 import {Logger} from '../src/share/Logger';
 
+// Prevent any of Jest's command line arguments from reaching the tested code.
+process.argv = process.argv.slice(0,2);
+
 class SEContainer extends Reactor{
     // Made these public to accommodate the test below.
     public o: OutPort<any>= new OutPort<any>(this);

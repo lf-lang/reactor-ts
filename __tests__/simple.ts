@@ -1,5 +1,8 @@
 import {Reactor, OutPort, InPort, App} from "../src/core/reactor";
 
+// Prevent any of Jest's command line arguments from reaching the tested code.
+process.argv = process.argv.slice(0,2);
+
     class MyActor extends Reactor {
      
         a: InPort<{t: number}> = new InPort(this);
