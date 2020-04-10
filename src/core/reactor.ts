@@ -5,8 +5,7 @@
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
 
-import commandLineArgs from 'command-line-args';
-import { PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log, LogLevel} from './util';
+import { PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
 import { TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
 Log.global.level = Log.levels.DEBUG;
 
@@ -41,13 +40,6 @@ export type Present = (number | string | boolean | symbol | object | null);
 export type Priority = number;
 
 /**
- * The type returned by the commandLineArguments function. This type must change
- * if the CommandLineOptionDefs changes.
- */
-export type ProcessedCommandLineArgs = {fast: boolean| undefined,
-    keepalive: boolean | undefined, timeout: UnitBasedTimeValue | null | undefined,
-    logging: LogLevel | undefined}
-/**
  * A variable is a port, action, or timer (all of which implement the interface
  * `Readable`). Its value is therefore readable using `get`, and may be writable
  * using `set`. When `isPresent` is called on a variable, it will return true if
@@ -71,96 +63,10 @@ export type Variable = Readable<unknown> |
 };
 
 //---------------------------------------------------------------------//
-// Command Line Arguments Helper Functions                             //
-//---------------------------------------------------------------------//
-
-/**
- * Function to convert a string into a LogLevel for command line argument parsing.
- * Returns null if the input is malformed.
- * @param logging the raw command line argument
- */
-function loggingCLAType(logging: string): LogLevel | null {
-    if (logging in LogLevel) {
-        type LevelString = keyof typeof LogLevel;
-        return LogLevel[logging as LevelString];
-    }  else {
-        return null;
-    }
-}
-
-/**
- * Function to convert a string into a UnitBasedTimeValue for command line argument parsing
- * Returns null if the input is malformed.
- * @param logging the raw command line argument
- */
-function unitBasedTimeValueCLAType(timeout: string): TimeValue | null {
-    let duration:number;
-    let units:TimeUnit;
-    let wholeTimeoutPattern = /^[0-9]+\s+[a-z]+$/;
-    if (wholeTimeoutPattern.test(timeout)) {
-        let durationPattern = /^[0-9]+/;
-        let unitsPattern = /[a-z]+$/;
-        
-        let stringDuration = durationPattern.exec(timeout);
-        if (stringDuration !== null) {
-            duration = parseInt(stringDuration[0]);
-        } else {
-            // Duration is not well formed.
-            return null;
-        }
-
-        // Test if the units are a valid TimeUnits
-        let stringUnits = unitsPattern.exec(timeout);
-        if (stringUnits !== null && (stringUnits[0] in TimeUnit)){
-            type TimeUnitString = keyof typeof TimeUnit;
-            units = TimeUnit[stringUnits[0] as TimeUnitString]
-        } else {
-            // Units are not well formed.
-            return null;
-        }
-        return new UnitBasedTimeValue(duration, units);
-    } else {
-        // Duration and units are not well formed.
-        return null;
-    }
-}
-
-/**
- * Function to convert a string into a boolean for command line argument parsing.
- * Returns null if the input is malformed.
- * Note that the command-line-arguments module's built in boolean type is
- * actually a flag that is either absent or true. https://github.com/75lb/command-line-args/wiki/Notation-rules
- * We need this custom boolean parsing because our command line arguments
- * are true, false, or absent.
- * @param logging the raw command line argument
- */
-function booleanCLAType(bool: string): boolean | null {
-    if (bool === "true" ) {
-        return true;
-    } else if (bool === "false") {
-        return false;
-    } else {
-        return null;
-    }
-}
-
-//---------------------------------------------------------------------//
 // Constants                                                           //
 //---------------------------------------------------------------------//
 
 const DefaultMinInterarrival = new UnitBasedTimeValue(1, TimeUnit.nsec);
-
-/**
- * Configuration for command line arguments.
- * If this configuration changes, the ProcessedCommandLineArgs type must
- * change too.
- */
-const CommandLineOptionDefs = [
-    { name: 'keepalive', alias: 'k', type: booleanCLAType },
-    { name: 'fast', alias: 'f', type: booleanCLAType },
-    { name: 'logging', alias: 'l', type: loggingCLAType },
-    { name: 'timeout', alias: 'o', type: unitBasedTimeValueCLAType }
-  ];
 
 //---------------------------------------------------------------------//
 // Interfaces                                                          //
@@ -1979,70 +1885,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     constructor(executionTimeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, public success: () => void = () => { }, public failure: () => void = () => { throw new Error("Default app failure callback") }) {
         super(null);
 
-        // Set App parameters using values from the constructor or command line args.
-        // Command line args have precedence over values from the constructor
-        let processedCLArgs: ProcessedCommandLineArgs;
-        try {
-            processedCLArgs =  commandLineArgs(CommandLineOptionDefs) as ProcessedCommandLineArgs;
-        } catch (e){
-            // Provide context for errors in parsing.
-            throw new Error("Command line argument parsing failed with: " + e);
-        }
-
-        // Fast Parameter
-        if (processedCLArgs.fast !== undefined) {
-            if (processedCLArgs.fast !== null) {
-                Log.global.info("'fast' property overridden by command line argument.");
-                this._fast = processedCLArgs.fast;
-            } else {
-                throw new Error("'fast' command line argument is malformed. "
-                + "The fast option must be one of: 'true' or 'false'");
-            }
-        } else {
-            this._fast = fast;
-        }
-
-        // KeepAlive parameter
-        if (processedCLArgs.keepalive !== undefined) {
-            if (processedCLArgs.keepalive !== null) {
-                Log.global.info("'keepalive' property overridden by command line argument.");
-                this._keepAlive = processedCLArgs.keepalive;
-            } else {
-                throw new Error("'keepalive' command line argument is malformed. "
-                + "The keepalive option must be one of: 'true' or 'false'");
-            }
-        } else {
-            this._keepAlive = keepAlive;
-        }
-
-        // Timeout parameter
-        if (processedCLArgs.timeout !== undefined) {
-            if (processedCLArgs.timeout !== null) {
-                Log.global.info("'timeout' property overridden by command line argument.");
-                this._executionTimeout = processedCLArgs.timeout;
-            } else {
-                throw new Error("'timeout' command line argument is malformed. "
-                    + "Ignoring specified 'timeout' argument."
-                    + "A timeout should have value '<duration> <units>'. "
-                    + "Duration must be a whole number, and units can be any of "
-                    + "nsec, usec, msec, sec, minute, hour, day, week, or the plurals of those.");
-            }
-        } else {
-            this._executionTimeout = executionTimeout;
-        }
-
-        // Logging parameter (not a constructor parameter, but a command line option)
-        if (processedCLArgs.logging !== undefined) {
-            if (processedCLArgs.logging !== null) {
-                Log.global.info("'logging' property overridden by command line argument.");
-                Log.global.level = processedCLArgs.logging;
-            } else {
-                throw new Error("'logging' command line argument is malformed. "
-                    + "The logging option must be one of: 'ERROR', 'WARN', 'INFO', 'LOG', or 'DEBUG'");
-            }
-        } else {
-            // Log level is unchanged from global setting.
-        }
+        this._fast = fast;
+        this._keepAlive = keepAlive;
+        this._executionTimeout = executionTimeout;
 
         // NOTE: these will be reset properly during startup.
         this._currentTag = new Tag(new TimeValue(0), 0);
