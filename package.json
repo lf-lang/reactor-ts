@@ -1,9 +1,10 @@
 {
-    "name": "wirewrap",
+    "name": "reactor-ts",
     "version": "0.0.1",
     "description": "Reactor runtime written in TypeScript",
     "main": "lib/reactor.js",
     "dependencies": {
+        "command-line-args": "^5.1.1",
         "got": "^9.6.0",
         "heap": "^0.2.6",
         "microtime": "^3.0.0",
