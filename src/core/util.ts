@@ -357,7 +357,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
  * Log levels for `Log`.
  * @see Log
  */
-enum LogLevel {
+export enum LogLevel {
     ERROR = 1,
     WARN = 2,
     INFO = 3,

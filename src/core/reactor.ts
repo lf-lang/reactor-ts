@@ -5,7 +5,7 @@
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
 
-import { PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log } from './util';
+import { PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
 import { TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
 Log.global.level = Log.levels.DEBUG;
 
@@ -64,7 +64,6 @@ export type Variable = Read<unknown> |
     [name: string]: (Read<unknown>
         | Write<unknown> | ReadWrite<unknown>)
 };
-
 
 //---------------------------------------------------------------------//
 // Constants                                                           //
@@ -1943,10 +1942,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     constructor(executionTimeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, public success: () => void = () => { }, public failure: () => void = () => { throw new Error("Default app failure callback") }) {
         super(null);
 
-        //App.instances.add(this);
-        this._executionTimeout = executionTimeout;
-        this._keepAlive = keepAlive;
         this._fast = fast;
+        this._keepAlive = keepAlive;
+        this._executionTimeout = executionTimeout;
 
         // NOTE: these will be reset properly during startup.
         this._currentTag = new Tag(new TimeValue(0), 0);
