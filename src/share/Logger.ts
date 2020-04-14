@@ -1,6 +1,6 @@
-import {Reactor, InPort, Reaction, Readable, Triggers, Args, State, Present} from '../core/reactor';
+import {Reactor, InPort, Reaction, Read, Triggers, Args, State, Present} from '../core/reactor';
 
-function print(this:Reaction<any>, i: Readable<unknown>, expected: State<unknown>) {
+function print(this:Reaction<any>, i: Read<unknown>, expected: State<unknown>) {
     const received = i.get();
     if (received) {
         console.log("Logging: " + received);

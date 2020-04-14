@@ -11,7 +11,7 @@ export class Adder extends Reactor {
         
         this.addReaction(
             new Triggers(this.in1, this.in2), 
-            new Args(this.in1, this.in2, this.getWritable(this.out)),
+            new Args(this.in1, this.in2, this.getWriter(this.out)),
             function (this, in1, in2, out) {
                 // Type assertions allow coercion of null to 0.
                 out.set(in1.get() as number + (in2.get() as number));
@@ -27,8 +27,8 @@ class MyAdder extends Adder {
         }
     }
 
-    public getWriter(port: Port<Present>) {
-        return this.getWritable(port);
+    public getProxy(port: Port<Present>) {
+        return this.getWriter(port);
     }
 }
 
@@ -41,8 +41,8 @@ describe('adder', function () {
     it('2 + 1 = 3', function () {
 
         expect(adder).toBeInstanceOf(Adder);
-        adder.getWriter(adder.in1).set(2);
-        adder.getWriter(adder.in2).set(1);
+        adder.getProxy(adder.in1).set(2);
+        adder.getProxy(adder.in2).set(1);
         adder.fire();
         expect(adder.out.get()).toBe(3);
     });

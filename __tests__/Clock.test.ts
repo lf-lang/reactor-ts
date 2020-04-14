@@ -1,6 +1,6 @@
 'use strict';
 
-import {Reaction, Timer, Action,  App, Schedulable, Triggers, Args} from '../src/core/reactor';
+import {Reaction, Timer, Action,  App, Schedule, Triggers, Args} from '../src/core/reactor';
 import {TimeValue, TimeUnit, Origin, UnitBasedTimeValue} from "../src/core/time"
 
 /**
@@ -57,7 +57,7 @@ export class Clock extends App {
             /**
              * Print cuckoo and schedule a3.
              */
-            function(this, a3: Schedulable<number>) {
+            function(this, a3: Schedule<number>) {
                 a3.schedule(0, 3);
                 console.log("Cuckoo");
             }

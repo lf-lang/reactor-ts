@@ -1,7 +1,7 @@
 
-import {Reactor, OutPort, Reaction, Timer, Writable, Triggers, Args, ArgList, Present, State, Parameter, Variable} from '../core/reactor';
+import {Reactor, OutPort, Reaction, Timer, Write, Triggers, Args, ArgList, Present, State, Parameter, Variable} from '../core/reactor';
 
-function produceOutput<S>(this: Reaction<any>, o: Writable<S>, payload:Parameter<S>) {
+function produceOutput<S>(this: Reaction<any>, o: Write<S>, payload:Parameter<S>) {
     o.set(payload.get());
 
     // FIXME: create a test that actually tests double sets.
@@ -21,7 +21,7 @@ export class SingleEvent<T extends Present> extends Reactor {
         super(parent);
         this.addReaction(
             new Triggers(this.t1), 
-            new Args(this.getWritable(this.o), this.payload),
+            new Args(this.getWriter(this.o), this.payload),
             produceOutput
         );
     }

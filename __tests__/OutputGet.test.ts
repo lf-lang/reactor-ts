@@ -1,4 +1,4 @@
-import {OutPort, App, Timer, Reaction, Writable, Triggers, Args} from '../src/core/reactor';
+import {OutPort, App, Timer, Reaction, Write, Triggers, Args} from '../src/core/reactor';
 import {TimeValue} from "../src/core/time";
 import { Log } from '../src/core/util';
 
@@ -13,7 +13,7 @@ class OutputGetTest extends App {
         this.setAlias(name);
         this.addReaction(
             new Triggers(this.t), 
-            new Args(this.getWritable(this.o)),
+            new Args(this.getWriter(this.o)),
             function(this, o) {
                 Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>")
                 if(o.get() != null){

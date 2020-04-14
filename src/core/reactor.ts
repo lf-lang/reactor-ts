@@ -19,6 +19,9 @@ Log.global.level = Log.levels.DEBUG;
  */
 export type Absent = undefined;
 
+export type ReadWrite<T> = Read<T> & Write<T>;
+
+
 /**
  * Conditional type for argument lists of reactions. If the type variable
  * `T` is inferred to be a subtype of `Variable[]` it will yield `T`; it  
@@ -41,7 +44,7 @@ export type Priority = number;
 
 /**
  * A variable is a port, action, or timer (all of which implement the interface
- * `Readable`). Its value is therefore readable using `get`, and may be writable
+ * `Read`). Its value is therefore readable using `get`, and may be writable
  * using `set`. When `isPresent` is called on a variable, it will return true if
  * the value is defined at the current logical time, and false otherwise.
  * Variables may also refer to ports of a contained reactors. To allow a dotted
@@ -51,15 +54,15 @@ export type Priority = number;
  * write `Foo.bar`, where `Foo` is the name of a contained reactor and `bar` the
  * name of the referenced port. In this case, `Foo` would be the name of the
  * argument passed into a `react` function, and the type of that argument would
- * be `{bar: Readable<T>|Writable<T>}`.
- * @see Readable
- * @see Writable
+ * be `{bar: Read<T>|Write<T>|ReadWrite<T>}`.
+ * @see Read
+ * @see Write
  */
-export type Variable = Readable<unknown> |
-    Writable<unknown> |
+export type Variable = Read<unknown> |
+    Write<unknown> | ReadWrite<unknown> |
 {
-    [name: string]: (Readable<unknown>
-        | Writable<unknown>)
+    [name: string]: (Read<unknown>
+        | Write<unknown> | ReadWrite<unknown>)
 };
 
 
@@ -76,28 +79,36 @@ const DefaultMinInterarrival = new UnitBasedTimeValue(1, TimeUnit.nsec);
 /**
  * Interface for readable variables.
  */
-export interface Readable<T> {
+export interface Read<T> {
     get: () => T | Absent;
+}
+
+export interface Call<A, R> extends Write<A>, Read<R> {
+    invoke(args: A): R | undefined;
+}
+
+export interface Return<A, R> extends Read<A>, Write<R> {
+    return(value: R): void;
 }
 
 /**
  * Interface for schedulable actions.
  */
-export interface Schedulable<T extends Present> extends Readable<T> {
+export interface Schedule<T extends Present> extends Read<T> {
     schedule: (extraDelay: TimeValue | 0, value: T) => void;
 }
 
 /**
  * Interface for writable ports.
  */
-export interface Writable<T> extends Readable<T> {
+export interface Write<T> {
     set: (value: T) => void;
 }
 
 /**
  * Interface for proxy objects used to make ports writable.
  */
-export interface Proxy<T extends Present> extends Writable<T> {
+export interface Proxy<T extends Present> extends Write<T> {
     isProxyOf: (port: Port<any>) => boolean;
     getPort(): Port<T>;
 }
@@ -405,7 +416,7 @@ class Event<T> implements PrioritySetNode<Tag> {
  * scheduled by a reactor by invoking the schedule function in a reaction
  * or in an asynchronous callback that has been set up in a reaction.
  */
-export class Action<T extends Present> extends Descendant implements Readable<T> {
+export class Action<T extends Present> extends Descendant implements Read<T> {
 
     origin: Origin;
     minDelay: TimeValue;
@@ -518,7 +529,7 @@ export class Shutdown extends Action<Present> {
     }
 }
 
-export class Parameter<T> implements Readable<T> {
+export class Parameter<T> implements Read<T> {
     constructor(private value: T) {
     }
     get(): T {
@@ -528,7 +539,7 @@ export class Parameter<T> implements Readable<T> {
 
 // It's valid to create state for a reactor without initializing it to a value,
 // so the type of State is T | undefined.
-export class State<T> implements Readable<T>, Writable<T> {
+export class State<T> implements Read<T>, Write<T> {
 
     constructor(private value: T) {
     }
@@ -543,7 +554,7 @@ export class State<T> implements Readable<T>, Writable<T> {
 
 }
 
-export class Scheduler<T extends Present> implements Readable<T>, Schedulable<T> {
+export class Scheduler<T extends Present> implements Read<T>, Schedule<T> {
 
     constructor(private __parent__: Reactor, private action: Action<T>) {
 
@@ -604,7 +615,7 @@ export class Scheduler<T extends Present> implements Readable<T>, Schedulable<T>
  * reschedule the event at the current logical time + period in the future. A 0 
  * period indicates the timer's event is a one-off and should not be rescheduled.
  */
-export class Timer extends Descendant implements Readable<Tag> {
+export class Timer extends Descendant implements Read<Tag> {
 
     private tag: Tag | undefined;
 
@@ -772,7 +783,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     public util: ReactorUtils;
 
-    protected getWritable<T extends Present>(port: Port<T>): Writable<T> {
+    protected getWriter<T extends Present>(port: Port<T>): ReadWrite<T> {
         // FIXME: Implement checks to ensure that port is allowed to be written to.
         return new Writer(port);
     }
@@ -853,7 +864,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
 
-    protected getSchedulable<T extends Present>(action: Action<T>): Schedulable<T> {
+    protected getSchedulable<T extends Present>(action: Action<T>): Schedule<T> {
         return new Scheduler(this, action); /// FIXME: check whether action is local
     }
 
@@ -1074,20 +1085,20 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             Log.global.debug("No reactions to trigger.")
         }
         // Update all ports that the src is connected to.
-        var dests = undefined;
-        if (src instanceof InPort) {
-            dests = this._destinationPorts.get(src);
-        } else if (this.__parent__ && this.__parent__ instanceof Reactor) {
-            dests = this.__parent__._destinationPorts.get(src); // FIXME: obtain set of writable object from this map
+        var dests = new Set(); // FIXME: obtain set of writable objects directly from the map
+        // Hierarchical connections (to contained reactors).
+        this._destinationPorts.get(src)?.forEach((dest) => dests.add(dest))
+        // Connections to reactors at the same level.
+        if (this.__parent__ && this.__parent__ instanceof Reactor) {
+            this.__parent__._destinationPorts.get(src)?.forEach((dest) => dests.add(dest))
         }
-        if (dests != undefined) {
-            for (let d of dests) {
-                // The following is type safe because we're doing
-                // type checks in connect().
-                //@ts-ignore
-                d.update(this.getWritable(d), value);
-            }
-        } else {
+        for (let d of dests) {
+            // The following is type safe because we're doing
+            // type checks in connect().
+            //@ts-ignore
+            d.update(this.getWriter(d), value);
+        }
+        if (dests.size == 0) {
             Log.global.debug("No downstream receivers.");
         }
     }
@@ -1499,7 +1510,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
 }
 
-export abstract class Port<T extends Present> extends Descendant implements Readable<T> {
+export abstract class Port<T extends Present> extends Descendant implements Read<T> {
 
     /** The time stamp associated with this port's value. */
     protected tag: Tag | undefined;
@@ -1635,7 +1646,53 @@ export class InPort<T extends Present> extends Port<T> {
 
 }
 
-class Writer<T extends Present> implements Proxy<T> { // NOTE: don't export this class!
+/**
+ * A caller port sends arguments of type T and receives a response of type R.
+ */
+export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Call<A, R> {
+    
+
+    public set(value: A): void  {
+        // Invoke downstream reaction directly, and return store the result.
+        for (let r of this.getDownstreamReactions()) {
+            this.__parent__._propagateValue(this)
+            let reactions = this.getDownstreamReactions()
+            if (reactions.size > 1)
+                Log.error(this, () => "Caller port connected to more than one callee.")
+            for (r of reactions) { 
+                r.doReact()
+            } 
+        }
+    }
+
+    public invoke(value:A): R | undefined {
+        // If connected, this will trigger a reaction and update the 
+        // value of this port.
+        this.set(value)
+        // Return the updated value.
+        return this.get()
+    }
+
+}
+
+/**
+ * A callee port receives arguments of type A and send a response of type R.
+ */
+export class CalleePort<A extends Present, R extends Present> extends Port<A> implements Return<A, R> {
+    
+    public set(value: R): void  {
+        // NOTE: this will not trigger reactions because
+        // connections between caller ports and callee ports
+        // are excluded from the trigger map.
+        this.__parent__._propagateValue(this)
+    }
+
+    public return(value: R): void {
+        this.set(value)
+    }
+}
+
+class Writer<T extends Present> implements Read<T>, Proxy<T> { // NOTE: don't export this class!
 
     constructor(private port: Port<T>) {
     }
