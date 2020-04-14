@@ -1,4 +1,5 @@
 import commandLineArgs from 'command-line-args';
+import commandLineUsage from 'command-line-usage';
 import { UnitBasedTimeValue, TimeUnit, TimeValue} from './time';
 import { LogLevel } from './util';
 
@@ -86,7 +87,7 @@ function booleanCLAType(bool: string): boolean | null {
  */
 export type ProcessedCommandLineArgs = {fast: boolean| undefined,
     keepalive: boolean | undefined, timeout: UnitBasedTimeValue | null | undefined,
-    logging: LogLevel | undefined}
+    logging: LogLevel | undefined, help: boolean}
 
 
 /**
@@ -95,8 +96,49 @@ export type ProcessedCommandLineArgs = {fast: boolean| undefined,
  * change too.
  */
 export const CommandLineOptionDefs = [
-    { name: 'keepalive', alias: 'k', type: booleanCLAType },
-    { name: 'fast', alias: 'f', type: booleanCLAType },
-    { name: 'logging', alias: 'l', type: loggingCLAType },
-    { name: 'timeout', alias: 'o', type: unitBasedTimeValueCLAType }
+    { name: 'keepalive', alias: 'k', type: booleanCLAType, typeLabel: '[true | false]',
+        description: 'Specifies whether to stop execution if there are no events to process. ' +
+            'This defaults to false, meaning that the program will stop executing when ' +
+            'there are no more events on the event queue. If you set this to true, then ' +
+            'the program will keep executing until either the timeout logical time is ' +
+            'reached or the program is externally killed. If you have physical actions, ' +
+            'it usually makes sense to set this to true.'
+    },
+    { name: 'fast', alias: 'f', type: booleanCLAType, typeLabel: '[true | false]',
+        description: 'Specifies whether to wait for physical time to match logical time. ' +
+            'The default is false. If this is true, then the program will execute as fast ' +
+            'as possible, letting logical time advance faster than physical time.'
+    },
+    { name: 'logging', alias: 'l', type: loggingCLAType, typeLabel: '[ERROR | WARN | INFO | LOG | DEBUG]',
+        description: 'The level of diagnostic messages about execution to print to the ' +
+            'console. A message will print if this parameter is greater than or equal to ' +
+            'the level of the message (ERROR < WARN < INFO < LOG < DEBUG).'
+    },
+    { name: 'timeout', alias: 'o', type: unitBasedTimeValueCLAType, typeLabel: "'<duration> <units>'",
+        description: 'Stop execution when logical time has advanced by the specified <duration>. ' +
+            'The units can be any of nsec, usec, msec, sec, minute, hour, day, week, or the plurals ' +
+            'of those. For the duration and units of a timeout argument to be parsed correctly as a ' +
+            'single value, these should be specified in quotes with no leading or trailing space ' +
+            "'(eg '5 sec')."
+    },
+    { name: 'help', alias: 'h', type: Boolean, 
+        description: 'Print this usage guide. The program will not execute if this flag is present.'
+    }
   ];
+
+/**
+ * Configuration for command line argument usage information.
+ */
+export const CommandLineUsageDefs = [
+{
+    header: 'Command Line Usage for TypeScript Reactors',
+    content: 'This generated program understands the following command-line arguments, ' +
+        'each of which has a short form (one character) and a long form. ' + 
+        'If provided, a command line argument will override whatever value ' +
+        'the corresponding target property had specified in the source .lf file.'
+},
+{
+    header: 'Options',
+    optionList: CommandLineOptionDefs
+}
+]
