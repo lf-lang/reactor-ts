@@ -921,42 +921,51 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             // If a reaction is triggered by a child reactor's port,
             // it needs to be inserted into the child reactor's trigger map
             // instead of this reactor's trigger map
-            let tMap: Map<Variable, Set<Reaction<any>>>;
-            let portParent: Reactor | undefined;
-            if (t instanceof Port && !t.isChildOf(this)) {
-                // Obtain the child reactor's trigger map
-                for (let childReactor of this._getChildren()) {
-                    if (t.isChildOf(childReactor)) {
-                        portParent = childReactor;
-                        break;
+            let triggerMap: Map<Variable, Set<Reaction<any>>>;
+            
+            if (!(t instanceof CalleePort)) {
+                if (t instanceof Port && !t.isChildOf(this)) {
+                    let portParent: Reactor | undefined;
+                    // Obtain the child reactor's trigger map
+                    for (let childReactor of this._getChildren()) {
+                        if (t.isChildOf(childReactor)) {
+                            portParent = childReactor;
+                            break;
+                        }
                     }
+                    if (portParent === undefined) {
+                        throw new Error("Port " + t + " is a trigger for reaction " + reaction
+                            + " but is neither a child of the reactor containing the reaction"
+                            + " or that reactor's children.")
+                    }
+                    triggerMap = portParent._triggerMap
+                } else {
+                    // Use this reactor's trigger map
+                    triggerMap = this._triggerMap
                 }
-                if (portParent === undefined) {
-                    throw new Error("Port " + t + " is a trigger for reaction " + reaction
-                        + " but is neither a child of the reactor containing the reaction"
-                        + " or that reactor's children.")
+                let reactions = triggerMap.get(t);
+                if (reactions == undefined) {
+                    reactions = new Set();
+                    triggerMap.set(t, reactions);
                 }
-                tMap = portParent._triggerMap
-            } else {
-                // Use this reactor's trigger map
-                tMap = this._triggerMap
+                reactions.add(reaction);
             }
-            let s = tMap.get(t);
-            if (s == undefined) {
-                s = new Set();
-                tMap.set(t, s);
-            }
-            s.add(reaction);
             // Record this trigger as a dependency.
-            if (t instanceof Port) {
+            if (t instanceof InPort || t instanceof OutPort) {
                 // The ports of hierarchical references are still given as ports
                 this._addDependency(t, reaction);
-            } else {
+            } else if (t instanceof CalleePort) {
+                // If this reaction is a callee, create a dependency
+                // from this port onto the preceding reaction within the same reactor (if it exists).
+                // Also create an antidependency on the subsequent reaction within the same reactor (if it exists).
+                console.log("Callee!")
+            }
+            else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
         }
         for (let a of reaction.args.tuple) {
-            if (a instanceof Port) {
+            if (a instanceof InPort || a instanceof OutPort) {
                 if (this._isUpstream(a)) {
                     this._addDependency(a, reaction);
                 } else if (this._isDownstream(a)) {
@@ -1337,6 +1346,14 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
     }
 
+    protected canConnect2<A extends Present, R extends S, T extends A, S extends Present>(src: CallerPort<A,R> | Port<A>, dst: CalleePort<T,S> | Port<T>) {
+        if (src instanceof CallerPort || dst instanceof CalleePort) {
+            return true
+        } else {
+            return this.canConnect(src as Port<T>, dst as Port<A>)
+        }
+    }
+
     protected _connect<D extends Present, S extends D>(src: Port<S>, dst: Port<D>) {
         //***********
         if (this.canConnect(src, dst)) {
@@ -1351,6 +1368,22 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
         }
+    }
+
+    connect2<A extends Present, R extends S, T extends A, S extends Present>(src: CallerPort<A,R> | Port<A>, dst: CalleePort<T,S> | Port<T>) {
+        if (this.canConnect2(src, dst)) {
+            Log.debug(this, () => "connecting " + src + " and " + dst);
+            let dests = this._destinationPorts.get(src);
+            if (dests == null) {
+                dests = new Set();
+            }
+            dests.add(dst);
+            this._destinationPorts.set(src, dests);
+            this._sourcePort.set(dst, src);
+        } else {
+            throw new Error("ERROR connecting " + src + " to " + dst);
+        }
+
     }
 
     protected _disconnect(src: Port<Present>, dst: Port<Present>) {
@@ -1529,6 +1562,10 @@ export abstract class Port<T extends Present> extends Descendant implements Read
             reactions = new Set([...reactions, ...d.getDownstreamReactions()]);
         }
         reactions = new Set([...reactions, ...this.__parent__.getDownstreamReactions(this)]);
+        if (reactions.size > 0) {
+            Log.global.debug("Downstream reactions found!");
+            console.log(reactions)
+        }
         return reactions;
     }
 
@@ -1547,7 +1584,8 @@ export abstract class Port<T extends Present> extends Descendant implements Read
         }
         // Reactions local (i.e., within the reactor).
         reactions = new Set([...reactions, ...this.__parent__.getUpstreamReactions(this)]);
-        Log.global.debug("Reactions found!");
+        if (reactions.size > 0)
+            Log.global.debug("Upstream reactions found!");
         return reactions;
     }
 
@@ -1649,7 +1687,7 @@ export class InPort<T extends Present> extends Port<T> {
  * A caller port sends arguments of type T and receives a response of type R.
  */
 export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Call<A, R> {
-    
+
 
     public set(value: A): void  {
         // Invoke downstream reaction directly, and return store the result.
@@ -1832,6 +1870,14 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         
         public connect<D extends Present, S extends D>(src: Port<S>, dst: Port<D>) {
             return this.app._connect(src, dst);
+        }
+
+        public connect2<A extends Present, R extends S, T extends A, S extends Present>(src: CallerPort<A,R> | Port<A>, dst: CalleePort<T,S> | Port<T>) {
+            if (src instanceof CallerPort) {
+
+            } else {
+                return this.app._connect(src as Port<T>, dst as Port<A>);
+            }
         }
     }(this);
 
@@ -2248,13 +2294,13 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         // Obtain the precedence graph, ensure it has no cycles, 
         // and assign a priority to each reaction in the graph.
         var apg = this.getPrecedenceGraph();
+        Log.debug(this, () => apg.toString());
+
         if (apg.updatePriorities()) {
             Log.global.debug("No cycles.");
         } else {
             throw new Error("Cycle in reaction graph.");
         }
-
-        Log.debug(this, () => apg.toString());
 
         // Let the start of the execution be the current physical time.
         this._startOfExecution = getCurrentPhysicalTime();
