@@ -82,13 +82,13 @@ export interface Read<T> {
     get: () => T | Absent;
 }
 
-export interface Call<A, R> extends Write<A>, Read<R> {
-    invoke(args: A): R | undefined;
-}
+// export interface Call<A, R> extends Write<A>, Read<R> {
+//     invoke(args: A): R | undefined;
+// }
 
-export interface Return<A, R> extends Read<A>, Write<R> {
-    return(value: R): void;
-}
+// export interface Return<A, R> extends Read<A>, Write<R> {
+//     return(value: R): void;
+// }
 
 /**
  * Interface for schedulable actions.
@@ -951,14 +951,14 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                 reactions.add(reaction);
             }
             // Record this trigger as a dependency.
-            if (t instanceof InPort || t instanceof OutPort) {
-                // The ports of hierarchical references are still given as ports
+            if (t instanceof InPort || t instanceof OutPort || t instanceof CalleePort) { // FIXME: this introduces a cycle
                 this._addDependency(t, reaction);
             } else if (t instanceof CalleePort) {
                 // If this reaction is a callee, create a dependency
                 // from this port onto the preceding reaction within the same reactor (if it exists).
                 // Also create an antidependency on the subsequent reaction within the same reactor (if it exists).
                 console.log("Callee!")
+                
             }
             else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
@@ -1034,7 +1034,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             var deps = r.getDependencies();
             // look upstream
             for (let d of deps[0]) {
-                if (d instanceof Port) {
+                if (d instanceof InPort || d instanceof OutPort) {
                     graph.addEdges(r, d.getUpstreamReactions());
                 } else {
                     Log.global.error("Found dependency that is not a port")
@@ -1042,7 +1042,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             }
             // look downstream
             for (let d of deps[1]) {
-                if (d instanceof Port) {
+                if (d instanceof InPort || d instanceof OutPort) {
                     graph.addBackEdges(r, d.getDownstreamReactions());
                 } else {
                     Log.global.error("Found antidependency that is not a port")
@@ -1346,11 +1346,11 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
     }
 
-    protected canConnect2<A extends Present, R extends S, T extends A, S extends Present>(src: CallerPort<A,R> | Port<A>, dst: CalleePort<T,S> | Port<T>) {
+    protected canConnect2<A extends T, R extends Present, T extends Present, S extends R>(src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
         if (src instanceof CallerPort || dst instanceof CalleePort) {
             return true
         } else {
-            return this.canConnect(src as Port<T>, dst as Port<A>)
+            return this.canConnect(src as Port<S>, dst as Port<R>)
         }
     }
 
@@ -1370,20 +1370,21 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
     }
 
-    connect2<A extends Present, R extends S, T extends A, S extends Present>(src: CallerPort<A,R> | Port<A>, dst: CalleePort<T,S> | Port<T>) {
-        if (this.canConnect2(src, dst)) {
-            Log.debug(this, () => "connecting " + src + " and " + dst);
-            let dests = this._destinationPorts.get(src);
-            if (dests == null) {
-                dests = new Set();
+    connect2<A extends T, R extends Present, T extends Present, S extends R>(src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
+        if (src instanceof CallerPort && dst instanceof CalleePort) {
+            src.remotePort = ((dst as unknown) as CalleePort<A,R>); // Safe substitution.
+            if (dst.isChildOf(this)) {
+
+            } else {
+                let calleeContainer: Reactor | undefined
+                this._getChildren().forEach((child) => child._getPorts().forEach((port) => {(port === dst)? calleeContainer = child : {}}))
+                let reactions = calleeContainer?._dependentReactions.get(dst)
+                src.remoteReaction = reactions?.values().next().value // NOTE: only one reaction.
+                console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + src.remoteReaction)
             }
-            dests.add(dst);
-            this._destinationPorts.set(src, dests);
-            this._sourcePort.set(dst, src);
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
         }
-
     }
 
     protected _disconnect(src: Port<Present>, dst: Port<Present>) {
@@ -1683,23 +1684,30 @@ export class InPort<T extends Present> extends Port<T> {
 
 }
 
+// export class RPCPort {
+    
+
+// }
+
 /**
  * A caller port sends arguments of type T and receives a response of type R.
  */
-export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Call<A, R> {
+export class CallerPort<A extends Present, R> implements Write<A>, Read<R> { // FIXME: may Port should not implement Read
+    
+    get(): R | undefined {
+        return this.remotePort?.retValue
+    }
 
+    remotePort: CalleePort<A, R> | undefined;
+
+    remoteReaction: Reaction<unknown> | undefined;
 
     public set(value: A): void  {
         // Invoke downstream reaction directly, and return store the result.
-        for (let r of this.getDownstreamReactions()) {
-            this.__parent__._propagateValue(this)
-            let reactions = this.getDownstreamReactions()
-            if (reactions.size > 1)
-                Log.error(this, () => "Caller port connected to more than one callee.")
-            for (r of reactions) { 
-                r.doReact()
-            } 
+        if (this.remotePort) {
+            this.remotePort.argValue = value
         }
+        this.remoteReaction?.doReact()
     }
 
     public invoke(value:A): R | undefined {
@@ -1715,13 +1723,21 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
 /**
  * A callee port receives arguments of type A and send a response of type R.
  */
-export class CalleePort<A extends Present, R extends Present> extends Port<A> implements Return<A, R> {
+export class CalleePort<A extends Present, R> extends Port<A> implements Read<A>, Write<R> {
     
+    get(): A | undefined {
+        return this.argValue;
+    }
+
+    public retValue: R | undefined;
+
+    public argValue: A | undefined;
+
     public set(value: R): void  {
         // NOTE: this will not trigger reactions because
         // connections between caller ports and callee ports
         // are excluded from the trigger map.
-        this.__parent__._propagateValue(this)
+        this.retValue = value;
     }
 
     public return(value: R): void {
@@ -1872,12 +1888,8 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
             return this.app._connect(src, dst);
         }
 
-        public connect2<A extends Present, R extends S, T extends A, S extends Present>(src: CallerPort<A,R> | Port<A>, dst: CalleePort<T,S> | Port<T>) {
-            if (src instanceof CallerPort) {
-
-            } else {
-                return this.app._connect(src as Port<T>, dst as Port<A>);
-            }
+        public connect2<A extends T, R extends Present, T extends Present, S extends R>(src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
+            return this.app.connect2(src, dst)
         }
     }(this);
 
