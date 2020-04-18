@@ -232,7 +232,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         var antideps: Set<Variable> = new Set();
         var vars = new Set();
         for (let a of this.args.tuple.concat(this.trigs.list)) {
-            if (a instanceof Port) {
+            if (a instanceof InPort || a instanceof OutPort) {
                 if (this.__parent__._isUpstream(a)) {
                     deps.add(a);
                 }
@@ -737,8 +737,6 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
 
     private _dependentReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
 
-    private _localCallee: Map<CalleePort<Present, unknown>, Reaction<unknown>> = new Map();
-
     private _remoteCallers: Map<CalleePort<Present, unknown>, Set<Reaction<unknown>>> = new Map();
 
     private _sourcePort: Map<Port<Present>, Port<Present>> = new Map();
@@ -951,16 +949,9 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                 reactions.add(reaction);
             }
             // Record this trigger as a dependency.
-            if (t instanceof InPort || t instanceof OutPort) {
+            if (t instanceof InPort || t instanceof OutPort || t instanceof CalleePort) {
                 this._addDependency(t, reaction);
-            } else if (t instanceof CalleePort) {
-                // If this reaction is a callee, create a dependency
-                // from this port onto the preceding reaction within the same reactor (if it exists).
-                // Also create an antidependency on the subsequent reaction within the same reactor (if it exists).
-                console.log("Callee!")
-                this._localCallee.set(t, reaction) // FIXME: report error if it is already set
-            }
-            else {
+            } else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
         }
@@ -1069,7 +1060,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                         }
                     }
                 } else {
-                    Log.global.error("Found dependency that is not a port")
+                    Log.global.error("Found dependency that is not a port: " + d)
                 }
             }
             // look downstream
@@ -1297,7 +1288,8 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             if (arg.isGrandChildOf(this)) {
                 return true;
             }
-        } else {
+        } 
+        if (arg instanceof InPort) {
             if (arg.isChildOf(this)) {
                 return true;
             }
@@ -1413,7 +1405,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             } else {
                 this._getChildren().forEach((child) => child._getPorts().forEach((port) => {(port === dst)? calleeContainer = child : {}}))
             }
-            src.remoteReaction = calleeContainer?._localCallee.get(dst)
+            src.remoteReaction = calleeContainer?._dependentReactions.get(dst)?.values().next().value
             let callers = calleeContainer?._remoteCallers.get(dst)
             if (!callers) {
                 callers = new Set()
@@ -1425,9 +1417,6 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
                 this._getChildren().forEach((child) => child._getPorts().forEach((port) => {(port === src)? callerContainer = child : {}}))
             }
             callerContainer?._dependsOnReactions.get(src)?.forEach((reaction) => callers?.add(reaction))
-            console.log("Number of callers: " + callers.size)
-            console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + src.remoteReaction)
-            console.log("?????????????" + calleeContainer?._dependentReactions.get(dst)?.values().next().value)
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
         }
