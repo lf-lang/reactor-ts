@@ -7,20 +7,20 @@
 
 import { PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
 import { TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
-Log.global.level = Log.levels.DEBUG;
+import { connect } from 'http2';
 
-//---------------------------------------------------------------------//
-// Types                                                               //
-//---------------------------------------------------------------------//
+// Set the default log level.
+Log.global.level = Log.levels.ERROR;
+
+//--------------------------------------------------------------------------//
+// Types                                                                    //
+//--------------------------------------------------------------------------//
 
 /**
  * Type that denotes the absence of a value.
  * @see Variable
  */
 export type Absent = undefined;
-
-export type ReadWrite<T> = Read<T> & Write<T>;
-
 
 /**
  * Conditional type for argument lists of reactions. If the type variable
@@ -34,6 +34,11 @@ export type ArgList<T> = T extends Variable[] ? T : never;
  * Type for data exchanged between ports.
  */
 export type Present = (number | string | boolean | symbol | object | null);
+
+/**
+ * Type for variables that are both readable and writable.
+ */
+export type ReadWrite<T> = Read<T> & Write<T>;
 
 /**
  * A number that indicates a reaction's position with respect to other
@@ -65,15 +70,30 @@ export type Variable = Read<unknown> |
         | Write<unknown> | ReadWrite<unknown>)
 };
 
-//---------------------------------------------------------------------//
-// Constants                                                           //
-//---------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+// Constants                                                                //
+//--------------------------------------------------------------------------//
 
 const DefaultMinInterarrival = new UnitBasedTimeValue(1, TimeUnit.nsec);
 
-//---------------------------------------------------------------------//
-// Interfaces                                                          //
-//---------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+// Interfaces                                                               //
+//--------------------------------------------------------------------------//
+
+/**
+ * Interface for the invocation of remote procedures.
+ */
+export interface Call<A, R> extends Write<A>, Read<R> {
+    invoke(args: A): R | undefined;
+}
+
+/**
+ * Interface for proxy objects used to make ports writable.
+ */
+export interface Proxy<T extends Present> extends Write<T> {
+    isProxyOf: (port: Port<any>) => boolean;
+    getPort(): Port<T>;
+}
 
 /**
  * Interface for readable variables.
@@ -82,13 +102,12 @@ export interface Read<T> {
     get: () => T | Absent;
 }
 
-// export interface Call<A, R> extends Write<A>, Read<R> {
-//     invoke(args: A): R | undefined;
-// }
-
-// export interface Return<A, R> extends Read<A>, Write<R> {
-//     return(value: R): void;
-// }
+/**
+ * Interface for the answering of remote calls.
+ */
+export interface Return<A, R> extends Read<A>, Write<R> {
+    return(value: R): void;
+}
 
 /**
  * Interface for schedulable actions.
@@ -105,17 +124,10 @@ export interface Write<T> {
 }
 
 /**
- * Interface for proxy objects used to make ports writable.
- */
-export interface Proxy<T extends Present> extends Write<T> {
-    isProxyOf: (port: Port<any>) => boolean;
-    getPort(): Port<T>;
-}
-
-/**
  * Interface for objects that have a name.
  */
 export interface Named {
+    
     /* Return the fully qualified name of this object. */
     getFullyQualifiedName(): string;
 
@@ -131,9 +143,11 @@ export interface Named {
 //---------------------------------------------------------------------//
 
 /**
- * 
+ * Base class for named objects that acquire their name on the basis of
+ * the hierarchy they are embedded in. Each descendant can only have a
+ * single parent.
  */
-class Descendant implements Named {
+class Descendant implements Named { // FIXME: maybe this should be called ContainedObject or something?
 
     private alias: string | undefined;
 
@@ -223,16 +237,16 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         return this.__parent__.getFullyQualifiedName() + "[R" + this.__parent__.getReactionIndex(this) + "]";
     }
 
-    public setReact(r: (...args: ArgList<T>) => void): this {
-        return this;
-    }
+    // public setReact(r: (...args: ArgList<T>) => void): this {
+    //     return this;
+    // }
 
     getDependencies(): [Set<Variable>, Set<Variable>] {
         var deps: Set<Variable> = new Set();
         var antideps: Set<Variable> = new Set();
         var vars = new Set();
         for (let a of this.args.tuple.concat(this.trigs.list)) {
-            if (a instanceof InPort || a instanceof OutPort) {
+            if (a instanceof Port) {
                 if (this.__parent__._isUpstream(a)) {
                     deps.add(a);
                 }
@@ -679,6 +693,10 @@ export class Timer extends Descendant implements Read<Tag> {
     }
 }
 
+class Procedure<T> extends Reaction<T> {
+
+}
+
 export class Mutation<T> extends Reaction<T> {
 
     /**
@@ -768,7 +786,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     /** Reactions added by the implemented of derived reactor classes. */
     protected _reactions: Reaction<any>[] = [];
 
-    private _mutations: Mutation<any>[] = []; // FIXME: introduce mutations
+    private _mutations: Mutation<any>[] = [];
 
     public startup = new Startup(this);
 
@@ -865,54 +883,6 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         return new Scheduler(this, action); /// FIXME: check whether action is local
     }
 
-    // protected addReaction<T>(reaction: Reaction<T>): void {
-    //     // FIXME: We could also construct the reaction in this function.
-    //     // That saves having to pass in a reference to `this`.
-    //     // Ensure that arguments are compatible with implementation of react().
-    //     (function<X>(args: ArgList<X>, fun: (...args:ArgList<X>) => void): void {
-    //     })(reaction.args.tuple, reaction.react);
-
-    //     this._reactions.push(reaction);
-    //     // Stick this reaction into the trigger map to ensure it gets triggered.
-    //     for (let t of reaction.trigs.list) {
-    //         let s = this._triggerMap.get(t);
-    //         if (s == null) {
-    //             s = new Set();
-    //             this._triggerMap.set(t, s);
-    //         }
-    //         s.add(reaction);
-    //         // Record this trigger as a dependency.
-    //         if (t instanceof Port) {
-    //             this._addDependency(t, reaction);
-    //         } else {
-    //             Log.global.debug(">>>>>>>> not a dependency:" + t); // FIXME: Handle hierarchical references!
-    //         }
-    //     }
-    //     for (let a of reaction.args.tuple) {
-    //         if (a instanceof Port) {
-    //             if (this._isUpstream(a)) {
-    //                 this._addDependency(a, reaction);
-    //             } else if (this._isDownstream(a)) {
-    //                 this._addAntiDependency(a, reaction);
-    //             } else {
-    //                 throw new Error("Encountered argument that is neither a dependency nor an antidependency.");
-    //             }
-    //         }
-    //         // Only necessary if we want to add actions to the dependency graph.
-    //         if (a instanceof Action) {
-    //             // dep
-    //         }
-    //         if (a instanceof Scheduler) {
-    //             // antidep
-    //         }
-    //         if (a instanceof Writer) {
-    //             this._addAntiDependency(a.getPort(), reaction);
-    //         }
-    //     }
-
-    //     //return reaction;
-    // }
-
     private recordDeps(reaction: Reaction<any>) {
         // Stick this reaction into the trigger map to ensure it gets triggered.
         for (let t of reaction.trigs.list) {
@@ -984,27 +954,69 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
     }
 
-    public previousReaction(reaction: Reaction<unknown>): Reaction<unknown> | undefined {
-        let index = this._reactions.findIndex((r) => r === reaction)
+    /**
+     * Given a reaction, return a the reaction or mutation that directly precedes it, or
+     * undefined if there is none.
+     * @param reaction A reaction to find the predecessor of. 
+     */
+    public previousReactionOrMutation(reaction: Reaction<unknown>): Reaction<unknown> | Mutation<unknown> | undefined {
+        let index = this._reactions.indexOf(reaction)
         if (index > 0) {
             return this._reactions[index-1];
+        } else {
+            let len = this._mutations.length
+            if (len > 0) {
+                return this._mutations[len-1]
+            }
         }
     }
 
-    public nextReaction(reaction: Reaction<unknown>): Reaction<unknown> | undefined {
+    /**
+     * Given a reaction, return a the reaction or mutation that directly succeeds it, or
+     * undefined if there is none.
+     * @param reaction A reaction to find the predecessor of. 
+     */
+    public nextReaction(reaction: Reaction<unknown>): Reaction<unknown> | undefined { // FIXME: mutations
         let index = this._reactions.findIndex((r) => r === reaction)
         if (index < this._reactions.length-1) {
             return this._reactions[index+1];
         }
     }
 
+    /**
+     * Add a reaction to this reactor. Each newly added reaction will acquire a
+     * dependency either on the previously added reaction, or on the last added
+     * mutation (in case no reactions had been added prior to it). A reaction is
+     * specified by a set of triggers, a set of arguments, a react function, an
+     * optional deadline, and an optional late function (which represents the
+     * reaction body of the deadline). 
+     * 
+     * @param trigs 
+     * @param args 
+     * @param react 
+     * @param deadline 
+     * @param late 
+     */
     public addReaction<T>(trigs: Triggers, args: Args<ArgList<T>>,
         react: (this: Reaction<T>, ...args: ArgList<T>) => void, deadline?: TimeValue,
         late: (this: Reaction<T>, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
-        let reaction = new Reaction(this, trigs, args, react, deadline, late);
-        this._reactions.push(reaction);
-        this.recordDeps(reaction);
+        
+        if (trigs.list.filter(trig => trig instanceof CalleePort).length > 0) {
+            // This is a procedure.
+            if (trigs.list.length > 1) {
+                // A procedure can only have a single trigger.
+                throw new Error("Procedure has multiple triggers.")
+            }
+            let procedure = new Procedure(this, trigs, args, react, deadline, late) 
+            this._reactions.push(procedure)
+            this.recordDeps(procedure)
+        } else {
+            // This is an ordinary reaction.
+            let reaction = new Reaction(this, trigs, args, react, deadline, late);
+            this._reactions.push(reaction);
+            this.recordDeps(reaction);
+        }
     }
 
     public addMutation<T>(trigs: Triggers, args: Args<ArgList<T>>,
@@ -1040,25 +1052,32 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
             // Establish dependencies between reactions
             // depending on their ordering inside the reactor.
             if (prev) {
-                graph.addEdge(r, prev); // FIXME: we can leave out edges between reactions that are RPCs.
+                graph.addEdge(r, prev);
             }
             var deps = r.getDependencies();
+            
             // look upstream
             for (let d of deps[0]) {
-                if (d instanceof InPort || d instanceof OutPort) { // FIXME: check this!!
-                    graph.addEdges(r, d.getUpstreamReactions());
-                } else if (d instanceof CalleePort) {
-                    let prev = this.previousReaction(r)
+                if (d instanceof CalleePort) {
+                    let prev = this.previousReactionOrMutation(r)
                     let next = this.nextReaction(r)
                     let callers = this._remoteCallers.get(d)
+                    console.log(">>>>>>>>>>>>>>>Number of callers: " + callers?.size)
                     if (callers) {
+                        // 1. Add dependencies from all callers to the preceding reaction.
                         if (prev) {
                             graph.addBackEdges(prev, callers)
                         }
+                        // 2. Add dependencies from all the next reaction to all callers.
                         if (next) {
                             graph.addEdges(next, callers)
                         }
+                        // 3. Add dependencies between all callers.
+                        prev = undefined;
+                        callers.forEach((caller) => {prev? graph.addEdge(caller, prev) : {}; prev = caller})
                     }
+                } else if (d instanceof InPort || d instanceof OutPort) { // FIXME: check this!!
+                    graph.addEdges(r, d.getUpstreamReactions());
                 } else {
                     Log.global.error("Found dependency that is not a port: " + d)
                 }
@@ -1313,7 +1332,7 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
      * @param src The start point of the tried connection.
      * @param dst The end point of the tried connection.
      */
-    public canConnect<D extends Present, S extends D>(src: Port<S>, dst: Port<D>): boolean {
+    public canConnect<A extends T, R extends Present, T extends Present, S extends R>(src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
         // 1. Rule out self loops. 
         //   - (including trivial ones)
         if (src === dst) {
@@ -1371,59 +1390,86 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         }
     }
 
-    protected canConnect2<A extends T, R extends Present, T extends Present, S extends R>(src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
-        if (src instanceof CallerPort || dst instanceof CalleePort) {
-            return true
-        } else {
-            return this.canConnect(src as Port<S>, dst as Port<R>)
-        }
-    }
-
-    protected _connect<D extends Present, S extends D>(src: Port<S>, dst: Port<D>) {
-        //***********
+    /**
+     * Connect a source port to a downstream destination port. If a source is a
+     * regular port, then the type variable of the source has to be a subtype of
+     * the type variable of the destination. If the source is a caller port,
+     * then the destination has to be a callee port that is effectively a
+     * subtype of the caller port. Because functions have a contra-variant
+     * subtype relation, the arguments of the caller side must be a subtype of
+     * the callee's, and the return value of the callee's must be a subtype of
+     * the caller's.
+     * @param src The source port to connect.
+     * @param dst The destination port to connect.
+     */
+    protected _connect<A extends T, R extends Present, T extends Present, S extends R>
+            (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
         if (this.canConnect(src, dst)) {
             Log.debug(this, () => "connecting " + src + " and " + dst);
-            let dests = this._destinationPorts.get(src);
-            if (dests == null) {
-                dests = new Set();
+            if (src instanceof CallerPort && dst instanceof CalleePort) {
+                // Treat connections between callers and callees separately.
+                // Note that because A extends T and S extends R, we can safely
+                // cast CalleePort<T,S> to CalleePort<A,R>.
+                src.remotePort = ((dst as unknown) as CalleePort<A,R>);
+                let calleeContainer: Reactor | undefined
+                let callerContainer: Reactor | undefined
+                // Figure out which reactor contains the callee.
+                if (dst.isChildOf(this)) {
+                    calleeContainer = this
+                } else {
+                    this._getChildren().forEach((child) => 
+                            child._getPorts().forEach((port) => 
+                            {(port === dst)? calleeContainer = child : {}}))
+                }
+                // Retrieve the first reaction that is triggered by the callee
+                // (there should not ever be more than one) and store it in the
+                // caller port as the remote reaction to trigger when "invoke"
+                // is called.
+                src.remoteReaction = calleeContainer?._dependentReactions.
+                        get(dst)?.values().next().value
+                // Obtain the list of remote callers that is stored on the
+                // callee's end.
+                let callers = calleeContainer?._remoteCallers.get(dst)
+                if (!callers) {
+                    callers = new Set()
+                    calleeContainer?._remoteCallers.set(dst, callers)
+                }
+                // Figure out which reactor contains the caller.
+                if (src.isChildOf(this)) {
+                    callerContainer = this
+                } else {
+                    this._getChildren().forEach((child) => 
+                            child._getPorts().forEach((port) => 
+                            {(port === src)? callerContainer = child : {}}))
+                }
+                // Register the caller in the callee reactor so that it can
+                // establish dependencies on the callers.
+                callerContainer?._dependsOnReactions.get(src)?.
+                        forEach((reaction) => callers?.add(reaction))
+            } else {
+                Log.debug(this, () => "connecting " + src + " and " + dst);
+                // Set up sources and destinations for value propagation.
+                let dests = this._destinationPorts.get(src);
+                if (dests == null) {
+                    dests = new Set();
+                }
+                dests.add(dst);
+                this._destinationPorts.set(src, dests);
+                this._sourcePort.set(dst, src);
             }
-            dests.add(dst);
-            this._destinationPorts.set(src, dests);
-            this._sourcePort.set(dst, src);
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
         }
     }
 
-    connect2<A extends T, R extends Present, T extends Present, S extends R>(src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
-        if (src instanceof CallerPort && dst instanceof CalleePort) {
-            src.remotePort = ((dst as unknown) as CalleePort<A,R>); // Safe substitution.
-            let calleeContainer: Reactor | undefined
-            let callerContainer: Reactor | undefined
-            if (dst.isChildOf(this)) {
-                calleeContainer = this
-            } else {
-                this._getChildren().forEach((child) => child._getPorts().forEach((port) => {(port === dst)? calleeContainer = child : {}}))
-            }
-            src.remoteReaction = calleeContainer?._dependentReactions.get(dst)?.values().next().value
-            let callers = calleeContainer?._remoteCallers.get(dst)
-            if (!callers) {
-                callers = new Set()
-                calleeContainer?._remoteCallers.set(dst, callers)
-            }
-            if (src.isChildOf(this)) {
-                callerContainer = this
-            } else {
-                this._getChildren().forEach((child) => child._getPorts().forEach((port) => {(port === src)? callerContainer = child : {}}))
-            }
-            callerContainer?._dependsOnReactions.get(src)?.forEach((reaction) => callers?.add(reaction))
-        } else {
-            throw new Error("ERROR connecting " + src + " to " + dst);
-        }
-    }
-
+    /**
+     * 
+     * @param src 
+     * @param dst 
+     */
     protected _disconnect(src: Port<Present>, dst: Port<Present>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
+        // FIXME
         let dests = this._destinationPorts.get(src);
         if (dests != null) {
             dests.delete(dst);
@@ -1482,8 +1528,8 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     /**
-     * Iterate through this reactor's attributes,
-     * and return the set of its ports.
+     * Iterate through this reactor's attributes and return the set of its
+     * ports.
      */
     public _getPorts(): Set<Port<any>> {
         // Log.global.debug("Getting ports for: " + this)
@@ -1497,8 +1543,8 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
     }
 
     /**
-     * Iterate through this reactor's attributes,
-     * and return the set of its actions.
+     * Iterate through this reactor's attributes and return the set of its
+     * actions.
      */
     public _getActions(): Set<Action<any>> {
         // Log.global.debug("Getting actions for: " + this)
@@ -1511,35 +1557,15 @@ export abstract class Reactor extends Descendant {  // FIXME: may create a sette
         return actions;
     }
 
-
-
-
-    //A reactor's priority represents its order in the topological sort.
-    //The default value of -1 indicates a priority has not been set.
+    /**
+     * A reactor's priority represents its order in the topological sort.
+     * The default value of -1 indicates a priority has not been set. 
+     */
     _priority: number = -1;
-
-    //FIXME: assign in constructor?
 
     toString(): string {
         return this.getFullyQualifiedName();
     }
-
-    /**
-     * Recursively sets the app attribute for this reactor and all contained reactors to app.
-     * @param app The app for this and all contained reactors.
-     */
-    // public _setApp(app: App){
-    //     // Log.global.debug("Starting _setApp for: " + this._getFullyQualifiedName());
-    //     Log.global.debug("Setting app for: " + this);
-    //     this._app = app;
-    //     // Recursively set the app attribute for all contained reactors to app.
-    //     let children = this._getChildren();
-    //     if(children){
-    //         for(let child of children){
-    //             child._setApp(app);
-    //         }
-    //     }
-    // }
 
     /**
      * Recursively traverse all reactors and verify the 
@@ -1585,9 +1611,6 @@ export abstract class Port<T extends Present> extends Descendant implements Read
 
     /** The value associated with this port. */
     protected value: T | Absent = undefined;
-
-    // public _connectedSinkPorts: Set<Port<unknown>> = new Set<Port<T>>(); // FIXME: change this into a private map hosted in the reactor
-    // public _connectedSourcePort: Port<T>| null = null; // FIXME: change this into a private map hosted in the reactor
 
     /**
      * Return the transitive closure of reactions dependent on this port.
@@ -1727,7 +1750,7 @@ export class InPort<T extends Present> extends Port<T> {
 /**
  * A caller port sends arguments of type T and receives a response of type R.
  */
-export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Write<A>, Read<R> { // FIXME: may Port should not implement Read
+export class CallerPort<A extends Present, R extends Present> extends OutPort<R> implements Write<A>, Read<R> { // FIXME: may Port should not implement Read
     
     get(): R | undefined {
         return this.remotePort?.retValue
@@ -1758,7 +1781,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
 /**
  * A callee port receives arguments of type A and send a response of type R.
  */
-export class CalleePort<A extends Present, R> extends Port<A> implements Read<A>, Write<R> {
+export class CalleePort<A extends Present, R> extends InPort<A> implements Read<A>, Write<R> {
     
     get(): A | undefined {
         return this.argValue;
@@ -1919,12 +1942,9 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     topology = new class implements Topology { 
         constructor(private app: App) {}
         
-        public connect<D extends Present, S extends D>(src: Port<S>, dst: Port<D>) {
+        public connect<A extends T, R extends Present, T extends Present, S extends R>
+                (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
             return this.app._connect(src, dst);
-        }
-
-        public connect2<A extends T, R extends Present, T extends Present, S extends R>(src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
-            return this.app.connect2(src, dst)
         }
     }(this);
 
@@ -2105,13 +2125,16 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * the event queue. After this wait, load the reactions triggered by all
      * events with the least tag onto the reaction queue and start executing
      * reactions in topological order. Each reaction may produce outputs, which,
-     * in turn, may place additional reactions into the reaction queue. Once
-     * done executing reactions for the current tag, see if the next tag has the
-     * same time (but a different microstep) and repeat the steps above until
-     * the next tag has both a different time and microstep. This is when we
-     * yield control back to the JS event loop. We either unravel the stack by
-     * invoking next through `process.nextTick()`, or we set an alarm to resume
-     * processing events at a later time.
+     * in turn, may load additional reactions onto the reaction queue. Once done
+     * executing reactions for the current tag, see if the next tag has the same
+     * time (but a different microstep) and repeat the steps above until the
+     * next tag has both a different time and microstep. In this case, set an
+     * alarm to be woken up at the next time. Note that our timer implementation
+     * uses `process.nextTick()` to unravel the stack but prevent I/O from
+     * taking place if computation is lagging behind physical time. Only once
+     * computation has caught up, full control is given back to the JS event
+     * loop. This prevents the system from being overwhelmed with external
+     * stimuli.
      */
     private _next() {
         var nextEvent = this._eventQ.peek();
