@@ -7,7 +7,6 @@
 
 import { PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
 import { TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
-import { connect } from 'http2';
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
