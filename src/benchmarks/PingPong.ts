@@ -71,7 +71,7 @@ export class PingPong extends App {
         super(timeout, keepAlive, fast, success, fail);
         this.ping = new Ping(this, 1)//25000)
         this.pong = new Pong(this)
-        this.connect2(this.ping.client, this.pong.server)
+        this._connect(this.ping.client, this.pong.server)
     }
 }
 // =============== END reactor class PingPong
