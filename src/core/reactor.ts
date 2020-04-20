@@ -5,8 +5,8 @@
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
 
-import { PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
-import { TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
+import {PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
+import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -35,16 +35,16 @@ export type ArgList<T> = T extends Variable[] ? T : never;
 export type Present = (number | string | boolean | symbol | object | null);
 
 /**
- * Type for variables that are both readable and writable.
- */
-export type ReadWrite<T> = Read<T> & Write<T>;
-
-/**
  * A number that indicates a reaction's position with respect to other
  * reactions in an acyclic precendence graph.
  * @see ReactionQueue
  */
 export type Priority = number;
+
+/**
+ * Type for simple variables that are both readable and writable.
+ */
+export type ReadWrite<T> = Read<T> & Write<T>;
 
 /**
  * A variable is a port, action, or timer (all of which implement the interface
@@ -87,6 +87,22 @@ export interface Call<A, R> extends Write<A>, Read<R> {
 }
 
 /**
+ * Interface for objects that have a name.
+ */
+export interface Named {
+    
+    /* An alternative name for this object */
+    alias: string | undefined;
+
+    /* Return the fully qualified name of this object. */
+    getFullyQualifiedName(): string;
+
+    /* Get the name of this object. */
+    getName(): string;
+
+}
+
+/**
  * Interface for proxy objects used to make ports writable.
  */
 export interface Proxy<T extends Present> extends Write<T> {
@@ -122,36 +138,25 @@ export interface Write<T> {
     set: (value: T) => void;
 }
 
-/**
- * Interface for objects that have a name.
- */
-export interface Named {
-    
-    /* Return the fully qualified name of this object. */
-    getFullyQualifiedName(): string;
-
-    /* Get the name of this object. */
-    getName(): string;
-
-    /* Set the alternative name for this object */
-    setAlias(name: string): void;
-}
-
-//---------------------------------------------------------------------//
-// Core Reactor Classes                                                //
-//---------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+// Core Reactor Classes                                                     //
+//--------------------------------------------------------------------------//
 
 /**
- * Base class for named objects that acquire their name on the basis of
- * the hierarchy they are embedded in. Each component can only have a
- * single container.
+ * Base class for named objects that acquire their name on the basis of the
+ * hierarchy they are embedded in. Each component can only be associated with a
+ * single reactor instance.
  */
 class Component implements Named {
 
-    private alias: string | undefined;
+    /**
+     * An optional alias for this component.
+     */
+    public alias: string | undefined;
 
-    constructor(protected __container__: Component | null) {
-
+    constructor(protected __container__: Reactor | null, alias?:string) {
+        this.alias = alias
+        // FIXME: look for duplicates in container
     }
 
     /**
@@ -195,8 +200,8 @@ class Component implements Named {
         return this.constructor.name + suffix;
     }
 
-    public setAlias(name: string) {
-        this.alias = name;
+    public setAlias(alias: string) {
+        this.alias = alias
     }
 }
 
@@ -717,11 +722,10 @@ export class Triggers {
 }
 
 /**
- * A reactor is a software component that reacts to input events,
- * timer events, and action events. It has private state variables
- * that are not visible to any other reactor. Its reactions can
- * consist of altering its own state, sending messages to other
- * reactors, or affecting the environment through some kind of
+ * A reactor is a software component that reacts to input events, timer events,
+ * and action events. It has private state variables that are not visible to any
+ * other reactor. Its reactions can consist of altering its own state, sending
+ * messages to other reactors, or affecting the environment through some kind of
  * actuation or side effect.
  */
 export abstract class Reactor extends Component {
@@ -746,10 +750,6 @@ export abstract class Reactor extends Component {
 
     private _shutdownActions: Set<Action<Present>> = new Set();
 
-    private isTrigger<T extends Present>(trigger: Port<T> | Action<T> | Timer) {
-
-    }
-
     /** Data structure to keep track of named components inside of this reactor. */
     public _instantiationCounts: Map<string, number> = new Map()
 
@@ -758,9 +758,9 @@ export abstract class Reactor extends Component {
 
     private _mutations: Mutation<any>[] = [];
 
-    public startup = new Startup(this);
+    protected startup = new Startup(this);
 
-    public shutdown = new Shutdown(this);
+    protected shutdown = new Shutdown(this);
 
     protected app: App;
 
@@ -802,7 +802,7 @@ export abstract class Reactor extends Component {
                 new Triggers(this.startup),
                 new Args(),
                 function (this) {
-                    var reactor = (this.parent as Reactor); // FIXME: make parent private and add
+                    var reactor = this.parent; // FIXME: make parent private and add
                     // function below part of ReactorUtils
                     //Log.global.log("*** Starting up reactor " + reactor.getFullyQualifiedName());
                     // Schedule startup for all contained reactors.
@@ -817,7 +817,7 @@ export abstract class Reactor extends Component {
                 new Triggers(this.shutdown),
                 new Args(),
                 function (this) {
-                    var reactor = (this.parent as Reactor);
+                    var reactor = this.parent;
                     Log.debug(this, () => "*** Shutting down reactor " + reactor.getFullyQualifiedName());
                     reactor._unsetTimers();
                     // Schedule shutdown for all contained reactors.
@@ -1317,7 +1317,8 @@ export abstract class Reactor extends Component {
      * @param src The start point of a new connection.
      * @param dst The end point of a new connection.
      */
-    public canConnect<A extends T, R extends Present, T extends Present, S extends R>(src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
+    public canConnect<A extends T, R extends Present, T extends Present, S extends R>
+            (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
         // Rule out self loops. 
         //   - (including trivial ones)
         if (src === dst) {
@@ -1466,30 +1467,6 @@ export abstract class Reactor extends Component {
         }
         this._sourcePort.delete(src);
     }
-
-    /**
-     * Returns the set of reactions directly owned by this reactor combined with 
-     * the recursive set of all reactions of contained reactors.
-     */
-    // public _getAllReactions(): Set<Reaction<unknown>> {
-    //     let reactions = this._getReactions();
-
-    //     // Recursively call this function on child reactors
-    //     // and add their timers to the timers set.
-    //     let children = this._getChildren();
-    //     if(children){
-    //         for(const child of children){
-    //             if(child){
-    //                 let subReactions = child._getAllReactions();
-    //                 for(const subReaction of subReactions){
-    //                     reactions.add(subReaction);
-    //                 }                     
-    //             }
-    //         }
-    //     }
-    //     return reactions;
-    // }
-
 
     /**
      * Set all the timers of this reactor.

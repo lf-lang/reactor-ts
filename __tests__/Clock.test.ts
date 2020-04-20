@@ -25,7 +25,7 @@ export class Clock extends App {
 
     constructor(name: string, timeout: TimeValue,  success: () => void, fail: () => void) {
         super(timeout, false, false, success, fail);
-        this.setAlias(name);
+        this.alias = name;
         this.addReaction(
             new Triggers(this.t1),
             new Args(this.getSchedulable(this.a1)),
