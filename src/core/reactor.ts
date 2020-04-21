@@ -212,19 +212,11 @@ class Component implements Named {
  */
 export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNode<Priority> {
 
-    /** Priority derived from this reaction's location in 
-     *  the directed acyclic precedence graph. */
+    /** 
+     * Priority derived from this reaction's location in 
+     * the directed acyclic precedence graph.
+     */
     private priority: Priority = Number.MAX_SAFE_INTEGER;
-    
-    /**
-     * Collection of utility functions accessible from within the `react` function.
-     */
-    readonly util: AppUtils;
-
-    /**
-     * 
-     */
-    readonly state = {};
 
     private next: PrioritySetNode<Priority> | undefined;
 
@@ -234,16 +226,14 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
      * @param state state shared among reactions
      */
     constructor(
-        private __parent__: Reactor,
-        protected sandbox: ReactionSandbox,
+        private reactor: Reactor,
+        private sandbox: ReactionSandbox,
         readonly trigs: Triggers,
         readonly args: Args<ArgList<T>>,
         private react: (...args: ArgList<T>) => void,
         private deadline?: TimeValue,
-        private late: (...args: ArgList<T>) => void = () => { Log.global.warn("Deadline violation occurred!") }) {
-            
-        this.state = __parent__.state;
-        this.util = __parent__.util;
+        private late: (...args: ArgList<T>) => void = () => 
+            { Log.global.warn("Deadline violation occurred!") }) {
     }
 
     getNext(): PrioritySetNode<Priority> | undefined {
@@ -255,7 +245,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
     }
 
     public toString(): string {
-        return this.__parent__.getFullyQualifiedName() + "[R" + this.__parent__.getReactionIndex(this) + "]";
+        return this.reactor.getFullyQualifiedName() + "[R" + this.reactor.getReactionIndex(this) + "]";
     }
 
     getDependencies(): [Set<Variable>, Set<Variable>] {
@@ -264,14 +254,14 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         var vars = new Set();
         for (let a of this.args.tuple.concat(this.trigs.list)) {
             if (a instanceof Port) {
-                if (this.__parent__._isUpstream(a)) {
+                if (this.reactor._isUpstream(a)) {
                     deps.add(a);
                 }
-                if (this.__parent__._isDownstream(a)) {
+                if (this.reactor._isDownstream(a)) {
                     antideps.add(a);
                 }
             } else if (a instanceof Writer) {
-                if (this.__parent__._isDownstream(a.getPort())) {
+                if (this.reactor._isDownstream(a.getPort())) {
                     antideps.add(a.getPort());
                 }
             } else {
@@ -279,10 +269,10 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
                 for (let p of Object.getOwnPropertyNames(a)) {
                     let prop = Object.getOwnPropertyDescriptor(a, p);
                     if (prop?.value instanceof Port) {
-                        if (this.__parent__._isUpstream(prop.value)) {
+                        if (this.reactor._isUpstream(prop.value)) {
                             deps.add(prop.value);
                         }
-                        if (this.__parent__._isDownstream(prop.value)) {
+                        if (this.reactor._isDownstream(prop.value)) {
                             antideps.add(prop.value);
                         }
                     }
@@ -320,7 +310,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         // logical time + timeout < physical time
 
         if (this.deadline &&
-            this.util.getCurrentTag()
+            this.sandbox.util.getCurrentTag()
                 .getLaterTag(this.deadline)
                 .isSmallerThan(new Tag(getCurrentPhysicalTime(), 0))) {
             this.late.apply(this.sandbox, this.args.tuple);
@@ -1881,7 +1871,11 @@ export interface MutationSandbox extends ReactionSandbox {
 }
 
 export interface ReactionSandbox {
+    /**
+     * Collection of utility functions accessible from within a `react` function.
+     */
     util: AppUtils
+
 }
 
 export class App extends Reactor {
