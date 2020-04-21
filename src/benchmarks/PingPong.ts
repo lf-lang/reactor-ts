@@ -25,7 +25,7 @@ export class Ping extends Reactor {
                 }
                 let elapsedTime = this.util.getCurrentPhysicalTime().subtract(startTime);
                 console.log("Elapsed time: " + elapsedTime);
-                this.util.requestShutdown();
+                //this.util.requestShutdown();
             }
         );
     }

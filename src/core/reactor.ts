@@ -793,22 +793,34 @@ export abstract class Reactor extends Component {
         this.mutationScope = new this.MutationSandbox(this)
         // NOTE: beware, if this is an instance of App, `this.util` will be `undefined`.
         // Do not attempt to reference it during the construction of an App.
-        
+        var self = this
         // Add default startup reaction.
         this.addMutation(
             new Triggers(this.startup),
             new Args(),
             function (this) {
-                this.start()
+                Log.debug(this, () => "*** Starting up reactor " +
+                self.getFullyQualifiedName());
+                self._isActive = true;
+                self._startupChildren();
+                self._setTimers();
             }
         );
-        var self = this
+        
         // Add default shutdown reaction.
         this.addMutation(
             new Triggers(this.shutdown),
             new Args(),
             function (this) {
-                this.stop()
+                Log.debug(this, () => "*** Shutting down reactor " + 
+                    self.getFullyQualifiedName());
+                self._isActive = false;
+                // if (this.reactor instanceof App) {
+                //     //this.reactor._shutdownStarted = true;
+                //     //this.reactor._cancelNext();
+                // }
+                self._shutdownChildren();
+                self._unsetTimers();
             }
         );
         
@@ -823,34 +835,13 @@ export abstract class Reactor extends Component {
      * topology.
      */
     protected MutationSandbox = class implements MutationSandbox { 
-        constructor(public reactor: Reactor) {}
+        constructor(private reactor: Reactor) {}
         
         public util = this.reactor.util
         
         public connect<A extends T, R extends Present, T extends Present, S extends R>
                 (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
             return this.reactor._connect(src, dst);
-        }
-
-        public start(): void {
-            Log.debug(this, () => "*** Starting up reactor " +
-                    this.reactor.getFullyQualifiedName());
-            this.reactor._isActive = true;
-            this.reactor._startupChildren();
-            this.reactor._setTimers();
-            
-        }
-        
-        public stop(): void {
-            Log.debug(this, () => "*** Shutting down reactor " + 
-                    this.reactor.getFullyQualifiedName());
-            this.reactor._isActive = false;
-            // if (this.reactor instanceof App) {
-            //     //this.reactor._shutdownStarted = true;
-            //     //this.reactor._cancelNext();
-            // }
-            this.reactor._shutdownChildren();
-            this.reactor._unsetTimers();
         }
     };
 
@@ -1883,10 +1874,9 @@ interface AppUtils {
 }
 
 export interface MutationSandbox extends ReactionSandbox {
-    reactor: Reactor;
-    connect<D extends Present, S extends D>(src: Port<S>, dst: Port<D>): void;
-    start(): void;
-    stop(): void;
+    connect<A extends T, R extends Present, T extends Present, S extends R>
+            (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>):void;
+    // FIXME: addReaction, removeReaction
     // FIXME: disconnect
 }
 
@@ -1894,7 +1884,7 @@ export interface ReactionSandbox {
     util: AppUtils
 }
 
-export class App extends Reactor { // Perhaps make this an abstract class, like reactor; omit the name parameter.
+export class App extends Reactor {
 
     alarm = new Alarm();
 
@@ -2060,7 +2050,8 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         super(null);
         
         // Initialize the scope in which reactions and mutations of this reactor
-        // will execute.
+        // will execute. This is already done in the super constructor, but has
+        // to be redone because at that time this.utils hasn't initialized yet.
         this.reactionScope = new this.ReactionSandbox(this);
         this.mutationScope = new this.MutationSandbox(this);
 
@@ -2072,40 +2063,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._currentTag = new Tag(new TimeValue(0), 0);
         this._startOfExecution = this._currentTag.time;
 
-        // // Add default startup reaction.
-        // this.addMutation(
-        //     new Triggers(this.startup),
-        //     new Args(),
-        //     function (this) {
-        //         //Log.global.log("*** Starting up reactor " + (this.__parent__ as Reactor).getFullyQualifiedName());
-        //         // If the end of execution is known at startup, schedule a 
-        //         // shutdown event to that effect.
-        //         // Note that we schedule shutdown one microstep later, so that
-        //         // any event scheduled exactly at the end of execution will be
-        //         // handled before the shutdown sequence starts.
-        //         var app = (this.reactor as App);
-        //         // Schedule startup for all contained reactors.
-        //         app._startupChildren();
-        //         app._setTimers();
-        //         app._isActive = true;
-        //     }
-        // );
-
-        // // Add default shutdown reaction.
-        // this.addMutation(
-        //     new Triggers(this.shutdown),
-        //     new Args(),
-        //     function (this) {
-        //         var app = (this.reactor as App);
-        //         app._shutdownStarted = true;
-        //         app._cancelNext();
-        //         Log.global.log("*** Shutting down reactor " + app.getFullyQualifiedName());
-        //         app._unsetTimers();
-        //         // Schedule shutdown for all contained reactors.
-        //         app._shutdownChildren();
-        //         app._isActive = false;
-        //     }
-        // );
     }
 
     
