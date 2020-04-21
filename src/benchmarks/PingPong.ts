@@ -2,7 +2,7 @@ import {Args, Parameter, CalleePort, CallerPort, Triggers, Timer, Reactor, App }
 import {TimeValue} from "../core/time"
 import {Log} from "../core/util"
 
-Log.global.level = Log.levels.DEBUG;
+Log.global.level = Log.levels.ERROR;
 
 export class Ping extends Reactor {
     count: Parameter<number>;
@@ -69,7 +69,7 @@ export class PingPong extends App {
     pong: Pong
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
-        this.ping = new Ping(this, 1)//25000)
+        this.ping = new Ping(this, 1000000)
         this.pong = new Pong(this)
         this._connect(this.ping.client, this.pong.server)
     }

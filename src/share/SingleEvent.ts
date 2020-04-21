@@ -1,9 +1,9 @@
 
-import {Reactor, OutPort, Reaction, Timer, Write, Triggers, Args, ArgList, Present, State, Parameter, Variable} from '../core/reactor';
+import {Reactor, OutPort, Reaction, Timer, Write, Triggers, Args, ArgList, ReactionSandbox, Present, State, Parameter, Variable} from '../core/reactor';
 
-function produceOutput<S>(this: Reaction<any>, o: Write<S>, payload:Parameter<S>) {
+function produceOutput<S>(this: ReactionSandbox, o: Write<S>, payload:Parameter<S>) {
     o.set(payload.get());
-
+    
     // FIXME: create a test that actually tests double sets.
     // It's confusing to have SingleEvent be a DoubleEvent.
     // Duplicate sets for the same port is bad form,

@@ -156,12 +156,11 @@ class Component implements Named {
 
     constructor(protected __container__: Reactor | null, alias?:string) {
         this.alias = alias
-        // FIXME: look for duplicates in container
     }
 
     /**
      * Return a string that identifies this component.
-     * The name is a path constructed as TopLevelParentName/.../ParentName/ThisReactorsName
+     * The name is a path constructed as App/.../Container/ThisComponent
      */
     getFullyQualifiedName(): string {
         var path = "";
@@ -220,7 +219,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
     /**
      * Collection of utility functions accessible from within the `react` function.
      */
-    readonly util: ReactorUtils;
+    readonly util: AppUtils;
 
     /**
      * 
@@ -236,6 +235,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
      */
     constructor(
         private __parent__: Reactor,
+        protected sandbox: ReactionSandbox,
         readonly trigs: Triggers,
         readonly args: Args<ArgList<T>>,
         private react: (...args: ArgList<T>) => void,
@@ -323,9 +323,9 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
             this.util.getCurrentTag()
                 .getLaterTag(this.deadline)
                 .isSmallerThan(new Tag(getCurrentPhysicalTime(), 0))) {
-            this.late.apply(this, this.args.tuple);
+            this.late.apply(this.sandbox, this.args.tuple);
         } else {
-            this.react.apply(this, this.args.tuple); // on time
+            this.react.apply(this.sandbox, this.args.tuple); // on time
         }
     }
 
@@ -353,10 +353,10 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
 }
 
 /**
- * An event is caused by a timer or a scheduled action. 
- * Each event is tagged with a time instant and may carry a value 
- * of arbitrary type. The tag will determine the event's position
- * with respect to other events in the event queue.
+ * An event is caused by a timer or a scheduled action. Each event is tagged
+ * with a time instant and may carry a value of arbitrary type. The tag will
+ * determine the event's position with respect to other events in the event
+ * queue.
  */
 class Event<T> implements PrioritySetNode<Tag> {
 
@@ -389,10 +389,6 @@ class Event<T> implements PrioritySetNode<Tag> {
         }
         return false;
     }
-
-    // getID(): [Variable, TimeInstant] {
-    //     return [this.trigger, this.time];
-    // }
 
     getNext(): Event<unknown> | undefined {
         return this.next;
@@ -536,14 +532,16 @@ export class Parameter<T> implements Read<T> {
     }
 }
 
-// It's valid to create state for a reactor without initializing it to a value,
-// so the type of State is T | undefined.
+/**
+ * A state variable.
+ */
 export class State<T> implements Read<T>, Write<T> {
 
-    constructor(private value: T) {
+    constructor(private value?: T) {
+    
     }
 
-    get(): T {
+    get(): T | Absent {
         return this.value;
     };
 
@@ -685,26 +683,27 @@ class Procedure<T> extends Reaction<T> {
 
 export class Mutation<T> extends Reaction<T> {
 
+    readonly parent: Reactor;
+
+    constructor(
+        __parent__: Reactor,
+        sandbox: MutationSandbox,
+        trigs: Triggers,
+        args: Args<ArgList<T>>,
+        react: (...args: ArgList<T>) => void,
+        deadline?: TimeValue,
+        late?: (...args: ArgList<T>) => void) {
+        super(__parent__, sandbox, trigs, args, react, deadline, late);
+        this.parent = __parent__;
+    }
+
     /**
      * @override
      */
     public toString(): string {
         return this.parent.getFullyQualifiedName() + "[M" + this.parent.getReactionIndex(this) + "]";
     }
-
-    readonly parent: Reactor;
-
-    constructor(
-        __parent__: Reactor,
-        trigs: Triggers,
-        args: Args<ArgList<T>>,
-        react: (...args: ArgList<T>) => void,
-        protected topology: Topology,
-        deadline?: TimeValue,
-        late?: (...args: ArgList<T>) => void) {
-        super(__parent__, trigs, args, react, deadline, late);
-        this.parent = __parent__;
-    }
+    
 }
 
 export class Args<T extends Variable[]> {
@@ -764,9 +763,7 @@ export abstract class Reactor extends Component {
 
     protected app: App;
 
-    protected topology: Topology;
-
-    public util: ReactorUtils;
+    public util: AppUtils;
 
     protected getWriter<T extends Present>(port: Port<T>): Writer<T> {
         // FIXME: Implement checks to ensure that port is allowed to be written to.
@@ -792,42 +789,77 @@ export abstract class Reactor extends Component {
         // Even though TypeScript doesn't catch it, the following statement
         // will assign `undefined` if the this is an instance of App.
         this.util = this.app.util;
-        this.topology = this.app.topology;
-
+        this.reactionScope = new this.ReactionSandbox(this)
+        this.mutationScope = new this.MutationSandbox(this)
         // NOTE: beware, if this is an instance of App, `this.util` will be `undefined`.
         // Do not attempt to reference it during the construction of an App.
-        if (!(this instanceof App)) {
-            // Add default startup reaction.
-            this.addMutation(
-                new Triggers(this.startup),
-                new Args(),
-                function (this) {
-                    var reactor = this.parent; // FIXME: make parent private and add
-                    // function below part of ReactorUtils
-                    //Log.global.log("*** Starting up reactor " + reactor.getFullyQualifiedName());
-                    // Schedule startup for all contained reactors.
-                    reactor._startupChildren();
-                    reactor._setTimers();
-                    reactor._isActive = true;
-                }
-            );
-
-            // Add default shutdown reaction.
-            this.addMutation(
-                new Triggers(this.shutdown),
-                new Args(),
-                function (this) {
-                    var reactor = this.parent;
-                    Log.debug(this, () => "*** Shutting down reactor " + reactor.getFullyQualifiedName());
-                    reactor._unsetTimers();
-                    // Schedule shutdown for all contained reactors.
-                    reactor._shutdownChildren();
-                    reactor._isActive = false;
-                }
-            );
-        }
+        
+        // Add default startup reaction.
+        this.addMutation(
+            new Triggers(this.startup),
+            new Args(),
+            function (this) {
+                this.start()
+            }
+        );
+        var self = this
+        // Add default shutdown reaction.
+        this.addMutation(
+            new Triggers(this.shutdown),
+            new Args(),
+            function (this) {
+                this.stop()
+            }
+        );
+        
     }
 
+    protected reactionScope: ReactionSandbox;
+
+    protected mutationScope: MutationSandbox;
+
+    /**
+     * Inner class to providing access to methods for changing the connection
+     * topology.
+     */
+    protected MutationSandbox = class implements MutationSandbox { 
+        constructor(public reactor: Reactor) {}
+        
+        public util = this.reactor.util
+        
+        public connect<A extends T, R extends Present, T extends Present, S extends R>
+                (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
+            return this.reactor._connect(src, dst);
+        }
+
+        public start(): void {
+            Log.debug(this, () => "*** Starting up reactor " +
+                    this.reactor.getFullyQualifiedName());
+            this.reactor._isActive = true;
+            this.reactor._startupChildren();
+            this.reactor._setTimers();
+            
+        }
+        
+        public stop(): void {
+            Log.debug(this, () => "*** Shutting down reactor " + 
+                    this.reactor.getFullyQualifiedName());
+            this.reactor._isActive = false;
+            // if (this.reactor instanceof App) {
+            //     //this.reactor._shutdownStarted = true;
+            //     //this.reactor._cancelNext();
+            // }
+            this.reactor._shutdownChildren();
+            this.reactor._unsetTimers();
+        }
+    };
+
+    protected ReactionSandbox = class implements ReactionSandbox {
+        public util: AppUtils;
+        constructor(public reactor: Reactor) {
+            this.util = reactor.util
+        }
+    }
 
     /**
      * Return the index of the reaction given as an argument.
@@ -1035,7 +1067,7 @@ export abstract class Reactor extends Component {
      * function, an optional deadline, and an optional late function (which
      * represents the reaction body of the deadline). All triggers a reaction
      * needs access must be included in the arguments.
-     * FIXME: apply the react function with the reactor as the this object. This will simpify things.
+     *
      * @param trigs 
      * @param args 
      * @param react 
@@ -1043,8 +1075,8 @@ export abstract class Reactor extends Component {
      * @param late 
      */
     public addReaction<T>(trigs: Triggers, args: Args<ArgList<T>>,
-        react: (this: Reaction<T>, ...args: ArgList<T>) => void, deadline?: TimeValue,
-        late: (this: Reaction<T>, ...args: ArgList<T>) => void =
+        react: (this: ReactionSandbox, ...args: ArgList<T>) => void, deadline?: TimeValue,
+        late: (this: ReactionSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
         
         if (trigs.list.filter(trig => trig instanceof CalleePort).length > 0) {
@@ -1053,22 +1085,22 @@ export abstract class Reactor extends Component {
                 // A procedure can only have a single trigger.
                 throw new Error("Procedure has multiple triggers.")
             }
-            let procedure = new Procedure(this, trigs, args, react, deadline, late) 
+            let procedure = new Procedure(this, this.reactionScope, trigs, args, react, deadline, late) 
             this._reactions.push(procedure)
             this.recordDeps(procedure)
         } else {
             // This is an ordinary reaction.
-            let reaction = new Reaction(this, trigs, args, react, deadline, late);
+            let reaction = new Reaction(this, this.reactionScope, trigs, args, react, deadline, late);
             this._reactions.push(reaction);
             this.recordDeps(reaction);
         }
     }
 
     public addMutation<T>(trigs: Triggers, args: Args<ArgList<T>>,
-        react: (this: Mutation<T>, ...args: ArgList<T>) => void, deadline?: TimeValue,
-        late: (this: Mutation<T>, ...args: ArgList<T>) => void =
+        react: (this: MutationSandbox, ...args: ArgList<T>) => void, deadline?: TimeValue,
+        late: (this: MutationSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
-        let mutation = new Mutation(this, trigs, args, react, this.topology, deadline, late);
+        let mutation = new Mutation(this, this.mutationScope, trigs, args, react,  deadline, late);
         this._mutations.push(mutation);
         this.recordDeps(mutation);
     }
@@ -1837,7 +1869,7 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 }
 
-interface ReactorUtils {
+interface AppUtils {
     schedule(e: Event<any>): void;
     success(): void;
     failure(): void;
@@ -1850,16 +1882,23 @@ interface ReactorUtils {
 
 }
 
-interface Topology {
+export interface MutationSandbox extends ReactionSandbox {
+    reactor: Reactor;
     connect<D extends Present, S extends D>(src: Port<S>, dst: Port<D>): void;
+    start(): void;
+    stop(): void;
     // FIXME: disconnect
+}
+
+export interface ReactionSandbox {
+    util: AppUtils
 }
 
 export class App extends Reactor { // Perhaps make this an abstract class, like reactor; omit the name parameter.
 
     alarm = new Alarm();
 
-    util = new class implements ReactorUtils { // NOTE this is an inner class because some of the member fields of the app are protected.
+    util = new class implements AppUtils { // NOTE this is an inner class because some of the member fields of the app are protected.
         constructor(private app: App) {
 
         }
@@ -1900,19 +1939,6 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         }
     }(this);
     
-    /**
-     * Inner class to providing access to methods for changing the connection
-     * topology.
-     */
-    topology = new class implements Topology { 
-        constructor(private app: App) {}
-        
-        public connect<A extends T, R extends Present, T extends Present, S extends R>
-                (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
-            return this.app._connect(src, dst);
-        }
-    }(this);
-
     /**
      * The current time, made available so actions may be scheduled relative to it.
      */
@@ -1968,7 +1994,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * Indicates whether the app is shutting down.
      * It is important not to schedule multiple/infinite shutdown events for the app.
      */
-    private _shutdownStarted: boolean = false;
+    //public _shutdownStarted: boolean = false;
 
     /**
      * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
@@ -2007,6 +2033,13 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         // but we'd have to add functionality for this.
     }
 
+    /**
+     * Unset all the timers of this reactor.
+     */
+    public _unsetTimers(): void {
+        Object.entries(this).filter(it => it[1] instanceof Timer).forEach(it => this._unsetTimer(it[1]))
+    }
+
     private snooze: Action<Tag> = new Action(this, Origin.logical, new TimeValue(1, 0));
 
     /**
@@ -2020,10 +2053,17 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
     constructor(executionTimeout: TimeValue | undefined = undefined, 
                 keepAlive: boolean = false, 
                 fast: boolean = false, 
-                public success: () => void = () => { }, 
-                public failure: () => void = () => { throw new Error("Default app failure callback") }) {
+                public success: () => void = () => {}, 
+                public failure: () => void = () => { 
+                    throw new Error("An unexpected error has occurred.") 
+                }) {
         super(null);
         
+        // Initialize the scope in which reactions and mutations of this reactor
+        // will execute.
+        this.reactionScope = new this.ReactionSandbox(this);
+        this.mutationScope = new this.MutationSandbox(this);
+
         this._fast = fast;
         this._keepAlive = keepAlive;
         this._executionTimeout = executionTimeout;
@@ -2032,40 +2072,40 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         this._currentTag = new Tag(new TimeValue(0), 0);
         this._startOfExecution = this._currentTag.time;
 
-        // Add default startup reaction.
-        this.addMutation(
-            new Triggers(this.startup),
-            new Args(),
-            function (this) {
-                //Log.global.log("*** Starting up reactor " + (this.__parent__ as Reactor).getFullyQualifiedName());
-                // If the end of execution is known at startup, schedule a 
-                // shutdown event to that effect.
-                // Note that we schedule shutdown one microstep later, so that
-                // any event scheduled exactly at the end of execution will be
-                // handled before the shutdown sequence starts.
-                var app = (this.parent as App);
-                // Schedule startup for all contained reactors.
-                app._startupChildren();
-                app._setTimers();
-                app._isActive = true;
-            }
-        );
+        // // Add default startup reaction.
+        // this.addMutation(
+        //     new Triggers(this.startup),
+        //     new Args(),
+        //     function (this) {
+        //         //Log.global.log("*** Starting up reactor " + (this.__parent__ as Reactor).getFullyQualifiedName());
+        //         // If the end of execution is known at startup, schedule a 
+        //         // shutdown event to that effect.
+        //         // Note that we schedule shutdown one microstep later, so that
+        //         // any event scheduled exactly at the end of execution will be
+        //         // handled before the shutdown sequence starts.
+        //         var app = (this.reactor as App);
+        //         // Schedule startup for all contained reactors.
+        //         app._startupChildren();
+        //         app._setTimers();
+        //         app._isActive = true;
+        //     }
+        // );
 
-        // Add default shutdown reaction.
-        this.addMutation(
-            new Triggers(this.shutdown),
-            new Args(),
-            function (this) {
-                var app = (this.parent as App);
-                app._shutdownStarted = true;
-                app._cancelNext();
-                Log.global.log("*** Shutting down reactor " + app.getFullyQualifiedName());
-                app._unsetTimers();
-                // Schedule shutdown for all contained reactors.
-                app._shutdownChildren();
-                app._isActive = false;
-            }
-        );
+        // // Add default shutdown reaction.
+        // this.addMutation(
+        //     new Triggers(this.shutdown),
+        //     new Args(),
+        //     function (this) {
+        //         var app = (this.reactor as App);
+        //         app._shutdownStarted = true;
+        //         app._cancelNext();
+        //         Log.global.log("*** Shutting down reactor " + app.getFullyQualifiedName());
+        //         app._unsetTimers();
+        //         // Schedule shutdown for all contained reactors.
+        //         app._shutdownChildren();
+        //         app._isActive = false;
+        //     }
+        // );
     }
 
     
@@ -2161,8 +2201,8 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
                     try {
                         var r = this._reactionQ.pop();
                         r.doReact();
-                    } catch {
-                        Log.info(this, () => "Exception occurred in reaction: " + r);
+                    } catch (e) {
+                        Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
                     }
                     
                 }
@@ -2212,7 +2252,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
         let head = this._eventQ.peek();
         
         // Ignore request if shutdown has started and the event is not tied to a shutdown action.
-        if (this._shutdownStarted && !(e.trigger instanceof Shutdown)) 
+        if (this._isActive && (!(e.trigger instanceof Shutdown) || !(e.trigger instanceof Startup)))
             return
         
         this._eventQ.push(e);
@@ -2287,7 +2327,7 @@ export class App extends Reactor { // Perhaps make this an abstract class, like 
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
     private _shutdown(): void {
-        if (!this._shutdownStarted) {
+        if (this._isActive) {
             this._endOfExecution = this._currentTag.time;
 
             Log.debug(this, () => "Initiating shutdown sequence.");

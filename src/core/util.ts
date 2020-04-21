@@ -10,13 +10,13 @@ export interface PrioritySetNode<P> {
     /**
      * Get a pointer to the next node in this priority set.
      */
-    getNext(): PrioritySetNode<P> | undefined;
+    getNext(): PrioritySetNode<P> | undefined; // FIXME: make this a property instead
 
     /**
      * Set a pointer to the next node in this priority set.
      * @param node Next element in the priority set this node is a part of.
      */
-    setNext(node: PrioritySetNode<P> | undefined): void;
+    setNext(node: PrioritySetNode<P> | undefined): void; // FIXME: make this a property instead
 
     /**
      * Return the priority of this node.
