@@ -33,28 +33,28 @@ describe('Container to Contained', () => {
     // container._setAllParents(null);
     // container2._setAllParents(null);
 
-    it('reactor with self as child', () => {
-        expect(() => {
-            let loopy = new Component(app, "Loopy");
-            loopy.child = loopy;
-            loopy._checkAllParents(null);
-        }).toThrowError();
-    });
+    // it('reactor with self as child', () => {
+    //     expect(() => {
+    //         let loopy = new Component(app, "Loopy");
+    //         loopy.child = loopy;
+    //         loopy._checkAllParents(null);
+    //     }).toThrowError();
+    // });
 
-    it('reactor with a port constructed with the wrong parent', () => {
-        expect(() => {
-            let badPortComponent = new Component(app, "BadPortComponent");
-            let otherComponent = new Component(app, "OtherComponent");
+    // it('reactor with a port constructed with the wrong parent', () => {
+    //     expect(() => {
+    //         let badPortComponent = new Component(app, "BadPortComponent");
+    //         let otherComponent = new Component(app, "OtherComponent");
 
-            // this port has been incorrectly constructed because it
-            // is an attribute of badPortComponent, but is set in the constructor
-            // with otherComponent as its parent 
-            badPortComponent.a = new InPort(otherComponent);
+    //         // this port has been incorrectly constructed because it
+    //         // is an attribute of badPortComponent, but is set in the constructor
+    //         // with otherComponent as its parent 
+    //         badPortComponent.a = new InPort(otherComponent);
 
-            // _setAllParents should throw an error
-            badPortComponent._checkAllParents(null);
-        }).toThrowError();
-    });
+    //         // _setAllParents should throw an error
+    //         badPortComponent._checkAllParents(null);
+    //     }).toThrowError();
+    // });
 
     
     it('contained reactor name', () => {

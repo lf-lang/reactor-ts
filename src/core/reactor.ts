@@ -759,7 +759,7 @@ export abstract class Reactor extends Component {
     /**
      * Maps a callee port to upstream reactions that may invoke the reaction it triggers.
      */
-    private _remoteCallers: Map<CalleePort<Present, unknown>, Set<Reaction<unknown>>> = new Map();
+    private _remoteCallers: Map<CalleePort<Present, Present>, Set<Reaction<unknown>>> = new Map();
 
     /**
      * Keeps track of named components inside of this reactor.
@@ -1121,7 +1121,7 @@ export abstract class Reactor extends Component {
             this._reactions.push(procedure)
             this._recordDeps(procedure);
             // Let the port discover the newly added reaction.
-            (calleePorts[0] as CalleePort<Present, unknown>).update()
+            (calleePorts[0] as CalleePort<Present, Present>).update()
         } else {
             // This is an ordinary reaction.
             let reaction = new Reaction(this, this._reactionScope, trigs, args, react, deadline, late);
@@ -1611,44 +1611,58 @@ export abstract class Reactor extends Component {
      */
     _priority: number = -1;
 
+    /**
+     * Return the fully qualified name of this reactor.
+     */
     toString(): string {
         return this.getFullyQualifiedName();
     }
 
-    /**
-     * Recursively traverse all reactors and verify the 
-     * parent property of each component correctly matches its location in
-     * the reactor hierarchy.
-     */
-    public _checkAllParents(parent: Reactor | null) {
-        if (this.__container__ != parent) throw new Error("The parent property for " + this
-            + " does not match the reactor hierarchy.");
+    // NOTE: This code is commented out because it could potentially run
+    // forever. Simple cycles like A contains A are ruled out, but ones such as
+    // A contains B ... contains A are not. If we want to check the integrity of
+    // the hierarchy we need to do something more sophisticated. Also, we'd have
+    // to find aliases, which we currently are not.
 
-        // FIXME: check that there exist no copies?
-        // This might be difficult...
+    // I decided to comment it out because hierarchy checks are already done in
+    // _connect, which is where they matter most. For instance, if a connection
+    // is drawn to something that is assumed to be up the hierarchy while it is
+    // really lower in the hierarchy (or vice versa), the connection will
+    // fail. 
 
-        let children = this._getChildren();
-        for (let child of children) {
-            child._checkAllParents(this);
-        }
+    // /**
+    //  * Recursively traverse all reactors and verify the 
+    //  * parent property of each component correctly matches its location in
+    //  * the reactor hierarchy.
+    //  */
+    // public _checkAllParents(parent: Reactor | null) {
 
-        // Ports have their parent set in constructor, so verify this was done correctly.
-        let ports = this._getPorts();
-        for (let port of ports) {
-            if (!port.isChildOf(this)) {
-                throw new Error("A port has been incorrectly constructed as an attribute of " +
-                    "a different reactor than the parent it was given in its constructor: "
-                    + port);
-            }
-        }
 
-        let actions = this._getActions();
-        for (let action of actions) {
-            if (!action.isChildOf(this)) throw new Error("The parent property for " + action
-                + " does not match the reactor hierarchy.");
-        }
+    //     if (this.__container__ != parent) throw new Error("The parent property for " + this
+    //         + " does not match the reactor hierarchy.");
 
-    }
+    //     let children = this._getChildren();
+    //     for (let child of children) {
+    //         child._checkAllParents(this);
+    //     }
+
+    //     // Ports have their parent set in constructor, so verify this was done correctly.
+    //     let ports = this._getPorts();
+    //     for (let port of ports) {
+    //         if (!port.isChildOf(this)) {
+    //             throw new Error("A port has been incorrectly constructed as an attribute of " +
+    //                 "a different reactor than the parent it was given in its constructor: "
+    //                 + port);
+    //         }
+    //     }
+
+    //     let actions = this._getActions();
+    //     for (let action of actions) {
+    //         if (!action.isChildOf(this)) throw new Error("The parent property for " + action
+    //             + " does not match the reactor hierarchy.");
+    //     }
+
+    // }
 
 }
 
@@ -1774,32 +1788,20 @@ export abstract class Port<T extends Present> extends Component implements Read<
 
 export class OutPort<T extends Present> extends Port<T> implements Port<T> {
 
-    toString(): string {
-        return this.getFullyQualifiedName();
-    }
-
 }
 
 export class InPort<T extends Present> extends Port<T> {
 
-    toString(): string {
-        return this.getFullyQualifiedName();
-    }
-
 }
-
-// export class RPCPort {
-    
-
-// }
 
 /**
  * A caller port sends arguments of type T and receives a response of type R.
  */
-export class CallerPort<A extends Present, R extends Present> extends OutPort<R> implements Write<A>, Read<R> { // FIXME: may Port should not implement Read
+export class CallerPort<A extends Present, R extends Present> extends OutPort<R> implements Write<A>, Read<R> { // FIXME: maybe Port should not implement Read
     
     public get(): R | undefined {
-        return this.remotePort?.retValue
+        if (this.tag?.isSimultaneousWith(this.__container__.util.getCurrentTag()))
+            return this.remotePort?.retValue
     }
 
     public remotePort: CalleePort<A, R> | undefined;
@@ -1811,6 +1813,7 @@ export class CallerPort<A extends Present, R extends Present> extends OutPort<R>
         if (this.remotePort) {
             this.remotePort.invoke(value)
         }
+        this.tag = this.__container__.util.getCurrentTag();
     }
 
     public invoke(value:A): R | undefined {
@@ -1826,7 +1829,7 @@ export class CallerPort<A extends Present, R extends Present> extends OutPort<R>
 /**
  * A callee port receives arguments of type A and send a response of type R.
  */
-export class CalleePort<A extends Present, R> extends InPort<A> implements Read<A>, Write<R> {
+export class CalleePort<A extends Present, R extends Present> extends InPort<A> implements Read<A>, Write<R> {
     
     get(): A | undefined {
         return this.argValue;
@@ -2397,9 +2400,9 @@ export class App extends Reactor {
         Log.global.info(">>> Initializing");
 
         Log.global.debug("Initiating startup sequence.")
-        // Recursively check the parent attribute for this and all contained reactors and
-        // and components, i.e. ports, actions, and timers have been set correctly.
-        this._checkAllParents(null);
+        // // Recursively check the parent attribute for this and all contained reactors and
+        // // and components, i.e. ports, actions, and timers have been set correctly.
+        // this._checkAllParents(null);
         // Obtain the precedence graph, ensure it has no cycles, 
         // and assign a priority to each reaction in the graph.
         var apg = this.getPrecedenceGraph();
