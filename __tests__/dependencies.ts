@@ -19,7 +19,7 @@ class R extends Reactor {
     }
 
     getNodes() {
-        return this._reactions;
+        return this._getReactions();
     }
 }
 

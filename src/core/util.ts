@@ -7,16 +7,18 @@ import ULog from 'ulog';
  */
 
 export interface PrioritySetNode<P> {
-    /**
-     * Get a pointer to the next node in this priority set.
-     */
-    getNext(): PrioritySetNode<P> | undefined; // FIXME: make this a property instead
+    // /**
+    //  * Get a pointer to the next node in this priority set.
+    //  */
+    // getNext(): PrioritySetNode<P> | undefined; // FIXME: make this a property instead
 
-    /**
-     * Set a pointer to the next node in this priority set.
-     * @param node Next element in the priority set this node is a part of.
-     */
-    setNext(node: PrioritySetNode<P> | undefined): void; // FIXME: make this a property instead
+    // /**
+    //  * Set a pointer to the next node in this priority set.
+    //  * @param node Next element in the priority set this node is a part of.
+    //  */
+    // setNext(node: PrioritySetNode<P> | undefined): void; // FIXME: make this a property instead
+
+    next: PrioritySetNode<P> | undefined;
 
     /**
      * Return the priority of this node.
@@ -56,7 +58,7 @@ export class PrioritySet<P> {
         // update linked list
         if (this.head == undefined) {
             // create head
-            element.setNext(undefined);
+            element.next = undefined;
             this.head = element;
             this.count++;
             return;
@@ -65,7 +67,7 @@ export class PrioritySet<P> {
         } else {
             // prepend
             if (element.hasPriorityOver(this.head)) {
-                element.setNext(this.head);
+                element.next = this.head;
                 this.head = element;
                 this.count++;
                 return;
@@ -73,7 +75,7 @@ export class PrioritySet<P> {
             // seek
             var curr: PrioritySetNode<P> | undefined = this.head;
             while (curr) {
-                let next: PrioritySetNode<P> | undefined = curr.getNext();
+                let next: PrioritySetNode<P> | undefined = curr.next;
                 if (next) {
                     if (element.updateIfDuplicateOf(next)) {
                         return;
@@ -88,8 +90,8 @@ export class PrioritySet<P> {
             }
             if (curr) {
                 // insert
-                element.setNext(curr.getNext()); // undefined if last
-                curr.setNext(element);
+                element.next = curr.next; // undefined if last
+                curr.next = element;
                 this.count++;
                 return;
             }
@@ -99,8 +101,8 @@ export class PrioritySet<P> {
     pop(): PrioritySetNode<P> | undefined {
         if (this.head) {
             let node = this.head;
-            this.head = this.head.getNext();
-            node.setNext(undefined); // unhook from linked list
+            this.head = this.head.next;
+            node.next = undefined; // unhook from linked list
             this.count--;
             return node;
         }

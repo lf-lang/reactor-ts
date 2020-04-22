@@ -215,12 +215,12 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
      * Priority derived from this reaction's location in 
      * the directed acyclic precedence graph.
      */
-    private priority: Priority = Number.MAX_SAFE_INTEGER;
+    public priority: Priority = Number.MAX_SAFE_INTEGER;
 
-    private next: PrioritySetNode<Priority> | undefined;
+    public next: PrioritySetNode<Priority> | undefined;
 
     /** 
-     * Construct a new Reaction by passing in a reference to the reactor that contains it,
+     * Construct a new reaction by passing in a reference to the reactor that contains it,
      * the variables that trigger it, and the arguments passed to the react function.
      * @param state state shared among reactions
      */
@@ -349,7 +349,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
  */
 class Event<T> implements PrioritySetNode<Tag> {
 
-    private next: Event<unknown> | undefined;
+    public next: PrioritySetNode<Tag> | undefined;
 
     /**
      * Constructor for an event.
@@ -377,14 +377,6 @@ class Event<T> implements PrioritySetNode<Tag> {
             }
         }
         return false;
-    }
-
-    getNext(): Event<unknown> | undefined {
-        return this.next;
-    }
-
-    setNext(node: Event<unknown> | undefined) {
-        this.next = node;
     }
 
     getPriority(): Tag {
@@ -1330,13 +1322,31 @@ export abstract class Reactor extends Component {
     }
 
     /**
-     * Returns the set of reactions and mutations owned by this reactor.
+     * Return a list of reactions owned by this reactor.
      */
-    public _getReactions(): Set<Reaction<unknown>> {
-        var set: Set<Reaction<any>> = new Set();
-        this._mutations.forEach((it) => set.add(it))
-        this._reactions.forEach((it) => set.add(it))
-        return set;
+    public _getReactions(): Array<Reaction<unknown>> {
+        var arr: Array<Reaction<any>> = new Array();
+        this._reactions.forEach((it) => arr.push(it))
+        return arr;
+    }
+
+    /**
+     * Return a list of reactions and mutations owned by this reactor.
+     */
+    public _getReactionsAndMutations(): Array<Reaction<unknown>> {
+        var arr: Array<Reaction<any>> = new Array();
+        this._mutations.forEach((it) => arr.push(it))
+        this._reactions.forEach((it) => arr.push(it))
+        return arr;
+    }
+
+    /**
+     * Return a list of reactions owned by this reactor.
+     */
+    public _getMutations(): Array<Reaction<unknown>> {
+        var arr: Array<Reaction<any>> = new Array();
+        this._mutations.forEach((it) => arr.push(it))
+        return arr;
     }
 
     public _isDownstream(arg: Port<Present>) {
@@ -1599,7 +1609,7 @@ export abstract class Reactor extends Component {
      * parent property of each component correctly matches its location in
      * the reactor hierarchy.
      */
-    protected _checkAllParents(parent: Reactor | null) {
+    public _checkAllParents(parent: Reactor | null) {
         if (this.__container__ != parent) throw new Error("The parent property for " + this
             + " does not match the reactor hierarchy.");
 
@@ -1818,7 +1828,7 @@ export class CalleePort<A extends Present, R> extends InPort<A> implements Read<
     private reaction: Reaction<unknown> | undefined
 
     public update(): void {
-        for (let reaction of this.__container__._getReactions()) {
+        for (let reaction of this.__container__._getReactionsAndMutations()) {
             if (reaction.trigs.list.find(it => it === this)) {
                 this.reaction = reaction
                 break

@@ -22,7 +22,7 @@ export class Adder extends Reactor {
 
 class MyAdder extends Adder {
     public fire() {
-        for (let r of this._reactions) {
+        for (let r of this._getReactions()) {
             r.doReact();
         }
     }
