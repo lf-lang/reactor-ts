@@ -235,13 +235,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
             { Log.global.warn("Deadline violation occurred!") }) {
     }
 
-    getNext(): PrioritySetNode<Priority> | undefined {
-        return this.next;
-    }
-
-    setNext(node: PrioritySetNode<Priority> | undefined) {
-        this.next = node;
-    }
+    public active = false
 
     public toString(): string {
         return this.reactor.getFullyQualifiedName() + "[R" + this.reactor.getReactionIndex(this) + "]";
@@ -304,10 +298,15 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         Log.debug(this, () => ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
         Log.debug(this, () => "Reaction deadline: " + this.deadline);
 
+        // If this reaction was loaded onto the reaction queue but subsequently
+        // removed/deactivated by a mutation, then return without invoking the
+        // reaction.
+        if (!this.active) {
+            return
+        }
         // Test if this reaction has a deadline which has been violated.
         // This is the case if the reaction has a defined timeout and
         // logical time + timeout < physical time
-
         if (this.deadline &&
             this.sandbox.util.getCurrentTag()
                 .getLaterTag(this.deadline)
@@ -421,7 +420,7 @@ export class Action<T extends Present> extends Component implements Read<T> {
         if (e.trigger == this) {
             this.value = e.value as T
             this.timestamp = e.tag;
-            this.__container__.triggerReactions(e);
+            this.__container__._triggerReactions(e);
         } else {
             throw new Error("Attempt to update action using incompatible event.");
         }
@@ -649,7 +648,7 @@ export class Timer extends Component implements Read<Tag> {
         }
         if (e.trigger == this) {
             this.tag = e.tag;
-            this.__container__.triggerReactions(e);
+            this.__container__._triggerReactions(e);
         }
     }
 
@@ -970,7 +969,7 @@ export abstract class Reactor extends Component {
         return new Scheduler(this, action); /// FIXME: check whether action is local
     }
 
-    private recordDeps(reaction: Reaction<any>) {
+    private _recordDeps(reaction: Reaction<any>) {
         // Stick this reaction into the trigger map to ensure it gets triggered.
         for (let t of reaction.trigs.list) {
             // If a reaction is triggered by a child reactor's port,
@@ -1116,17 +1115,19 @@ export abstract class Reactor extends Component {
                 // A procedure can only have a single trigger.
                 throw new Error("Procedure has multiple triggers.")
             }
-            // FIXME: throw error if there are existing reactions sensitive to this particular port.
-            let procedure = new Procedure(this, this._reactionScope, trigs, args, react, deadline, late) 
+            // FIXME: throw error if there are other active reactions sensitive to this particular port.
+            let procedure = new Procedure(this, this._reactionScope, trigs, args, react, deadline, late)
+            procedure.active = true
             this._reactions.push(procedure)
-            this.recordDeps(procedure);
+            this._recordDeps(procedure);
             // Let the port discover the newly added reaction.
             (calleePorts[0] as CalleePort<Present, unknown>).update()
         } else {
             // This is an ordinary reaction.
             let reaction = new Reaction(this, this._reactionScope, trigs, args, react, deadline, late);
+            reaction.active = true;
             this._reactions.push(reaction);
-            this.recordDeps(reaction);
+            this._recordDeps(reaction);
         }
     }
 
@@ -1135,8 +1136,9 @@ export abstract class Reactor extends Component {
         late: (this: MutationSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
         let mutation = new Mutation(this, this._mutationScope, trigs, args, react,  deadline, late);
+        mutation.active = true
         this._mutations.push(mutation);
-        this.recordDeps(mutation);
+        this._recordDeps(mutation);
     }
 
     public getPrecedenceGraph(): PrecedenceGraph<Reaction<unknown> | Mutation<unknown>> {
@@ -1147,14 +1149,14 @@ export abstract class Reactor extends Component {
         }
 
         let prev: Reaction<unknown> | Mutation<unknown> | null = null;
-        prev = this.collectDependencies(graph, this._mutations, prev);
-        prev = this.collectDependencies(graph, this._reactions, prev);
+        prev = this._collectDependencies(graph, this._mutations, prev);
+        prev = this._collectDependencies(graph, this._reactions, prev);
 
         return graph;
 
     }
 
-    private collectDependencies(graph: PrecedenceGraph<Reaction<unknown> | Mutation<unknown>>,
+    private _collectDependencies(graph: PrecedenceGraph<Reaction<unknown> | Mutation<unknown>>,
         nodes: Reaction<unknown>[] | Mutation<unknown>[],
         prev: Reaction<unknown> | Mutation<unknown> | null) {
         for (let i = 0; i < nodes.length; i++) {
@@ -1195,7 +1197,7 @@ export abstract class Reactor extends Component {
             }
             // look downstream
             for (let d of deps[1]) {
-                if (d instanceof InPort || d instanceof OutPort) { // FIXME: check this!!
+                if (d instanceof Port) {
                     graph.addBackEdges(r, d.getDownstreamReactions());
                 } else {
                     Log.global.error("Found antidependency that is not a port")
@@ -1261,7 +1263,7 @@ export abstract class Reactor extends Component {
         }
     }
 
-    public triggerReactions(e: Event<unknown>) {
+    public _triggerReactions(e: Event<unknown>) {
         Log.debug(this, () => "Triggering reactions sensitive to " + e.trigger);
 
         let reactions = this._triggerMap.get(e.trigger);
@@ -1271,9 +1273,8 @@ export abstract class Reactor extends Component {
             }
         }
     }
-
     
-    public _startupChildren() {
+    private _startupChildren() {
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating startup: " + r.startup);
             // Note that startup reactions are scheduled without a microstep delay
@@ -1281,7 +1282,7 @@ export abstract class Reactor extends Component {
         }
     }
 
-    public _shutdownChildren() {
+    private _shutdownChildren() {
         Log.global.debug("Shutdown children was called")
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating shutdown: " + r.shutdown);
@@ -1298,22 +1299,22 @@ export abstract class Reactor extends Component {
     }
 
     /**
-     * Obtain the set of this reactor's child reactors.
-     * Watch out for cycles!
-     * This function ignores reactor attributes which reference
-     * this reactor's parent and this reactor's app.
-     * It is an error for a reactor to be a child of itself.
+     * Obtain a set that has the reactors that this reactor contains directly
+     * (not further down the hierarchy).
      */
     private _getChildren(): Set<Reactor> {
         let children = new Set<Reactor>();
         for (const [key, value] of Object.entries(this)) {
             // If pointers to other non-child reactors in the hierarchy are not
-            // excluded (eg. value != this.parent) this function will loop forever.
-            if (value instanceof Reactor && value != this.__container__ && !(value instanceof App)) {
+            // excluded (eg. value != this.parent) this function will loop
+            // forever.
+            if (value instanceof Reactor && 
+                    value != this.__container__ && !(value instanceof App)) {
                 // A reactor may not be a child of itself.
                 if (value === this) {
-                    throw new Error("A reactor may not have itself as an attribute." +
-                        " Reactor attributes represent a containment relationship, and a reactor cannot contain itself.");
+                    throw new Error("A reactor may not have itself as an " +
+                    "attribute. Reactor attributes represent a containment " +
+                    "relationship, and a reactor cannot contain itself.");
                 }
                 children.add(value);
             }
@@ -1349,28 +1350,38 @@ export abstract class Reactor extends Component {
         return arr;
     }
 
-    public _isDownstream(arg: Port<Present>) {
-        if (arg instanceof InPort) {
-            if (arg.isGrandChildOf(this)) {
+    /**
+     * Report whether the given port is downstream of this reactor. If so, the
+     * given port can be connected to with an output port of this reactor.
+     * @param port 
+     */
+    public _isDownstream(port: Port<Present>) {
+        if (port instanceof InPort) {
+            if (port.isGrandChildOf(this)) {
                 return true;
             }
         } 
-        if (arg instanceof OutPort) {
-            if (arg.isChildOf(this)) {
+        if (port instanceof OutPort) {
+            if (port.isChildOf(this)) {
                 return true;
             }
         }
         return false;
     }
 
-    public _isUpstream(arg: Port<Present>) {
-        if (arg instanceof OutPort) {
-            if (arg.isGrandChildOf(this)) {
+    /**
+     * Report whether the given port is upstream of this reactor. If so, the
+     * given port can be connected to an input port of this reactor.
+     * @param port 
+     */
+    public _isUpstream(port: Port<Present>) {
+        if (port instanceof OutPort) {
+            if (port.isGrandChildOf(this)) {
                 return true;
             }
         } 
-        if (arg instanceof InPort) {
-            if (arg.isChildOf(this)) {
+        if (port instanceof InPort) {
+            if (port.isChildOf(this)) {
                 return true;
             }
         }
@@ -1401,7 +1412,7 @@ export abstract class Reactor extends Component {
             return false
         }
 
-        // FIXME: If elapsed logical time is greater thatn zero, check the local
+        // FIXME: If elapsed logical time is greater than zero, check the local
         // dependency graph to figure out whether this change introduces
         // zero-delay feedback.
         
@@ -1530,7 +1541,7 @@ export abstract class Reactor extends Component {
      */
     protected _disconnect(src: Port<Present>, dst: Port<Present>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
-        // FIXME
+        // FIXME: imlement this
         let dests = this._destinationPorts.get(src);
         if (dests != null) {
             dests.delete(dst);
@@ -1647,7 +1658,7 @@ export abstract class Port<T extends Present> extends Component implements Read<
     protected tag: Tag | undefined;
 
     /** The value associated with this port. */
-    protected value: T | Absent = undefined;
+    protected value: T | Absent;
 
     /**
      * Return the transitive closure of reactions dependent on this port.
@@ -2081,7 +2092,6 @@ export class App extends Reactor {
      * @param timer The timer to report to the app.
      */
     public _unsetTimer(timer: Timer) {
-        // push a new event onto the event queue
         // FIXME: we could either set the timer to 'inactive' to tell the 
         // scheduler to ignore future event and prevent it from rescheduling any.
         // The problem with this approach is that if, for some reason, a timer would get
@@ -2218,10 +2228,6 @@ export class App extends Reactor {
                 }
 
                 while (this._reactionQ.size() > 0) {
-                    // FIXME: relevant for mutations:
-                    // Check whether the reactor is active or not
-                    // If it is inactive, all reactions, except for those
-                    // in response to startup actions, should be ignored.
                     try {
                         var r = this._reactionQ.pop();
                         r.doReact();

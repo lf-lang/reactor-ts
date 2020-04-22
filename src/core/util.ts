@@ -7,17 +7,10 @@ import ULog from 'ulog';
  */
 
 export interface PrioritySetNode<P> {
-    // /**
-    //  * Get a pointer to the next node in this priority set.
-    //  */
-    // getNext(): PrioritySetNode<P> | undefined; // FIXME: make this a property instead
 
-    // /**
-    //  * Set a pointer to the next node in this priority set.
-    //  * @param node Next element in the priority set this node is a part of.
-    //  */
-    // setNext(node: PrioritySetNode<P> | undefined): void; // FIXME: make this a property instead
-
+    /**
+     * Pointer to the next node in the priority set.
+     */
     next: PrioritySetNode<P> | undefined;
 
     /**
@@ -41,7 +34,7 @@ export interface PrioritySetNode<P> {
 
 export interface PrecedenceGraphNode<P> {
     setPriority(priority: P): void;
-    toString(): string;
+
     // getSTPUntil(): TimeInstant
     // setSTPUntil(): TimeInstant
 }
