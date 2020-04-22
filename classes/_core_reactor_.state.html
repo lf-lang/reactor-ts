@@ -72,7 +72,9 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A state variable.</p>
+						<p>A state variable. This class refines the Read interface by letting <code>get</code>
+							return T rather than T | Absent. If the state should be nullable or
+						uninitialized, this has to be reflected explicitly in T.</p>
 					</div>
 				</div>
 			</section>
@@ -131,19 +133,29 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>State<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">?: </span><a href="" class="tsd-signature-type">T</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_reactor_.state.html" class="tsd-signature-type">State</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>State<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_reactor_.state.html" class="tsd-signature-type">State</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/reactor.ts#L522">core/reactor.ts:522</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/3f2773f/src/core/reactor.ts#L524">core/reactor.ts:524</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a new state variable and assign it an initial value.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> value: <a href="" class="tsd-signature-type">T</a></h5>
+									<h5>value: <span class="tsd-signature-type">T</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>The initial value to assign to this state variable.</p>
+										</div>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_core_reactor_.state.html" class="tsd-signature-type">State</a></h4>
@@ -155,13 +167,18 @@
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="value" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> value</h3>
-					<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type">T</a></div>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> value</h3>
+					<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">T</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/reactor.ts#L524">core/reactor.ts:524</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/3f2773f/src/core/reactor.ts#L530">core/reactor.ts:530</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The initial value to assign to this state variable.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -170,19 +187,21 @@
 					<a name="get" class="tsd-anchor"></a>
 					<h3>get</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol"> | </span><a href="../modules/_core_reactor_.html#absent" class="tsd-signature-type">Absent</a></li>
+						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/reactor.ts#L528">core/reactor.ts:528</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/3f2773f/src/core/reactor.ts#L537">core/reactor.ts:537</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span>
-								<span class="tsd-signature-symbol"> | </span>
-								<a href="../modules/_core_reactor_.html#absent" class="tsd-signature-type">Absent</a>
-							</h4>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return the current value of this state variable.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -196,13 +215,20 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/reactor.ts#L532">core/reactor.ts:532</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/3f2773f/src/core/reactor.ts#L545">core/reactor.ts:545</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Set the current value of this state variable.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>value: <span class="tsd-signature-type">T</span></h5>
+									<div class="tsd-comment tsd-typography">
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -296,7 +322,7 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="_core_reactor_.reactor.html" class="tsd-kind-icon">Reactor</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="_core_reactor_.scheduler.html" class="tsd-kind-icon">Scheduler</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
