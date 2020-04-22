@@ -102,6 +102,7 @@
 				<ul class="tsd-hierarchy">
 					<li><a href="../classes/_core_reactor_.event.html" class="tsd-signature-type">Event</a></li>
 					<li><a href="../classes/_core_reactor_.mutation.html" class="tsd-signature-type">Mutation</a></li>
+					<li><a href="../classes/_core_reactor_.procedure.html" class="tsd-signature-type">Procedure</a></li>
 					<li><a href="../classes/_core_reactor_.reaction.html" class="tsd-signature-type">Reaction</a></li>
 				</ul>
 			</section>
@@ -113,15 +114,14 @@
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#haspriorityover" class="tsd-kind-icon">has<wbr>Priority<wbr>Over</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#next" class="tsd-kind-icon">next</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#updateifduplicateof" class="tsd-kind-icon">update<wbr>IfDuplicate<wbr>Of</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#getnext" class="tsd-kind-icon">get<wbr>Next</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#getpriority" class="tsd-kind-icon">get<wbr>Priority</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#setnext" class="tsd-kind-icon">set<wbr>Next</a></li>
 							</ul>
 						</section>
 					</div>
@@ -135,7 +135,7 @@
 					<div class="tsd-signature tsd-kind-icon">has<wbr>Priority<wbr>Over<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/de604c7/src/core/util.ts#L30">core/util.ts:30</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/util.ts#L25">core/util.ts:25</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -171,12 +171,27 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="next" class="tsd-anchor"></a>
+					<h3>next</h3>
+					<div class="tsd-signature tsd-kind-icon">next<span class="tsd-signature-symbol">:</span> <a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/util.ts#L14">core/util.ts:14</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Pointer to the next node in the priority set.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="updateifduplicateof" class="tsd-anchor"></a>
 					<h3>update<wbr>IfDuplicate<wbr>Of</h3>
 					<div class="tsd-signature tsd-kind-icon">update<wbr>IfDuplicate<wbr>Of<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/de604c7/src/core/util.ts#L37">core/util.ts:37</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/util.ts#L32">core/util.ts:32</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -216,31 +231,6 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="getnext" class="tsd-anchor"></a>
-					<h3>get<wbr>Next</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Next<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/de604c7/src/core/util.ts#L13">core/util.ts:13</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Get a pointer to the next node in this priority set.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span>
-								<span class="tsd-signature-symbol"> | </span>
-								<span class="tsd-signature-type">undefined</span>
-							</h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
 					<a name="getpriority" class="tsd-anchor"></a>
 					<h3>get<wbr>Priority</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
@@ -250,7 +240,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/de604c7/src/core/util.ts#L24">core/util.ts:24</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/util.ts#L19">core/util.ts:19</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -262,37 +252,6 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="setnext" class="tsd-anchor"></a>
-					<h3>set<wbr>Next</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">set<wbr>Next<span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/de604c7/src/core/util.ts#L19">core/util.ts:19</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Set a pointer to the next node in this priority set.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>node: <a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Next element in the priority set this node is a part of.</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-						</li>
-					</ul>
-				</section>
 			</section>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
@@ -300,6 +259,9 @@
 				<ul>
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_benchmark_pingpong_.html">&quot;benchmark/<wbr>Ping<wbr>Pong&quot;</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_core_cli_.html">&quot;core/cli&quot;</a>
@@ -350,16 +312,13 @@
 								<a href="_core_util_.prioritysetnode.html#haspriorityover" class="tsd-kind-icon">has<wbr>Priority<wbr>Over</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_core_util_.prioritysetnode.html#next" class="tsd-kind-icon">next</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="_core_util_.prioritysetnode.html#updateifduplicateof" class="tsd-kind-icon">update<wbr>IfDuplicate<wbr>Of</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_core_util_.prioritysetnode.html#getnext" class="tsd-kind-icon">get<wbr>Next</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="_core_util_.prioritysetnode.html#getpriority" class="tsd-kind-icon">get<wbr>Priority</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_core_util_.prioritysetnode.html#setnext" class="tsd-kind-icon">set<wbr>Next</a>
 							</li>
 						</ul>
 					</li>

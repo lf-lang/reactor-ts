@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Readable | reactor-ts - v0.0.1</title>
+	<title>Read | reactor-ts - v0.0.1</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,10 +59,10 @@
 					<a href="../modules/_core_reactor_.html">&quot;core/reactor&quot;</a>
 				</li>
 				<li>
-					<a href="_core_reactor_.readable.html">Readable</a>
+					<a href="_core_reactor_.read.html">Read</a>
 				</li>
 			</ul>
-			<h1>Interface Readable&lt;T&gt;</h1>
+			<h1>Interface Read&lt;T&gt;</h1>
 		</div>
 	</div>
 </header>
@@ -88,13 +88,13 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Readable</span>
+						<span class="target">Read</span>
 						<ul class="tsd-hierarchy">
 							<li>
-								<a href="_core_reactor_.schedulable.html" class="tsd-signature-type">Schedulable</a>
+								<a href="_core_reactor_.call.html" class="tsd-signature-type">Call</a>
 							</li>
 							<li>
-								<a href="_core_reactor_.writable.html" class="tsd-signature-type">Writable</a>
+								<a href="_core_reactor_.schedule.html" class="tsd-signature-type">Schedule</a>
 							</li>
 						</ul>
 					</li>
@@ -104,6 +104,10 @@
 				<h3>Implemented by</h3>
 				<ul class="tsd-hierarchy">
 					<li><a href="../classes/_core_reactor_.action.html" class="tsd-signature-type">Action</a></li>
+					<li><a href="../classes/_core_reactor_.calleeport.html" class="tsd-signature-type">CalleePort</a></li>
+					<li><a href="../classes/_core_reactor_.calleeport.html" class="tsd-signature-type">CalleePort</a></li>
+					<li><a href="../classes/_core_reactor_.callerport.html" class="tsd-signature-type">CallerPort</a></li>
+					<li><a href="../classes/_core_reactor_.callerport.html" class="tsd-signature-type">CallerPort</a></li>
 					<li><a href="../classes/_core_reactor_.inport.html" class="tsd-signature-type">InPort</a></li>
 					<li><a href="../classes/_core_reactor_.outport.html" class="tsd-signature-type">OutPort</a></li>
 					<li><a href="../classes/_core_reactor_.parameter.html" class="tsd-signature-type">Parameter</a></li>
@@ -113,6 +117,7 @@
 					<li><a href="../classes/_core_reactor_.startup.html" class="tsd-signature-type">Startup</a></li>
 					<li><a href="../classes/_core_reactor_.state.html" class="tsd-signature-type">State</a></li>
 					<li><a href="../classes/_core_reactor_.timer.html" class="tsd-signature-type">Timer</a></li>
+					<li><a href="../classes/_core_reactor_.writer.html" class="tsd-signature-type">Writer</a></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -122,7 +127,7 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_reactor_.readable.html#get" class="tsd-kind-icon">get</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_reactor_.read.html#get" class="tsd-kind-icon">get</a></li>
 							</ul>
 						</section>
 					</div>
@@ -136,7 +141,7 @@
 					<div class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/de604c7/src/core/reactor.ts#L79">core/reactor.ts:79</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/4e1e735/src/core/reactor.ts#L117">core/reactor.ts:117</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -165,6 +170,9 @@
 				<ul>
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_benchmark_pingpong_.html">&quot;benchmark/<wbr>Ping<wbr>Pong&quot;</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_core_cli_.html">&quot;core/cli&quot;</a>
@@ -200,8 +208,14 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../classes/_core_reactor_.args.html" class="tsd-kind-icon">Args</a>
 					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_core_reactor_.calleeport.html" class="tsd-kind-icon">Callee<wbr>Port</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_core_reactor_.callerport.html" class="tsd-kind-icon">Caller<wbr>Port</a>
+					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../classes/_core_reactor_.descendant.html" class="tsd-kind-icon">Descendant</a>
+						<a href="../classes/_core_reactor_.component.html" class="tsd-kind-icon">Component</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="../classes/_core_reactor_.event.html" class="tsd-kind-icon">Event</a>
@@ -223,6 +237,9 @@
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../classes/_core_reactor_.port.html" class="tsd-kind-icon">Port</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
+						<a href="../classes/_core_reactor_.procedure.html" class="tsd-kind-icon">Procedure</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../classes/_core_reactor_.reaction.html" class="tsd-kind-icon">Reaction</a>
@@ -254,35 +271,41 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter tsd-is-not-exported">
 						<a href="../classes/_core_reactor_.writer.html" class="tsd-kind-icon">Writer</a>
 					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
+						<a href="_core_reactor_.apputils.html" class="tsd-kind-icon">App<wbr>Utils</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="_core_reactor_.call.html" class="tsd-kind-icon">Call</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="_core_reactor_.mutationsandbox.html" class="tsd-kind-icon">Mutation<wbr>Sandbox</a>
+					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
 						<a href="_core_reactor_.named.html" class="tsd-kind-icon">Named</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="_core_reactor_.proxy.html" class="tsd-kind-icon">Proxy</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_core_reactor_.reactorutils.html" class="tsd-kind-icon">Reactor<wbr>Utils</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
+						<a href="_core_reactor_.reactionsandbox.html" class="tsd-kind-icon">Reaction<wbr>Sandbox</a>
 					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_core_reactor_.readable.html" class="tsd-kind-icon">Readable</a>
+						<a href="_core_reactor_.read.html" class="tsd-kind-icon">Read</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_core_reactor_.readable.html#get" class="tsd-kind-icon">get</a>
+								<a href="_core_reactor_.read.html#get" class="tsd-kind-icon">get</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_core_reactor_.schedulable.html" class="tsd-kind-icon">Schedulable</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_core_reactor_.topology.html" class="tsd-kind-icon">Topology</a>
+						<a href="_core_reactor_.schedule.html" class="tsd-kind-icon">Schedule</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_core_reactor_.writable.html" class="tsd-kind-icon">Writable</a>
+						<a href="_core_reactor_.write.html" class="tsd-kind-icon">Write</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="../modules/_core_reactor_.html#absent" class="tsd-kind-icon">Absent</a>
@@ -296,11 +319,14 @@
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="../modules/_core_reactor_.html#priority" class="tsd-kind-icon">Priority</a>
 					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../modules/_core_reactor_.html#readwrite" class="tsd-kind-icon">Read<wbr>Write</a>
+					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
 						<a href="../modules/_core_reactor_.html#variable" class="tsd-kind-icon">Variable</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../modules/_core_reactor_.html#defaultmininterarrival" class="tsd-kind-icon">Default<wbr>Min<wbr>Interarrival</a>
+						<a href="../modules/_core_reactor_.html#defaultmit" class="tsd-kind-icon">defaultMIT</a>
 					</li>
 				</ul>
 			</nav>
