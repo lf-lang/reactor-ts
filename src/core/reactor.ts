@@ -175,9 +175,10 @@ class Component implements Named {
         return path;
     }
 
+    /**
+     * Return a string that identifies this component within the reactor.
+     */
     public getName(): string {
-        var count = 0;
-        var suffix = "";
         if (this.alias) {
             return this.alias;
         } else if (this.__container__) {
@@ -185,20 +186,18 @@ class Component implements Named {
                 if (value === this) {
                     return `${key}`;
                 }
-                // Count instantiations of the same object among entries
-                // in order to report unique names (within the scope of
-                // the reactor) for each entry.
-                if (value && this.constructor === value.constructor) {
-                    count++;
-                }
             }
         }
-        if (count > 0) {
-            suffix = "(" + count + ")";
-        }
-        return this.constructor.name + suffix;
+        // Return the constructor name in case the component wasn't found in its
+        // container.
+        return this.constructor.name;
     }
 
+    /**
+     * Set an alias to override the name assigned to this component by its
+     * container.
+     * @param alias An alternative name.
+     */
     public setAlias(alias: string) {
         this.alias = alias
     }
@@ -719,58 +718,124 @@ export class Triggers {
  */
 export abstract class Reactor extends Component {
 
-    protected _isActive = false;
+    /**
+     * Indicates whether this reactor is active (meaning it has reacted to a
+     * startup action), or not (in which case it either never started up or has
+     * reacted to a shutdown action).
+     */
+    private _active = false;
 
-    public state = {};
+    /**
+     * The top-level reactor that this reactor is contained in.
+     */
+    private _app: App;
 
-    private _triggerMap: Map<Variable, Set<Reaction<any>>> = new Map();
-
+    /**
+     * Maps ports to upstream reactions that they depend on.
+     */
     private _dependsOnReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
 
+    /**
+     * Maps ports to downstream reactions that depend on them.
+     */
     private _dependentReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
 
-    private _remoteCallers: Map<CalleePort<Present, unknown>, Set<Reaction<unknown>>> = new Map();
-
-    private _sourcePort: Map<Port<Present>, Port<Present>> = new Map();
-
+    /**
+     * Maps ports to downstream ports to which they are connected.
+     */
     private _destinationPorts: Map<Port<Present>, Set<Port<Present>>> = new Map();
 
-    private _startupActions: Set<Startup> = new Set(); // FIXME: use these so we can make startup and shutdown private
+    /**
+     * This reactor's shutdown action.
+     */
+    readonly shutdown = new Shutdown(this);
 
-    private _shutdownActions: Set<Action<Present>> = new Set();
+    /**
+     * Maps ports to an upstream port that it is connected to.
+     */
+    private _sourcePort: Map<Port<Present>, Port<Present>> = new Map();
 
-    /** Data structure to keep track of named components inside of this reactor. */
-    public _instantiationCounts: Map<string, number> = new Map()
+    /**
+     * This reactor's startup action.
+     */
+    readonly startup = new Startup(this);
 
-    /** Reactions added by the implemented of derived reactor classes. */
-    protected _reactions: Reaction<any>[] = [];
+    /**
+     * Maps triggers to reactions.
+     */
+    private _triggerMap: Map<Variable, Set<Reaction<any>>> = new Map();
 
+    /**
+     * Maps a callee port to upstream reactions that may invoke the reaction it triggers.
+     */
+    private _remoteCallers: Map<CalleePort<Present, unknown>, Set<Reaction<unknown>>> = new Map();
+
+    /**
+     * Keeps track of named components inside of this reactor.
+     */
+    //public _instantiationCounts: Map<string, number> = new Map()
+
+    /**
+     * The list of reactions this reactor has.
+     */
+    private _reactions: Reaction<any>[] = [];
+
+    /**
+     * Sandbox for the execution of reactions.
+     */
+    private _reactionScope: ReactionSandbox;
+
+    /** 
+     * The list of mutations this reactor has.
+     */
     private _mutations: Mutation<any>[] = [];
 
-    protected startup = new Startup(this);
+    /**
+     * Sandbox for the execution of mutations.
+     */
+    private _mutationScope: MutationSandbox;
 
-    protected shutdown = new Shutdown(this);
-
-    protected app: App;
-
+    /**
+     * Collection of utility functions for this app.
+     */
     public util: AppUtils;
 
-    protected getWriter<T extends Present>(port: Port<T>): Writer<T> {
-        // FIXME: Implement checks to ensure that port is allowed to be written to.
-        return new Writer(port);
+    /**
+     * Inner class intended to provide access to methods that should be
+     * accessible to mutations, not to reactions.
+     */
+    private _MutationSandbox = class implements MutationSandbox { 
+        constructor(private reactor: Reactor) {}
+        
+        public util = this.reactor.util
+        
+        public connect<A extends T, R extends Present, T extends Present, S extends R>
+                (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
+            return this.reactor._connect(src, dst);
+        }
+    };
+    
+    /**
+     * Inner class that furnishes an execution environment for reactions.  
+     */
+    private _ReactionSandbox = class implements ReactionSandbox {
+        public util: AppUtils;
+        constructor(public reactor: Reactor) {
+            this.util = reactor.util
+        }
     }
 
     /**
      * Create a new reactor.
-     * @param __parent__ Parent of this reactor.
+     * @param __parent__ The container of this reactor.
      */
     constructor(__parent__: Reactor | null) {
         super(__parent__);
         if (__parent__ != null) {
-            this.app = __parent__.app;
+            this._app = __parent__._app;
         } else {
             if (this instanceof App) {
-                this.app = this;
+                this._app = this;
             } else {
                 throw new Error("Cannot instantiate reactor without a parent.");
             }
@@ -778,9 +843,9 @@ export abstract class Reactor extends Component {
 
         // Even though TypeScript doesn't catch it, the following statement
         // will assign `undefined` if the this is an instance of App.
-        this.util = this.app.util;
-        this.reactionScope = new this.ReactionSandbox(this)
-        this.mutationScope = new this.MutationSandbox(this)
+        this.util = this._app.util;
+        this._reactionScope = new this._ReactionSandbox(this)
+        this._mutationScope = new this._MutationSandbox(this)
         // NOTE: beware, if this is an instance of App, `this.util` will be `undefined`.
         // Do not attempt to reference it during the construction of an App.
         var self = this
@@ -791,7 +856,7 @@ export abstract class Reactor extends Component {
             function (this) {
                 Log.debug(this, () => "*** Starting up reactor " +
                 self.getFullyQualifiedName());
-                self._isActive = true;
+                self._active = true;
                 self._startupChildren();
                 self._setTimers();
             }
@@ -804,7 +869,7 @@ export abstract class Reactor extends Component {
             function (this) {
                 Log.debug(this, () => "*** Shutting down reactor " + 
                     self.getFullyQualifiedName());
-                self._isActive = false;
+                self._active = false;
                 // if (this.reactor instanceof App) {
                 //     //this.reactor._shutdownStarted = true;
                 //     //this.reactor._cancelNext();
@@ -816,31 +881,24 @@ export abstract class Reactor extends Component {
         
     }
 
-    protected reactionScope: ReactionSandbox;
-
-    protected mutationScope: MutationSandbox;
-
-    /**
-     * Inner class to providing access to methods for changing the connection
-     * topology.
-     */
-    protected MutationSandbox = class implements MutationSandbox { 
-        constructor(private reactor: Reactor) {}
-        
-        public util = this.reactor.util
-        
-        public connect<A extends T, R extends Present, T extends Present, S extends R>
-                (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
-            return this.reactor._connect(src, dst);
-        }
-    };
-
-    protected ReactionSandbox = class implements ReactionSandbox {
-        public util: AppUtils;
-        constructor(public reactor: Reactor) {
-            this.util = reactor.util
-        }
+    protected _initializeReactionScope(): void {
+        this._reactionScope = new this._ReactionSandbox(this)
     }
+
+    protected _initializeMutationScope(): void {
+        this._mutationScope = new this._MutationSandbox(this)
+    }
+    
+    protected _isActive(): boolean {
+        return this._active
+    }
+
+
+    protected getWriter<T extends Present>(port: Port<T>): Writer<T> {
+        // FIXME: Implement checks to ensure that port is allowed to be written to.
+        return new Writer(port);
+    }
+
 
     /**
      * Return the index of the reaction given as an argument.
@@ -867,9 +925,9 @@ export abstract class Reactor extends Component {
      * to the given port.
      * @param port The port to look up its destinations for.
      */
-    public getDestinations(port: Port<Present>): Set<Port<Present>> {
+    public _getDestinations(port: Port<Present>): Set<Port<Present>> {
         if (this.__container__) {
-            let dests = (this.__container__ as Reactor)._destinationPorts.get(port);
+            let dests = this.__container__._destinationPorts.get(port);
             if (dests) {
                 return dests;
             }
@@ -883,7 +941,7 @@ export abstract class Reactor extends Component {
      */
     public getSource(port: Port<Present>): Port<Present> | undefined {
         if (this.__container__) {
-            return (this.__container__ as Reactor)._sourcePort.get(port); // FIXME: weird cast
+            return this.__container__._sourcePort.get(port);
         }
     }
 
@@ -1059,19 +1117,22 @@ export abstract class Reactor extends Component {
         react: (this: ReactionSandbox, ...args: ArgList<T>) => void, deadline?: TimeValue,
         late: (this: ReactionSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
-        
-        if (trigs.list.filter(trig => trig instanceof CalleePort).length > 0) {
+        let calleePorts = trigs.list.filter(trig => trig instanceof CalleePort)
+        if (calleePorts.length > 0) {
             // This is a procedure.
             if (trigs.list.length > 1) {
                 // A procedure can only have a single trigger.
                 throw new Error("Procedure has multiple triggers.")
             }
-            let procedure = new Procedure(this, this.reactionScope, trigs, args, react, deadline, late) 
+            // FIXME: throw error if there are existing reactions sensitive to this particular port.
+            let procedure = new Procedure(this, this._reactionScope, trigs, args, react, deadline, late) 
             this._reactions.push(procedure)
-            this.recordDeps(procedure)
+            this.recordDeps(procedure);
+            // Let the port discover the newly added reaction.
+            (calleePorts[0] as CalleePort<Present, unknown>).update()
         } else {
             // This is an ordinary reaction.
-            let reaction = new Reaction(this, this.reactionScope, trigs, args, react, deadline, late);
+            let reaction = new Reaction(this, this._reactionScope, trigs, args, react, deadline, late);
             this._reactions.push(reaction);
             this.recordDeps(reaction);
         }
@@ -1081,7 +1142,7 @@ export abstract class Reactor extends Component {
         react: (this: MutationSandbox, ...args: ArgList<T>) => void, deadline?: TimeValue,
         late: (this: MutationSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
-        let mutation = new Mutation(this, this.mutationScope, trigs, args, react,  deadline, late);
+        let mutation = new Mutation(this, this._mutationScope, trigs, args, react,  deadline, late);
         this._mutations.push(mutation);
         this.recordDeps(mutation);
     }
@@ -1187,7 +1248,7 @@ export abstract class Reactor extends Component {
         // Push triggered reactions onto the reaction queue.
         if (reactions != undefined) {
             for (let r of reactions) {
-                this.app._triggerReaction(r);
+                this._app._triggerReaction(r);
             }
         } else {
             Log.global.debug("No reactions to trigger.")
@@ -1214,7 +1275,7 @@ export abstract class Reactor extends Component {
         let reactions = this._triggerMap.get(e.trigger);
         if (reactions) {
             for (let r of reactions) {
-                this.app._triggerReaction(r);
+                this._app._triggerReaction(r);
             }
         }
     }
@@ -1260,8 +1321,7 @@ export abstract class Reactor extends Component {
                 // A reactor may not be a child of itself.
                 if (value === this) {
                     throw new Error("A reactor may not have itself as an attribute." +
-                        " Reactor attributes of a reactor represent children" +
-                        " and a reactor may not be a child of itself");
+                        " Reactor attributes represent a containment relationship, and a reactor cannot contain itself.");
                 }
                 children.add(value);
             }
@@ -1269,20 +1329,13 @@ export abstract class Reactor extends Component {
         return children;
     }
 
-    // public _registerStartupShutdown(startup: Startup, shutdown: Action<unknown>) {
-    //     // FIXME: do hierarchy check to ensure that this reactors should have access to these actions.
-    //     this._startupActions.add(startup);
-    //     this._shutdownActions.add(shutdown);
-    // }
-
     /**
-     * Returns the set of reactions owned by this reactor.
+     * Returns the set of reactions and mutations owned by this reactor.
      */
     public _getReactions(): Set<Reaction<unknown>> {
-        var set: Set<Reaction<unknown>> = new Set();
-        for (let entry of this._reactions) {
-            set.add(entry);
-        }
+        var set: Set<Reaction<any>> = new Set();
+        this._mutations.forEach((it) => set.add(it))
+        this._reactions.forEach((it) => set.add(it))
         return set;
     }
 
@@ -1425,12 +1478,6 @@ export abstract class Reactor extends Component {
                             child._getPorts().forEach((port) => 
                             {(port === dst)? calleeContainer = child : {}}))
                 }
-                // Retrieve the first reaction that is triggered by the callee
-                // (there should not ever be more than one) and store it in the
-                // caller port as the remote reaction to trigger when "invoke"
-                // is called.
-                src.remoteReaction = calleeContainer?._dependentReactions.
-                        get(dst)?.values().next().value
                 // Obtain the list of remote callers that is stored on the
                 // callee's end.
                 let callers = calleeContainer?._remoteCallers.get(dst)
@@ -1489,7 +1536,7 @@ export abstract class Reactor extends Component {
         let timers = new Set<Timer>();
         for (const [k, v] of Object.entries(this)) {
             if (v instanceof Timer) {
-                this.app._setTimer(v);
+                this._app._setTimer(v);
             }
         }
     }
@@ -1502,7 +1549,7 @@ export abstract class Reactor extends Component {
         let timers = new Set<Timer>();
         for (const [k, v] of Object.entries(this)) {
             if (v instanceof Timer) {
-                this.app._unsetTimer(v);
+                this._app._unsetTimer(v);
             }
         }
     }
@@ -1552,7 +1599,7 @@ export abstract class Reactor extends Component {
      * parent property of each component correctly matches its location in
      * the reactor hierarchy.
      */
-    public _checkAllParents(parent: Reactor | null) {
+    protected _checkAllParents(parent: Reactor | null) {
         if (this.__container__ != parent) throw new Error("The parent property for " + this
             + " does not match the reactor hierarchy.");
 
@@ -1597,7 +1644,7 @@ export abstract class Port<T extends Present> extends Component implements Read<
      */
     public getDownstreamReactions(): Set<Reaction<unknown>> { // FIXME: move this to reactor because reactions should not be able to retrieve downstream reactions
         var reactions: Set<Reaction<unknown>> = new Set();
-        for (let d of this.__container__.getDestinations(this)) {
+        for (let d of this.__container__._getDestinations(this)) {
             reactions = new Set([...reactions, ...d.getDownstreamReactions()]);
         }
         reactions = new Set([...reactions, ...this.__container__.getDownstreamReactions(this)]);
@@ -1670,7 +1717,7 @@ export abstract class Port<T extends Present> extends Component implements Read<
             this.value = value;
             Log.debug(this, () => ">> parent: " + this.__container__);
             this.tag = this.__container__.util.getCurrentTag();
-            this.__container__._propagateValue(this); // FIXME: should this be a utility function?
+            this.__container__._propagateValue(this);
         } else {
             Log.global.warn("WARNING: port update denied.");
         }
@@ -1730,20 +1777,19 @@ export class InPort<T extends Present> extends Port<T> {
  */
 export class CallerPort<A extends Present, R extends Present> extends OutPort<R> implements Write<A>, Read<R> { // FIXME: may Port should not implement Read
     
-    get(): R | undefined {
+    public get(): R | undefined {
         return this.remotePort?.retValue
     }
 
-    remotePort: CalleePort<A, R> | undefined;
+    public remotePort: CalleePort<A, R> | undefined;
 
-    remoteReaction: Reaction<unknown> | undefined;
+    //public remoteReaction: Reaction<unknown> | undefined;
 
     public set(value: A): void  {
         // Invoke downstream reaction directly, and return store the result.
         if (this.remotePort) {
-            this.remotePort.argValue = value
+            this.remotePort.invoke(value)
         }
-        this.remoteReaction?.doReact()
     }
 
     public invoke(value:A): R | undefined {
@@ -1768,6 +1814,23 @@ export class CalleePort<A extends Present, R> extends InPort<A> implements Read<
     public retValue: R | undefined;
 
     public argValue: A | undefined;
+
+    private reaction: Reaction<unknown> | undefined
+
+    public update(): void {
+        for (let reaction of this.__container__._getReactions()) {
+            if (reaction.trigs.list.find(it => it === this)) {
+                this.reaction = reaction
+                break
+            }
+        }
+    }
+
+    public invoke(value: A): R | undefined {
+        this.argValue = value
+        this.reaction?.doReact()
+        return this.retValue
+    }
 
     public set(value: R): void  {
         // NOTE: this will not trigger reactions because
@@ -2046,8 +2109,8 @@ export class App extends Reactor {
         // Initialize the scope in which reactions and mutations of this reactor
         // will execute. This is already done in the super constructor, but has
         // to be redone because at that time this.utils hasn't initialized yet.
-        this.reactionScope = new this.ReactionSandbox(this);
-        this.mutationScope = new this.MutationSandbox(this);
+        this._initializeReactionScope()
+        this._initializeMutationScope()
 
         this._fast = fast;
         this._keepAlive = keepAlive;
@@ -2203,7 +2266,7 @@ export class App extends Reactor {
         let head = this._eventQ.peek();
         
         // Ignore request if shutdown has started and the event is not tied to a shutdown action.
-        if (this._isActive && (!(e.trigger instanceof Shutdown) || !(e.trigger instanceof Startup)))
+        if (this._isActive() && (!(e.trigger instanceof Shutdown) || !(e.trigger instanceof Startup)))
             return
         
         this._eventQ.push(e);
@@ -2278,7 +2341,7 @@ export class App extends Reactor {
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
     private _shutdown(): void {
-        if (this._isActive) {
+        if (this._isActive()) {
             this._endOfExecution = this._currentTag.time;
 
             Log.debug(this, () => "Initiating shutdown sequence.");
