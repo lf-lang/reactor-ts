@@ -118,13 +118,6 @@ export interface Read<T> {
 }
 
 /**
- * Interface for the answering of remote calls.
- */
-export interface Return<A, R> extends Read<A>, Write<R> {
-    return(value: R): void;
-}
-
-/**
  * Interface for schedulable actions.
  */
 export interface Schedule<T extends Present> extends Read<T> {
@@ -291,8 +284,6 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         return Object.is(this, node);
     }
 
-    
-
     public doReact() {
 
         Log.debug(this, () => ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
@@ -318,11 +309,10 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
     }
 
     /**
-     * Setter for reaction deadline. Once a deadline has been set
-     * the deadline's timeout will determine whether the reaction's 
-     * react function or the deadline's handle function will be invoked.
-     * If a deadline has not been set the reaction's react function
-     * will be invoked once triggered. 
+     * Set a deadline for this reaction. The given time value denotes the maximum
+     * allowable amount by which logical time may lag behind physical time at the
+     * point that this reaction is ready to execute. If this maximum lag is
+     * exceeded, the "late" function is executed instead of the "react" function.
      * @param deadline The deadline to set to this reaction.
      */
     setDeadline(deadline: TimeValue): this {
@@ -331,8 +321,9 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
     }
 
     /**
-     * Setter for reaction priority. This should
-     * be determined by topological sort of reactions.
+     * Setter for reaction priority, to be used only by the runtime environment.
+     * The priority of each reaction is determined on the basis of its
+     * dependencies on other reactions.
      * @param priority The priority for this reaction.
      */
     public setPriority(priority: number) {
@@ -351,15 +342,21 @@ class Event<T> implements PrioritySetNode<Tag> {
     public next: PrioritySetNode<Tag> | undefined;
 
     /**
-     * Constructor for an event.
+     * Construct a new event.
      * @param trigger The trigger of this event.
      * @param tag The tag at which this event occurs.
      * @param value The value associated with this event. 
      * 
      */
-    constructor(public trigger: Action<Present> | Timer, public tag: Tag, public value: T) {
+    constructor(public trigger: Action<Present> | Timer, public tag: Tag, 
+            public value: T) {
     }
 
+    /**
+     * Return true if this event has a smaller tag than the given event, false
+     * otherwise.
+     * @param node The event to compare this event's tag against.
+     */
     hasPriorityOver(node: PrioritySetNode<Tag> | undefined) {
         if (node) {
             return this.getPriority().isSmallerThan(node.getPriority());
@@ -368,6 +365,11 @@ class Event<T> implements PrioritySetNode<Tag> {
         }
     }
 
+    /**
+     * Determine whether the given event is a duplicate of this one. If so, assign the
+     * value of this event to the given event and return true. Otherwise, return false.
+     * @param node The event to update the value of if it is a duplicate of this event.
+     */
     updateIfDuplicateOf(node: PrioritySetNode<Tag> | undefined) {
         if (node && node instanceof Event) {
             if (this.trigger === node.trigger && this.tag.isSimultaneousWith(node.tag)) {
@@ -378,6 +380,9 @@ class Event<T> implements PrioritySetNode<Tag> {
         return false;
     }
 
+    /**
+     * Return the tag associated with this event.
+     */
     getPriority(): Tag {
         return this.tag;
     }
@@ -397,8 +402,7 @@ export class Action<T extends Present> extends Component implements Read<T> {
     origin: Origin;
     minDelay: TimeValue;
     minInterArrival: TimeValue = defaultMIT;
-    //name: string;
-
+    
     // A value is available to any reaction triggered by this action.
     // The value is not directly associated with a timestamp because
     // every action needs a timestamp (for _isPresent()) and only
