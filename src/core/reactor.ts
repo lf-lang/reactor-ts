@@ -367,13 +367,13 @@ class Event<T> implements PrioritySetNode<Tag> {
 
     /**
      * Determine whether the given event is a duplicate of this one. If so, assign the
-     * value of this event to the given event and return true. Otherwise, return false.
-     * @param node The event to update the value of if it is a duplicate of this event.
+     * value of given event to this one and return true. Otherwise, return false.
+     * @param node The event adopt the value from if it is a duplicate of this one.
      */
     updateIfDuplicateOf(node: PrioritySetNode<Tag> | undefined) {
         if (node && node instanceof Event) {
             if (this.trigger === node.trigger && this.tag.isSimultaneousWith(node.tag)) {
-                node.value = this.value; // update the value
+                this.value = node.value; // update the value
                 return true;
             }
         }
