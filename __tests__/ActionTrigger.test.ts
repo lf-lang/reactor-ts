@@ -56,6 +56,7 @@ export class ActionTrigger extends Reactor {
                     this.util.success();
                     console.log("success")
                 } else {
+                    console.log("MESSAGE: " + msg)
                     this.util.failure();
                 }
                 console.log("Response to action is reacting. String payload is: " + msg);
@@ -82,7 +83,7 @@ describe('ActionTrigger', function () {
 
     it('start runtime', done => {
 
-        function failure(){
+        function failure() {
             throw new Error("Reactor has failed.");
         };
 

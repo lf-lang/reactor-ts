@@ -367,13 +367,13 @@ class Event<T> implements PrioritySetNode<Tag> {
 
     /**
      * Determine whether the given event is a duplicate of this one. If so, assign the
-     * value of given event to this one and return true. Otherwise, return false.
+     * value this event to the given one. Otherwise, return false.
      * @param node The event adopt the value from if it is a duplicate of this one.
      */
     updateIfDuplicateOf(node: PrioritySetNode<Tag> | undefined) {
         if (node && node instanceof Event) {
             if (this.trigger === node.trigger && this.tag.isSimultaneousWith(node.tag)) {
-                this.value = node.value; // update the value
+                node.value = this.value; // update the value
                 return true;
             }
         }
@@ -595,7 +595,7 @@ class Scheduler<T extends Present> implements Read<T>, Schedule<T> {
         }
         
         Log.debug(this, () => "Scheduling " + this.action.origin +
-            " action " + this.action.getName() + " with tag: " + tag);
+            " action " + this.action.getFullyQualifiedName() + " with tag: " + tag);
 
         this.__parent__.util.schedule(new Event(this.action, tag, value));
     }
@@ -864,9 +864,9 @@ export abstract class Reactor extends Component {
             function (this) {
                 Log.debug(this, () => "*** Starting up reactor " +
                 self.getFullyQualifiedName());
-                self._active = true;
                 self._startupChildren();
                 self._setTimers();
+                self._active = true;
             }
         );
         
@@ -877,13 +877,14 @@ export abstract class Reactor extends Component {
             function (this) {
                 Log.debug(this, () => "*** Shutting down reactor " + 
                     self.getFullyQualifiedName());
-                self._active = false;
+
                 // if (this.reactor instanceof App) {
                 //     //this.reactor._shutdownStarted = true;
                 //     //this.reactor._cancelNext();
                 // }
                 self._shutdownChildren();
                 self._unsetTimers();
+                self._active = false;
             }
         );
         
@@ -1702,7 +1703,6 @@ export abstract class Port<T extends Present> extends Component implements Read<
         reactions = new Set([...reactions, ...this.__container__.getDownstreamReactions(this)]);
         if (reactions.size > 0) {
             Log.global.debug("Downstream reactions found!");
-            console.log(reactions)
         }
         return reactions;
     }
@@ -2300,11 +2300,7 @@ export class App extends Reactor {
      */
     public schedule(e: Event<any>) {
         let head = this._eventQ.peek();
-        
-        // Ignore request if shutdown has started and the event is not tied to a shutdown action.
-        if (this._isActive() && (!(e.trigger instanceof Shutdown) || !(e.trigger instanceof Startup)))
-            return
-        
+                    
         this._eventQ.push(e);
 
         Log.debug(this, () => "Scheduling with trigger: " + e.trigger);
