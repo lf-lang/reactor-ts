@@ -3,7 +3,7 @@ import {TimeValue, TimeUnit, Tag, UnitBasedTimeValue} from "./time";
 /**
  * Test of helper functions for time in reactors
  */
-describe('time representation', function () {
+describe('time helper functions', function () {
     
     // Zero time intervals.
     const straightZero: TimeValue = new TimeValue(0);
@@ -22,7 +22,7 @@ describe('time representation', function () {
     const oneThousandMS: TimeValue = new UnitBasedTimeValue(1000, TimeUnit.msec);
     const aboutTenYears: TimeValue = new UnitBasedTimeValue(365 * 10, TimeUnit.day);
 
-    // Time instants.
+    // Tags.
     const tiFiveSeconds0:Tag = new Tag(fiveSeconds, 0);
     const tiFiveSeconds1:Tag = new Tag(fiveSeconds, 1);
 
@@ -35,7 +35,7 @@ describe('time representation', function () {
      * Test to see if the zero representations for time intervals 
      * are correctly identified by the timeIntervalIsZero function.
      */
-    it('timeIntervalIsZero', function () {
+    it('zero test', function () {
         
         expect( straightZero.isZero()).toBe(true);
         expect( zeroSeconds.isZero()).toBe(true);
@@ -52,9 +52,9 @@ describe('time representation', function () {
     });
 
     /**
-     * Create time intervals by specifying a time value and time unit.
+     * Test whether time intervals are equal.
      */
-    it('unitBasedTimeIntervals', function () {
+    it('time value equality', function () {
 
         // Creating time intervals with a non-integer 
         // time value results in an error.
@@ -76,6 +76,12 @@ describe('time representation', function () {
         expect(oneThousandMS.isEqualTo(new TimeValue(1, 0)));
         expect(aboutTenYears.isEqualTo(new TimeValue(10 * 365 * 24 * 60 * 60 , 0)));
 
+        expect(fiveSeconds.isEqualTo(fiveSeconds)).toBeTruthy();
+        expect(fiveSeconds.isEqualTo(fortyTwoDays)).toBeFalsy();
+        expect(fortyTwoDays.isEqualTo(fiveSeconds)).toBeFalsy();
+        expect(fiveSFiveUS.isEqualTo(fiveSeconds)).toBeFalsy();
+        expect(fiveSeconds.isEqualTo(fiveSFiveUS)).toBeFalsy();
+
         // This test should generate an error because we're trying to convert
         // a number which can't be represented as a numeric time interval.
         expect(() => {
@@ -83,23 +89,12 @@ describe('time representation', function () {
         }).toThrowError();
 
     });
-
+    
     /**
-     * Test whether time intervals are equal.
-     */
-    it('TestEqualTimeIntervals', function () {
-        expect(fiveSeconds.isEqualTo(fiveSeconds)).toBeTruthy();
-        expect(fiveSeconds.isEqualTo(fortyTwoDays)).toBeFalsy();
-        expect(fortyTwoDays.isEqualTo(fiveSeconds)).toBeFalsy();
-        expect(fiveSFiveUS.isEqualTo(fiveSeconds)).toBeFalsy();
-        expect(fiveSeconds.isEqualTo(fiveSFiveUS)).toBeFalsy();
-    });
-
-    /**
-     * Report whether one time instant is ealier than another one.
+     * Report whether one tag is earlier than another one.
      * Microstep indices are taken into consideration.
      */
-    it('compareTimeInstants', function () {
+    it('compare tags', function () {
         expect(tiZero.isSmallerThan(tiZero)).toBeFalsy();
         expect(tiZero.isSmallerThan(tiZero1)).toBeTruthy();
         expect(tiZero1.isSmallerThan(tiZero)).toBeFalsy();
@@ -121,9 +116,9 @@ describe('time representation', function () {
     });
 
     /**
-     * Test simultaneity of time instants.
+     * Test simultaneity of tags.
      */
-    it('timeInstantsAreEqual', function(){
+    it('tag equality', function() {
         expect(tiZero.isSimultaneousWith(tiZero1)).toBeFalsy();
         expect(tiZero1.isSimultaneousWith(tiZero1)).toBeTruthy();
         expect(tiOne1.isSimultaneousWith(tiZero1)).toBeFalsy();
@@ -131,9 +126,9 @@ describe('time representation', function () {
     });
 
     /**
-     * Add a time interval to a time instant and obtain a new time instant.
+     * Add a time interval to a tag and obtain a new time instant.
      */
-    it('getLaterTime' , function () {
+    it('get a later tag' , function () {
         expect(new Tag(fiveHundredMilNS, 0).getLaterTag(fortyTwoDays).isSimultaneousWith(new Tag(new TimeValue(42 * 24 * 60 * 60, 500000000), 0))).toBeTruthy();
         expect(new Tag(fiveHundredMilNS, 0).getLaterTag(fiveHundredMilNS).isSimultaneousWith(new Tag(new TimeValue(1, 0), 0))).toBeTruthy();
         expect(new Tag(oneThousandMS, 0).getLaterTag(straightZero).isSimultaneousWith(new Tag(oneThousandMS, 0))).toBeTruthy();
@@ -143,7 +138,7 @@ describe('time representation', function () {
     /**
      * Get a time interval in a format that is understood by nanotimer.
      */
-    it('getNanoTime', function() {
+    it('support for nanotimer (obsolete)', function() {
         expect(fiveSeconds.getNanoTime()).toEqual("5s");
         expect(straightZero.getNanoTime()).toEqual("0s");
         expect(fiveSFiveUS.getNanoTime()).toEqual("5000005u");
@@ -159,15 +154,22 @@ describe('time representation', function () {
     })
 
     /**
-     * Obtain the difference between two time instants.
+     * Obtain the difference between two time values.
      * Microstep indices are ignored in this operation 
-     * (time intervals don't have a microstep).
+     * (time values don't have a microstep).
      */
-    it('getTimeDifference', function() {
+    it('compare tags', function() {
         expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeValue(0));
         expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds1)).toEqual(new TimeValue(0));
         expect(tiFiveSeconds0.getTimeDifference(tiOne1)).toEqual(new TimeValue(4));
         expect(tiOne1.getTimeDifference(tiFiveSeconds0)).toEqual(new TimeValue(4));
+    });
+
+    /**
+     * Compare two time values and find out which one is earlier.
+     */
+    it('compare time values', function() {
+        expect(new TimeValue(0, 999999998).isEarlierThan(new TimeValue(0, 999999999))).toEqual(true)
     });
 
     /**

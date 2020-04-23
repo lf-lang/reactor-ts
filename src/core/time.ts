@@ -75,7 +75,7 @@ export class TimeValue {
      * @param other The time value to subtract from this one.
      */
     subtract(other: TimeValue): TimeValue {
-        var s = this.seconds - other.seconds;;
+        var s = this.seconds - other.seconds;
         var ns = this.nanoseconds - other.nanoseconds;
 
         if(ns < 0) {
