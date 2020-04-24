@@ -1,4 +1,5 @@
 import {TimeValue, TimeUnit, Tag, UnitBasedTimeValue} from "../src/core/time";
+import { createSecureServer } from "http2";
 
 /**
  * Test of helper functions for time in reactors
@@ -30,6 +31,26 @@ describe('time helper functions', function () {
     const tiZero1:Tag = new Tag(straightZero, 1);
     const tiOne1:Tag = new Tag(new TimeValue(1), 1);
     const tiOneNano1:Tag = new Tag(new TimeValue(0,1), 1);
+
+
+
+    
+    /**
+     * Test if "borrowing a second" functionality works
+     */
+    it('borrow a second', function() {
+        expect(new TimeValue(2, 200000).subtract(new TimeValue(1, 300000))).toEqual(new TimeValue(0, (200000 - 300000) + 1000000000));
+        expect(new TimeValue(7, 3000).subtract(fiveSFiveUS)).toEqual(new TimeValue((7-5)-1, (3000 - 5000) + 1000000000));
+        expect(new TimeValue(7, 6000).subtract(fiveSFiveUS)).toEqual(new TimeValue((7-5), (6000 - 5000)));
+        console.log("Borrowed")
+    });
+
+    it('converting to string', function() {
+        expect(straightZero.toString()).toEqual("(0 secs; 0 nsecs)");
+        expect(new TimeValue(5, 5000).toString()).toEqual("(5 secs; 5000 nsecs)");
+        expect(new TimeValue(250000, 0).toString()).toEqual("(250000 secs; 0 nsecs)");
+    });
+
     
     /**
      * Test to see if the zero representations for time intervals 
@@ -139,6 +160,7 @@ describe('time helper functions', function () {
      * Get a time interval in a format that is understood by nanotimer.
      */
     it('support for nanotimer (obsolete)', function() {
+        expect(new TimeValue(0 , 225).getNanoTime()).toEqual("225n");
         expect(fiveSeconds.getNanoTime()).toEqual("5s");
         expect(straightZero.getNanoTime()).toEqual("0s");
         expect(fiveSFiveUS.getNanoTime()).toEqual("5000005u");
@@ -172,16 +194,6 @@ describe('time helper functions', function () {
         expect(new TimeValue(0, 999999998).isEarlierThan(new TimeValue(0, 999999999))).toEqual(true)
     });
 
-
-    /**
-     * Test if borrowing a second functionality works
-     */
-    it('borrow a second', function() {
-        expect(new TimeValue(2, 200000).subtract(new TimeValue(1, 300000))).toEqual(new TimeValue(0, (200000 - 300000) + 1000000000));
-        expect(new TimeValue(7, 3000).subtract(fiveSFiveUS)).toEqual(new TimeValue((7-5)-1, (3000 - 5000) + 1000000000));
-        expect(new TimeValue(7, 6000).subtract(fiveSFiveUS)).toEqual(new TimeValue((7-5), (6000 - 5000)));
-        console.log("Borrowed")
-    });
 
     /**
      * See if expected errors happen.
