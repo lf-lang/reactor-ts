@@ -337,7 +337,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
  * determine the event's position with respect to other events in the event
  * queue.
  */
-class Event<T> implements PrioritySetNode<Tag> {
+class TaggedEvent<T> implements PrioritySetNode<Tag> {
 
     public next: PrioritySetNode<Tag> | undefined;
 
@@ -371,7 +371,7 @@ class Event<T> implements PrioritySetNode<Tag> {
      * @param node The event adopt the value from if it is a duplicate of this one.
      */
     updateIfDuplicateOf(node: PrioritySetNode<Tag> | undefined) {
-        if (node && node instanceof Event) {
+        if (node && node instanceof TaggedEvent) {
             if (this.trigger === node.trigger && this.tag.isSimultaneousWith(node.tag)) {
                 node.value = this.value; // update the value
                 return true;
@@ -416,7 +416,7 @@ export class Action<T extends Present> extends Component implements Read<T> {
 
     private timestamp: Tag | undefined;
 
-    public update(e: Event<unknown>) {
+    public update(e: TaggedEvent<unknown>) {
 
         if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
@@ -580,7 +580,7 @@ class Scheduler<T extends Present> implements Read<T>, Schedule<T> {
 
         if (this.action instanceof Startup) {
             // Add all reactions triggered by startup directly to the reaction queue.
-            this.action.update(new Event(this.action, tag, value));
+            this.action.update(new TaggedEvent(this.action, tag, value));
             return;
         }
 
@@ -597,7 +597,7 @@ class Scheduler<T extends Present> implements Read<T>, Schedule<T> {
         Log.debug(this, () => "Scheduling " + this.action.origin +
             " action " + this.action.getFullyQualifiedName() + " with tag: " + tag);
 
-        this.__parent__.util.schedule(new Event(this.action, tag, value));
+        this.__parent__.util.schedule(new TaggedEvent(this.action, tag, value));
     }
 }
 
@@ -659,7 +659,7 @@ export class Timer extends Component implements Read<Tag> {
      * event, and trigger any reactions that list this timer as their trigger.
      * @param e Timestamped event.
      */
-    public update(e: Event<unknown>) {
+    public update(e: TaggedEvent<unknown>) {
         if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
         }
@@ -1281,7 +1281,7 @@ export abstract class Reactor extends Component {
         }
     }
 
-    public _triggerReactions(e: Event<unknown>) {
+    public _triggerReactions(e: TaggedEvent<unknown>) {
         Log.debug(this, () => "Triggering reactions sensitive to " + e.trigger);
 
         let reactions = this._triggerMap.get(e.trigger);
@@ -1925,16 +1925,16 @@ class Writer<T extends Present> implements Read<T>, Proxy<T> { // NOTE: don't ex
 
 class EventQueue extends PrioritySet<Tag> {
 
-    public push(event: Event<unknown>) {
+    public push(event: TaggedEvent<unknown>) {
         return super.push(event);
     }
 
-    public pop(): Event<unknown> | undefined {
-        return super.pop() as Event<unknown>;
+    public pop(): TaggedEvent<unknown> | undefined {
+        return super.pop() as TaggedEvent<unknown>;
     }
 
-    public peek(): Event<unknown> | undefined {
-        return super.peek() as Event<unknown>;
+    public peek(): TaggedEvent<unknown> | undefined {
+        return super.peek() as TaggedEvent<unknown>;
     }
 }
 
@@ -1955,7 +1955,7 @@ class ReactionQueue extends PrioritySet<Priority> {
 }
 
 interface AppUtils {
-    schedule(e: Event<any>): void;
+    schedule(e: TaggedEvent<any>): void;
     success(): void;
     failure(): void;
     requestShutdown(): void;
@@ -1990,7 +1990,7 @@ export class App extends Reactor {
         constructor(private app: App) {
 
         }
-        public schedule(e: Event<any>) {
+        public schedule(e: TaggedEvent<any>) {
             return this.app.schedule(e);
         }
 
@@ -2104,7 +2104,7 @@ export class App extends Reactor {
         } else {
             startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
         }
-        this.schedule(new Event(timer, this.util.getCurrentTag().getLaterTag(timer.offset), null));
+        this.schedule(new TaggedEvent(timer, this.util.getCurrentTag().getLaterTag(timer.offset), null));
     }
 
     /**
@@ -2235,7 +2235,7 @@ export class App extends Reactor {
                         if (!trigger.period.isZero()) {
                             Log.debug(this, () => "Rescheduling timer " + trigger);
 
-                            this.schedule(new Event(trigger,
+                            this.schedule(new TaggedEvent(trigger,
                                 this._currentTag.getLaterTag(trigger.period),
                                 null));
                         }
@@ -2298,7 +2298,7 @@ export class App extends Reactor {
      * Push events on the event queue. 
      * @param e Prioritized event to push onto the event queue.
      */
-    public schedule(e: Event<any>) {
+    public schedule(e: TaggedEvent<any>) {
         let head = this._eventQ.peek();
                     
         this._eventQ.push(e);
@@ -2437,7 +2437,7 @@ export class App extends Reactor {
             this._endOfExecution = this._startOfExecution.add(this._executionTimeout);
             Log.debug(this, () => "Execution timeout: " + this._executionTimeout);
             // If there is a known end of execution, schedule a shutdown reaction to that effect.
-            this.schedule(new Event(this.shutdown, new Tag(this._endOfExecution, 1), null));
+            this.schedule(new TaggedEvent(this.shutdown, new Tag(this._endOfExecution, 1), null));
         }
 
         Log.info(this, () => ">>> Spent " + this._currentTag.time.subtract(initStart as TimeValue)
@@ -2448,7 +2448,7 @@ export class App extends Reactor {
         Log.info(this, () => Log.hr);
 
         // Set in motion the execution of this program by scheduling startup at the current logical time.
-        this.util.schedule(new Event(this.startup, this._currentTag, null));
+        this.util.schedule(new TaggedEvent(this.startup, this._currentTag, null));
         //this.getSchedulable(this.startup).schedule(0);
     }
 }
