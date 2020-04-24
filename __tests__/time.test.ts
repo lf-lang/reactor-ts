@@ -45,10 +45,16 @@ describe('time helper functions', function () {
         console.log("Borrowed")
     });
 
+    /**
+     * Test conversion to string
+     */
     it('converting to string', function() {
         expect(straightZero.toString()).toEqual("(0 secs; 0 nsecs)");
         expect(new TimeValue(5, 5000).toString()).toEqual("(5 secs; 5000 nsecs)");
         expect(new TimeValue(250000, 0).toString()).toEqual("(250000 secs; 0 nsecs)");
+        expect(fiveSFiveUS.toString()).toEqual("5000005 usec");
+        expect(tiFiveSeconds0.toString()).toEqual("(5 secs, 0)")
+        expect(tiFiveSeconds1.toString()).toEqual("(5 secs, 1)")
     });
 
     
@@ -110,7 +116,27 @@ describe('time helper functions', function () {
         }).toThrowError();
 
     });
-    
+
+    /**
+     * Test the Tag constructor
+     */
+    it('create tags', function () {
+        const tg = new Tag(straightZero, 0);
+        expect(tg.time).toStrictEqual(new TimeValue(0, 0));
+        const tg2 = new Tag(straightZero);
+        expect(tg2.time).toStrictEqual(new TimeValue(0, 0));
+
+
+        expect(() => {
+            expect(new Tag(new TimeValue(2,1), -2));
+        }).toThrowError
+
+        expect(() => {
+            expect(new Tag(straightZero, 2.2));
+        }).toThrowError
+        
+    });
+
     /**
      * Report whether one tag is earlier than another one.
      * Microstep indices are taken into consideration.
@@ -198,7 +224,7 @@ describe('time helper functions', function () {
     /**
      * See if expected errors happen.
      */
-    it('errors', function() {
+    it('errors', function () {
         expect(() => {
             expect(new TimeValue(4.3, 2.1));
         }).toThrowError()
@@ -210,6 +236,10 @@ describe('time helper functions', function () {
         expect(() => {
             expect(new TimeValue(2,1).subtract(new TimeValue(4, 3)));
         }).toThrowError()
+
     });
+
+
+
 
 });
