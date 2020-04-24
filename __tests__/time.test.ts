@@ -1,4 +1,4 @@
-import {TimeValue, TimeUnit, Tag, UnitBasedTimeValue} from "./time";
+import {TimeValue, TimeUnit, Tag, UnitBasedTimeValue} from "../src/core/time";
 
 /**
  * Test of helper functions for time in reactors
@@ -171,6 +171,8 @@ describe('time helper functions', function () {
     it('compare time values', function() {
         expect(new TimeValue(0, 999999998).isEarlierThan(new TimeValue(0, 999999999))).toEqual(true)
     });
+
+
 
     /**
      * See if expected errors happen.
