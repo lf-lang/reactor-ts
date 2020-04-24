@@ -173,6 +173,15 @@ describe('time helper functions', function () {
     });
 
 
+    /**
+     * Test if borrowing a second functionality works
+     */
+    it('borrow a second', function() {
+        expect(new TimeValue(2, 200000).subtract(new TimeValue(1, 300000))).toEqual(new TimeValue(0, (200000 - 300000) + 1000000000));
+        expect(new TimeValue(7, 3000).subtract(fiveSFiveUS)).toEqual(new TimeValue((7-5)-1, (3000 - 5000) + 1000000000));
+        expect(new TimeValue(7, 6000).subtract(fiveSFiveUS)).toEqual(new TimeValue((7-5), (6000 - 5000)));
+        console.log("Borrowed")
+    });
 
     /**
      * See if expected errors happen.
