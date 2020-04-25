@@ -45,14 +45,14 @@ class SR extends Reactor {
 describe('Manually constructed simple precedence graphs', () => {
 
     var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
-    var reactor = new R(new App());
+    var reactor = new SR(new App());
 
     var nodes = reactor.getNodes();
 
     graph.addNode(nodes[0]);
 
     it('graph equality', () => {
-        expect([ ...graph.nodes()]).toEqual(nodes[0])
+        expect([ ...graph.nodes()]).toEqual(nodes)
     });
 
 });
