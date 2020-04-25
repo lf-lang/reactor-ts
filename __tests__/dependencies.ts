@@ -23,6 +23,40 @@ class R extends Reactor {
     }
 }
 
+
+class SR extends Reactor {
+    protected in = new InPort(this);
+    constructor(parent: Reactor|null) {
+        super(parent);
+        this.addReaction(
+            new Triggers(this.in), 
+            new Args(), 
+            function(this) {
+                throw new Error("Method not implemented.");
+            }
+        );
+    }
+
+    getNodes() {
+        return this._getReactions();
+    }
+}
+
+describe('Manually constructed simple precedence graphs', () => {
+
+    var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
+    var reactor = new R(new App());
+
+    var nodes = reactor.getNodes();
+
+    graph.addNode(nodes[0]);
+
+    it('graph equality', () => {
+        expect([ ...graph.nodes()]).toEqual(nodes[0])
+    });
+
+});
+
 describe('Manually constructed precedence graphs', () => {
 
     var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
