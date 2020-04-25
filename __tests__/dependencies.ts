@@ -1,4 +1,4 @@
-import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet, Log} from '../src/core/util';
+import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet, Log, LogLevel} from '../src/core/util';
 import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown} from '../src/core/reactor';
 
 //Log.setGlobalLevel(Log.levels.DEBUG);
@@ -42,6 +42,19 @@ class SR extends Reactor {
     }
 }
 
+class CNode<T> implements PrecedenceGraphNode<Priority> {
+    
+    public priority: Priority = Number.MAX_SAFE_INTEGER;
+
+    constructor() {
+       
+    }
+
+    public setPriority(priority: number) {
+        this.priority = priority;
+    }
+}
+
 describe('Manually constructed simple precedence graphs', () => {
 
     var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
@@ -49,11 +62,20 @@ describe('Manually constructed simple precedence graphs', () => {
 
     var nodes = reactor.getNodes();
 
-    graph.addNode(nodes[0]);
+   graph.addNode(nodes[0]);
 
     it('graph equality', () => {
         expect([ ...graph.nodes()]).toEqual(nodes)
     });
+
+    
+});
+
+describe('Test for corner cases', () => {
+
+    var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
+    var node: PrecedenceGraphNode<Priority> = new CNode<Priority>(); 
+    graph.addEdge(node, node);
 
 });
 
@@ -275,4 +297,53 @@ describe('Automatically constructed precedence graphs', () => {
 }`);
     });
 
+});
+
+
+
+describe('Test for Logger', () => {
+    
+    it('DEBUG Log', () => {
+        
+        Log.global.level = LogLevel.DEBUG
+
+        console.log("Log level is " + Log.global.level)
+        Log.getInstance("test module")
+        Log.debug(null, () => "test");
+        Log.debug(null, () => "test", "test module");
+        Log.error(null, () => "test");
+        Log.error(null, () => "test", "test module");
+        Log.info(null, () => "test");
+        Log.info(null, () => "test", "test module");
+        Log.log(null, () => "test");
+        Log.log(null, () => "test", "test module");
+        Log.warn(null, () => "test");
+        Log.warn(null, () => "test", "test module");
+
+        spyOn(Log, 'debug').and.callThrough
+        spyOn(Log, 'error').and.callThrough
+        spyOn(Log, 'info').and.callThrough
+        spyOn(Log, 'log').and.callThrough
+        spyOn(Log, 'warn').and.callThrough
+
+        Log.getInstance("test module")
+        Log.debug(null, () => "test");
+        Log.debug(null, () => "test", "test module");
+        Log.error(null, () => "test");
+        Log.error(null, () => "test", "test module");
+        Log.info(null, () => "test");
+        Log.info(null, () => "test", "test module");
+        Log.log(null, () => "test");
+        Log.log(null, () => "test", "test module");
+        Log.warn(null, () => "test");
+        Log.warn(null, () => "test", "test module");
+
+        expect(Log.debug).toHaveBeenCalledTimes(2);
+        expect(Log.error).toHaveBeenCalledTimes(2);
+        expect(Log.info).toHaveBeenCalledTimes(2);
+        expect(Log.log).toHaveBeenCalledTimes(2);
+        expect(Log.warn).toHaveBeenCalledTimes(2);
+        /* xpect(Log.getInstance("test module")).toEqual(""); */
+        console.log(Log.global.level)
+    });
 });
