@@ -9,7 +9,7 @@ const _reactor:Reactor = new App()
 const lg:Logger = new Logger(_reactor , 10)
 
 /**
- * Test of helper functions for time in reactors
+ * 
  */
 describe('Logger functions', function () {
 
@@ -21,10 +21,11 @@ describe('Logger functions', function () {
 });
 
 
+/**
+ * Test for Logging utilities
+ */
 
-
-
-describe('Test for Logger', () => {
+ describe('Test for Logger', () => {
     
     it('DEBUG Log', () => {
         
@@ -66,7 +67,7 @@ describe('Test for Logger', () => {
         expect(Log.info).toHaveBeenCalledTimes(2);
         expect(Log.log).toHaveBeenCalledTimes(2);
         expect(Log.warn).toHaveBeenCalledTimes(2);
-        /* xpect(Log.getInstance("test module")).toEqual(""); */
+
         console.log(Log.global.level)
     });
 });

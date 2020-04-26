@@ -126,14 +126,10 @@ describe('time helper functions', function () {
         const tg2 = new Tag(straightZero);
         expect(tg2.time).toStrictEqual(new TimeValue(0, 0));
 
+        
+        expect(() => { const tiFiveSecondsMinus1:Tag = new Tag(fiveSeconds, -1) }).toThrowError("Microstep must be positive.");
+        expect(() => { const tiFiveSeconds1Point1:Tag = new Tag(fiveSeconds, 1.1)}).toThrowError("Microstep must be integer.");
 
-        expect(() => {
-            expect(new Tag(new TimeValue(2,1), -2));
-        }).toThrowError
-
-        expect(() => {
-            expect(new Tag(straightZero, 2.2));
-        }).toThrowError
         
     });
 

@@ -74,8 +74,8 @@ describe('Manually constructed simple precedence graphs', () => {
 describe('Test for corner cases', () => {
 
     var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
-    var node: PrecedenceGraphNode<Priority> = new CNode<Priority>(); 
-    graph.addEdge(node, node);
+    const node: PrecedenceGraphNode<Priority> = new CNode<Priority>(); 
+    graph.addEdge(node, new CNode<Priority>());
 
 });
 
