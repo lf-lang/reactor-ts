@@ -1,7 +1,7 @@
 import {Logger} from '../src/share/Logger'
 import {Reactor, InPort, Reaction, Read, Triggers, Args, State, Present, ReactionSandbox, App} from '../src/core/reactor';
 import { TimeValue, UnitBasedTimeValue, TimeUnit } from '../src/core/time';
-import { Log } from '../src/core/util'
+import { Log, LogLevel } from '../src/core/util'
 
 
 
