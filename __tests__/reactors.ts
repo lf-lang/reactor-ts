@@ -1,6 +1,6 @@
 import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort} from '../src/core/reactor';
 import { UnitBasedTimeValue, TimeUnit } from '../src/core/time';
-import { Log } from '../src/core/util';
+import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
 import { writer } from 'repl';
 
 
@@ -45,11 +45,11 @@ class R extends Reactor {
 
 describe("Testing Reactor Cases", function () {
 
-    var parent = new App();
-    var reactor1 = new R(parent);
+    Log.global.level = LogLevel.DEBUG
 
     it("Deadline miss", function(){
-        
+        var parent = new App();       
+        var reactor1 = new R(parent);
         var trigger = new Triggers(reactor1.calleep);
         
 
@@ -62,10 +62,53 @@ describe("Testing Reactor Cases", function () {
             new UnitBasedTimeValue(1,TimeUnit.usec) // Deliberately small deadline
         );
 
-        reactor1.start()
+        reactor1.start();
 
         
-
     });
+
+
+    
+    it("Multiple triggers", function(){
+
+        var parent = new App();
+        var reactor1 = new R(parent);
+        var trigger = new Triggers(reactor1.calleep, new CalleePort(reactor1));
+
+        expect( () => { reactor1.addReaction(
+            trigger,
+            new Args(),
+            function(this) {
+                throw new Error("Method not implemented.");
+            },
+            new UnitBasedTimeValue(1,TimeUnit.usec) // Deliberately small deadline
+        );} ).toThrowError("Procedure has multiple triggers.")
+
+        
+    });
+
+
+    it("Bad Parents", function(){
+
+        var parent = new App();
+        var reactor1 = new R(parent);
+        var cport = new CalleePort(new R(new App()));
+        var trigger = new Triggers(cport);
+        reactor1.callerp.remotePort = cport;
+
+        reactor1.addReaction(
+            trigger,
+            new Args(),
+            function(this) {
+                throw new Error("Method not implemented.");
+            },
+            new UnitBasedTimeValue(1,TimeUnit.usec) // Deliberately small deadline
+        );
+        
+        console.log(reactor1.getPrecedenceGraph().toString());
+        
+        reactor1.start();
+    });
+
 
 });
