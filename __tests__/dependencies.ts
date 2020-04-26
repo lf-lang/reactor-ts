@@ -62,7 +62,7 @@ describe('Manually constructed simple precedence graphs', () => {
 
     var nodes = reactor.getNodes();
 
-   graph.addNode(nodes[0]);
+    graph.addNode(nodes[0]);
 
     it('graph equality', () => {
         expect([ ...graph.nodes()]).toEqual(nodes)
