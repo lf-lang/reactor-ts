@@ -54,46 +54,24 @@ describe("Testing Reactor Cases", function () {
 
     Log.global.level = LogLevel.DEBUG
 
-   
-    it("Deadline miss", function(){
+
+    it("Multiple reactions for a callee port", () => {
         var parent = new App();       
         var reactor1 = new R(parent);
         var trigger = new Triggers(reactor1.calleep);
         
 
-        reactor1.addReaction(
+        expect(() => { reactor1.addReaction(
             trigger,
             new Args(),
             function(this) {
-                throw new Error("Method not implemented.");
-            },
-            new UnitBasedTimeValue(1,TimeUnit.usec), // Deliberately small deadline
-        );
-
-        reactor1.start();
-    });
-
-
-    it("Deadline miss with custom message", function(){
-        var parent = new App();       
-        var reactor1 = new R(parent);
-        var trigger = new Triggers(reactor1.calleep);
-        
-
-        reactor1.addReaction(
-            trigger,
-            new Args(),
-            function(this) {
-                throw new Error("Method not implemented.");
-            },
-            new UnitBasedTimeValue(1,TimeUnit.nsec), // Deliberately small deadline
-            () => { Log.warn(null, () => "Deadline violation has occurred!")}
-        );
-
-        reactor1.start();
+                reactor1.callerp.set(4);
+            }
+        );}).toThrowError("Each callee port can trigger only a single reaction, but two or more are found.")
 
         
     });
+
     
     
     it("Multiple triggers", function(){
