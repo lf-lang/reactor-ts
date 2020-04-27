@@ -298,3 +298,4 @@ describe('Automatically constructed precedence graphs', () => {
     });
 
 });
+
