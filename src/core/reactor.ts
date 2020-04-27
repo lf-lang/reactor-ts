@@ -1133,7 +1133,15 @@ export abstract class Reactor extends Component {
                 // A procedure can only have a single trigger.
                 throw new Error("Procedure has multiple triggers.")
             }
-            // FIXME: throw error if there are other active reactions sensitive to this particular port.
+            let port = calleePorts[0]
+            let existing = this._getReactionsAndMutations()
+            var conflict = false
+            existing.forEach(r => 
+                (r.active && r.trigs.list.find(it => 
+                    it === port)) ? conflict = true : {});
+            if (conflict) {
+                throw new Error("Each callee port can trigger only a single reaction, but two or more are found.")
+            }
             let procedure = new Procedure(this, this._reactionScope, trigs, args, react, deadline, late)
             procedure.active = true
             this._reactions.push(procedure)
