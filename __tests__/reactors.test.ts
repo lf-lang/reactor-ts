@@ -1,140 +1,132 @@
-import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present} from '../src/core/reactor';
-import { UnitBasedTimeValue, TimeUnit } from '../src/core/time';
+import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort} from '../src/core/reactor';
+import { UnitBasedTimeValue, TimeUnit, TimeValue } from '../src/core/time';
 import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
-import { writer } from 'repl';
 import { doesNotMatch } from 'assert';
 
-
-class R extends Reactor {
-
-    public calleep = new CalleePort(this)
-    public callerp = new CallerPort(this);
+/* Set a port in startup to get thing going */
+class Starter extends Reactor {
+    public out = new OutPort<number>(this);
 
     constructor(parent: Reactor|null) {
         super(parent);
-        this.callerp.remotePort = this.calleep;
         this.addReaction(
-            new Triggers(this.calleep),
-            new Args(), 
-            function(this) {
-                throw new Error("Method not implemented.");
-            },
-            new UnitBasedTimeValue(10,TimeUnit.msec),
-        )
+            new Triggers(this.startup),
+            new Args(this.getWriter(this.out)),
+            function(this, __out) {
+                __out.set(4);
 
-        this.addReaction(
-            new Triggers(this.callerp),
-            new Args(), 
-            function(this) {
-                throw new Error("Method not implemented.");
-            },
-            new UnitBasedTimeValue(10,TimeUnit.msec),
-        )
-
-        
+            }
+        );
     }
 
-    start() {
-        this.callerp.set(4)
+}
+
+/* A reactor with a deadline in its constructor */
+class R1 extends Reactor {
+    public in = new InPort<number>(this);
+    public out = new OutPort<number>(this);
+
+    constructor(parent: Reactor|null, deadline: TimeValue) {
+        super(parent);
+        this.addReaction(
+            new Triggers(this.in),
+            new Args(this.in, this.getWriter(this.out)),
+            function(this, __in, __out) {
+                const util = this.util
+                let initialElapsedTime = util.getElapsedPhysicalTime();
+                let tmp = __in.get();
+                
+                if(tmp)
+                {
+                    console.log("Recieved "+tmp.toString());
+                }
+
+                let out: number = 0;
+
+                try {
+                    if(tmp)
+                    {
+                        out = tmp + 4;
+                        while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(new UnitBasedTimeValue(1, TimeUnit.sec))));
+                    }
+                } finally {
+                    if(out){
+                        console.log("Sending "+out.toString())
+                        __out.set(out);
+                    }
+                }
+
+            },
+            deadline
+
+
+        );
     }
 
-    getNodes() {
-        return this._getReactions();
+
+
+}
+
+class R2 extends Reactor {
+    public in = new InPort<number>(this);
+
+    constructor(parent: Reactor|null) {
+        super(parent);
+        this.addReaction(
+            new Triggers(this.in),
+            new Args(this.in),
+            function(this, __in) {
+                let tmp = __in.get();
+                /* Do Nothing */               
+                if(tmp)
+                {
+                    console.log("Recieved "+tmp.toString());
+                }
+            }
+
+        );
+    }
+
+}
+
+class testApp extends App {
+    start: Starter
+    reactor1: R1;
+    reactor2: R2;
+
+    constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void) {
+        super(timeout, false, false, success, fail);
+        this.start = new Starter(this);
+        this.reactor1 = new R1(this, timeout);
+        this.reactor2 = new R2(this);
+        this._connect(this.start.out, this.reactor1.in)
+        this._connect(this.reactor1.out, this.reactor2.in)
     }
 }
 
 
-class TP<T extends Present> extends Port<T>
-{
 
-}
+describe("Testing deadlines", function () {
 
+    jest.setTimeout(7000);
 
-describe("Testing Reactor Cases", function () {
+    it("Missed reaction deadline on InPort", done => {
 
-    Log.global.level = LogLevel.DEBUG
+        function fail() {
+            throw new Error("Test has failed.");
+        };
 
+        let app = new testApp("testApp", new TimeValue(1,TimeUnit.msec), done, fail)
 
-    it("Multiple reactions for a callee port", () => {
-        var parent = new App();       
-        var reactor1 = new R(parent);
-        var trigger = new Triggers(reactor1.calleep);
-        
+        spyOn(app, '_start').and.callThrough
 
-        expect(() => { reactor1.addReaction(
-            trigger,
-            new Args(),
-            function(this) {
-                reactor1.callerp.set(4);
-            }
-        );}).toThrowError("Each callee port can trigger only a single reaction, but two or more are found.")
+        expect(() => {app._start()}).toThrowError("Deadline violation occurred!");
 
-        
+        //app._start();
     });
-
-    
-    
-    it("Multiple triggers", function(){
-
-        var parent = new App();
-        var reactor1 = new R(parent);
-        var trigger = new Triggers(reactor1.calleep, new CalleePort(reactor1));
-
-        expect( () => { reactor1.addReaction(
-            trigger,
-            new Args(),
-            function(this) {
-                throw new Error("Method not implemented.");
-            }
-        );} ).toThrowError("Procedure has multiple triggers.")
-
-        
-    });
-
-
-    it("Bad Parents", function(){
-
-        var parent = new App();
-
-        expect(  () => { var reactor1 = new R(null);} ).toThrowError("Cannot instantiate reactor without a parent.")
-        
-        expect( () => { var cport = new CalleePort(new R(null));} ).toThrowError("Cannot instantiate reactor without a parent.");
-        
-        var reactor = new R(new App());
-        var reactor2= new R(new App());
-
-        var trigger = new Triggers(new TP(reactor));
-
-        expect ( () => { reactor2.addReaction(
-            trigger,
-            new Args(),
-            function(this) {
-                throw new Error("Method not implemented.");
-            }
-        );}).toThrowError("Port App/R/TP is a trigger for reaction App/R[R2] but is neither a child of the reactor containing the reaction or that reactor's children.")
-        
-    });
-
 
 
 });
 
-    
-describe('Dependencies directly from reactions.', () => {
-    var reactor = new R(new App());
-    var reactor2= new R(new App());
 
-    reactor2.callerp.remotePort = reactor.calleep;
 
-    it('Get dependencies', () => {
-        var reactions = reactor2._getReactions()
-        for(let r of reactions)
-        {
-            r.getDependencies();
-        }
-
-    });
-
-    
-
-});
