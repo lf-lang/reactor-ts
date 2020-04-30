@@ -55,7 +55,7 @@ export class Pong extends Reactor {
             }
         );
         this.addReaction(
-            new Triggers(this.dummy),
+            new Triggers(this.dummy), // replace this with `server` and an error is thrown.
             new Args(this.dummy),
             function (this) {
                 
