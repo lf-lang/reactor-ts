@@ -212,6 +212,49 @@ export class TimeValue {
             }
         } 
     }
+
+    /**
+     * Get a 64 bit binary, little endian representation of this TimeValue.
+     * Used by federates.
+     */
+    public get64Bit() : Buffer {
+        const billion = BigInt(TimeUnit.secs);
+        let bigTime =  BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
+
+        // Ensure the TimeValue fits into a 64 unsigned integer.
+        let clampedTime = BigInt.asUintN(64, bigTime);
+        if (clampedTime != bigTime) {
+            throw new Error(`TimeValue ${this.toString()} is too big to fit into `
+                + `a 64 bit unsigned integer`);
+        }
+
+        let buff = Buffer.alloc(8);
+        buff.writeBigUInt64LE(bigTime, 0);
+        return buff;
+    }
+}
+
+/**
+ * Creates a TimeValue from a 64 bit unsigned integer encoded as a 
+ * little endian buffer.
+ */
+export class BinaryTimeValue extends TimeValue {
+
+    /**
+     * Create a TimeValue from a 64bit unsigned integer.
+     * @param buffer A 64 bit unsigned integer. Little endian.
+     */
+    constructor(buffer: Buffer) {
+        const billion = BigInt(TimeUnit.secs);
+
+        // To avoid overflow and floating point errors, work with BigInts.
+        let bigTime = buffer.readBigUInt64LE(0);
+        console.log("----bigtime: " + bigTime);
+        let bigSeconds = bigTime / billion;
+        let bigNSeconds = bigTime % billion;
+
+        super(Number(bigSeconds), Number(bigNSeconds));
+    }
 }
 
 /** 
@@ -246,7 +289,7 @@ export class UnitBasedTimeValue extends TimeValue {
         let bigSeconds = bigT / billion;
         
         if(bigSeconds > Number.MAX_SAFE_INTEGER) {
-            throw new Error("Unable to instantiate time interval: value too large.");
+            throw new Error("Unable to instantiate time value: value too large.");
         }
         
         this.seconds = Number(bigSeconds);
