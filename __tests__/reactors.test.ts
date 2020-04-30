@@ -112,7 +112,7 @@ describe("Testing deadlines", function () {
     jest.setTimeout(7000);
 
     it("Missed reaction deadline on InPort", done => {
-        Log.global.level = LogLevel.WARN
+        Log.global.level = LogLevel.DEBUG
 
         function fail() {
             throw new Error("Test has failed.");
