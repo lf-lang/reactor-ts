@@ -2261,6 +2261,8 @@ export class App extends Reactor {
                         r.doReact();
                     } catch (e) {
                         Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
+                        // Allow errors in reactions to kill execution.
+                        throw e; 
                     }
                     
                 }
