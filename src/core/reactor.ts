@@ -315,6 +315,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
      * exceeded, the "late" function is executed instead of the "react" function.
      * @param deadline The deadline to set to this reaction.
      */
+    /* FIXME: Unused function */
     setDeadline(deadline: TimeValue): this {
         this.deadline = deadline;
         return this;

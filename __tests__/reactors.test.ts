@@ -26,7 +26,7 @@ class R1 extends Reactor {
     public in = new InPort<number>(this);
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null, deadline: TimeValue) {
+    constructor(parent: Reactor|null, deadline: TimeValue, deadlineMiss?: () => void) {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
@@ -57,7 +57,8 @@ class R1 extends Reactor {
                 }
 
             },
-            deadline
+            deadline,
+            deadlineMiss
 
 
         );
@@ -94,10 +95,10 @@ class testApp extends App {
     reactor1: R1;
     reactor2: R2;
 
-    constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void) {
+    constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void) {
         super(timeout, false, false, success, fail);
         this.start = new Starter(this);
-        this.reactor1 = new R1(this, timeout);
+        this.reactor1 = new R1(this, timeout, deadlineMiss);
         this.reactor2 = new R2(this);
         this._connect(this.start.out, this.reactor1.in)
         this._connect(this.reactor1.out, this.reactor2.in)
@@ -111,12 +112,13 @@ describe("Testing deadlines", function () {
     jest.setTimeout(7000);
 
     it("Missed reaction deadline on InPort", done => {
+        Log.global.level = LogLevel.WARN
 
         function fail() {
             throw new Error("Test has failed.");
         };
-
-        let app = new testApp("testApp", new TimeValue(1,TimeUnit.msec), done, fail)
+        
+        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), done, fail)
 
         //spyOn(app, '_start').and.callThrough
 
@@ -126,6 +128,39 @@ describe("Testing deadlines", function () {
         app._start();
     });
 
+
+    it("Missed deadline with custom message", () => {
+        Log.global.level = LogLevel.WARN
+
+        function fail() {
+            throw new Error("Test has failed.");
+        };
+        
+        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), () => {} , fail, () => {throw new Error("Deadline missed!")})
+
+        let reactions = app.reactor1._getReactions();
+
+        expect( () => {reactions.forEach( function (reaction) {
+            reaction.doReact();
+        });} ).toThrowError("Deadline missed!");
+    });
+
+
+});
+
+
+describe("Testing Reactions", function () {
+
+    it("Manually call reactions", () => {
+        let app = new testApp("testApp", new TimeValue(5000,TimeUnit.msec), () => {}, fail)
+
+        let reactions = app.reactor1._getReactions();
+
+        reactions.forEach( function (reaction) {
+            reaction.doReact();
+        });
+
+    });
 
 });
 
