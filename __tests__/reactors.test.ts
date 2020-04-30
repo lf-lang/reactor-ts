@@ -130,7 +130,7 @@ describe("Testing deadlines", function () {
 
 
     it("Missed deadline with custom message", () => {
-        Log.global.level = LogLevel.WARN
+        Log.global.level = LogLevel.DEBUG
 
         function fail() {
             throw new Error("Test has failed.");
