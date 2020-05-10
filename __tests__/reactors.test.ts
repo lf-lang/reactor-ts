@@ -129,40 +129,40 @@ describe("Testing deadlines", function () {
     });
 
 
-    it("Missed deadline with custom message", () => {
-        Log.global.level = LogLevel.DEBUG
+    // it("Missed deadline with custom message", () => {
+    //     Log.global.level = LogLevel.DEBUG
 
-        function fail() {
-            throw new Error("Test has failed.");
-        };
+    //     function fail() {
+    //         throw new Error("Test has failed.");
+    //     };
         
-        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), () => {} , fail, () => {throw new Error("Deadline missed!")})
+    //     let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), () => {} , fail, () => {throw new Error("Deadline missed!")})
 
-        let reactions = app.reactor1._getReactions();
+    //     let reactions = app.reactor1._getReactions();
 
-        expect( () => {reactions.forEach( function (reaction) {
-            reaction.doReact();
-        });} ).toThrowError("Deadline missed!");
-    });
+    //     expect( () => {reactions.forEach( function (reaction) {
+    //         reaction.doReact();
+    //     });} ).toThrowError("Deadline missed!");
+    // });
 
 
 });
 
 
-describe("Testing Reactions", function () {
+// describe("Testing Reactions", function () {
 
-    it("Manually call reactions", () => {
-        let app = new testApp("testApp", new TimeValue(5000,TimeUnit.msec), () => {}, fail)
+//     it("Manually call reactions", () => {
+//         let app = new testApp("testApp", new TimeValue(5000,TimeUnit.msec), () => {}, fail)
 
-        let reactions = app.reactor1._getReactions();
+//         let reactions = app.reactor1._getReactions();
 
-        reactions.forEach( function (reaction) {
-            reaction.doReact();
-        });
+//         reactions.forEach( function (reaction) {
+//             reaction.doReact();
+//         });
 
-    });
+//     });
 
-});
+// });
 
 
 
