@@ -418,8 +418,6 @@ abstract class Trigger extends Component {
     protected getReactions() {
 
     }
-
-
 }
 
 /**
@@ -433,16 +431,16 @@ abstract class Trigger extends Component {
  */
 export class Action<T extends Present> extends Trigger implements Read<T> {
 
-    origin: Origin;
-    minDelay: TimeValue;
-    minInterArrival: TimeValue = defaultMIT;
+    readonly origin: Origin;
+    readonly minDelay: TimeValue;
+    readonly minInterArrival: TimeValue = defaultMIT;
     
     // A value is available to any reaction triggered by this action.
     // The value is not directly associated with a timestamp because
     // every action needs a timestamp (for _isPresent()) and only
     // some actions carry values. 
 
-    value: T | Absent = undefined;
+    private value: T | Absent = undefined;
 
     // The most recent time this action was scheduled.
     // Used by the isPresent function to tell if this action
