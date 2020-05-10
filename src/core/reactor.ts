@@ -171,6 +171,9 @@ class Component implements Named {
         return false;
     }
 
+    public getContainer(): Reactor | null {
+        return this.__container__
+    }
 
     /**
      * Return a string that identifies this component.
@@ -370,7 +373,7 @@ class TaggedEvent<T extends Present> implements PrioritySetNode<Tag> {
      * @param value The value associated with this event. 
      * 
      */
-    constructor(public trigger: Action<T> | Timer, public tag: Tag, public value: T) {
+    constructor(public trigger: ScheduledTrigger<T>, public tag: Tag, public value: T) {
     }
 
     /**
@@ -414,8 +417,30 @@ abstract class Trigger extends Component {
 
     abstract getManager(container: Reactor): TriggerManager;
 
-    protected getReactions() {
+}
 
+abstract class ScheduledTrigger<T extends Present> extends Trigger {
+    protected value: T | Absent = undefined;
+    protected tag: Tag | undefined;
+
+    public update(e: TaggedEvent<T>, trigger: (r: Reaction<unknown>) => void):void {
+
+        if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
+            throw new Error("Time of event does not match current logical time.");
+        }
+        if (e.trigger === this) {
+            this.value = e.value
+            this.tag = e.tag;
+            //this.__container__._triggerReactions(e);
+            for (let r of this.reactions) {
+                trigger(r)
+            }
+        } else {
+            throw new Error("Attempt to update action using incompatible event.");
+        }
+    }
+    constructor(protected __container__: Reactor) {
+        super(__container__)
     }
 }
 
@@ -428,7 +453,7 @@ abstract class Trigger extends Component {
  * scheduled by a reactor by invoking the schedule function in a reaction
  * or in an asynchronous callback that has been set up in a reaction.
  */
-export class Action<T extends Present> extends Trigger implements Read<T> {
+export class Action<T extends Present> extends ScheduledTrigger<T> implements Read<T> {
 
     readonly origin: Origin;
     readonly minDelay: TimeValue;
@@ -439,30 +464,30 @@ export class Action<T extends Present> extends Trigger implements Read<T> {
     // every action needs a timestamp (for _isPresent()) and only
     // some actions carry values. 
 
-    private value: T | Absent = undefined;
+    //private value: T | Absent = undefined;
 
     // The most recent time this action was scheduled.
     // Used by the isPresent function to tell if this action
     // has been scheduled for the current logical time.
 
-    private timestamp: Tag | undefined;
+    //private timestamp: Tag | undefined;
 
-    public update(e: TaggedEvent<T>) {
+    // public update(e: TaggedEvent<T>, trigger: (r: Reaction<unknown>) => void):void {
 
-        if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
-            throw new Error("Time of event does not match current logical time.");
-        }
-        if (e.trigger === this) {
-            this.value = e.value
-            this.timestamp = e.tag;
-            //this.__container__._triggerReactions(e);
-            for (let r of this.reactions) {
-                this.__container__._triggerReaction(r)
-            }
-        } else {
-            throw new Error("Attempt to update action using incompatible event.");
-        }
-    }
+    //     if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
+    //         throw new Error("Time of event does not match current logical time.");
+    //     }
+    //     if (e.trigger === this) {
+    //         this.value = e.value
+    //         this.timestamp = e.tag;
+    //         //this.__container__._triggerReactions(e);
+    //         for (let r of this.reactions) {
+    //             trigger(r)
+    //         }
+    //     } else {
+    //         throw new Error("Attempt to update action using incompatible event.");
+    //     }
+    // }
 
     /**
      * Returns true if this action was scheduled for the current
@@ -470,11 +495,11 @@ export class Action<T extends Present> extends Trigger implements Read<T> {
      * has a value.
      */
     private isPresent() {
-        if (this.timestamp === undefined) {
+        if (this.tag === undefined) {
             // This action has never been scheduled before.
             return false;
         }
-        if (this.timestamp.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
+        if (this.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -505,11 +530,11 @@ export class Action<T extends Present> extends Trigger implements Read<T> {
             var tag = this.action.__container__.util.getCurrentTag();
             var delay = this.action.minDelay.add(extraDelay);
 
-            if (this.action instanceof Startup) {
-                // Add all reactions triggered by startup directly to the reaction queue.
-                this.action.update(new TaggedEvent(this.action, tag, value));
-                return;
-            }
+            // if (this.action instanceof Startup) {
+            //     // Add all reactions triggered by startup directly to the reaction queue.
+            //     this.action.update(new TaggedEvent(this.action, tag, value));
+            //     return;
+            // }
 
             if (this.action.origin == Origin.physical) {
                 tag = new Tag(getCurrentPhysicalTime(), 0);
@@ -517,7 +542,7 @@ export class Action<T extends Present> extends Trigger implements Read<T> {
     
             tag = tag.getLaterTag(delay);
     
-            if (this.action.origin == Origin.logical) {
+            if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
                 tag = tag.getMicroStepLater();
             }
             
@@ -671,7 +696,7 @@ class Scheduler<T extends Present> implements Read<T>, Schedule<T> {
  * reschedule the event at the current logical time + period in the future. A 0 
  * period indicates the timer's event is a one-off and should not be rescheduled.
  */
-export class Timer extends Trigger implements Read<Tag> {
+export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
     public getManager(container: Reactor): TriggerManager {
         if (this.__container__ === container) {
@@ -690,7 +715,7 @@ export class Timer extends Trigger implements Read<Tag> {
         }
     }(this)
 
-    private tag: Tag | undefined;
+    //private tag: Tag | undefined;
 
     get(): Tag | Absent {
         if (this.tag && this.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
@@ -738,19 +763,19 @@ export class Timer extends Trigger implements Read<Tag> {
      * event, and trigger any reactions that list this timer as their trigger.
      * @param e Timestamped event.
      */
-    public update(e: TaggedEvent<Present>) {
-        if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
-            throw new Error("Time of event does not match current logical time.");
-        }
+    // public update(e: TaggedEvent<Present>, trigger: (r: Reaction<unknown>) => void) {
+    //     if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
+    //         throw new Error("Time of event does not match current logical time.");
+    //     }
         
-        if (e.trigger === this) {
-            this.tag = e.tag;
-            //this.__container__._triggerReactions(e);
-            for (let r of this.reactions) {
-                this.__container__._triggerReaction(r)
-            }
-        }
-    }
+    //     if (e.trigger === this) {
+    //         this.tag = e.tag;
+    //         //this.__container__._triggerReactions(e);
+    //         for (let r of this.reactions) {
+    //             trigger(r)
+    //         }
+    //     }
+    // }
 
     public toString() {
         return "Timer from " + this.__container__.getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
@@ -876,10 +901,17 @@ export abstract class Reactor extends Component {
      */
     private _mutationScope: MutationSandbox;
 
-    private managers: Map<Port<any>, PortManager<any>> = new Map()
+    private keys: Map<Component, Symbol> = new Map()
 
-    public setManager(port: Port<any>, manager: PortManager<any>) {
-        if (!this.managers.has(port)) this.managers.set(port, manager)
+    public register(component: Component, key: Symbol) {
+        if (!this.keys.has(component)) this.keys.set(component, key)
+    }
+
+    public borrow(component: Component, container:Reactor): Symbol | undefined {
+        let key = this.keys.get(component)
+        if (this.isChildOf(container)) {
+            return key
+        }
     }
 
     /**
@@ -983,7 +1015,7 @@ export abstract class Reactor extends Component {
 
 
     protected getWriter<T extends Present>(port: IOPort<T>): ReadWrite<T> {
-        return port.asWritable(this.managers.get(port));
+        return port.asWritable(this.keys.get(port));
     }
 
 
@@ -1307,10 +1339,6 @@ export abstract class Reactor extends Component {
         this._app._triggerReaction(reaction);
     }
 
-    public _setValue<T extends Present>(port: IOPort<T>, value: T) {
-        port.asWritable(this.managers.get(port)).set(value)
-    }
-
     private _startupChildren() {
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating startup: " + r.startup);
@@ -1563,7 +1591,15 @@ export abstract class Reactor extends Component {
                     dests = new Set();
                 }
                 dests.add(dst);
-                src.getManager(this).addReceiver(dst as IOPort<S>); // FIXME: suspicious cast
+
+                let key = this.keys.get(dst)
+                let writable
+                if (key) {
+                    writable = dst.asWritable(key) as WritablePort<S> // FIXME: suspicious cast
+                } else {
+                    writable = dst.asWritable(dst.getContainer()?.borrow(dst, this)) as WritablePort<S>
+                }
+                src.getManager(this).addReceiver(writable); // FIXME: suspicious cast
                 this._destinationPorts.set(src, dests);
                 this._sourcePort.set(dst, src);
             }
@@ -1704,7 +1740,7 @@ export abstract class Reactor extends Component {
 
 }
 
-export abstract class Port<T extends Present> extends Trigger implements Read<T> { // Remove the generics from this guy?
+export abstract class Port<T extends Present> extends Trigger implements Read<T> {
     
     /** The time stamp associated with this port's value. */
     protected tag: Tag | undefined;
@@ -1763,9 +1799,11 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
 
 export abstract class IOPort<T extends Present> extends Port<T> {
 
-    protected receivers: Set<IOPort<T>> = new Set();
+    protected receivers: Set<WritablePort<T>> = new Set();
 
     protected reactions: Set<Reaction<unknown>> = new Set();
+
+    private key: Symbol = Symbol()
 
     /**
      * Create a new port on the given reactor.
@@ -1773,7 +1811,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      */
     constructor(protected __container__: Reactor) {
         super(__container__);
-        __container__.setManager(this, this.manager)
+        __container__.register(this, this.key)
     }
 
     /**
@@ -1808,13 +1846,11 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     }
 
     /**
-     * Take a reference to the container of this port and return a
-     * writable version of this port. If the reference is invalid,
-     * an error is thrown.
-     * @param container
+     * Only the holder of the key may obtain a writable port.
+     * @param key
      */
-    public asWritable(manager: PortManager<any> | undefined): WritablePort<T> {
-        if (this.manager === manager) {
+    public asWritable(key: Symbol | undefined): WritablePort<T> {
+        if (this.key === key) {
             return this.writer
         }
         throw Error("Invalid reference to container.")
@@ -1844,7 +1880,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
             this.port.value = value;
             this.port.tag = this.port.__container__.util.getCurrentTag();
             // Set values in downstream receivers.
-            this.port.receivers.forEach(p => p.__container__._setValue(p, value))
+            this.port.receivers.forEach(p => p.set(value))
             // Trigger reactions sensitive to this port.
             this.port.reactions.forEach(r => this.port.__container__._triggerReaction(r))
         }
@@ -1868,10 +1904,10 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      */
     protected manager:PortManager<T> = new class implements PortManager<T> {
         constructor(private port:IOPort<T>) {}
-        addReceiver(port: IOPort<T>): void {
+        addReceiver(port: WritablePort<T>): void {
             this.port.receivers.add(port)
         }
-        delReceiver(port: IOPort<T>): void {
+        delReceiver(port: WritablePort<T>): void {
             this.port.receivers.delete(port)
         }
         addReaction(reaction: Reaction<unknown>): void {
@@ -1893,8 +1929,8 @@ interface TriggerManager {
 }
 
 interface PortManager<T extends Present> extends TriggerManager {
-    addReceiver(port: IOPort<T>): void;
-    delReceiver(port: IOPort<T>): void;
+    addReceiver(port: WritablePort<T>): void;
+    delReceiver(port: WritablePort<T>): void;
 }
 
 export class OutPort<T extends Present> extends IOPort<T> {
@@ -1947,10 +1983,10 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
 
     protected manager:PortManager<R> = new class implements PortManager<R> {
         constructor(private port:Port<R>) {}
-        addReceiver(port: Port<R>): void {
+        addReceiver(port: WritablePort<R>): void {
             //
         }
-        delReceiver(port: Port<R>): void {
+        delReceiver(port: WritablePort<R>): void {
             //
         }
         addReaction(reaction: Reaction<unknown>): void {
@@ -2018,10 +2054,10 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
 
     protected manager:PortManager<A> = new class implements PortManager<A> {
         constructor(private port:Port<A>) {}
-        addReceiver(port: Port<A>): void {
+        addReceiver(port: WritablePort<A>): void {
             //
         }
-        delReceiver(port: Port<A>): void {
+        delReceiver(port: WritablePort<A>): void {
             //
         }
         addReaction(reaction: Reaction<unknown>): void {
@@ -2347,7 +2383,7 @@ export class App extends Reactor {
                     }
 
                     // Load reactions onto the reaction queue.
-                    nextEvent.trigger.update(nextEvent);
+                    nextEvent.trigger.update(nextEvent, (r:Reaction<unknown>) => this._triggerReaction(r));
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
                 }
@@ -2407,6 +2443,12 @@ export class App extends Reactor {
      */
     public schedule(e: TaggedEvent<any>) {
         let head = this._eventQ.peek();
+
+        // If startup was scheduled during a run-time mutation, bypass the event queue.
+        if (e.trigger instanceof Startup && !this.util.getElapsedLogicalTime().isZero()) {
+            e.trigger.update(e, (r:Reaction<unknown>) => this._triggerReaction(r))
+            return
+        }
 
         this._eventQ.push(e);
 
