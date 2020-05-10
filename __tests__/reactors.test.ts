@@ -1,4 +1,4 @@
-import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort} from '../src/core/reactor';
+import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, IOPort, Present, OutPort} from '../src/core/reactor';
 import { UnitBasedTimeValue, TimeUnit, TimeValue } from '../src/core/time';
 import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
 import { doesNotMatch } from 'assert';

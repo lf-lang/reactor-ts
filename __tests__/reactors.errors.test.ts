@@ -1,4 +1,4 @@
-import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present} from '../src/core/reactor';
+import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, IOPort, Present} from '../src/core/reactor';
 import { UnitBasedTimeValue, TimeUnit } from '../src/core/time';
 import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
 import { writer } from 'repl';
@@ -43,7 +43,7 @@ class R extends Reactor {
 }
 
 
-class TP<T extends Present> extends Port<T>
+class TP<T extends Present> extends IOPort<T>
 {
 
 }
@@ -91,7 +91,6 @@ describe("Testing Error Cases", function () {
         
     });
 
-
     it("Bad Parents", function(){
 
         var parent = new App();
@@ -111,7 +110,7 @@ describe("Testing Error Cases", function () {
             function(this) {
                 throw new Error("Method not implemented.");
             }
-        );}).toThrowError("Port App/R/TP is a trigger for reaction App/R[R2] but is neither a child of the reactor containing the reaction or that reactor's children.")
+        );}).toThrowError("Invalid reference to container.")
         
     });
 

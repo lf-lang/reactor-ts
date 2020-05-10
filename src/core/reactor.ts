@@ -102,13 +102,13 @@ export interface Named {
 
 }
 
-/**
- * Interface for proxy objects used to make ports writable.
- */
-export interface Proxy<T extends Present> extends Write<T> {
-    isProxyOf: (port: Port<any>) => boolean;
-    getPort(): Port<T>;
-}
+// /**
+//  * Interface for proxy objects used to make ports writable.
+//  */
+// export interface Proxy<T extends Present> extends Write<T> {
+//     isProxyOf: (port: IOPort<any>) => boolean;
+//     getPort(): IOPort<T>;
+// }
 
 /**
  * Interface for readable variables.
@@ -131,6 +131,12 @@ export interface Write<T> {
     set: (value: T) => void;
 }
 
+export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
+    abstract get(): T | undefined;
+    abstract set(value: T): void;
+    abstract getPort(): Port<T>
+}
+
 //--------------------------------------------------------------------------//
 // Core Reactor Classes                                                     //
 //--------------------------------------------------------------------------//
@@ -150,6 +156,21 @@ class Component implements Named {
     constructor(protected __container__: Reactor | null, alias?:string) {
         this.alias = alias
     }
+
+    public isChildOf(r: Reactor): boolean {
+        if (this.__container__ && this.__container__ === r) {
+            return true;
+        }
+        return false;
+    }
+
+    public isGrandChildOf(r: Reactor): boolean {
+        if (this.__container__ && this.__container__.isChildOf(r)) {
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * Return a string that identifies this component.
@@ -239,14 +260,14 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         var antideps: Set<Variable> = new Set();
         var vars = new Set();
         for (let a of this.args.tuple.concat(this.trigs.list)) {
-            if (a instanceof Port) {
+            if (a instanceof IOPort) {
                 if (this.reactor._isUpstream(a)) {
                     deps.add(a);
                 }
                 if (this.reactor._isDownstream(a)) {
                     antideps.add(a);
                 }
-            } else if (a instanceof Writer) {
+            } else if (a instanceof WritablePort) { // FIXME: how to figure out whether this thing is writable???
                 if (this.reactor._isDownstream(a.getPort())) {
                     antideps.add(a.getPort());
                 }
@@ -388,6 +409,18 @@ class TaggedEvent<T> implements PrioritySetNode<Tag> {
         return this.tag;
     }
 }
+abstract class Trigger extends Component {
+
+    protected reactions: Set<Reaction<unknown>> = new Set();
+
+    abstract getManager(container: Reactor): TriggerManager;
+
+    protected getReactions() {
+
+    }
+
+
+}
 
 /**
  * An action denotes a self-scheduled event.
@@ -398,7 +431,7 @@ class TaggedEvent<T> implements PrioritySetNode<Tag> {
  * scheduled by a reactor by invoking the schedule function in a reaction
  * or in an asynchronous callback that has been set up in a reaction.
  */
-export class Action<T extends Present> extends Component implements Read<T> {
+export class Action<T extends Present> extends Trigger implements Read<T> {
 
     origin: Origin;
     minDelay: TimeValue;
@@ -425,7 +458,10 @@ export class Action<T extends Present> extends Component implements Read<T> {
         if (e.trigger == this) {
             this.value = e.value as T
             this.timestamp = e.tag;
-            this.__container__._triggerReactions(e);
+            //this.__container__._triggerReactions(e);
+            for (let r of this.reactions) {
+                this.__container__._triggerReaction(r)
+            }
         } else {
             throw new Error("Attempt to update action using incompatible event.");
         }
@@ -448,13 +484,22 @@ export class Action<T extends Present> extends Component implements Read<T> {
         }
     }
 
-    public isChildOf(r: Reactor): boolean {
-        if (this.__container__ && this.__container__ === r) {
-            return true;
+    public getManager(container: Reactor): TriggerManager {
+        if (this.__container__ === container) {
+            return this.manager
         }
-        return false;
+        throw Error("Invalid reference to container.")
     }
 
+    protected manager = new class implements TriggerManager {
+        constructor(private action: Action<T>) { }
+        addReaction(reaction: Reaction<unknown>): void {
+            this.action.reactions.add(reaction)
+        }
+        delReaction(reaction: Reaction<unknown>): void {
+            this.action.reactions.delete(reaction)
+        }
+    }(this)
     /**
      * Called on an action within a reaction to acquire the action's value.
      * The value for an action is set by a scheduled action event, and is only
@@ -610,7 +655,24 @@ class Scheduler<T extends Present> implements Read<T>, Schedule<T> {
  * reschedule the event at the current logical time + period in the future. A 0 
  * period indicates the timer's event is a one-off and should not be rescheduled.
  */
-export class Timer extends Component implements Read<Tag> {
+export class Timer extends Trigger implements Read<Tag> {
+
+    public getManager(container: Reactor): TriggerManager {
+        if (this.__container__ === container) {
+            return this.manager
+        }
+        throw Error("Invalid reference to container.")
+    }
+
+    protected manager = new class implements TriggerManager {
+        constructor(private timer: Timer) { }
+        addReaction(reaction: Reaction<unknown>): void {
+            this.timer.reactions.add(reaction)
+        }
+        delReaction(reaction: Reaction<unknown>): void {
+            this.timer.reactions.delete(reaction)
+        }
+    }(this)
 
     private tag: Tag | undefined;
 
@@ -666,7 +728,10 @@ export class Timer extends Component implements Read<Tag> {
         }
         if (e.trigger == this) {
             this.tag = e.tag;
-            this.__container__._triggerReactions(e);
+            //this.__container__._triggerReactions(e);
+            for (let r of this.reactions) {
+                this.__container__._triggerReaction(r)
+            }
         }
     }
 
@@ -745,12 +810,12 @@ export abstract class Reactor extends Component {
     private _dependsOnReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
 
     /**
-     * Maps ports to downstream reactions that depend on them.
+     * Maps ports to downstream reactions that depend on them. FIXME: FWD: to be subsumed by reactions in Port.
      */
     private _dependentReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
 
     /**
-     * Maps ports to downstream ports to which they are connected.
+     * Maps ports to downstream ports to which they are connected. FIXME: FWD: To be subsumed by receivers in Port.
      */
     private _destinationPorts: Map<Port<Present>, Set<Port<Present>>> = new Map();
 
@@ -770,19 +835,9 @@ export abstract class Reactor extends Component {
     readonly startup = new Startup(this);
 
     /**
-     * Maps triggers to reactions.
-     */
-    private _triggerMap: Map<Variable, Set<Reaction<any>>> = new Map();
-
-    /**
      * Maps a callee port to upstream reactions that may invoke the reaction it triggers.
      */
     private _remoteCallers: Map<CalleePort<Present, Present>, Set<Reaction<unknown>>> = new Map();
-
-    /**
-     * Keeps track of named components inside of this reactor.
-     */
-    //public _instantiationCounts: Map<string, number> = new Map()
 
     /**
      * The list of reactions this reactor has.
@@ -819,7 +874,7 @@ export abstract class Reactor extends Component {
         public util = this.reactor.util
         
         public connect<A extends T, R extends Present, T extends Present, S extends R>
-                (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
+                (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
             return this.reactor._connect(src, dst);
         }
     };
@@ -904,9 +959,8 @@ export abstract class Reactor extends Component {
     }
 
 
-    protected getWriter<T extends Present>(port: Port<T>): Writer<T> {
-        // FIXME: Implement checks to ensure that port is allowed to be written to.
-        return new Writer(port);
+    protected getWriter<T extends Present>(port: IOPort<T>): ReadWrite<T> {
+        return port.asWritable(this);
     }
 
 
@@ -994,44 +1048,48 @@ export abstract class Reactor extends Component {
             // If a reaction is triggered by a child reactor's port,
             // it needs to be inserted into the child reactor's trigger map
             // instead of this reactor's trigger map
-            let triggerMap: Map<Variable, Set<Reaction<any>>>;
+            //let triggerMap: Map<Variable, Set<Reaction<any>>>;
             
-            if (!(t instanceof CalleePort)) {
-                if (t instanceof Port && !t.isChildOf(this)) {
-                    let portParent: Reactor | undefined;
-                    // Obtain the child reactor's trigger map
-                    for (let childReactor of this._getChildren()) {
-                        if (t.isChildOf(childReactor)) {
-                            portParent = childReactor;
-                            break;
-                        }
-                    }
-                    if (portParent === undefined) {
-                        throw new Error("Port " + t + " is a trigger for reaction " + reaction
-                            + " but is neither a child of the reactor containing the reaction"
-                            + " or that reactor's children.")
-                    }
-                    triggerMap = portParent._triggerMap
-                } else {
-                    // Use this reactor's trigger map
-                    triggerMap = this._triggerMap
-                }
-                let reactions = triggerMap.get(t);
-                if (reactions == undefined) {
-                    reactions = new Set();
-                    triggerMap.set(t, reactions);
-                }
-                reactions.add(reaction);
+            // if (!(t instanceof CalleePort)) {
+            //     if (t instanceof IOPort && !t.isChildOf(this)) {
+            //         let portParent: Reactor | undefined;
+            //         // Obtain the child reactor's trigger map
+            //         for (let childReactor of this._getChildren()) {
+            //             if (t.isChildOf(childReactor)) {
+            //                 portParent = childReactor;
+            //                 break;
+            //             }
+            //         }
+            //         if (portParent === undefined) {
+            //             throw new Error("Port " + t + " is a trigger for reaction " + reaction
+            //                 + " but is neither a child of the reactor containing the reaction"
+            //                 + " or that reactor's children.")
+            //         }
+            //         //triggerMap = portParent._triggerMap
+            //     } else {
+            //         // Use this reactor's trigger map
+            //         //triggerMap = this._triggerMap
+            //     }
+            //     let reactions = triggerMap.get(t);
+            //     if (reactions == undefined) {
+            //         reactions = new Set();
+            //         triggerMap.set(t, reactions);
+            //     }
+            //     reactions.add(reaction);
+            // }
+            if (t instanceof Trigger) {
+                t.getManager(this).addReaction(reaction)
             }
+
             // Record this trigger as a dependency.
-            if (t instanceof InPort || t instanceof OutPort || t instanceof CalleePort) {
+            if (t instanceof IOPort || t instanceof CalleePort) {
                 this._addDependency(t, reaction);
             } else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
         }
         for (let a of reaction.args.tuple) {
-            if (a instanceof InPort || a instanceof OutPort) {
+            if (a instanceof IOPort) {
                 if (this._isUpstream(a)) {
                     this._addDependency(a, reaction);
                 } else if (this._isDownstream(a)) {
@@ -1053,7 +1111,7 @@ export abstract class Reactor extends Component {
             if (a instanceof Scheduler) {
                 // antidep
             }
-            if (a instanceof Writer) {
+            if (a instanceof WritablePort) {
                 this._addAntiDependency(a.getPort(), reaction);
             }
         }
@@ -1216,7 +1274,7 @@ export abstract class Reactor extends Component {
                         prev = undefined;
                         callers.forEach((caller) => {prev? graph.addEdge(caller, prev) : {}; prev = caller})
                     }
-                } else if (d instanceof Port) {
+                } else if (d instanceof IOPort) {
                     graph.addEdges(r, d.getUpstreamReactions());
                 } else {
                     Log.global.error("Found dependency that is not a port: " + d)
@@ -1224,7 +1282,7 @@ export abstract class Reactor extends Component {
             }
             // look downstream
             for (let d of deps[1]) {
-                if (d instanceof Port) {
+                if (d instanceof IOPort) {
                     graph.addBackEdges(r, d.getDownstreamReactions());
                 } else {
                     Log.global.error("Found antidependency that is not a port")
@@ -1253,53 +1311,62 @@ export abstract class Reactor extends Component {
         s.add(reaction);
     }
 
+    public _triggerReaction(reaction: Reaction<unknown>) {
+        this._app._triggerReaction(reaction);
+    }
+
+    public _setValue<T extends Present>(port: IOPort<T>, value: T) {
+        port.asWritable(this).set(value)
+    }
+
     /**
      * Assign a value to this port at the current logical time.
      * Put the reactions this port triggers on the reaction 
      * queue and recursively invoke this function on all connected output ports.
      * @param value The value to assign to this port.
      */
-    public _propagateValue<T extends Present>(src: Port<T>): void {
-        var value = src.get();
-        if (value === undefined) {
-            Log.debug(this, () => "Retrieving null value from " + src.getFullyQualifiedName());
-            return;
-        }
-        var reactions = this._triggerMap.get(src);
-        // Push triggered reactions onto the reaction queue.
-        if (reactions != undefined) {
-            for (let r of reactions) {
-                this._app._triggerReaction(r);
-            }
-        } else {
-            Log.global.debug("No reactions to trigger.")
-        }
-        // Update all ports that the src is connected to.
-        var dests:Set<Port<Present>> = new Set(); // FIXME: obtain set of writable objects directly from the map
-        // Hierarchical connections (to contained reactors).
-        this._destinationPorts.get(src)?.forEach((dest) => dests.add(dest))
-        // Connections to reactors at the same level.
-        if (this.__container__ && this.__container__ instanceof Reactor) {
-            this.__container__._destinationPorts.get(src)?.forEach((dest) => dests.add(dest))
-        }
-        for (let d of dests) {
-            d.update(this.getWriter(d), value);
-        }
-        if (dests.size == 0) {
-            Log.global.debug("No downstream receivers.");
-        }
-    }
+    // public _propagateValue<T extends Present>(src: Port<T>): void {
+        
+    //     var value = src.get();
+    //     if (value === undefined) {
+    //         Log.debug(this, () => "Retrieving null value from " + src.getFullyQualifiedName());
+    //         return;
+    //     }
+    //     var reactions = this._triggerMap.get(src);
+    //     // Push triggered reactions onto the reaction queue.
+    //     if (reactions != undefined) {
+    //         for (let r of reactions) {
+    //             this._app._triggerReaction(r);
+    //         }
+    //     } else {
+    //         Log.global.debug("No reactions to trigger.")
+    //     }
+    //     // Update all ports that the src is connected to.
+    //     var dests:Set<Port<Present>> = new Set(); // FIXME: obtain set of writable objects directly from the map
+    //     // Hierarchical connections (to contained reactors).
+    //     this._destinationPorts.get(src)?.forEach((dest) => dests.add(dest))
+    //     // Connections to reactors at the same level.
+    //     if (this.__container__ && this.__container__ instanceof Reactor) {
+    //         this.__container__._destinationPorts.get(src)?.forEach((dest) => dests.add(dest))
+    //     }
+    //     for (let d of dests) {
+    //         this.getWriter(d).set(value);
+    //     }
+    //     if (dests.size == 0) {
+    //         Log.global.debug("No downstream receivers.");
+    //     }
+    // }
 
-    public _triggerReactions(e: TaggedEvent<unknown>) {
-        Log.debug(this, () => "Triggering reactions sensitive to " + e.trigger);
+    // public _triggerReactions(e: TaggedEvent<unknown>) {
+    //     Log.debug(this, () => "Triggering reactions sensitive to " + e.trigger);
 
-        let reactions = this._triggerMap.get(e.trigger);
-        if (reactions) {
-            for (let r of reactions) {
-                this._app._triggerReaction(r);
-            }
-        }
-    }
+    //     let reactions = this._triggerMap.get(e.trigger);
+    //     if (reactions) {
+    //         for (let r of reactions) {
+    //             this._app._triggerReaction(r);
+    //         }
+    //     }
+    // }
     
     private _startupChildren() {
         for (let r of this._getChildren()) {
@@ -1432,7 +1499,7 @@ export abstract class Reactor extends Component {
      * @param dst The end point of a new connection.
      */
     public canConnect<A extends T, R extends Present, T extends Present, S extends R>
-            (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
+            (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
         // Rule out self loops. 
         //   - (including trivial ones)
         if (src === dst) {
@@ -1508,7 +1575,7 @@ export abstract class Reactor extends Component {
      * @param dst The destination port to connect.
      */
     protected _connect<A extends T, R extends Present, T extends Present, S extends R>
-            (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>) {
+            (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
         if (this.canConnect(src, dst)) {
             Log.debug(this, () => "connecting " + src + " and " + dst);
             if (src instanceof CallerPort && dst instanceof CalleePort) {
@@ -1545,7 +1612,7 @@ export abstract class Reactor extends Component {
                 // establish dependencies on the callers.
                 callerContainer?._dependsOnReactions.get(src)?.
                         forEach((reaction) => callers?.add(reaction))
-            } else {
+            } else if (src instanceof IOPort && dst instanceof IOPort) {
                 Log.debug(this, () => "connecting " + src + " and " + dst);
                 // Set up sources and destinations for value propagation.
                 let dests = this._destinationPorts.get(src);
@@ -1553,6 +1620,7 @@ export abstract class Reactor extends Component {
                     dests = new Set();
                 }
                 dests.add(dst);
+                src.getManager(this).addReceiver(dst as IOPort<S>); // FIXME: suspicious cast
                 this._destinationPorts.set(src, dests);
                 this._sourcePort.set(dst, src);
             }
@@ -1568,7 +1636,7 @@ export abstract class Reactor extends Component {
      */
     protected _disconnect(src: Port<Present>, dst: Port<Present>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
-        // FIXME: imlement this
+        //src.getManager(this).delReceiver(dst);
         let dests = this._destinationPorts.get(src);
         if (dests != null) {
             dests.delete(dst);
@@ -1693,15 +1761,27 @@ export abstract class Reactor extends Component {
 
 }
 
-export abstract class Port<T extends Present> extends Component implements Read<T> {
-
+export abstract class Port<T extends Present> extends Trigger implements Read<T> { // Remove the generics from this guy?
+    
     /** The time stamp associated with this port's value. */
     protected tag: Tag | undefined;
 
     /** The value associated with this port. */
     protected value: T | Absent;
 
+    abstract get(): T | undefined;
+
+    abstract getManager(container: Reactor): PortManager<T>;
+
     /**
+     * Create a new port on the given reactor.
+     * @param __container__ 
+     */
+    constructor(protected __container__: Reactor) {
+        super(__container__);
+    }
+
+/**
      * Return the transitive closure of reactions dependent on this port.
      */
     public getDownstreamReactions(): Set<Reaction<unknown>> { // FIXME: move this to reactor because reactions should not be able to retrieve downstream reactions
@@ -1736,19 +1816,13 @@ export abstract class Port<T extends Present> extends Component implements Read<
         return reactions;
     }
 
-    public isChildOf(r: Reactor): boolean {
-        if (this.__container__ && this.__container__ === r) {
-            return true;
-        }
-        return false;
-    }
+}
 
-    public isGrandChildOf(r: Reactor): boolean {
-        if (this.__container__ && this.__container__.isChildOf(r)) {
-            return true;
-        }
-        return false;
-    }
+export abstract class IOPort<T extends Present> extends Port<T> {
+
+    protected receivers: Set<IOPort<T>> = new Set();
+
+    protected reactions: Set<Reaction<unknown>> = new Set();
 
     /**
      * Returns true if the connected port's value has been set; false otherwise
@@ -1769,26 +1843,9 @@ export abstract class Port<T extends Present> extends Component implements Read<
         }
     }
 
-    public update(writer: Writer<T>, value: T) {
-        if (writer.isProxyOf(this)) {
-            // Only update the value if the proxy has a reference
-            // to this port. If it does, the type variables must
-            // match; no further checks are needed.
-            Log.debug(this, () => "Updating value of " + this.getFullyQualifiedName());
-            this.value = value;
-            Log.debug(this, () => ">> parent: " + this.__container__);
-            this.tag = this.__container__.util.getCurrentTag();
-            this.__container__._propagateValue(this);
-        } else {
-            Log.global.warn("WARNING: port update denied.");
-        }
-    }
-
     /**
-     * Obtains the value set to this port. Values are either set directly by calling set()
-     * on this port, or indirectly by calling set() on a connected upstream port.
-     * Will return null if the connected output did not have its value set at the current
-     * logical time.
+     * Return the value set to this port. Return `Absent` if the connected
+     * output did not have its value set at the current logical time.
      */
     public get(): T | Absent {
         if (this.isPresent()) {
@@ -1799,31 +1856,107 @@ export abstract class Port<T extends Present> extends Component implements Read<
     }
 
     /**
-     * Create a new port on the given reactor.
-     * @param __container__ 
+     * Take a reference to the container of this port and return a
+     * writable version of this port. If the reference is invalid,
+     * an error is thrown.
+     * @param container
      */
-    constructor(protected __container__: Reactor) {
-        super(__container__);
+    public asWritable(container: Reactor): WritablePort<T> {
+        if (this.__container__ === container) {
+            return this.writer
+        }
+        throw Error("Invalid reference to container.")
     }
+
+    /**
+     * 
+     * @param container Reference to the container of this port 
+     * (or the container thereof).
+     */
+    public getManager(container: Reactor): PortManager<T> {
+        if (this.__container__ === container || this.__container__.isChildOf(container)) {
+            return this.manager
+        }
+        throw Error("Invalid reference to container.")
+    }
+
+    /**
+     * Inner class instance to gain access to Write<T> interface.
+     */
+    protected writer = new class extends WritablePort<T> {
+        constructor(private port:IOPort<T>) {
+            super()
+        }
+
+        public set(value: T): void {
+            this.port.value = value;
+            this.port.tag = this.port.__container__.util.getCurrentTag();
+            // Set values in downstream receivers.
+            this.port.receivers.forEach(p => p.__container__._setValue(p, value))
+            // Trigger reactions sensitive to this port.
+            this.port.reactions.forEach(r => this.port.__container__._triggerReaction(r))
+        }
+
+        public get(): T | Absent {
+            return this.port.get()
+        }
+
+        public getPort(): Port<T> {
+            return this.port
+        }
+        
+        public toString(): string {
+            return this.port.toString()
+        }
+        
+    }(this)
+
+    /**
+     * Inner class instance to let the container configure this port.
+     */
+    protected manager:PortManager<T> = new class implements PortManager<T> {
+        constructor(private port:IOPort<T>) {}
+        addReceiver(port: IOPort<T>): void {
+            this.port.receivers.add(port)
+        }
+        delReceiver(port: IOPort<T>): void {
+            this.port.receivers.delete(port)
+        }
+        addReaction(reaction: Reaction<unknown>): void {
+            this.port.reactions.add(reaction)
+        }
+        delReaction(reaction: Reaction<unknown>): void {
+            this.port.reactions.delete(reaction)
+        }
+    }(this)
 
     toString(): string {
         return this.getFullyQualifiedName();
     }
 }
 
+interface TriggerManager {
+    addReaction(reaction: Reaction<unknown>): void;
+    delReaction(reaction: Reaction<unknown>): void;    
+}
 
-export class OutPort<T extends Present> extends Port<T> implements Port<T> {
+interface PortManager<T extends Present> extends TriggerManager {
+    addReceiver(port: IOPort<T>): void;
+    delReceiver(port: IOPort<T>): void;
+}
+
+export class OutPort<T extends Present> extends IOPort<T> {
 
 }
 
-export class InPort<T extends Present> extends Port<T> {
+export class InPort<T extends Present> extends IOPort<T> {
 
 }
 
 /**
  * A caller port sends arguments of type T and receives a response of type R.
  */
-export class CallerPort<A extends Present, R extends Present> extends OutPort<R> implements Write<A>, Read<R> { // FIXME: maybe Port should not implement Read
+export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Write<A>, Read<R> { // FIXME: maybe Port should not implement Read
     
     public get(): R | undefined {
         if (this.tag?.isSimultaneousWith(this.__container__.util.getCurrentTag()))
@@ -1831,8 +1964,6 @@ export class CallerPort<A extends Present, R extends Present> extends OutPort<R>
     }
 
     public remotePort: CalleePort<A, R> | undefined;
-
-    //public remoteReaction: Reaction<unknown> | undefined;
 
     public set(value: A): void  {
         // Invoke downstream reaction directly, and return store the result.
@@ -1850,12 +1981,40 @@ export class CallerPort<A extends Present, R extends Present> extends OutPort<R>
         return this.get()
     }
 
+    /**
+     * 
+     * @param container Reference to the container of this port 
+     * (or the container thereof).
+     */
+    public getManager(container: Reactor): PortManager<R> {
+        if (this.__container__ === container || this.__container__.isChildOf(container)) {
+            return this.manager
+        }
+        throw Error("Invalid reference to container.")
+    }
+
+    protected manager:PortManager<R> = new class implements PortManager<R> {
+        constructor(private port:Port<R>) {}
+        addReceiver(port: Port<R>): void {
+            //
+        }
+        delReceiver(port: Port<R>): void {
+            //
+        }
+        addReaction(reaction: Reaction<unknown>): void {
+            //
+        }
+        delReaction(reaction: Reaction<unknown>): void {
+            //
+        }
+    }(this)
+
 }
 
 /**
  * A callee port receives arguments of type A and send a response of type R.
  */
-export class CalleePort<A extends Present, R extends Present> extends InPort<A> implements Read<A>, Write<R> {
+export class CalleePort<A extends Present, R extends Present> extends Port<A> implements Read<A>, Write<R> {
     
     get(): A | undefined {
         return this.argValue;
@@ -1892,44 +2051,35 @@ export class CalleePort<A extends Present, R extends Present> extends InPort<A> 
     public return(value: R): void {
         this.set(value)
     }
-}
-
-class Writer<T extends Present> implements Read<T>, Proxy<T> { // NOTE: don't export this class!
-
-    constructor(private port: Port<T>) {
-    }
 
     /**
-    * Write a value and recursively transmit it to connected ports, which may
-    * trigger downstream reactions. No action is taken if the given value is
-    * null.
-    * @param value The value to be written.
-    */
-    public set(value: T): void {
-        Log.debug(this, () => "set() has been called on " + this.port.getFullyQualifiedName());
-        if (value !== undefined) {
-            this.port.update(this, value);
+     * 
+     * @param container Reference to the container of this port 
+     * (or the container thereof).
+     */
+    public getManager(container: Reactor): PortManager<A> {
+        if (this.__container__ === container || this.__container__.isChildOf(container)) {
+            return this.manager
         }
+        throw Error("Invalid reference to container.")
     }
 
-    public get(): T | Absent {
-        return this.port.get();
-    }
-
-    public isProxyOf(port: Port<any>): boolean {
-        if (this.port === port) {
-            return true;
+    protected manager:PortManager<A> = new class implements PortManager<A> {
+        constructor(private port:Port<A>) {}
+        addReceiver(port: Port<A>): void {
+            //
         }
-        return false;
-    }
+        delReceiver(port: Port<A>): void {
+            //
+        }
+        addReaction(reaction: Reaction<unknown>): void {
+            //
+        }
+        delReaction(reaction: Reaction<unknown>): void {
+            //
+        }
+    }(this)
 
-    public getPort() {
-        return this.port;
-    }
-
-    public toString() {
-        return "Writable(" + this.port.toString() + ")";
-    }
 }
 
 class EventQueue extends PrioritySet<Tag> {
@@ -1978,7 +2128,7 @@ interface AppUtils {
 
 export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
-            (src: CallerPort<A,R> | Port<S>, dst: CalleePort<T,S> | Port<R>):void;
+            (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
     // FIXME: addReaction, removeReaction
     // FIXME: disconnect
 }
@@ -2086,12 +2236,6 @@ export class App extends Reactor {
      * Priority set that keeps track of reactions at the current Logical time.
      */
     private _reactionQ = new ReactionQueue();
-
-    /**
-     * Indicates whether the app is shutting down.
-     * It is important not to schedule multiple/infinite shutdown events for the app.
-     */
-    //public _shutdownStarted: boolean = false;
 
     /**
      * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
