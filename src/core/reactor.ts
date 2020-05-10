@@ -439,6 +439,41 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
             throw new Error("Attempt to update action using incompatible event.");
         }
     }
+
+    public getManager(container: Reactor): TriggerManager {
+        if (this.__container__ === container) {
+            return this.manager
+        }
+        throw Error("Invalid reference to container.")
+    }
+
+    /**
+     * Returns true if this action was scheduled for the current
+     * logical time. This result is not affected by whether it
+     * has a value.
+     */
+    public isPresent() {
+        if (this.tag === undefined) {
+            // This action has never been scheduled before.
+            return false;
+        }
+        if (this.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected manager = new class implements TriggerManager {
+        constructor(private trigger: ScheduledTrigger<T>) { }
+        addReaction(reaction: Reaction<unknown>): void {
+            this.trigger.reactions.add(reaction)
+        }
+        delReaction(reaction: Reaction<unknown>): void {
+            this.trigger.reactions.delete(reaction)
+        }
+    }(this)
+
     constructor(protected __container__: Reactor) {
         super(__container__)
     }
@@ -459,50 +494,11 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
     readonly minDelay: TimeValue;
     readonly minInterArrival: TimeValue = defaultMIT;
     
-    // A value is available to any reaction triggered by this action.
-    // The value is not directly associated with a timestamp because
-    // every action needs a timestamp (for _isPresent()) and only
-    // some actions carry values. 
-
-    //private value: T | Absent = undefined;
-
-    // The most recent time this action was scheduled.
-    // Used by the isPresent function to tell if this action
-    // has been scheduled for the current logical time.
-
-    //private timestamp: Tag | undefined;
-
-    // public update(e: TaggedEvent<T>, trigger: (r: Reaction<unknown>) => void):void {
-
-    //     if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
-    //         throw new Error("Time of event does not match current logical time.");
-    //     }
-    //     if (e.trigger === this) {
-    //         this.value = e.value
-    //         this.timestamp = e.tag;
-    //         //this.__container__._triggerReactions(e);
-    //         for (let r of this.reactions) {
-    //             trigger(r)
-    //         }
-    //     } else {
-    //         throw new Error("Attempt to update action using incompatible event.");
-    //     }
-    // }
-
-    /**
-     * Returns true if this action was scheduled for the current
-     * logical time. This result is not affected by whether it
-     * has a value.
-     */
-    private isPresent() {
-        if (this.tag === undefined) {
-            // This action has never been scheduled before.
-            return false;
-        }
-        if (this.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
-            return true;
+    public get(): T | Absent {
+        if (this.isPresent()) {
+            return this.value;
         } else {
-            return false;
+            return undefined;
         }
     }
 
@@ -530,12 +526,6 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
             var tag = this.action.__container__.util.getCurrentTag();
             var delay = this.action.minDelay.add(extraDelay);
 
-            // if (this.action instanceof Startup) {
-            //     // Add all reactions triggered by startup directly to the reaction queue.
-            //     this.action.update(new TaggedEvent(this.action, tag, value));
-            //     return;
-            // }
-
             if (this.action.origin == Origin.physical) {
                 tag = new Tag(getCurrentPhysicalTime(), 0);
             }
@@ -558,30 +548,6 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
 
     }(this)
 
-    protected manager = new class implements TriggerManager {
-        constructor(private action: Action<T>) { }
-        addReaction(reaction: Reaction<unknown>): void {
-            this.action.reactions.add(reaction)
-        }
-        delReaction(reaction: Reaction<unknown>): void {
-            this.action.reactions.delete(reaction)
-        }
-    }(this)
-    /**
-     * Called on an action within a reaction to acquire the action's value.
-     * The value for an action is set by a scheduled action event, and is only
-     * present for reactions executing at that logical time. When logical time
-     * advances, that previously available value is now unavailable.
-     * If the action was scheduled with no value, this function returns `null`.
-     */
-    public get(): T | Absent {
-        if (this.isPresent()) {
-            return this.value;
-        } else {
-            return undefined;
-        }
-    }
-
     /** 
      * Construct a new action.
      * @param __container__ The reactor containing this action.
@@ -602,11 +568,6 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
     public toString() {
         return this.getFullyQualifiedName();
     }
-
-    public isSchedulable() {
-        return false;
-    }
-
 }
 
 export class Startup extends Action<Present> {
@@ -698,40 +659,6 @@ class Scheduler<T extends Present> implements Read<T>, Schedule<T> {
  */
 export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
-    public getManager(container: Reactor): TriggerManager {
-        if (this.__container__ === container) {
-            return this.manager
-        }
-        throw Error("Invalid reference to container.")
-    }
-
-    protected manager = new class implements TriggerManager {
-        constructor(private timer: Timer) { }
-        addReaction(reaction: Reaction<unknown>): void {
-            this.timer.reactions.add(reaction)
-        }
-        delReaction(reaction: Reaction<unknown>): void {
-            this.timer.reactions.delete(reaction)
-        }
-    }(this)
-
-    //private tag: Tag | undefined;
-
-    get(): Tag | Absent {
-        if (this.tag && this.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
-            return this.tag;
-        } else {
-            return undefined;
-        }
-    }
-
-    isPresent(): boolean {
-        if (this.get() !== undefined) {
-            return true;
-        }
-        return false;
-    }
-
     period: TimeValue;
     offset: TimeValue;
 
@@ -779,6 +706,14 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
     public toString() {
         return "Timer from " + this.__container__.getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
+    }
+
+    public get(): Tag | Absent {
+        if (this.isPresent()) {
+            return this.tag;
+        } else {
+            return undefined;
+        }
     }
 }
 
