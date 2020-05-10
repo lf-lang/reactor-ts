@@ -137,6 +137,11 @@ export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
     abstract getPort(): Port<T>
 }
 
+export abstract class SchedulableAction<T extends Present> implements Schedule<T> {
+    abstract schedule(extraDelay: 0 | TimeValue, value: T): void;
+    abstract get(): T | undefined; // FIXME: not convinced this should be here.
+}
+
 //--------------------------------------------------------------------------//
 // Core Reactor Classes                                                     //
 //--------------------------------------------------------------------------//
@@ -516,8 +521,10 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
         throw Error("Invalid reference to container.")
     }
 
-    protected scheduler = new class implements Schedule<T> {
-        constructor(private action: Action<T>) {}
+    protected scheduler = new class extends SchedulableAction<T> {
+        constructor(private action: Action<T>) {
+            super()
+        }
         schedule(extraDelay: 0 | TimeValue, value: T): void {
             if (!(extraDelay instanceof TimeValue)) {
                 extraDelay = new TimeValue(0);
@@ -620,33 +627,6 @@ export class State<T> implements Read<T>, Write<T> {
         this.value = value;
     };
 
-}
-
-class Scheduler<T extends Present> implements Read<T>, Schedule<T> {
-
-    constructor(private __parent__: Reactor, private action: Action<T>) {
-
-    }
-
-    get(): T | Absent {
-        return this.action.get();
-    }
-
-    /**
-     * Schedule this action. An event for this action will be
-     * created and pushed onto the event queue. If the same action
-     * is scheduled multiple times for the same logical time, the value
-     * associated with the last invocation of the this function determines
-     * the value attached to the action at that logical time.
-     * @param extraDelay An additional scheduling delay on top of the intrinsic
-     * delay of the action. See
-     * https://github.com/icyphy/lingua-franca/wiki/Language-Specification#Action-Declaration.
-     * @param value An optional value to be attached to this action.
-     * The value will be available to reactions depending on this action.
-     */
-    schedule(extraDelay: TimeValue | 0, value: T) {
-        
-    }
 }
 
 /**
@@ -1067,7 +1047,7 @@ export abstract class Reactor extends Component {
             if (a instanceof Action) {
                 // dep
             }
-            if (a instanceof Scheduler) {
+            if (a instanceof SchedulableAction) {
                 // antidep
             }
             if (a instanceof WritablePort) {
