@@ -102,19 +102,12 @@ export interface Named {
 
 }
 
-// /**
-//  * Interface for proxy objects used to make ports writable.
-//  */
-// export interface Proxy<T extends Present> extends Write<T> {
-//     isProxyOf: (port: IOPort<any>) => boolean;
-//     getPort(): IOPort<T>;
-// }
-
 /**
  * Interface for readable variables.
  */
 export interface Read<T> {
-    get: () => T | Absent;
+    get(): T | Absent;
+    // isPresent():boolean; // FIXME: add this
 }
 
 /**
@@ -343,8 +336,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
      * exceeded, the "late" function is executed instead of the "react" function.
      * @param deadline The deadline to set to this reaction.
      */
-    /* FIXME: Unused function */
-    setDeadline(deadline: TimeValue): this {
+    public setDeadline(deadline: TimeValue): this {
         this.deadline = deadline;
         return this;
     }
@@ -823,7 +815,7 @@ export abstract class Reactor extends Component {
      * @param key The key that verifies the ownership relation between this
      * reactor and the component, with at most one level of indirection.
      */
-    public getKey(component: Trigger, key?: Symbol): Symbol | undefined {
+    protected getKey(component: Trigger, key?: Symbol): Symbol | undefined {
         if (component.isChildOf(this) || this.key === key) {
             return this.keys.get(component)
         } else if (component.isGrandChildOf(this)) {
@@ -868,7 +860,7 @@ export abstract class Reactor extends Component {
      * Create a new reactor.
      * @param __parent__ The container of this reactor.
      */
-    constructor(__parent__: Reactor | null) {
+    constructor(__parent__: Reactor | null) { // FIXME: don't allow parent to be null, instead let App be selfcontained (i.e., be contained by itself)
         super(__parent__);
         if (__parent__ != null) {
             this._app = __parent__._app;
@@ -1125,7 +1117,7 @@ export abstract class Reactor extends Component {
      * @param deadline 
      * @param late 
      */
-    public addReaction<T>(trigs: Triggers, args: Args<ArgList<T>>,
+    protected addReaction<T>(trigs: Triggers, args: Args<ArgList<T>>,
         react: (this: ReactionSandbox, ...args: ArgList<T>) => void, deadline?: TimeValue,
         late: (this: ReactionSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
@@ -1160,7 +1152,7 @@ export abstract class Reactor extends Component {
         }
     }
 
-    public addMutation<T>(trigs: Triggers, args: Args<ArgList<T>>,
+    protected addMutation<T>(trigs: Triggers, args: Args<ArgList<T>>,
         react: (this: MutationSandbox, ...args: ArgList<T>) => void, deadline?: TimeValue,
         late: (this: MutationSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
@@ -1255,7 +1247,7 @@ export abstract class Reactor extends Component {
         s.add(reaction);
     }
 
-    public _triggerReaction(reaction: Reaction<unknown>) {
+    public _triggerReaction(reaction: Reaction<unknown>) { // FIXME: find way to move this into Trigger
         this._app._triggerReaction(reaction);
     }
 
@@ -1526,7 +1518,7 @@ export abstract class Reactor extends Component {
      * @param src 
      * @param dst 
      */
-    protected _disconnect(src: Port<Present>, dst: Port<Present>) {
+    private _disconnect(src: Port<Present>, dst: Port<Present>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
         //src.getManager(this).delReceiver(dst);
         let dests = this._destinationPorts.get(src);
@@ -1566,7 +1558,7 @@ export abstract class Reactor extends Component {
      * Iterate through this reactor's attributes and return the set of its
      * ports.
      */
-    protected _getPorts(): Set<Port<any>> {
+    private _getPorts(): Set<Port<any>> {
         // Log.global.debug("Getting ports for: " + this)
         let ports = new Set<Port<any>>();
         for (const [key, value] of Object.entries(this)) {
