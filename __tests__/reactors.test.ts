@@ -1,5 +1,5 @@
-import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort} from '../src/core/reactor';
-import { UnitBasedTimeValue, TimeUnit, TimeValue } from '../src/core/time';
+import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort, Action, Timer} from '../src/core/reactor';
+import { UnitBasedTimeValue, TimeUnit, TimeValue, Origin } from '../src/core/time';
 import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
 import { doesNotMatch } from 'assert';
 
@@ -106,10 +106,30 @@ class testApp extends App {
 }
 
 
+class ReactorWithAction extends App {
+    a = new Action<number>(this, Origin.logical);
+    t = new Timer(this, new UnitBasedTimeValue(1, TimeUnit.msec), new TimeValue(1, TimeUnit.sec))
+    
+    
+    constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void) {
+        super(timeout, false, false, success, fail);
+        this.addReaction(
+            new Triggers(this.t),
+            new Args(this.getSchedulable(this.a)),
+            function(this, a){
+                a.schedule(0, 1);
+            }
+        );
+    }
+
+}
+
+
+
 
 describe("Testing deadlines", function () {
 
-    jest.setTimeout(7000);
+    jest.setTimeout(100000);
 
     it("Missed reaction deadline on InPort", done => {
         Log.global.level = LogLevel.DEBUG
@@ -161,6 +181,30 @@ describe("Testing Reactions", function () {
         });
 
     });
+
+    it("Mutate a reaction", () => {
+
+    });
+
+});
+
+describe("Testing Actions", function () {
+
+        it("Mismatched logical time", done => {
+            Log.global.level = LogLevel.DEBUG
+
+            function fail() {
+                throw new Error("Test has failed.");
+            };
+            
+            let app = new ReactorWithAction("testApp", new TimeValue(2,TimeUnit.sec), done, fail)
+
+            
+           
+    
+            /* FIXME: Deadlines are not working */
+            app._start();
+        });
 
 });
 
