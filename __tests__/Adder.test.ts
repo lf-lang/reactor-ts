@@ -1,5 +1,5 @@
 
-import {App, Port, Reactor, InPort, OutPort, Present, Args, Triggers} from '../src/core/reactor';
+import {App, IOPort, Reactor, InPort, OutPort, Present, Args, Triggers} from '../src/core/reactor';
 
 export class Adder extends Reactor {    
     
@@ -27,7 +27,7 @@ class MyAdder extends Adder {
         }
     }
 
-    public getProxy(port: Port<Present>) {
+    public getProxy(port: IOPort<Present>) {
         return this.getWriter(port);
     }
 }
