@@ -1386,7 +1386,7 @@ export abstract class Reactor extends Component {
      * @param src The start point of a new connection.
      * @param dst The end point of a new connection.
      */
-    private canConnect<A extends T, R extends Present, T extends Present, S extends R>
+    protected canConnect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
         // Rule out self loops. 
         //   - (including trivial ones)
