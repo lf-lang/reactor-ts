@@ -825,15 +825,27 @@ export abstract class Reactor extends Component {
         if (!this.keys.has(component)) this.keys.set(component, key)
     }
 
-    public getKey(component: Component, key?:Symbol): Symbol | undefined {
-        if (component.isChildOf(this) || this.key === key) {
+    /**
+     * If the given component is owned by this reactor, look up its key and
+     * return it. Otherwise, if a key has been provided, and it matches the
+     * key of this reactor, also look up the component's key and return it,
+     * provided that the component is not itself a reactor. Otherwise, if
+     * the component is owned by a reactor that is owned by this reactor,
+     * request the component's key from that reactor.
+     * @param component The component to look up the key for.
+     * @param key The key that verifies the ownership relation between this
+     * reactor and the component, with at most one level of indirection.
+     */
+    public getKey(component: Component, key?: Symbol): Symbol | undefined {
+        if (component.isChildOf(this) || 
+            (!(component instanceof Reactor) && this.key === key)) {
             return this.keys.get(component)
         } else if (component.isGrandChildOf(this)) {
             let owner = component.getContainer()
             if (owner !== null) {
                 return owner.getKey(component, this.keys.get(owner))
             }
-        }  
+        }
     }
 
     /**
@@ -1514,8 +1526,6 @@ export abstract class Reactor extends Component {
                 }
                 dests.add(dst);
 
-                let key = this.keys.get(dst)
-                
                 src.getManager(this).addReceiver(dst.asWritable(this.getKey(dst)) as WritablePort<S>);
                 this._destinationPorts.set(src, dests);
                 this._sourcePort.set(dst, src);
