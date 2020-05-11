@@ -291,11 +291,12 @@ describe('ReactionQ', () => {
 describe('Automatically constructed precedence graphs', () => {
     var reactor = new R(new App());
     it('internal dependencies between reactions', () => {
-        expect(reactor.getPrecedenceGraph().toString()).toBe(
+        // getPrecedenceGraph is not a public interface anymore
+        /* expect(reactor.getPrecedenceGraph().toString()).toBe(
 `digraph G {
 "App/R[R6]"->"App/R[R5]"->"App/R[R4]"->"App/R[R3]"->"App/R[R2]"->"App/R[R1]"->"App/R[R0]"->"App/R[M1]"->"App/R[M0]";
 }`);
-    });
+    }); */
 
 });
 
