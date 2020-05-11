@@ -162,7 +162,7 @@ class Component implements Named {
 
     constructor(protected __container__: Reactor | null, alias?:string) {
         this.alias = alias
-        if (__container__ !== null) __container__.register(this, this.key)
+        if (__container__ !== null) __container__._register(this, this.key)
     }
 
     public isChildOf(r: Reactor): boolean {
@@ -177,10 +177,6 @@ class Component implements Named {
             return true;
         }
         return false;
-    }
-
-    public getContainer(): Reactor | null {
-        return this.__container__
     }
 
     /**
@@ -424,6 +420,10 @@ abstract class Trigger extends Component {
     protected reactions: Set<Reaction<unknown>> = new Set();
 
     abstract getManager(container: Reactor): TriggerManager;
+
+    public getContainer(): Reactor | null {
+        return this.__container__
+    }
 
 }
 
@@ -821,24 +821,23 @@ export abstract class Reactor extends Component {
      */
     private _mutationScope: MutationSandbox;
 
-    public register(component: Component, key: Symbol) {
+    public _register(component: Component, key: Symbol) {
         if (!this.keys.has(component)) this.keys.set(component, key)
     }
 
     /**
      * If the given component is owned by this reactor, look up its key and
      * return it. Otherwise, if a key has been provided, and it matches the
-     * key of this reactor, also look up the component's key and return it,
-     * provided that the component is not itself a reactor. Otherwise, if
-     * the component is owned by a reactor that is owned by this reactor,
-     * request the component's key from that reactor.
+     * key of this reactor, also look up the component's key and return it.
+     * Otherwise, if the component is owned by a reactor that is owned by 
+     * this reactor, request the component's key from that reactor and return
+     * it.
      * @param component The component to look up the key for.
      * @param key The key that verifies the ownership relation between this
      * reactor and the component, with at most one level of indirection.
      */
-    public getKey(component: Component, key?: Symbol): Symbol | undefined {
-        if (component.isChildOf(this) || 
-            (!(component instanceof Reactor) && this.key === key)) {
+    public getKey(component: Trigger, key?: Symbol): Symbol | undefined {
+        if (component.isChildOf(this) || this.key === key) {
             return this.keys.get(component)
         } else if (component.isGrandChildOf(this)) {
             let owner = component.getContainer()
@@ -1343,7 +1342,7 @@ export abstract class Reactor extends Component {
     /**
      * Return a list of reactions owned by this reactor.
      */
-    public _getMutations(): Array<Reaction<unknown>> {
+    private _getMutations(): Array<Reaction<unknown>> {
         var arr: Array<Reaction<any>> = new Array();
         this._mutations.forEach((it) => arr.push(it))
         return arr;
@@ -1403,7 +1402,7 @@ export abstract class Reactor extends Component {
      * @param src The start point of a new connection.
      * @param dst The end point of a new connection.
      */
-    public canConnect<A extends T, R extends Present, T extends Present, S extends R>
+    private canConnect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
         // Rule out self loops. 
         //   - (including trivial ones)
@@ -1553,7 +1552,7 @@ export abstract class Reactor extends Component {
     /**
      * Set all the timers of this reactor.
      */
-    public _setTimers(): void {
+    protected _setTimers(): void {
         Log.debug(this, () => "Setting timers for: " + this);
         let timers = new Set<Timer>();
         for (const [k, v] of Object.entries(this)) {
@@ -1566,7 +1565,7 @@ export abstract class Reactor extends Component {
     /**
      * Unset all the timers of this reactor.
      */
-    public _unsetTimers(): void {
+    protected _unsetTimers(): void {
         // Log.global.debug("Getting timers for: " + this)
         let timers = new Set<Timer>();
         for (const [k, v] of Object.entries(this)) {
@@ -1605,12 +1604,6 @@ export abstract class Reactor extends Component {
     //     }
     //     return actions;
     // }
-
-    /**
-     * A reactor's priority represents its order in the topological sort.
-     * The default value of -1 indicates a priority has not been set. 
-     */
-    _priority: number = -1;
 
     /**
      * Return the fully qualified name of this reactor.
