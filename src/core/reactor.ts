@@ -158,8 +158,11 @@ class Component implements Named {
      */
     public alias: string | undefined;
 
+    protected key: Symbol = Symbol()
+
     constructor(protected __container__: Reactor | null, alias?:string) {
         this.alias = alias
+        if (__container__ !== null) __container__.register(this, this.key)
     }
 
     public isChildOf(r: Reactor): boolean {
@@ -436,7 +439,6 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
         if (e.trigger === this) {
             this.value = e.value
             this.tag = e.tag;
-            //this.__container__._triggerReactions(e);
             for (let r of this.reactions) {
                 trigger(r)
             }
@@ -507,8 +509,8 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
         }
     }
 
-    public getScheduler(container: Reactor): Schedule<T> {
-        if (this.__container__ === container) {
+    public asSchedulable(key: Symbol | undefined): Schedule<T> {
+        if (this.key === key) {
             return this.scheduler
         }
         throw Error("Invalid reference to container.")
@@ -749,6 +751,9 @@ export class Triggers {
  */
 export abstract class Reactor extends Component {
 
+    // NOTE: put this first because components may attempt to register and need access to this datastructore
+    private keys: Map<Component, Symbol> = new Map()
+
     /**
      * Indicates whether this reactor is active (meaning it has reacted to a
      * startup action), or not (in which case it either never started up or has
@@ -816,17 +821,19 @@ export abstract class Reactor extends Component {
      */
     private _mutationScope: MutationSandbox;
 
-    private keys: Map<Component, Symbol> = new Map()
-
     public register(component: Component, key: Symbol) {
         if (!this.keys.has(component)) this.keys.set(component, key)
     }
 
-    public borrow(component: Component, container:Reactor): Symbol | undefined {
-        let key = this.keys.get(component)
-        if (this.isChildOf(container)) {
-            return key
-        }
+    public getKey(component: Component, key?:Symbol): Symbol | undefined {
+        if (component.isChildOf(this) || this.key === key) {
+            return this.keys.get(component)
+        } else if (component.isGrandChildOf(this)) {
+            let owner = component.getContainer()
+            if (owner !== null) {
+                return owner.getKey(component, this.keys.get(owner))
+            }
+        }  
     }
 
     /**
@@ -1009,7 +1016,7 @@ export abstract class Reactor extends Component {
 
 
     protected getSchedulable<T extends Present>(action: Action<T>): Schedule<T> {
-        return action.getScheduler(this);
+        return action.asSchedulable(this.keys.get(action));
     }
 
     private _recordDeps(reaction: Reaction<any>) {
@@ -1258,7 +1265,7 @@ export abstract class Reactor extends Component {
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating startup: " + r.startup);
             // Note that startup reactions are scheduled without a microstep delay
-            r.getSchedulable(r.startup).schedule(0, null);
+            r.startup.asSchedulable(this.getKey(r.startup)).schedule(0, null)
         }
     }
 
@@ -1266,7 +1273,7 @@ export abstract class Reactor extends Component {
         Log.global.debug("Shutdown children was called")
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating shutdown: " + r.shutdown);
-            r.getSchedulable(r.shutdown).schedule(0, null);
+            r.shutdown.asSchedulable(this.getKey(r.shutdown)).schedule(0, null)
         }
     }
 
@@ -1508,13 +1515,8 @@ export abstract class Reactor extends Component {
                 dests.add(dst);
 
                 let key = this.keys.get(dst)
-                let writable
-                if (key) {
-                    writable = dst.asWritable(key) as WritablePort<S> // FIXME: suspicious cast
-                } else {
-                    writable = dst.asWritable(dst.getContainer()?.borrow(dst, this)) as WritablePort<S>
-                }
-                src.getManager(this).addReceiver(writable); // FIXME: suspicious cast
+                
+                src.getManager(this).addReceiver(dst.asWritable(this.getKey(dst)) as WritablePort<S>);
                 this._destinationPorts.set(src, dests);
                 this._sourcePort.set(dst, src);
             }
@@ -1718,15 +1720,12 @@ export abstract class IOPort<T extends Present> extends Port<T> {
 
     protected reactions: Set<Reaction<unknown>> = new Set();
 
-    private key: Symbol = Symbol()
-
     /**
      * Create a new port on the given reactor.
      * @param __container__ 
      */
     constructor(protected __container__: Reactor) {
         super(__container__);
-        __container__.register(this, this.key)
     }
 
     /**
@@ -2341,7 +2340,7 @@ export class App extends Reactor {
                 if (this._keepAlive) {
                     // Keep alive: snooze and wake up later.
                     Log.global.debug("Going to sleep.");
-                    this.getSchedulable(this.snooze).schedule(0, this._currentTag);
+                    this.snooze.asSchedulable(this.getKey(this.snooze)).schedule(0, this._currentTag);
                 } else {
                     // Don't keep alive: initiate shutdown.
                     Log.global.debug("Initiating shutdown.")
