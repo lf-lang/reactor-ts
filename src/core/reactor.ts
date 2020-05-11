@@ -431,6 +431,11 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
     protected value: T | Absent = undefined;
     protected tag: Tag | undefined;
 
+    /**
+     * Update the current value of this timer in accordance with the given
+     * event, and trigger any reactions that list this timer as their trigger.
+     * @param e Timestamped event.
+     */
     public update(e: TaggedEvent<T>, trigger: (r: Reaction<unknown>) => void):void {
 
         if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
@@ -667,24 +672,6 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
         }
     }
 
-    /**
-     * Update the current value of this timer in accordance with the given
-     * event, and trigger any reactions that list this timer as their trigger.
-     * @param e Timestamped event.
-     */
-    // public update(e: TaggedEvent<Present>, trigger: (r: Reaction<unknown>) => void) {
-    //     if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
-    //         throw new Error("Time of event does not match current logical time.");
-    //     }
-        
-    //     if (e.trigger === this) {
-    //         this.tag = e.tag;
-    //         //this.__container__._triggerReactions(e);
-    //         for (let r of this.reactions) {
-    //             trigger(r)
-    //         }
-    //     }
-    // }
 
     public toString() {
         return "Timer from " + this.__container__.getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
@@ -1611,53 +1598,6 @@ export abstract class Reactor extends Component {
     toString(): string {
         return this.getFullyQualifiedName();
     }
-
-    // NOTE: This code is commented out because it could potentially run
-    // forever. Simple cycles like A contains A are ruled out, but ones such as
-    // A contains B ... contains A are not. If we want to check the integrity of
-    // the hierarchy we need to do something more sophisticated. Also, we'd have
-    // to find aliases, which we currently are not.
-
-    // I decided to comment it out because hierarchy checks are already done in
-    // _connect, which is where they matter most. For instance, if a connection
-    // is drawn to something that is assumed to be up the hierarchy while it is
-    // really lower in the hierarchy (or vice versa), the connection will
-    // fail. 
-
-    // /**
-    //  * Recursively traverse all reactors and verify the 
-    //  * parent property of each component correctly matches its location in
-    //  * the reactor hierarchy.
-    //  */
-    // public _checkAllParents(parent: Reactor | null) {
-
-
-    //     if (this.__container__ != parent) throw new Error("The parent property for " + this
-    //         + " does not match the reactor hierarchy.");
-
-    //     let children = this._getChildren();
-    //     for (let child of children) {
-    //         child._checkAllParents(this);
-    //     }
-
-    //     // Ports have their parent set in constructor, so verify this was done correctly.
-    //     let ports = this._getPorts();
-    //     for (let port of ports) {
-    //         if (!port.isChildOf(this)) {
-    //             throw new Error("A port has been incorrectly constructed as an attribute of " +
-    //                 "a different reactor than the parent it was given in its constructor: "
-    //                 + port);
-    //         }
-    //     }
-
-    //     let actions = this._getActions();
-    //     for (let action of actions) {
-    //         if (!action.isChildOf(this)) throw new Error("The parent property for " + action
-    //             + " does not match the reactor hierarchy.");
-    //     }
-
-    // }
-
 }
 
 export abstract class Port<T extends Present> extends Trigger implements Read<T> {
