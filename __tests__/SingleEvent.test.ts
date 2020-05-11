@@ -35,9 +35,9 @@ describe('SingleEvent', function () {
         expect(expect(seTest.singleEvent).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logger).toBeInstanceOf(Logger));
         
-        /* FIXME: canConnect is not a public interface. Find a replacement to test the same behavior. */
-        // expect(seTest.canConnect(seTest.singleEvent.o, seTest.logger.i)).toBe(false);
-        // expect(seTest.canConnect(seTest.logger.i, seTest.singleEvent.o)).toBe(false);
+        
+        expect(seTest.canConnect(seTest.singleEvent.o, seTest.logger.i)).toBe(false);
+        expect(seTest.canConnect(seTest.logger.i, seTest.singleEvent.o)).toBe(false);
 
         seTest._start();
     })

@@ -295,8 +295,8 @@ describe('Automatically constructed precedence graphs', () => {
         /* expect(reactor.getPrecedenceGraph().toString()).toBe(
 `digraph G {
 "App/R[R6]"->"App/R[R5]"->"App/R[R4]"->"App/R[R3]"->"App/R[R2]"->"App/R[R1]"->"App/R[R0]"->"App/R[M1]"->"App/R[M0]";
-}`);
-    }); */
+}`); */
+    });
 
 });
 

@@ -71,8 +71,8 @@ describe('HierarchicalSingleEvent', function () {
         expect(expect(seTest.seContainer.child).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logContainer.child).toBeInstanceOf(Logger));
 
-        /* FIXME: canConnect is not a public interface. Find a replacement to test the same behavior. */
-        // expect(seTest.seContainer.canConnect(seTest.seContainer.child.o, seTest.logContainer.child.i)).toBe(false);
+        
+        expect(seTest.seContainer.canConnect(seTest.seContainer.child.o, seTest.logContainer.child.i)).toBe(false);
 
         seTest._start();
     });
