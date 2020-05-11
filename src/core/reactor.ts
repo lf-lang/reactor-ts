@@ -810,7 +810,9 @@ export abstract class Reactor extends Component {
      * key of this reactor, also look up the component's key and return it.
      * Otherwise, if the component is owned by a reactor that is owned by 
      * this reactor, request the component's key from that reactor and return
-     * it.
+     * it. If the component is an action, this request is only honored if it
+     * is a startup or shutdown action (other actions are not allowed to be
+     * scheduled across hierarchies).
      * @param component The component to look up the key for.
      * @param key The key that verifies the ownership relation between this
      * reactor and the component, with at most one level of indirection.
@@ -818,7 +820,10 @@ export abstract class Reactor extends Component {
     protected getKey(component: Trigger, key?: Symbol): Symbol | undefined {
         if (component.isChildOf(this) || this.key === key) {
             return this.keys.get(component)
-        } else if (component.isGrandChildOf(this)) {
+        } else if ((component instanceof Startup || 
+                    component instanceof Shutdown ||
+                  !(component instanceof Action)) && 
+                    component.isGrandChildOf(this)) {
             let owner = component.getContainer()
             if (owner !== null) {
                 return owner.getKey(component, this.keys.get(owner))
