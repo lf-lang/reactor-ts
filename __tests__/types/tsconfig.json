@@ -1,55 +1,14 @@
 {
     "compilerOptions": {
-        "allowJs": true,
         "noEmit": true,
-        "target": "esnext",
-        "esModuleInterop": true,
-        "isolatedModules": true,
         "lib": ["esnext", "dom"],
-        "sourceMap": true,
-        "strict": true,
-        "moduleResolution": "node",
-        "strictBindCallApply": true,
+	    "strictBindCallApply": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
          /* dtslint needs these to operate in this directory */
         "baseUrl": ".",
         "paths": { "reactor-ts": ["../../src"] }
-    },
-    "typedocOptions": {
-        "tags": {
-            "allowUnknownTags" : true
-        },
-        "plugins":[
-            "<rootDir>/plugins/markdown",
-            "<rootDir>/node_modules/tsdoc/template/plugins/TSDoc.js"
-        ],
-        "opts": {
-            "template"  :"<rootDir>/node_modules/tsdoc/template",
-            "recurse"   :"true"
-        },
-        "templates" : {
-            "cleverLinks"     : false,
-            "monospaceLinks"  : false
-        },
-        "source": {
-            "includePattern": "(\\.d)?\\.ts$"
-        },
-        "markdown": {
-            "parser"    : "gfm",
-            "hardwrap"  : true
-        },
-        "tsdoc": {
-            "source"            : "<rootDir>/src/",
-            "destination"       : "<rootDir>/docs",
-            "tutorials"         : "",
-            "systemName"        : "reactor-ts",
-            "footer"            : "",
-            "copyright"         : "Copyright © 2019 University of California, Berkeley.",
-            "outputSourceFiles" : true,
-            "commentsOnly"      : true
-        }
-    },
-    "include": [
-        "src/**/*",
-        "__tests__"
-    ]
+    }
 }
