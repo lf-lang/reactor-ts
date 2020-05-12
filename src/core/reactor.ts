@@ -154,9 +154,9 @@ class Component implements Named {
     protected key: Symbol = Symbol()
 
     /**
-     * Function for loading reactions onto the reaction queue.
+     * Function for staging reactions for execution at the current logical time.
      */
-    protected loader: ((reaction: Reaction<unknown>) => void);
+    protected stage: ((reaction: Reaction<unknown>) => void);
 
     protected __container__: Reactor;
 
@@ -165,12 +165,12 @@ class Component implements Named {
 
         if (this instanceof App) {
             this.__container__ = this       // Apps are self-contained.
-            this.loader = this.getLoader()  // Loader inherited from the app.
+            this.stage = this.getLoader()   // Loader inherited from the app.
         } else {
             if (__container__ !== null) {
                 this.__container__ = __container__  // Set the container.
                 this.__container__._register(this, this.key) // Register.
-                this.loader = __container__.loader  // Inherited the loader.
+                this.stage = __container__.stage   // Inherited the loader.
             } else {
                 throw Error("Cannot instantiate reactor without a parent.")
             }
@@ -1289,10 +1289,6 @@ export abstract class Reactor extends Component {
         s.add(reaction);
     }
 
-    public _triggerReaction(reaction: Reaction<unknown>) { // FIXME: find way to move this into Trigger
-        this._app._triggerReaction(reaction);
-    }
-
     private _startupChildren() {
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating startup: " + r.startup);
@@ -1748,9 +1744,8 @@ export abstract class IOPort<T extends Present> extends Port<T> {
             this.port.tag = this.port.__container__.util.getCurrentTag();
             // Set values in downstream receivers.
             this.port.receivers.forEach(p => p.set(value))
-            // Trigger reactions sensitive to this port.
-            //this.port.loader
-            this.port.reactions.forEach(r => this.port.__container__._triggerReaction(r))
+            // Stage triggered reactions for execution.
+            this.port.reactions.forEach(r => this.port.stage(r))
         }
 
         public get(): T | Absent {
@@ -2175,24 +2170,6 @@ export class App extends Reactor {
 
     }
 
-    
-
-    // getName(): string {
-    //     var alias = super.getName();
-    //     var count = 0;
-    //     var suffix = "";
-    //     if (alias == this.constructor.name) {
-    //         for (let a of App.instances) {
-    //             if (a !== this && alias === a.constructor.name) {
-    //                 count++;
-    //             }
-    //         }
-    //     }
-    //     if (count > 0) {
-    //         suffix = "(" + count + ")";
-    //     }
-    //     return alias + suffix;
-    // }
 
     /**
      * Handle the next events on the event queue.
