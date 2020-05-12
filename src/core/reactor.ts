@@ -451,7 +451,7 @@ abstract class Trigger extends Component {
 
     protected reactions: Set<Reaction<unknown>> = new Set();
 
-    abstract getManager(container: Reactor): TriggerManager;
+    abstract getManager(key: Symbol | undefined): TriggerManager;
 
     public getContainer(): Reactor | null {
         return this.__container__
@@ -484,11 +484,11 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
         }
     }
 
-    public getManager(container: Reactor): TriggerManager {
-        if (this.__container__ === container) { // FIXME: use key
+    public getManager(key: Symbol | undefined): TriggerManager {
+        if (this.key == key) {
             return this.manager
         }
-        throw Error("Invalid reference to container.")
+        throw Error("Unable to grant access to manager.")
     }
 
     /**
@@ -550,11 +550,11 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
         throw Error("Invalid reference to container.")
     }
 
-    public getManager(container: Reactor): TriggerManager {
-        if (this.__container__ === container) { // FIXME: use key
+    public getManager(key: Symbol | undefined): TriggerManager {
+        if (this.key == key) {
             return this.manager
         }
-        throw Error("Invalid reference to container.")
+        throw Error("Unable to grant access to manager.")
     }
 
     protected scheduler = new class extends SchedulableAction<T> {
@@ -1044,7 +1044,7 @@ export abstract class Reactor extends Component {
         for (let t of reaction.trigs.list) {
             // Link the trigger to the reaction.
             if (t instanceof Trigger) {
-                t.getManager(this).addReaction(reaction)
+                t.getManager(this.getKey(t)).addReaction(reaction)
             }
 
             // Record this trigger as a dependency.
@@ -1522,7 +1522,7 @@ export abstract class Reactor extends Component {
                 }
                 dests.add(dst);
 
-                src.getManager(this).addReceiver(dst.asWritable(this.getKey(dst)) as WritablePort<S>);
+                src.getManager(this.getKey(src)).addReceiver(dst.asWritable(this.getKey(dst)) as WritablePort<S>);
                 this._destinationPorts.set(src, dests);
                 this._sourcePort.set(dst, src);
             }
@@ -1576,7 +1576,7 @@ export abstract class Reactor extends Component {
      * Report a timer to the app so that it gets unscheduled.
      * @param timer The timer to report to the app.
      */
-    public _unsetTimer(timer: Timer) {
+    protected _unsetTimer(timer: Timer) {
         // FIXME: we could either set the timer to 'inactive' to tell the 
         // scheduler to ignore future event and prevent it from rescheduling any.
         // The problem with this approach is that if, for some reason, a timer would get
@@ -1646,7 +1646,7 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
 
     abstract get(): T | undefined;
 
-    abstract getManager(container: Reactor): PortManager<T>;
+    abstract getManager(key: Symbol | undefined): PortManager<T>;
 
     /**
      * Return the transitive closure of reactions dependent on this port.
@@ -1738,11 +1738,11 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      * @param container Reference to the container of this port 
      * (or the container thereof).
      */
-    public getManager(container: Reactor): PortManager<T> {
-        if (this.__container__ === container || this.__container__.isChildOf(container)) { // FIXME: use key
+    public getManager(key: Symbol | undefined): PortManager<T> {
+        if (this.key == key) {
             return this.manager
         }
-        throw Error("Invalid reference to container.")
+        throw Error("Unable to grant access to manager.")
     }
 
     /**
@@ -1851,12 +1851,13 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
      * @param container Reference to the container of this port 
      * (or the container thereof).
      */
-    public getManager(container: Reactor): PortManager<R> {
-        if (this.__container__ === container || this.__container__.isChildOf(container)) { // FIXME: use key
+    public getManager(key: Symbol | undefined): PortManager<R> {
+        if (this.key == key) {
             return this.manager
         }
-        throw Error("Invalid reference to container.")
+        throw Error("Unable to grant access to manager.")
     }
+
 
     protected manager:PortManager<R> = new class implements PortManager<R> {
         constructor(private port:Port<R>) {}
@@ -1922,12 +1923,13 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
      * @param container Reference to the container of this port 
      * (or the container thereof).
      */
-    public getManager(container: Reactor): PortManager<A> {
-        if (this.__container__ === container || this.__container__.isChildOf(container)) { // FIXME: use key
+    public getManager(key: Symbol | undefined): PortManager<A> {
+        if (this.key == key) {
             return this.manager
         }
-        throw Error("Invalid reference to container.")
+        throw Error("Unable to grant access to manager.")
     }
+
 
     protected manager:PortManager<A> = new class implements PortManager<A> {
         constructor(private port:Port<A>) {}
