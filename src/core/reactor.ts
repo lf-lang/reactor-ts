@@ -243,7 +243,8 @@ class Component implements Named {
     }
 
     public getAlias(): string {
-        return this.alias?
+        if (this.alias) return this.alias
+        else return ""
     }
 
     /**
@@ -901,8 +902,8 @@ export abstract class Reactor extends Component {
      * Create a new reactor.
      * @param __parent__ The container of this reactor.
      */
-    constructor(__parent__: Reactor | null) {
-        super(__parent__);
+    constructor(__parent__: Reactor | null, alias?:string) {
+        super(__parent__, alias);
         if (__parent__ != null) {
             this._app = __parent__._app;
         } else {

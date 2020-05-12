@@ -12,7 +12,10 @@ import {Reactor, OutPort, InPort, App} from "../src/core/reactor";
  
         a: InPort<{t: number}> = new InPort(this);
         b: OutPort<{t: number, y: string}> = new OutPort(this);
-
+        
+        constructor(parent:Reactor, alias: string) {
+            super(parent, alias)
+        }
     }
 
 
@@ -22,7 +25,7 @@ describe('Test names for contained reactors', () => {
         port: InPort<any> = new InPort<any>(this);
 
         x = new MyActor(this);
-        y = new MyActor2(this);
+        y = new MyActor2(this, "Foo");
 
         constructor(name: string, someParam: string) {
             super(undefined);
@@ -35,7 +38,6 @@ describe('Test names for contained reactors', () => {
                 expect(this.x.toString()).toBe("Hello World/x");
             });
 
-            this.y.alias = "Foo"
             it('contained actor with alias FQN', () => {
                 expect(this.y.toString()).toBe("Hello World/y (Foo)");
             });
