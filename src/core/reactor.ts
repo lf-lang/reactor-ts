@@ -63,7 +63,7 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  * @see Write
  */
 export type Variable = Read<unknown> |
-    Write<unknown> | ReadWrite<unknown> |
+    Write<unknown> | ReadWrite<unknown> | // FIXME: reduce this to just Read<unknown>
 {
     [name: string]: (Read<unknown>
         | Write<unknown> | ReadWrite<unknown>)
@@ -91,13 +91,20 @@ export interface Call<A, R> extends Write<A>, Read<R> {
  */
 export interface Named {
     
-    /* An alternative name for this object */
+    /** 
+     * Return the alternative name for this object if set, 
+     * an empty string otherwise. 
+     */
     getAlias(): string;
 
-    /* Return the fully qualified name of this object. */
+    /**
+     * Return the fully qualified name of this object.
+     */ 
     getFullyQualifiedName(): string;
 
-    /* Get the name of this object. */
+    /**
+     * Return this name of this object.
+     **/
     getName(): string;
 
 }
@@ -307,7 +314,7 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
                 if (this.reactor._isDownstream(a)) {
                     antideps.add(a);
                 }
-            } else if (a instanceof WritablePort) { // FIXME: how to figure out whether this thing is writable???
+            } else if (a instanceof WritablePort) {
                 if (this.reactor._isDownstream(a.getPort())) {
                     antideps.add(a.getPort());
                 }
@@ -350,9 +357,9 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         Log.debug(this, () => ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
         Log.debug(this, () => "Reaction deadline: " + this.deadline);
 
-        // If this reaction was loaded onto the reaction queue but subsequently
-        // removed/deactivated by a mutation, then return without invoking the
-        // reaction.
+        // If this reaction was loaded onto the reaction queue but the trigger(s) 
+        // absorbed by a mutation that routed the value(s) elsewhere, then return
+        // without invoking the reaction.
         if (!this.active) {
             return
         }
