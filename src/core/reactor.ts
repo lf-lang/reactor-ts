@@ -92,7 +92,7 @@ export interface Call<A, R> extends Write<A>, Read<R> {
 export interface Named {
     
     /* An alternative name for this object */
-    alias: string | undefined;
+    getAlias(): string;
 
     /* Return the fully qualified name of this object. */
     getFullyQualifiedName(): string;
@@ -149,26 +149,48 @@ class Component implements Named {
     /**
      * An optional alias for this component.
      */
-    public alias: string | undefined;
+    protected alias: string | undefined;
 
     protected key: Symbol = Symbol()
 
-    constructor(protected __container__: Reactor | null, alias?:string) {
+    /**
+     * Function for loading reactions onto the reaction queue.
+     */
+    protected loader: ((reaction: Reaction<unknown>) => void);
+
+    protected __container__: Reactor;
+
+    constructor(__container__: Reactor | null, alias?:string) {
         this.alias = alias
-        if (__container__ !== null) __container__._register(this, this.key)
+
+        if (this instanceof App) {
+            this.__container__ = this       // Apps are self-contained.
+            this.loader = this.getLoader()  // Loader inherited from the app.
+        } else {
+            if (__container__ !== null) {
+                this.__container__ = __container__  // Set the container.
+                this.__container__._register(this, this.key) // Register.
+                this.loader = __container__.loader  // Inherited the loader.
+            } else {
+                throw Error("Cannot instantiate reactor without a parent.")
+            }
+        }
     }
 
     public isChildOf(r: Reactor): boolean {
-        if (this.__container__ && this.__container__ === r) {
-            return true;
-        }
-        return false;
+
+        if (this instanceof App) return false
+        
+        if (this.__container__ === r) return true
+    
+        return false
     }
 
     public isGrandChildOf(r: Reactor): boolean {
-        if (this.__container__ && this.__container__.isChildOf(r)) {
-            return true;
-        }
+        if (this instanceof App) return false
+        
+        if (this.__container__.isChildOf(r)) return true;
+    
         return false;
     }
 
@@ -178,7 +200,7 @@ class Component implements Named {
      */
     getFullyQualifiedName(): string {
         var path = "";
-        if (this.__container__ != null) {
+        if (!(this instanceof App)) {
             path = this.__container__.getFullyQualifiedName();
         }
         if (path != "") {
@@ -193,18 +215,35 @@ class Component implements Named {
      * Return a string that identifies this component within the reactor.
      */
     public getName(): string {
-        if (this.alias) {
-            return this.alias;
-        } else if (this.__container__) {
+
+        var name = ""
+        if (!(this instanceof App)) {
             for (const [key, value] of Object.entries(this.__container__)) {
                 if (value === this) {
-                    return `${key}`;
+                    name = `${key}`
+                    break
                 }
             }
         }
+
+        if (this.alias) {
+            if (name == "") {
+                name = this.alias
+            } else {
+                name += ` (${this.alias})`
+            }
+        }
         // Return the constructor name in case the component wasn't found in its
-        // container.
-        return this.constructor.name;
+        // container and doesn't have an alias.
+        if (name == "") {
+            name = this.constructor.name
+        }
+        
+        return name
+    }
+
+    public getAlias(): string {
+        return this.alias?
     }
 
     /**
@@ -445,7 +484,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
     }
 
     public getManager(container: Reactor): TriggerManager {
-        if (this.__container__ === container) {
+        if (this.__container__ === container) { // FIXME: use key
             return this.manager
         }
         throw Error("Invalid reference to container.")
@@ -478,9 +517,6 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
         }
     }(this)
 
-    constructor(protected __container__: Reactor) {
-        super(__container__)
-    }
 }
 
 /**
@@ -514,7 +550,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
     }
 
     public getManager(container: Reactor): TriggerManager {
-        if (this.__container__ === container) {
+        if (this.__container__ === container) { // FIXME: use key
             return this.manager
         }
         throw Error("Invalid reference to container.")
@@ -565,7 +601,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
      * @param minInterArrival Optional. Defaults to 1 nsec. Specifies the minimum
      * intrinsic delay between to occurrences of this action.
      */
-    constructor(protected __container__: Reactor, origin: Origin, minDelay: TimeValue = new TimeValue(0), minInterArrival: TimeValue = defaultMIT) {
+    constructor(__container__: Reactor, origin: Origin, minDelay: TimeValue = new TimeValue(0), minInterArrival: TimeValue = defaultMIT) {
         super(__container__);
         this.origin = origin;
         this.minDelay = minDelay;
@@ -649,7 +685,7 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
      * @param period The interval between rescheduled timer events. If 0, will
      * not reschedule. Cannot be negative.
      */
-    constructor(protected __container__: Reactor, offset: TimeValue | 0, period: TimeValue | 0) {
+    constructor(__container__: Reactor, offset: TimeValue | 0, period: TimeValue | 0) {
         super(__container__);
         if (!(offset instanceof TimeValue)) {
             this.offset = new TimeValue(0);
@@ -865,7 +901,7 @@ export abstract class Reactor extends Component {
      * Create a new reactor.
      * @param __parent__ The container of this reactor.
      */
-    constructor(__parent__: Reactor | null) { // FIXME: don't allow parent to be null, instead let App be selfcontained (i.e., be contained by itself)
+    constructor(__parent__: Reactor | null) {
         super(__parent__);
         if (__parent__ != null) {
             this._app = __parent__._app;
@@ -1272,14 +1308,6 @@ export abstract class Reactor extends Component {
         }
     }
 
-    public isChildOf(parent: Reactor) {
-        if (this.__container__ === parent) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     /**
      * Obtain a set that has the reactors that this reactor contains directly
      * (not further down the hierarchy).
@@ -1610,14 +1638,6 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
     abstract getManager(container: Reactor): PortManager<T>;
 
     /**
-     * Create a new port on the given reactor.
-     * @param __container__ 
-     */
-    constructor(protected __container__: Reactor) {
-        super(__container__);
-    }
-
-    /**
      * Return the transitive closure of reactions dependent on this port.
      */
     public getDownstreamReactions(): Set<Reaction<unknown>> { // FIXME: move this to reactor because reactions should not be able to retrieve downstream reactions
@@ -1659,14 +1679,6 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     protected receivers: Set<WritablePort<T>> = new Set();
 
     protected reactions: Set<Reaction<unknown>> = new Set();
-
-    /**
-     * Create a new port on the given reactor.
-     * @param __container__ 
-     */
-    constructor(protected __container__: Reactor) {
-        super(__container__);
-    }
 
     /**
      * Returns true if the connected port's value has been set; false otherwise
@@ -1716,7 +1728,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      * (or the container thereof).
      */
     public getManager(container: Reactor): PortManager<T> {
-        if (this.__container__ === container || this.__container__.isChildOf(container)) {
+        if (this.__container__ === container || this.__container__.isChildOf(container)) { // FIXME: use key
             return this.manager
         }
         throw Error("Invalid reference to container.")
@@ -1736,6 +1748,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
             // Set values in downstream receivers.
             this.port.receivers.forEach(p => p.set(value))
             // Trigger reactions sensitive to this port.
+            //this.port.loader
             this.port.reactions.forEach(r => this.port.__container__._triggerReaction(r))
         }
 
@@ -1829,7 +1842,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
      * (or the container thereof).
      */
     public getManager(container: Reactor): PortManager<R> {
-        if (this.__container__ === container || this.__container__.isChildOf(container)) {
+        if (this.__container__ === container || this.__container__.isChildOf(container)) { // FIXME: use key
             return this.manager
         }
         throw Error("Invalid reference to container.")
@@ -1900,7 +1913,7 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
      * (or the container thereof).
      */
     public getManager(container: Reactor): PortManager<A> {
-        if (this.__container__ === container || this.__container__.isChildOf(container)) {
+        if (this.__container__ === container || this.__container__.isChildOf(container)) { // FIXME: use key
             return this.manager
         }
         throw Error("Invalid reference to container.")
@@ -2047,6 +2060,10 @@ export class App extends Reactor {
      * Priority set that keeps track of scheduled events.
      */
     private _eventQ = new EventQueue();
+
+    public getLoader(): (reaction: Reaction<unknown>) => void {
+        return (r:Reaction<unknown>) => this._reactionQ.push(r);
+    }
 
     /**
      * If not null, finish execution with success, this time interval after the

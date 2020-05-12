@@ -18,7 +18,6 @@ import {Reactor, OutPort, InPort, App} from "../src/core/reactor";
 
 describe('Test names for contained reactors', () => {
     
-    
     class myApp extends App {
         port: InPort<any> = new InPort<any>(this);
 
@@ -29,16 +28,16 @@ describe('Test names for contained reactors', () => {
             super(undefined);
             this.setAlias(name);
 
-            // Normally _setAllParents would be called as part of the initialization
-            // process for starting an app, but we call it directly here to set
-            // parent attributes needed for this test.
-            // this._setAllParents(null);
-
             // it('contained actor name', () => {
             //     expect(this.x._getName()).toBe("MyActor");
             // });
             it('contained actor FQN', () => {
                 expect(this.x.toString()).toBe("Hello World/x");
+            });
+
+            this.y.alias = "Foo"
+            it('contained actor with alias FQN', () => {
+                expect(this.y.toString()).toBe("Hello World/y (Foo)");
             });
 
             it('uncontained actor name', () => {
