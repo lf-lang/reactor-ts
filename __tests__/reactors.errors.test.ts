@@ -92,9 +92,9 @@ describe("Testing Error Cases", function () {
 
         var parent = new App();
 
-        expect(  () => { var reactor1 = new R(null);} ).toThrowError("Cannot instantiate reactor without a parent.")
+        expect( () => { var reactor1 = new R(null);} ).toThrowError("Cannot instantiate component without a parent.")
         
-        expect( () => { var cport = new CalleePort(new R(null));} ).toThrowError("Cannot instantiate reactor without a parent.");
+        expect( () => { var cport = new CalleePort(new R(null));} ).toThrowError("Cannot instantiate component without a parent.");
         
         var reactor = new R(new App());
         var reactor2= new R(new App());

@@ -172,7 +172,7 @@ class Component implements Named {
                 this.__container__._register(this, this.key) // Register.
                 this.stage = __container__.stage   // Inherited the loader.
             } else {
-                throw Error("Cannot instantiate reactor without a parent.")
+                throw Error("Cannot instantiate component without a parent.")
             }
         }
     }
@@ -778,11 +778,6 @@ export abstract class Reactor extends Component {
     private _active = false;
 
     /**
-     * The top-level reactor that this reactor is contained in.
-     */
-    private _app: App;
-
-    /**
      * Maps ports to upstream reactions that they depend on.
      */
     private _dependsOnReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
@@ -904,19 +899,12 @@ export abstract class Reactor extends Component {
      */
     constructor(__parent__: Reactor | null, alias?:string) {
         super(__parent__, alias);
-        if (__parent__ != null) {
-            this._app = __parent__._app;
-        } else {
-            if (this instanceof App) {
-                this._app = this;
-            } else {
-                throw new Error("Cannot instantiate reactor without a parent.");
-            }
-        }
-
-        // Even though TypeScript doesn't catch it, the following statement
-        // will assign `undefined` if the this is an instance of App.
-        this.util = this._app.util;
+        
+        // Utils get passed down the hierarchy. If this is an App,
+        // the container refers to this object, making the following
+        // assignment idemponent.
+        this.util = (this.__container__ as unknown as Reactor).util    
+        
         this._reactionScope = new this._ReactionSandbox(this)
         this._mutationScope = new this._MutationSandbox(this)
         // NOTE: beware, if this is an instance of App, `this.util` will be `undefined`.
@@ -1566,9 +1554,35 @@ export abstract class Reactor extends Component {
         let timers = new Set<Timer>();
         for (const [k, v] of Object.entries(this)) {
             if (v instanceof Timer) {
-                this._app._setTimer(v);
+                this._setTimer(v);
             }
         }
+    }
+
+    protected _setTimer(timer: Timer): void {
+        Log.debug(this, () => ">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
+        let startTime;
+        if (timer.offset.isZero()) {
+            // getLaterTime always returns a microstep of zero, so handle the
+            // zero offset case explicitly.
+            startTime = this.util.getCurrentTag().getMicroStepLater();
+        } else {
+            startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
+        }
+        this.util.schedule(new TaggedEvent(timer, this.util.getCurrentTag().getLaterTag(timer.offset), null));
+    }
+
+    /**
+     * Report a timer to the app so that it gets unscheduled.
+     * @param timer The timer to report to the app.
+     */
+    public _unsetTimer(timer: Timer) {
+        // FIXME: we could either set the timer to 'inactive' to tell the 
+        // scheduler to ignore future event and prevent it from rescheduling any.
+        // The problem with this approach is that if, for some reason, a timer would get
+        // reactivated, it could start seeing events that were scheduled prior to its
+        // becoming inactive. Alternatively, we could remove the event from the queue, 
+        // but we'd have to add functionality for this.
     }
 
     /**
@@ -1579,7 +1593,7 @@ export abstract class Reactor extends Component {
         let timers = new Set<Timer>();
         for (const [k, v] of Object.entries(this)) {
             if (v instanceof Timer) {
-                this._app._unsetTimer(v);
+                this._unsetTimer(v);
             }
         }
     }
@@ -2098,35 +2112,14 @@ export class App extends Reactor {
      */
     private _startOfExecution: TimeValue;
 
-    /**
-     * Report a timer to the app so that it gets scheduled.
-     * @param timer The timer to report to the app.
-     */
-    public _setTimer(timer: Timer) {
-        Log.debug(this, () => ">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
-        let startTime;
-        if (timer.offset.isZero()) {
-            // getLaterTime always returns a microstep of zero, so handle the
-            // zero offset case explicitly.
-            startTime = this.util.getCurrentTag().getMicroStepLater();
-        } else {
-            startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
-        }
-        this.schedule(new TaggedEvent(timer, this.util.getCurrentTag().getLaterTag(timer.offset), null));
-    }
+    // /**
+    //  * Report a timer to the app so that it gets scheduled.
+    //  * @param timer The timer to report to the app.
+    //  */
+    // public _setTimer(timer: Timer) {
+        
+    // }
 
-    /**
-     * Report a timer to the app so that it gets unscheduled.
-     * @param timer The timer to report to the app.
-     */
-    public _unsetTimer(timer: Timer) {
-        // FIXME: we could either set the timer to 'inactive' to tell the 
-        // scheduler to ignore future event and prevent it from rescheduling any.
-        // The problem with this approach is that if, for some reason, a timer would get
-        // reactivated, it could start seeing events that were scheduled prior to its
-        // becoming inactive. Alternatively, we could remove the event from the queue, 
-        // but we'd have to add functionality for this.
-    }
 
     /**
      * Unset all the timers of this reactor.
