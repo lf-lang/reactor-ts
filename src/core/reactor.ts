@@ -475,7 +475,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
      * event, and trigger any reactions that list this timer as their trigger.
      * @param e Timestamped event.
      */
-    public update(e: TaggedEvent<T>, trigger: (r: Reaction<unknown>) => void):void {
+    public update(e: TaggedEvent<T>):void {
 
         if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
@@ -484,7 +484,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
             this.value = e.value
             this.tag = e.tag;
             for (let r of this.reactions) {
-                trigger(r)
+                this.stage(r)
             }
         } else {
             throw new Error("Attempt to update action using incompatible event.");
@@ -2234,7 +2234,7 @@ export class App extends Reactor {
                     }
 
                     // Load reactions onto the reaction queue.
-                    nextEvent.trigger.update(nextEvent, (r:Reaction<unknown>) => this._triggerReaction(r));
+                    nextEvent.trigger.update(nextEvent);
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
                 }
@@ -2297,7 +2297,7 @@ export class App extends Reactor {
 
         // If startup was scheduled during a run-time mutation, bypass the event queue.
         if (e.trigger instanceof Startup && !this.util.getElapsedLogicalTime().isZero()) {
-            e.trigger.update(e, (r:Reaction<unknown>) => this._triggerReaction(r))
+            e.trigger.update(e)
             return
         }
 
