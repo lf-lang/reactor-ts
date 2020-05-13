@@ -28,7 +28,7 @@ class Logger<T extends Present>  extends Reactor {
 
 class SETest extends App {
     singleEvent: SingleEvent<string>;
-    logger: Logger<number>;
+    logger: Logger<number>; // Type mismatched with SingleEvent on purpose
 
     constructor(timeout: TimeValue, success: () => void, failure: () => void) {
         super(timeout, false, false, success, failure);
