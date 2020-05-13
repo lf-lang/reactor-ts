@@ -1,9 +1,25 @@
 /* file: __tests__/types/basic-type-tests.ts */
 import { TimeValue } from '../../src/core/time';
-import { App, Parameter, Reactor, Triggers, Present, Args, State, InPort, ReactionSandbox, Write, OutPort, Timer } from '../../src/core/reactor';
+import { App, Parameter, Reactor, Triggers, Present, Args, State, InPort, ReactionSandbox, Write, OutPort, Timer, Read } from '../../src/core/reactor';
+import { SingleEvent } from '../../src/share/SingleEvent';
 
-class Logger extends Reactor {
-    i = new InPort<number>(this);
+function print(this: ReactionSandbox, i: Read<unknown>, expected: State<unknown>) {
+    const received = i.get();
+    if (received) {
+        console.log("Logging: " + received);
+        if (received === expected.get()) {
+            this.util.success();
+        } else {
+            this.util.failure();
+        }
+    } else {
+        throw new Error("Log had no input available. This shouldn't happen because the logging reaction is triggered by the input");
+    }
+}
+
+/* Logger class with explicit type */
+class Logger<T extends Present>  extends Reactor {
+    i = new InPort<T>(this);
     constructor(parent: Reactor, expected: Present) {
         super(parent);
         this.addReaction(new Triggers(this.i), new Args(this.i, new State(expected)), print);
@@ -11,8 +27,8 @@ class Logger extends Reactor {
 }
 
 class SETest extends App {
-    singleEvent: SingleEvent;
-    logger: Logger;
+    singleEvent: SingleEvent<string>;
+    logger: Logger<number>;
 
     constructor(timeout: TimeValue, success: () => void, failure: () => void) {
         super(timeout, false, false, success, failure);
@@ -23,29 +39,6 @@ class SETest extends App {
         // Connect output of singleEvent to input of logger.
         // $ExpectError
         this._connect(this.singleEvent.o, this.logger.i);
-    }
-}
-
-function produceOutput(this: ReactionSandbox, o: Write<string>, payload: Parameter<string>) {
-    o.set(payload.get());
-        // FIXME: create a test that actually tests double sets.
-    // It's confusing to have SingleEvent be a DoubleEvent.
-    // Duplicate sets for the same port is bad form,
-    // but its worth checking that the correct value (from the last set)
-    // is delivered.
-    console.log("Writing payload to SingleEvent's output.");
-}
-
-class SingleEvent extends Reactor {
-    o: OutPort<string> = new OutPort<string>(this);
-    t1: Timer = new Timer(this, 0, 0);
-    constructor(parent: Reactor, private readonly payload: Parameter<string>) {
-        super(parent);
-        this.addReaction(
-            new Triggers(this.t1),
-            new Args(this.getWriter(this.o), this.payload),
-            produceOutput
-        );
     }
 }
 
