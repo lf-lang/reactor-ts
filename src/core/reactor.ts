@@ -457,7 +457,7 @@ class TaggedEvent<T extends Present> implements PrioritySetNode<Tag> {
 abstract class Trigger extends Component {
 
     protected reactions: Set<Reaction<unknown>> = new Set();
-
+    
     abstract getManager(key: Symbol | undefined): TriggerManager;
 
     public getContainer(): Reactor | null {
@@ -1418,10 +1418,16 @@ export abstract class Reactor extends Component {
         // dependency graph to figure out whether this change introduces
         // zero-delay feedback.
         
-        // Check that a caller is matched with callee and vice versa. 
-        if ((src instanceof CallerPort && !(dst instanceof CalleePort)) || 
-             dst instanceof CalleePort && !(src instanceof CallerPort)) {
-                return false
+        // Validate connections between callers and callees.
+        if (src instanceof CalleePort) {
+            return false
+        }
+        if (src instanceof CallerPort) {
+            if (dst instanceof CalleePort && 
+                src.isGrandChildOf(this) && dst.isGrandChildOf(this)) {
+                return true
+            }
+            return false
         }
 
         // Rule out write conflicts.
@@ -1695,8 +1701,6 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
 export abstract class IOPort<T extends Present> extends Port<T> {
 
     protected receivers: Set<WritablePort<T>> = new Set();
-
-    protected reactions: Set<Reaction<unknown>> = new Set();
 
     /**
      * Returns true if the connected port's value has been set; false otherwise
