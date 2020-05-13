@@ -1,7 +1,11 @@
 {
     "compilerOptions": {
+        "target": "es5",
         "noEmit": true,
+        "downlevelIteration": true,
         "lib": ["esnext", "dom"],
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
 	    "strictBindCallApply": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
