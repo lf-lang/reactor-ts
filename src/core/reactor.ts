@@ -5,11 +5,11 @@
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
 
-import {PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log, DependencyGraph} from './util';
+import {Sortable, PrioritySetNode, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
 import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
 
 // Set the default log level.
-Log.global.level = Log.levels.ERROR;
+Log.global.level = Log.levels.DEBUG;
 
 //--------------------------------------------------------------------------//
 // Types                                                                    //
@@ -131,7 +131,7 @@ export interface Write<T> {
     set: (value: T) => void;
 }
 
-export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
+export abstract class WritablePort<T extends Present> implements ReadWrite<T> { // FIXME: should this be an IOPort?
     abstract get(): T | undefined;
     abstract set(value: T): void;
     abstract getPort(): Port<T>
@@ -270,7 +270,7 @@ class Component implements Named {
  * the argument list of the `react` function that that is applied to when this
  * reaction gets triggered.
  */
-export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNode<Priority> {
+export class Reaction<T> implements Sortable<Priority>, PrioritySetNode<Priority> {
 
     /** 
      * Priority derived from this reaction's location in 
@@ -302,39 +302,39 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
         return this.reactor.getFullyQualifiedName() + "[R" + this.reactor.getReactionIndex(this) + "]";
     }
 
-    getDependencies(): [Set<Variable>, Set<Variable>] {
-        var deps: Set<Variable> = new Set();
-        var antideps: Set<Variable> = new Set();
-        var vars = new Set();
-        for (let a of this.args.tuple.concat(this.trigs.list)) {
-            if (a instanceof IOPort) {
-                if (this.reactor._isUpstream(a)) {
-                    deps.add(a);
-                }
-                if (this.reactor._isDownstream(a)) {
-                    antideps.add(a);
-                }
-            } else if (a instanceof WritablePort) {
-                if (this.reactor._isDownstream(a.getPort())) {
-                    antideps.add(a.getPort());
-                }
-            } else {
-                // Handle hierarchical references.
-                for (let p of Object.getOwnPropertyNames(a)) {
-                    let prop = Object.getOwnPropertyDescriptor(a, p);
-                    if (prop?.value instanceof Port) {
-                        if (this.reactor._isUpstream(prop.value)) {
-                            deps.add(prop.value);
-                        }
-                        if (this.reactor._isDownstream(prop.value)) {
-                            antideps.add(prop.value);
-                        }
-                    }
-                }
-            }
-        }
-        return [deps, antideps];
-    }
+    // getDependencies(): [Set<Variable>, Set<Variable>] {
+    //     var deps: Set<Variable> = new Set();
+    //     var antideps: Set<Variable> = new Set();
+    //     var vars = new Set();
+    //     for (let a of this.args.tuple.concat(this.trigs.list)) {
+    //         if (a instanceof IOPort) {
+    //             if (this.reactor._isUpstream(a)) {
+    //                 deps.add(a);
+    //             }
+    //             if (this.reactor._isDownstream(a)) {
+    //                 antideps.add(a);
+    //             }
+    //         } else if (a instanceof WritablePort) {
+    //             if (this.reactor._isDownstream(a.getPort())) {
+    //                 antideps.add(a.getPort());
+    //             }
+    //         } else {
+    //             // Handle hierarchical references.
+    //             for (let p of Object.getOwnPropertyNames(a)) { // FIXME: remove this
+    //                 let prop = Object.getOwnPropertyDescriptor(a, p);
+    //                 if (prop?.value instanceof Port) {
+    //                     if (this.reactor._isUpstream(prop.value)) {
+    //                         deps.add(prop.value);
+    //                     }
+    //                     if (this.reactor._isDownstream(prop.value)) {
+    //                         antideps.add(prop.value);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return [deps, antideps];
+    // }
 
     getPriority(): Priority {
         return this.priority;
@@ -520,6 +520,9 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
 
     protected manager = new class implements TriggerManager {
         constructor(private trigger: ScheduledTrigger<T>) { }
+        getContainer(): Reactor {
+            return this.trigger.__container__
+        }
         addReaction(reaction: Reaction<unknown>): void {
             this.trigger.reactions.add(reaction)
         }
@@ -784,8 +787,7 @@ export abstract class Reactor extends Component {
      * This graph has in it all the dependencies implied by this reactor's
      * ports, reactions, and connections.
      */
-    private dependencies: DependencyGraph<Port<Present> | Reaction<unknown>> = 
-        new DependencyGraph()
+    private dependencyGraph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph()
 
     /**
      * This graph has some overlap with the reactors dependency, but is 
@@ -796,8 +798,7 @@ export abstract class Reactor extends Component {
      * connection at runtime could result in a cyclic dependency, _without_ 
      * having to consult other reactors.
      */
-    private collapsedDependencies: DependencyGraph<Port<Present>> = 
-        new DependencyGraph()
+    private causalityGraph: DependencyGraph<Port<Present>> = new DependencyGraph()
 
     // FIXME: to do runtime checks, filter out the ports/reactions that are not
     // of this reactor, collapse dependencies between ports that go through a reaction,
@@ -811,29 +812,9 @@ export abstract class Reactor extends Component {
     private _active = false;
 
     /**
-     * Maps ports to upstream reactions that they depend on.
-     */
-    private _dependsOnReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
-
-    /**
-     * Maps ports to downstream reactions that depend on them. FIXME: FWD: to be subsumed by reactions in Port.
-     */
-    private _dependentReactions: Map<Port<Present>, Set<Reaction<unknown>>> = new Map();
-
-    /**
-     * Maps ports to downstream ports to which they are connected. FIXME: FWD: To be subsumed by receivers in Port.
-     */
-    private _destinationPorts: Map<Port<Present>, Set<Port<Present>>> = new Map();
-
-    /**
      * This reactor's shutdown action.
      */
     readonly shutdown = new Shutdown(this);
-
-    /**
-     * Maps ports to an upstream port that it is connected to.
-     */
-    private _sourcePort: Map<Port<Present>, Port<Present>> = new Map();
 
     /**
      * This reactor's startup action.
@@ -841,14 +822,9 @@ export abstract class Reactor extends Component {
     readonly startup = new Startup(this);
 
     /**
-     * Maps a callee port to upstream reactions that may invoke the reaction it triggers.
+     * The list of reactions this reactor has.
      */
-    private _remoteCallers: Map<CalleePort<Present, Present>, Set<Reaction<unknown>>> = new Map();
-
-    /**
-     * The list of reactions this reactor has. They must be set in the constructor and cannot be changed afterwards.
-     */
-    private readonly _reactions: Reaction<any>[] = [];
+    private _reactions: Reaction<any>[] = [];
 
     /**
      * Sandbox for the execution of reactions.
@@ -858,15 +834,46 @@ export abstract class Reactor extends Component {
     /** 
      * The list of mutations this reactor has.
      */
-    private readonly _mutations: Mutation<any>[] = [];
+    private _mutations: Mutation<any>[] = [];
 
     /**
-     * Sandbox for the execution of mutations. They must be set in the constructor and cannot be changed afterwards.
+     * Sandbox for the execution of mutations.
      */
     private _mutationScope: MutationSandbox;
 
     public _register(component: Component, key: Symbol) {
         if (!this.keys.has(component)) this.keys.set(component, key)
+    }
+
+    protected _getLast(reactions: Set<Reaction<any>>): Reaction<unknown> | undefined {
+        let index = -1
+        let all = this._getReactionsAndMutations()
+
+        for (let reaction of reactions) {
+            console.log(all.findIndex((r) => r === reaction))
+            let found = all.findIndex((r) => r === reaction)
+            if (found >= 0) {
+                index = Math.max(found, index)
+            }
+        }
+        if (index >= 0) {
+            return all[index]
+        }
+    }
+
+    protected _getFirst(reactions: Set<Reaction<any>>): Reaction<unknown> | undefined {
+        let index = -1
+        let all = this._getReactionsAndMutations()
+
+        for (let reaction of reactions) {
+            let found = all.findIndex((r) => r === reaction)
+            if (found >= 0) {
+                index = Math.min(found, index)
+            }
+        }
+        if (index >= 0) {
+            return all[index]
+        }
     }
 
     /**
@@ -1014,94 +1021,51 @@ export abstract class Reactor extends Component {
         throw new Error("Reaction is not listed.");
     }
 
-    /**
-     * Return the set of downstream ports that this reactor connects 
-     * to the given port.
-     * @param port The port to look up its destinations for.
-     */
-    public _getDestinations(port: Port<Present>): Set<Port<Present>> {
-        if (this.__container__) {
-            let dests = this.__container__._destinationPorts.get(port);
-            if (dests) {
-                return dests;
-            }
-        }
-        return new Set();
-    }
-
-    /**
-     * Return the upstream port that this reactor connects to the given port.
-     * @param port The port to look up its source for.
-     */
-    public getSource(port: Port<Present>): Port<Present> | undefined {
-        if (this.__container__) {
-            return this.__container__._sourcePort.get(port);
-        }
-    }
-
-    /**
-     * Return the set of reactions within this reactor that are dependent on
-     * the given port.
-     * @param port The port to look up its depdendent reactions for.
-     */
-    public getDownstreamReactions(port: Port<Present>): Set<Reaction<unknown>> {
-        var reactions = this._dependentReactions.get(port);
-        if (reactions) {
-            return reactions;
-        } else {
-            return new Set();
-        }
-    }
-
-    /**
-     * Return the set of reactions within this reactor that the given port 
-     * depends on.
-     * @param port The port to look up its depdendent reactions for.
-     */
-    public getUpstreamReactions(port: Port<Present>): Set<Reaction<unknown>> {
-        var reactions = this._dependsOnReactions.get(port);
-        if (reactions) {
-            return reactions;
-        } else {
-            return new Set();
-        }
-    }
-
-
     protected getSchedulable<T extends Present>(action: Action<T>): Schedule<T> {
         return action.asSchedulable(this.keys.get(action));
     }
 
-    private _recordDeps(reaction: Reaction<any>) {
-        // Stick this reaction into the trigger map to ensure it gets triggered.
+    private _recordDeps<T extends Variable[]>(reaction: Reaction<any>) {
+        
+        // Add a dependency on the previous reaction or mutation, if it exists.
+        let prev = this._getLastReactionOrMutation()
+        if (prev) {
+            // FIXME: how does this affect the causality graph?
+            // Will any effect of this reaction will now be depending
+            // on the ports that its predecessors list as dependencies?
+            this.dependencyGraph.addEdge(reaction, prev)
+            
+        }
+
+        // Set up the triggers.
         for (let t of reaction.trigs.list) {
             // Link the trigger to the reaction.
             if (t instanceof Trigger) {
                 t.getManager(this.getKey(t)).addReaction(reaction)
             }
 
-            // Record this trigger as a dependency.
-            if (t instanceof IOPort || t instanceof CalleePort) {
-                this._addDependency(t, reaction);
+            // Also record this trigger as a dependency.
+            if (t instanceof IOPort) {
+                this.dependencyGraph.addEdge(reaction, t)
+                //this._addDependency(t, reaction);
             } else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
         }
+        
+        let sources = new Set<Port<any>>()
+        let effects = new Set<Port<any>>()
+    
         for (let a of reaction.args.tuple) {
             if (a instanceof IOPort) {
-                if (this._isUpstream(a)) {
-                    this._addDependency(a, reaction);
-                } else if (this._isDownstream(a)) {
-                    this._addAntiDependency(a, reaction);
-                } else {
-                    throw new Error("Encountered argument that is neither a dependency nor an antidependency.");
-                }
+                this.dependencyGraph.addEdge(reaction, a)
+                sources.add(a)
             }
             if (a instanceof CalleePort) {
-                this._addDependency(a, reaction)
+                this.dependencyGraph.addEdge(a, reaction)
             }
             if (a instanceof CallerPort) {
-                this._addAntiDependency(a, reaction)
+                this.dependencyGraph.addEdge(reaction, a)
             }
             // Only necessary if we want to add actions to the dependency graph.
             if (a instanceof Action) {
@@ -1111,8 +1075,13 @@ export abstract class Reactor extends Component {
                 // antidep
             }
             if (a instanceof WritablePort) {
-                this._addAntiDependency(a.getPort(), reaction);
+                this.dependencyGraph.addEdge(a.getPort(), reaction)
+                effects.add(a.getPort())
             }
+        }
+        // Make effects dependent on sources.
+        for (let effect of effects) {
+            this.causalityGraph.addEdges(effect, sources)
         }
     }
 
@@ -1191,7 +1160,7 @@ export abstract class Reactor extends Component {
                 // A procedure can only have a single trigger.
                 throw new Error("Procedure has multiple triggers.")
             }
-            let port = calleePorts[0]
+            let port = calleePorts[0] as CalleePort<Present, Present>
             let existing = this._getReactionsAndMutations()
             var conflict = false
             existing.forEach(r => 
@@ -1202,16 +1171,17 @@ export abstract class Reactor extends Component {
             }
             let procedure = new Procedure(this, this._reactionScope, trigs, args, react, deadline, late)
             procedure.active = true
-            this._reactions.push(procedure)
             this._recordDeps(procedure);
-            // Let the port discover the newly added reaction.
-            (calleePorts[0] as CalleePort<Present, Present>).update()
+            port.getManager(this.getKey(port)).setLastCaller(this._getLastReactionOrMutation())
+            port.getManager(this.getKey(port)).addReaction(procedure as unknown as Reaction<unknown>) // FIXME: Tweak the manager API
+            this._reactions.push(procedure);    
+            //(calleePorts[0] as CalleePort<Present, Present>).update()
         } else {
             // This is an ordinary reaction.
             let reaction = new Reaction(this, this._reactionScope, trigs, args, react, deadline, late);
             reaction.active = true;
-            this._reactions.push(reaction);
             this._recordDeps(reaction);
+            this._reactions.push(reaction);
         }
     }
 
@@ -1221,92 +1191,51 @@ export abstract class Reactor extends Component {
             () => { Log.global.warn("Deadline violation occurred!") }) {
         let mutation = new Mutation(this, this._mutationScope, trigs, args, react,  deadline, late);
         mutation.active = true
-        this._mutations.push(mutation);
         this._recordDeps(mutation);
+        this._mutations.push(mutation);
     }
 
-    protected getPrecedenceGraph(): PrecedenceGraph<Reaction<unknown> | Mutation<unknown>> {
-        var graph: PrecedenceGraph<Reaction<unknown> | Mutation<unknown>> = new PrecedenceGraph();
+    protected getPrecedenceGraph(depth=-1): DependencyGraph<Port<Present> | Reaction<unknown>> {
         
-        for (let r of this._getChildren()) {
-            graph.merge(r.getPrecedenceGraph());
+        var graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph();
+        
+        graph.merge(this.dependencyGraph)
+
+        if (depth > 0 || depth < 0) {
+            if (depth > 0) {
+                depth--
+            }
+            for (let r of this._getChildren()) {
+                graph.merge(r.getPrecedenceGraph(depth));
+            }
+        }
+        
+        // Check if there are any callee ports owned by this reactor.
+        // If there are, add a dependency from its last caller to the antidependencies
+        // of the procedure (excluding the callee port itself).
+        let calleePorts = this._findOwnCalleePorts()
+        for (let p of calleePorts) {
+            let procedure = p.getManager(this.getKey(p)).getProcedure()
+            let lastCaller = p.getManager(this.getKey(p)).getLastCaller()
+            if (procedure && lastCaller) {
+                let antideps = graph.getBackEdges(procedure)
+                console.log(">>>>>>>>>>>> last caller:" + lastCaller)
+                for (let a of antideps) {
+                    if (!(a instanceof CalleePort)) {
+                        graph.addEdge(a, lastCaller)
+                    }
+                }
+            } else {
+                Error("No procedure")
+            }
         }
 
-        this._collectDependencies(graph, this._getReactionsAndMutations())
+        //this._collectDependencies(graph, this._getReactionsAndMutations())
 
         return graph;
 
     }
-
-    private _collectDependencies(graph: PrecedenceGraph<Reaction<unknown> | Mutation<unknown>>,
-        nodes: Reaction<unknown>[] | Mutation<unknown>[]) {
-        for (let i = 0; i < nodes.length; i++) {
-            let r = nodes[i];
-            graph.addNode(r);
-            // Establish dependencies between reactions
-            // depending on their ordering inside the reactor.
-            // if (prev) {
-            //     graph.addEdge(r, prev);
-            // }
-            var deps = r.getDependencies();
-            
-            // look upstream
-            for (let d of deps[0]) {
-                if (d instanceof CalleePort) {
-                    let prev = this.prevReaction(r)
-                    let next = this.nextReaction(r)
-                    let callers = this._remoteCallers.get(d)
-                    Log.global.debug(">>>>>>>>>>>>>>>Number of callers: " + callers?.size)
-                    if (callers) {
-                        // 1. Add dependencies from all callers to the preceding reaction.
-                        if (prev) {
-                            graph.addBackEdges(prev, callers)
-                        }
-                        // 2. Add dependencies from all the next reaction to all callers.
-                        if (next) {
-                            graph.addEdges(next, callers)
-                        }
-                        // 3. Add dependencies between all callers.
-                        prev = undefined;
-                        callers.forEach((caller) => {prev? graph.addEdge(caller, prev) : {}; prev = caller})
-                    }
-                } else if (d instanceof IOPort) {
-                    graph.addEdges(r, d.getUpstreamReactions());
-                } else {
-                    Log.global.error("Found dependency that is not a port: " + d)
-                }
-            }
-            // look downstream
-            for (let d of deps[1]) {
-                if (d instanceof IOPort) {
-                    graph.addBackEdges(r, d.getDownstreamReactions());
-                } else {
-                    Log.global.error("Found antidependency that is not a port")
-                }
-            }
-            //prev = r;
-        }
-        //return prev;
-    }
-
-    private _addDependency(port: Port<Present>, reaction: Reaction<any>): void {
-        let s = this._dependentReactions.get(port);
-        if (s == null) {
-            s = new Set();
-            this._dependentReactions.set(port, s);
-        }
-        s.add(reaction);
-    }
-
-    private _addAntiDependency(port: Port<Present>, reaction: Reaction<any>): void {
-        let s = this._dependsOnReactions.get(port);
-        if (s == null) {
-            s = new Set();
-            this._dependsOnReactions.set(port, s);
-        }
-        s.add(reaction);
-    }
-
+    
     private _startupChildren() {
         for (let r of this._getChildren()) {
             Log.debug(this, () => "Propagating startup: " + r.startup);
@@ -1364,6 +1293,17 @@ export abstract class Reactor extends Component {
         this._mutations.forEach((it) => arr.push(it))
         this._reactions.forEach((it) => arr.push(it))
         return arr;
+    }
+
+    private _getLastReactionOrMutation(): Reaction<any> | undefined {
+        let len = this._reactions.length
+        if (len > 0) {
+            return this._reactions[len -1]
+        }
+        len = this._mutations.length
+        if (len > 0) {
+            return this._mutations[len -1]
+        }
     }
 
     /**
@@ -1456,14 +1396,15 @@ export abstract class Reactor extends Component {
         // Rule out write conflicts.
         //   - (between reactors)
         if (!(dst instanceof CalleePort) && 
-                this._sourcePort.get(dst) !== undefined) {
+                this.dependencyGraph.getBackEdges(dst).size > 0) {
             return false;
         }
 
         //   - between reactors and reactions (NOTE: check also needs to happen
         //     in addReaction)
-        var antideps = this._dependsOnReactions.get(dst);
-        if (antideps != undefined && antideps.size > 0) {
+        //var antideps = this._dependsOnReactions.get(dst);
+        var deps = this.dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
+        if (deps != undefined && deps.size > 0) {
             return false;
         }
 
@@ -1520,90 +1461,53 @@ export abstract class Reactor extends Component {
                 // Note that because A extends T and S extends R, we can safely
                 // cast CalleePort<T,S> to CalleePort<A,R>.
                 src.remotePort = ((dst as unknown) as CalleePort<A,R>);
-                let calleeContainer: Reactor | undefined
-                let callerContainer: Reactor | undefined
-                // Figure out which reactor contains the callee.
-                if (dst.isChildOf(this)) {
-                    calleeContainer = this
-                } else {
-                    this._getChildren().forEach((child) => 
-                            child._getPorts().forEach((port) => 
-                            {(port === dst)? calleeContainer = child : {}}))
-                }
-                // Obtain the list of remote callers that is stored on the
-                // callee's end.
-                let callers = calleeContainer?._remoteCallers.get(dst)
-                if (!callers) {
-                    callers = new Set()
-                    calleeContainer?._remoteCallers.set(dst, callers)
-                }
-                // Figure out which reactor contains the caller.
-                if (src.isChildOf(this)) {
-                    callerContainer = this
-                } else {
-                    this._getChildren().forEach((child) => 
-                            child._getPorts().forEach((port) => 
-                            {(port === src)? callerContainer = child : {}}))
-                }
                 // Register the caller in the callee reactor so that it can
                 // establish dependencies on the callers.
-                callerContainer?._dependsOnReactions.get(src)?.
-                        forEach((reaction) => callers?.add(reaction))
+                let calleeManager = dst.getManager(this.getKey(dst))
+                let callerManager = src.getManager(this.getKey(src))
+                let container = callerManager.getContainer()
+                let callers = new Set<Reaction<any>>()
+                
+                //console.log(container.dependencyGraph.getBackEdges(src))
+                container.dependencyGraph.getBackEdges(src).forEach((dep) => {if (dep instanceof Reaction) {callers.add(dep)}})
+                console.log(callers)
+                let first = container._getFirst(callers)
+                console.log("first: \n" + first)
+                let last = container._getLast(callers)
+                console.log("last: \n" + last)
+                let lastCaller = calleeManager.getLastCaller()
+                if (lastCaller !== undefined) {
+                    // This means the callee port is bound to a reaction and there may be zero or more callers.
+                    // We now continue building a chain of callers. Ultimately, the last caller will be come a
+                    // dependency of any reaction that might come after the 
+                    if (first) {
+                        this.dependencyGraph.addEdge(first, lastCaller)
+                    } else {
+                        this.dependencyGraph.addEdge(src, dst)
+                    }
+                    if (last)
+                        calleeManager.setLastCaller(last)
+                } else {
+                    throw new Error("No procedure linked to callee port.")
+                }
+                
+
+                // callerContainer?._dependsOnReactions.get(src)?.
+                //         forEach((reaction) => callers?.add(reaction))
+
             } else if (src instanceof IOPort && dst instanceof IOPort) {
                 Log.debug(this, () => "connecting " + src + " and " + dst);
                 // Set up sources and destinations for value propagation.
-                let dests = this._destinationPorts.get(src);
-                if (dests == null) {
-                    dests = new Set();
-                }
-                dests.add(dst);
+                this.dependencyGraph.addEdge(dst, src);
+                this.causalityGraph.addEdge(dst, src);
 
                 src.getManager(this.getKey(src)).addReceiver(dst.asWritable(this.getKey(dst)) as WritablePort<S>);
-                this._destinationPorts.set(src, dests);
-                this._sourcePort.set(dst, src);
+                // this._destinationPorts.set(src, dests);
+                // this._sourcePort.set(dst, src);
             }
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
         }
-    }
-
-    private _collapseDependencies() {
-        let self = this
-        let visited = new Set()
-        function collect(source: Port<Present>, node: Port<Present> | Reaction<unknown>): void {
-            if (node instanceof Port) {
-                self.collapsedDependencies.addEdge(source, node)
-            }
-            self.dependencies.getAdjacentNodes(node).forEach(
-                (dep) => {
-                    if (!visited.has(dep)) {
-                        visited.add(dep)
-                        if (node instanceof Port && dep instanceof Port) {
-                            self.collapsedDependencies.addEdge(node, dep)
-                        } 
-                        else if (dep instanceof Reaction) {
-                            collect(source, dep)
-                        }
-                    }
-                }
-            )
-        }
-        
-        // Collect port-to-port dependencies.
-        for (let source of this.dependencies.independentNodes()) {
-            self.dependencies.getAdjacentNodes(source).forEach((dep) => {
-                if (source instanceof Port) {
-                    collect(source, dep)
-                    visited.clear()
-                }
-            })
-        }
-
-        // Splice in causality interfaces from all contained reactors.
-        for (let reactor of this._findOwnReactors()) {
-            this.collapsedDependencies.merge(reactor._getCausalityInterface())
-        }
-
     }
 
     /**
@@ -1611,20 +1515,22 @@ export abstract class Reactor extends Component {
      * and the dependencies between them.
      */
     protected _getCausalityInterface(): DependencyGraph<Port<Present>> {
-        let ifGraph = this.collapsedDependencies
+        let ifGraph = this.causalityGraph
         // Find all the input and output ports that this reactor owns.
         
         let inputs = this._findOwnInputs()
         let outputs = this._findOwnOutputs()
         let visited = new Set()
         let self = this
+        
         function search(output: OutPort<Present>, nodes: Set<Port<Present> | Reaction<unknown>>) {
             for (let node of nodes) {
                 if (!visited.has(node)) {
+                    visited.add(node)
                     if (node instanceof InPort && inputs.has(node)) {
                         ifGraph.addEdge(output, node)   
                     } else {
-                        search(output, self.dependencies.getAdjacentNodes(output))
+                        search(output, self.dependencyGraph.getEdges(output))
                     }
                 }
             }
@@ -1633,11 +1539,21 @@ export abstract class Reactor extends Component {
         // For each output, walk the graph and add dependencies to 
         // the inputs that are reachable.
         for (let output of outputs) {
-            search(output, this.dependencies.getAdjacentNodes(output))
+            search(output, this.dependencyGraph.getEdges(output))
             visited.clear()
         }
         
         return ifGraph
+    }
+
+    protected _findOwnCalleePorts() {
+        let ports = new Set<CalleePort<Present, Present>>()
+        for(let component of this.keys.keys()) {
+            if (component instanceof CalleePort) {
+                ports.add(component)
+            }
+        }
+        return ports
     }
 
     protected _findOwnInputs() {
@@ -1678,12 +1594,16 @@ export abstract class Reactor extends Component {
      */
     private _disconnect(src: Port<Present>, dst: Port<Present>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
-        //src.getManager(this).delReceiver(dst);
-        let dests = this._destinationPorts.get(src);
-        if (dests != null) {
-            dests.delete(dst);
-        }
-        this._sourcePort.delete(src);
+        //src.getManager(this.getKey(src)).delReceiver(dst);
+
+
+        // FIXME
+
+        // let dests = this._destinationPorts.get(src);
+        // if (dests != null) {
+        //     dests.delete(dst);
+        // }
+        // this._sourcePort.delete(src);
     }
 
     /**
@@ -1741,8 +1661,9 @@ export abstract class Reactor extends Component {
     /**
      * Iterate through this reactor's attributes and return the set of its
      * ports.
+     * @deprecated
      */
-    private _getPorts(): Set<Port<any>> {
+    private _getPorts(): Set<Port<any>> { // FIXME: replace this
         // Log.global.debug("Getting ports for: " + this)
         let ports = new Set<Port<any>>();
         for (const [key, value] of Object.entries(this)) {
@@ -1752,21 +1673,6 @@ export abstract class Reactor extends Component {
         }
         return ports;
     }
-
-    // /**
-    //  * Iterate through this reactor's attributes and return the set of its
-    //  * actions.
-    //  */
-    // public _getActions(): Set<Action<any>> {
-    //     // Log.global.debug("Getting actions for: " + this)
-    //     let actions = new Set<Action<any>>();
-    //     for (const [key, value] of Object.entries(this)) {
-    //         if (value instanceof Action) {
-    //             actions.add(value);
-    //         }
-    //     }
-    //     return actions;
-    // }
 
     /**
      * Return the fully qualified name of this reactor.
@@ -1787,42 +1693,6 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
     abstract get(): T | undefined;
 
     abstract getManager(key: Symbol | undefined): PortManager<T>;
-
-    /**
-     * Return the transitive closure of reactions dependent on this port.
-     */
-    public getDownstreamReactions(): Set<Reaction<unknown>> { // FIXME: move this to reactor because reactions should not be able to retrieve downstream reactions
-        var reactions: Set<Reaction<unknown>> = new Set();
-        for (let d of this.__container__._getDestinations(this)) {
-            reactions = new Set([...reactions, ...d.getDownstreamReactions()]);
-        }
-        reactions = new Set([...reactions, ...this.__container__.getDownstreamReactions(this)]);
-        if (reactions.size > 0) {
-            Log.global.debug("Downstream reactions found!");
-        }
-        return reactions;
-    }
-
-
-    /**
-     * Return the transitive closure of reactions dependent on this port.
-     */
-    public getUpstreamReactions(): Set<Reaction<unknown>> {
-        var reactions: Set<Reaction<unknown>> = new Set();
-        var source = this.__container__.getSource(this);
-        Log.debug(this, () => "Finding upstream reactions for " + this);
-        if (source) {
-            Log.global.debug(">>>");
-            // Reactions upstream (i.e., in other reactors).
-            reactions = new Set([...reactions, ...source.getUpstreamReactions()]);
-        }
-        // Reactions local (i.e., within the reactor).
-        reactions = new Set([...reactions, ...this.__container__.getUpstreamReactions(this)]);
-        if (reactions.size > 0)
-            Log.global.debug("Upstream reactions found!");
-        return reactions;
-    }
-
 }
 
 export abstract class IOPort<T extends Present> extends Port<T> {
@@ -1919,6 +1789,9 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      */
     protected manager:PortManager<T> = new class implements PortManager<T> {
         constructor(private port:IOPort<T>) {}
+        getContainer(): Reactor {
+            return this.port.__container__
+        }
         addReceiver(port: WritablePort<T>): void {
             this.port.receivers.add(port)
         }
@@ -1939,6 +1812,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
 }
 
 interface TriggerManager {
+    getContainer():Reactor;
     addReaction(reaction: Reaction<unknown>): void;
     delReaction(reaction: Reaction<unknown>): void;    
 }
@@ -1946,11 +1820,6 @@ interface TriggerManager {
 interface PortManager<T extends Present> extends TriggerManager {
     addReceiver(port: WritablePort<T>): void; // addLink(port:Port<T>) and iff WritablePort use as receiver (sender otherwise)
     delReceiver(port: WritablePort<T>): void;
-    // NOTES: in addReaction:
-    // for each reaction:
-    // - add edges to the graph
-    // To create the dependency graph:
-    // For each dependency,
 }
 
 export class OutPort<T extends Present> extends IOPort<T> {
@@ -2003,7 +1872,10 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
 
 
     protected manager:PortManager<R> = new class implements PortManager<R> {
-        constructor(private port:Port<R>) {}
+        constructor(private port:CallerPort<A, R>) {}
+        getContainer(): Reactor {
+            return this.port.__container__
+        }
         addReceiver(port: WritablePort<R>): void {
             //
         }
@@ -2018,6 +1890,16 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
         }
     }(this)
 
+    toString() {
+        return "CallerPort"
+    }
+
+}
+
+interface CalleeManager<T extends Present> extends PortManager<T> {
+    setLastCaller(reaction: Reaction<unknown> | undefined):void;
+    getLastCaller(): Reaction<unknown> | undefined;
+    getProcedure(): Reaction<unknown> | undefined;
 }
 
 /**
@@ -2035,15 +1917,8 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
 
     private reaction: Reaction<unknown> | undefined
 
-    public update(): void {
-        for (let reaction of this.__container__._getReactionsAndMutations()) {
-            if (reaction.trigs.list.find(it => it === this)) {
-                this.reaction = reaction
-                break
-            }
-        }
-    }
-
+    private lastCaller: Reaction<unknown> | undefined
+    
     public invoke(value: A): R | undefined {
         this.argValue = value
         this.reaction?.doReact()
@@ -2066,29 +1941,44 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
      * @param container Reference to the container of this port 
      * (or the container thereof).
      */
-    public getManager(key: Symbol | undefined): PortManager<A> {
+    public getManager(key: Symbol | undefined): CalleeManager<A> {
         if (this.key == key) {
             return this.manager
         }
         throw Error("Unable to grant access to manager.")
     }
 
-
-    protected manager:PortManager<A> = new class implements PortManager<A> {
-        constructor(private port:Port<A>) {}
+    protected manager:CalleeManager<A> = new class implements CalleeManager<A> {
+        constructor(private port:CalleePort<A, Present>) {}
+        getContainer(): Reactor {
+            return this.port.__container__
+        }
         addReceiver(port: WritablePort<A>): void {
-            //
+            throw new Error("Method not implemented.");
         }
         delReceiver(port: WritablePort<A>): void {
-            //
+            throw new Error("Method not implemented.");
         }
         addReaction(reaction: Reaction<unknown>): void {
-            //
+            this.port.reaction = reaction
         }
         delReaction(reaction: Reaction<unknown>): void {
-            //
+            throw new Error("Method not implemented.");
+        }
+        setLastCaller(reaction: Reaction<unknown> | undefined):void {
+            this.port.lastCaller = reaction
+        }
+        getProcedure(): Reaction<unknown> | undefined {
+            return this.port.reaction
+        }
+        getLastCaller(): Reaction<unknown> | undefined {
+            return this.port.lastCaller
         }
     }(this)
+
+    toString() {
+        return "CalleePort"
+    }
 
 }
 
@@ -2549,15 +2439,53 @@ export class App extends Reactor {
         Log.global.info(">>> Initializing");
 
         Log.global.debug("Initiating startup sequence.")
-        // // Recursively check the parent attribute for this and all contained reactors and
-        // // and components, i.e. ports, actions, and timers have been set correctly.
-        // this._checkAllParents(null);
+        
         // Obtain the precedence graph, ensure it has no cycles, 
         // and assign a priority to each reaction in the graph.
         var apg = this.getPrecedenceGraph();
-        Log.debug(this, () => apg.toString());
 
-        if (apg.updatePriorities()) {
+        Log.debug(this, () => apg.toString());
+        var collapsed = new SortableDependencyGraph()
+        
+        // FIXME:
+        // 1. Collapse dependencies and weed out the ports.
+        let leafs = apg.leafNodes()
+
+        console.log("leaf nodes: " + Array.from(leafs))
+
+        let visited = new Set()
+
+        function search(reaction: Reaction<unknown>, nodes: Set<Port<Present> | Reaction<unknown>>) {
+            for (let node of nodes) {
+                
+                    if (node instanceof Reaction) {
+                        collapsed.addEdge(reaction, node)
+                        if (!visited.has(node)) {
+                            visited.add(node)
+                            search(node, apg.getEdges(node))
+                        }
+                    } else {
+                        search(reaction, apg.getEdges(node))
+                    }
+                
+            }
+        }
+
+        for (let leaf of leafs) {
+            if (leaf instanceof Reaction) {
+                collapsed.addNode(leaf)
+                search(leaf, apg.getEdges(leaf))
+                visited.clear()
+            }
+        }        
+
+
+        // 2. Update priorities.
+        // FIXME: is there a way to do this without creating a whole new dependency
+        
+        Log.debug(this, () => collapsed.toString());
+
+        if (collapsed.updatePriorities(true)) {
             Log.global.debug("No cycles.");
         } else {
             throw new Error("Cycle in reaction graph.");

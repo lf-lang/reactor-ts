@@ -1,6 +1,6 @@
 import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort, Action, Timer} from '../src/core/reactor';
 import { UnitBasedTimeValue, TimeUnit, TimeValue, Origin } from '../src/core/time';
-import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
+import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { doesNotMatch } from 'assert';
 
 /* Set a port in startup to get thing going */

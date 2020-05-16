@@ -32,7 +32,7 @@ export interface PrioritySetNode<P> {
     updateIfDuplicateOf: (node: PrioritySetNode<P> | undefined) => boolean;
 }
 
-export interface PrecedenceGraphNode<P> {
+export interface Sortable<P> {
     setPriority(priority: P): void;
 
     // getSTPUntil(): TimeInstant
@@ -121,7 +121,7 @@ export class DependencyGraph<T> {
     /**
      * Map nodes to the set of nodes that they depend on.
      **/
-    protected adjacencyMap: Map<T, Set<T>> = new Map(); // FIXME: use a WeakMap instead?
+    protected adjacencyMap: Map<T, Set<T>> = new Map();
 
     protected numberOfEdges = 0;
 
@@ -148,13 +148,19 @@ export class DependencyGraph<T> {
         }
     }
 
-    getAdjacentNodes(node: T): Set<T> {
+    getEdges(node: T): Set<T> {
         let nodes = this.adjacencyMap.get(node)
         if (nodes !== undefined) {
             return nodes
         } else {
             return new Set<T>()
         }
+    }
+
+    getBackEdges(node: T): Set<T> {
+        let backEdges = new Set<T>()
+        this.adjacencyMap.forEach((edges, dep) => edges.forEach((edge) => {if (edge === node) { backEdges.add(dep)}}))
+        return backEdges
     }
 
     removeNode(node: T) {
@@ -314,69 +320,71 @@ export class DependencyGraph<T> {
         return "digraph G {" + dot + "\n}";
     }
 
-    public independentNodes(): Set<T> {
-        var indep: Set<T> = new Set();
+    public rootNodes(): Set<T> {
+        var roots: Set<T> = new Set();
         /* Populate start set */
         for (const [v, e] of this.adjacencyMap) {
             if (!e || e.size == 0) {
-                indep.add(v); // start nodes have no dependencies
+                roots.add(v); // leaf nodes have no dependencies
                 //clone.delete(v); // FIXME add a removeNodes function to factor out the duplicate code below
             }
         }
-        return indep
+        return roots
+    }
+
+    public leafNodes(): Set<T> {
+        var leafs: Set<T> = new Set(this.nodes());
+        for (let node of this.nodes()) {
+            for (let dep of this.getEdges(node)) {
+                leafs.delete(dep)
+            }
+        }
+        return leafs
     }
 }
 
-export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> extends DependencyGraph<T> {
-
-    // FIXME: if we add a second map dependentNodes, we can cut down on the algorithmic
-    // complexity of the sorting algorithms. Not really a big deal now because the graphs
-    // are small, and sorting is not expected to happen often during the course of execution.
-    
-
-    //protected startNodes: Set<T> = new Set(); 
-
-    updatePriorities(spacing: number = 100) {
+export class SortableDependencyGraph<T extends Sortable<number>> extends DependencyGraph<T> {
+    updatePriorities(destructive: boolean, spacing: number = 100) {
         var start: Array<T> = new Array();
-        var clone = new Map();
-        var count = 0;
-
-        /* duplicate the graph */
-        for (const [v, e] of this.adjacencyMap) {
-            clone.set(v, new Set(e));
+        var graph: Map<T, Set<T>>
+        var count = 0; 
+        if (!destructive) { 
+            graph = new Map() 
+            /* duplicate the map */ 
+            for (const [v, e] of this.adjacencyMap) { 
+                graph.set(v, new Set(e)); 
+            } 
+        } else {
+            graph = this.adjacencyMap
         }
-
+        
         /* Populate start set */
         for (const [v, e] of this.adjacencyMap) {
             if (!e || e.size == 0) {
                 start.push(v); // start nodes have no dependencies
-                clone.delete(v);
-            }
+                graph.delete(v); 
+            } 
         }
-
         /* Sort reactions */
         for (var n: T | undefined; (n = start.shift()); count += spacing) {
             n.setPriority(count);
-
-            // for each node v with an edge e from n to v do
-            for (const [v, e] of clone) {
-                if (e.has(n)) { // v depends on n
+            // for each node v with an edge e from n to v do 
+            for (const [v, e] of graph) { 
+                if (e.has(n)) {
+                    // v depends on n 
                     e.delete(n);
-                }
-                if (e.size == 0) {
+                } if (e.size == 0) {
                     start.push(v);
-                    clone.delete(v);
+                    graph.delete(v);
                 }
             }
-        }
-        if (clone.size != 0) {
+        } if (graph.size != 0) {
             return false; // ERROR: cycle detected
         } else {
             return true;
         }
     }
 }
-
 /**
  * Log levels for `Log`.
  * @see Log

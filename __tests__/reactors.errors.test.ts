@@ -1,6 +1,6 @@
 import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present} from '../src/core/reactor';
 import { UnitBasedTimeValue, TimeUnit } from '../src/core/time';
-import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
+import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { writer } from 'repl';
 import { doesNotMatch } from 'assert';
 
