@@ -114,13 +114,12 @@ export interface Named {
  */
 export interface Read<T> {
     get(): T | Absent;
-    // isPresent():boolean; // FIXME: add this
 }
 
 /**
  * Interface for schedulable actions.
  */
-export interface Schedule<T extends Present> extends Read<T> {
+export interface Schedule<T extends Present> {
     schedule: (extraDelay: TimeValue | 0, value: T) => void;
 }
 
@@ -131,7 +130,7 @@ export interface Write<T> {
     set: (value: T) => void;
 }
 
-export abstract class WritablePort<T extends Present> implements ReadWrite<T> { // FIXME: should this be an IOPort?
+export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
     abstract get(): T | undefined;
     abstract set(value: T): void;
     abstract getPort(): Port<T>
@@ -139,7 +138,7 @@ export abstract class WritablePort<T extends Present> implements ReadWrite<T> { 
 
 export abstract class SchedulableAction<T extends Present> implements Schedule<T> {
     abstract schedule(extraDelay: 0 | TimeValue, value: T): void;
-    abstract get(): T | undefined; // FIXME: not convinced this should be here.
+    //abstract get(): T | undefined;
 }
 
 //--------------------------------------------------------------------------//
@@ -467,6 +466,8 @@ abstract class Trigger extends Component {
         return this.__container__
     }
 
+    abstract isPresent():boolean;
+
 }
 
 abstract class ScheduledTrigger<T extends Present> extends Trigger {
@@ -597,11 +598,6 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
     
             this.action.__container__.util.schedule(new TaggedEvent(this.action, tag, value));
         }
-        
-        get(): T | undefined {
-            return this.action.get()
-        }
-
     }(this)
 
     /** 
@@ -1693,11 +1689,6 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
     abstract get(): T | undefined;
 
     abstract getManager(key: Symbol | undefined): PortManager<T>;
-}
-
-export abstract class IOPort<T extends Present> extends Port<T> {
-
-    protected receivers: Set<WritablePort<T>> = new Set();
 
     /**
      * Returns true if the connected port's value has been set; false otherwise
@@ -1717,6 +1708,11 @@ export abstract class IOPort<T extends Present> extends Port<T> {
             return false;
         }
     }
+}
+
+export abstract class IOPort<T extends Present> extends Port<T> {
+
+    protected receivers: Set<WritablePort<T>> = new Set();
 
     /**
      * Return the value set to this port. Return `Absent` if the connected
