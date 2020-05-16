@@ -795,10 +795,6 @@ export abstract class Reactor extends Component {
      * having to consult other reactors.
      */
     private causalityGraph: DependencyGraph<Port<Present>> = new DependencyGraph()
-
-    // FIXME: to do runtime checks, filter out the ports/reactions that are not
-    // of this reactor, collapse dependencies between ports that go through a reaction,
-    // and plug causality interfaces obtained from contained reactors.
     
     /**
      * Indicates whether this reactor is active (meaning it has reacted to a
@@ -966,11 +962,6 @@ export abstract class Reactor extends Component {
             function (this) {
                 Log.debug(this, () => "*** Shutting down reactor " + 
                     self.getFullyQualifiedName());
-
-                // if (this.reactor instanceof App) {
-                //     //this.reactor._shutdownStarted = true;
-                //     //this.reactor._cancelNext();
-                // }
                 self._shutdownChildren();
                 self._unsetTimers();
                 self._active = false;
@@ -1225,8 +1216,6 @@ export abstract class Reactor extends Component {
                 Error("No procedure")
             }
         }
-
-        //this._collectDependencies(graph, this._getReactionsAndMutations())
 
         return graph;
 
@@ -1487,10 +1476,6 @@ export abstract class Reactor extends Component {
                     throw new Error("No procedure linked to callee port.")
                 }
                 
-
-                // callerContainer?._dependsOnReactions.get(src)?.
-                //         forEach((reaction) => callers?.add(reaction))
-
             } else if (src instanceof IOPort && dst instanceof IOPort) {
                 Log.debug(this, () => "connecting " + src + " and " + dst);
                 // Set up sources and destinations for value propagation.
@@ -1498,8 +1483,6 @@ export abstract class Reactor extends Component {
                 this.causalityGraph.addEdge(dst, src);
 
                 src.getManager(this.getKey(src)).addReceiver(dst.asWritable(this.getKey(dst)) as WritablePort<S>);
-                // this._destinationPorts.set(src, dests);
-                // this._sourcePort.set(dst, src);
             }
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
