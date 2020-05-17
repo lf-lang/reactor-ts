@@ -47,27 +47,13 @@ export type Priority = number;
 export type ReadWrite<T> = Read<T> & Write<T>;
 
 /**
- * A variable is a port, action, or timer (all of which implement the interface
- * `Read`). Its value is therefore readable using `get`, and may be writable
- * using `set`. When `isPresent` is called on a variable, it will return true if
- * the value is defined at the current logical time, and false otherwise.
- * Variables may also refer to ports of a contained reactors. To allow a dotted
- * style of port referencing that is common in Lingua Franca, hierarchical
- * references may be represented by an object of which the own properties have
- * keys that denote the names of the referenced ports. For example, we could
- * write `Foo.bar`, where `Foo` is the name of a contained reactor and `bar` the
- * name of the referenced port. In this case, `Foo` would be the name of the
- * argument passed into a `react` function, and the type of that argument would
- * be `{bar: Read<T>|Write<T>|ReadWrite<T>}`.
+ * A variable can be read, written to, or scheduled. Variables may be passed to
+ * reactions in an argument list.
  * @see Read
  * @see Write
+ * @see Schedule
  */
 export type Variable = Read<any> | Write<any> | Schedule<any>
-// | ReadWrite<unknown> | // FIXME: reduce this to just Read<unknown>
-// {
-//     [name: string]: (Read<unknown>
-//         | Write<unknown> | ReadWrite<unknown>)
-// };
 
 //--------------------------------------------------------------------------//
 // Constants                                                                //
