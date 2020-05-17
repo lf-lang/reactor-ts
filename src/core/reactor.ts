@@ -1181,7 +1181,7 @@ export abstract class Reactor extends Component {
             if (depth > 0) {
                 depth--
             }
-            for (let r of this._getChildren()) {
+            for (let r of this._getOwnReactors()) {
                 graph.merge(r.getPrecedenceGraph(depth));
             }
         }
@@ -1211,7 +1211,7 @@ export abstract class Reactor extends Component {
     }
     
     private _startupChildren() {
-        for (let r of this._getChildren()) {
+        for (let r of this._getOwnReactors()) {
             Log.debug(this, () => "Propagating startup: " + r.startup);
             // Note that startup reactions are scheduled without a microstep delay
             r.startup.asSchedulable(this._getKey(r.startup)).schedule(0, null)
@@ -1220,7 +1220,7 @@ export abstract class Reactor extends Component {
 
     private _shutdownChildren() {
         Log.global.debug("Shutdown children was called")
-        for (let r of this._getChildren()) {
+        for (let r of this._getOwnReactors()) {
             Log.debug(this, () => "Propagating shutdown: " + r.shutdown);
             r.shutdown.asSchedulable(this._getKey(r.shutdown)).schedule(0, null)
         }
@@ -1230,24 +1230,8 @@ export abstract class Reactor extends Component {
      * Obtain a set that has the reactors that this reactor contains directly
      * (not further down the hierarchy).
      */
-    private _getChildren(): Set<Reactor> {
-        let children = new Set<Reactor>();
-        for (const [key, value] of Object.entries(this)) {
-            // If pointers to other non-child reactors in the hierarchy are not
-            // excluded (eg. value != this.parent) this function will loop
-            // forever.
-            if (value instanceof Reactor && 
-                    value != this._owner && !(value instanceof App)) {
-                // A reactor may not be a child of itself.
-                if (value === this) {
-                    throw new Error("A reactor may not have itself as an " +
-                    "attribute. Reactor attributes represent a containment " +
-                    "relationship, and a reactor cannot contain itself.");
-                }
-                children.add(value);
-            }
-        }
-        return children;
+    private _getOwnReactors(): Array<Reactor> {
+        return Array.from(this._keyChain.keys()).filter((it) => it instanceof Reactor) as Array<Reactor>;
     }
 
     /**
