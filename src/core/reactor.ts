@@ -1227,11 +1227,11 @@ export abstract class Reactor extends Component {
     }
 
     /**
-     * Obtain a set that has the reactors that this reactor contains directly
-     * (not further down the hierarchy).
+     * Return the reactors that this reactor owns.
      */
     private _getOwnReactors(): Array<Reactor> {
-        return Array.from(this._keyChain.keys()).filter((it) => it instanceof Reactor) as Array<Reactor>;
+        return Array.from(this._keyChain.keys()).filter(
+            (it) => it instanceof Reactor) as Array<Reactor>;
     }
 
     /**
