@@ -155,13 +155,15 @@ class Component implements Named {
      * Only instances of `App`, which denote top-level reactors, are allowed
      * to be their own owner.
      */
-    protected _owner: Reactor;
+    protected _owner: Reactor; // FIXME: make this private with a getter!
 
     /**
      * Function for staging reactions for execution at the current logical
      * time.
      */
-    protected _stage: ((reaction: Reaction<unknown>) => void);
+    protected _stage: (reaction: Reaction<unknown>) => void;
+
+    protected _schedule: (e: TaggedEvent<any>) => void;
 
     /**
      * Create a new component and register it with the owner.
@@ -176,11 +178,13 @@ class Component implements Named {
         if (this instanceof App) {
             this._owner = this               // Apps are self-owner.
             this._stage = this.getLoader()   // Get the loader from the app.
+            this._schedule = this.getScheduler() // Also get the scheduler.
         } else {
             if (owner !== null) {
-                this._owner = owner          // Set the owner.
+                this._owner = owner              // Set the owner.
                 this._owner._register(this, this._key) // Register with owner.
-                this._stage = owner._stage   // Inherited the loader.
+                this._stage = owner._stage       // Inherited the loader.
+                this._schedule = owner._schedule // Inherit the scheduler
             } else {
                 throw Error("Cannot instantiate component without a parent.")
             }
@@ -591,7 +595,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
             Log.debug(this, () => "Scheduling " + this.action.origin +
                 " action " + this.action._getFullyQualifiedName() + " with tag: " + tag);
     
-            this.action._owner.util.schedule(new TaggedEvent(this.action, tag, value));
+            this.action._schedule(new TaggedEvent(this.action, tag, value));
         }
     }(this)
 
@@ -1594,7 +1598,7 @@ export abstract class Reactor extends Component {
         } else {
             startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
         }
-        this.util.schedule(new TaggedEvent(timer, this.util.getCurrentTag().getLaterTag(timer.offset), null));
+        this._schedule(new TaggedEvent(timer, this.util.getCurrentTag().getLaterTag(timer.offset), null));
     }
 
     /**
@@ -1826,10 +1830,10 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
     protected manager: TriggerManager = new class implements TriggerManager {
         constructor(private port:CallerPort<A, R>) {}
         addReaction(reaction: Reaction<unknown>): void {
-            throw new Error("Method not implemented.");
+            throw new Error("A Caller port cannot use used as a trigger.");
         }
         delReaction(reaction: Reaction<unknown>): void {
-            throw new Error("Method not implemented.");
+            throw new Error("A Caller port cannot use used as a trigger.");
         }
         getContainer(): Reactor {
             return this.port._owner
@@ -1959,8 +1963,8 @@ class ReactionQueue extends PrioritySet<Priority> {
 }
 
 interface AppUtils {
-    schedule(e: TaggedEvent<any>): void; // FIXME: shouldn't really be here.
-    success(): void;
+    //schedule(e: TaggedEvent<any>): void; // FIXME: shouldn't really be here.
+    success(): void; // FIXME: These callbacks needs be renamed and their implementation needs to be improved.
     failure(): void;
     requestShutdown(): void;
     getCurrentTag(): Tag;
@@ -1990,7 +1994,11 @@ export class App extends Reactor {
 
     alarm = new Alarm();
 
-    util = new class implements AppUtils { // NOTE this is an inner class because some of the member fields of the app are protected.
+    /**
+     * Inner class that provides access to utilities that are safe to expose to
+     * reaction code.
+     */
+    util = new class implements AppUtils {
         constructor(private app: App) {
 
         }
@@ -2055,6 +2063,10 @@ export class App extends Reactor {
         return (r:Reaction<unknown>) => this._reactionQ.push(r);
     }
 
+    public getScheduler(): (e: TaggedEvent<any>) => void {
+        return (e: TaggedEvent<any>) => this.schedule(e);
+    }
+
     /**
      * If not null, finish execution with success, this time interval after the
      * start of execution.
@@ -2091,15 +2103,6 @@ export class App extends Reactor {
      * Initialized in start().
      */
     private _startOfExecution: TimeValue;
-
-    // /**
-    //  * Report a timer to the app so that it gets scheduled.
-    //  * @param timer The timer to report to the app.
-    //  */
-    // public _setTimer(timer: Timer) {
-        
-    // }
-
 
     /**
      * Unset all the timers of this reactor.
@@ -2258,7 +2261,6 @@ export class App extends Reactor {
         }
     }
 
-
     /**
      * Push events on the event queue. 
      * @param e Prioritized event to push onto the event queue.
@@ -2367,7 +2369,7 @@ export class App extends Reactor {
         this.success();
     }
 
-    private _terminateWithError(): void {
+    private _terminateWithError(): void { // FIXME: this is never read.
         this._cancelNext();
         Log.info(this, () => Log.hr);
         Log.info(this, () => ">>> End of execution at (logical) time: " + this.util.getCurrentLogicalTime());
@@ -2389,28 +2391,25 @@ export class App extends Reactor {
         // and assign a priority to each reaction in the graph.
         var apg = this.getPrecedenceGraph();
 
-        Log.debug(this, () => apg.toString());
+        Log.debug(this, () => "Before collapse: " + apg.toString());
         var collapsed = new SortableDependencyGraph()
-        
-        // FIXME:
+
         // 1. Collapse dependencies and weed out the ports.
         let leafs = apg.leafNodes()
-
         let visited = new Set()
 
-        function search(reaction: Reaction<unknown>, nodes: Set<Port<Present> | Reaction<unknown>>) {
-            for (let node of nodes) {
-                
-                    if (node instanceof Reaction) {
-                        collapsed.addEdge(reaction, node)
-                        if (!visited.has(node)) {
-                            visited.add(node)
-                            search(node, apg.getEdges(node))
-                        }
-                    } else {
-                        search(reaction, apg.getEdges(node))
+        function search(reaction: Reaction<unknown>, 
+            nodes: Set<Port<Present> | Reaction<unknown>>) {
+            for (let node of nodes) {    
+                if (node instanceof Reaction) {
+                    collapsed.addEdge(reaction, node)
+                    if (!visited.has(node)) {
+                        visited.add(node)
+                        search(node, apg.getEdges(node))
                     }
-                
+                } else {
+                    search(reaction, apg.getEdges(node))
+                }
             }
         }
 
@@ -2422,11 +2421,8 @@ export class App extends Reactor {
             }
         }        
 
-
         // 2. Update priorities.
-        // FIXME: is there a way to do this without creating a whole new dependency
-        
-        Log.debug(this, () => collapsed.toString());
+        Log.debug(this, () => "After collapse: " + collapsed.toString());
 
         if (collapsed.updatePriorities(true)) {
             Log.global.debug("No cycles.");

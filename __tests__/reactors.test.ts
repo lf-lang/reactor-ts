@@ -81,7 +81,7 @@ class R2 extends Reactor {
                 /* Do Nothing */               
                 if(tmp)
                 {
-                    console.log("Recieved "+tmp.toString());
+                    console.log("Received "+tmp.toString());
                 }
             }
 

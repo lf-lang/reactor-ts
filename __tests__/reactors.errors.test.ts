@@ -6,6 +6,7 @@ import { doesNotMatch } from 'assert';
 
 class R extends Reactor {
 
+    public inp = new InPort(this)
     public calleep = new CalleePort(this)
     public callerp = new CallerPort(this);
 
@@ -22,8 +23,8 @@ class R extends Reactor {
         )
 
         this.addReaction(
-            new Triggers(this.callerp),
-            new Args(), 
+            new Triggers(this.inp),
+            new Args(this.callerp), 
             function(this) {
                 throw new Error("Method not implemented.");
             },
