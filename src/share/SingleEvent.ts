@@ -21,7 +21,7 @@ export class SingleEvent<T extends Present> extends Reactor {
         super(parent);
         this.addReaction(
             new Triggers(this.t1), 
-            new Args(this.getWriter(this.o), this.payload),
+            new Args(this.writable(this.o), this.payload),
             produceOutput
         );
     }

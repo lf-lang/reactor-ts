@@ -28,7 +28,7 @@ export class Clock extends App {
         this._alias = name;
         this.addReaction(
             new Triggers(this.t1),
-            new Args(this.getSchedulable(this.a1)),
+            new Args(this.schedulable(this.a1)),
             /**
              * Print tick and schedule a1
              */
@@ -39,7 +39,7 @@ export class Clock extends App {
         );
         this.addReaction(
             new Triggers(this.t2), 
-            new Args(this.getSchedulable(this.a2)),
+            new Args(this.schedulable(this.a2)),
             /**
              * Print tock and schedule a2.
              */
@@ -53,7 +53,7 @@ export class Clock extends App {
         //print once.
         this.addReaction(
             new Triggers(this.t1, this.t2), 
-            new Args(this.getSchedulable(this.a3)),
+            new Args(this.schedulable(this.a3)),
             /**
              * Print cuckoo and schedule a3.
              */

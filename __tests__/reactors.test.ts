@@ -11,7 +11,7 @@ class Starter extends Reactor {
         super(parent);
         this.addReaction(
             new Triggers(this.startup),
-            new Args(this.getWriter(this.out)),
+            new Args(this.writable(this.out)),
             function(this, __out) {
                 __out.set(4);
 
@@ -30,7 +30,7 @@ class R1 extends Reactor {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
-            new Args(this.in, this.getWriter(this.out)),
+            new Args(this.in, this.writable(this.out)),
             function(this, __in, __out) {
                 const util = this.util
                 let initialElapsedTime = util.getElapsedPhysicalTime();
@@ -115,7 +115,7 @@ class ReactorWithAction extends App {
         super(timeout, false, false, success, fail);
         this.addReaction(
             new Triggers(this.t),
-            new Args(this.getSchedulable(this.a)),
+            new Args(this.schedulable(this.a)),
             function(this, a){
                 a.schedule(0, 1);
             }

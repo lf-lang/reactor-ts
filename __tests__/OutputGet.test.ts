@@ -13,7 +13,7 @@ class OutputGetTest extends App {
         this._setAlias(name);
         this.addReaction(
             new Triggers(this.t), 
-            new Args(this.getWriter(this.o)),
+            new Args(this.writable(this.o)),
             function(this, o) {
                 Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>")
                 if(o.get() != null){

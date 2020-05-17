@@ -18,7 +18,7 @@ export class ActionTrigger extends Reactor {
         super(parent);
         //Reaction priorities matter here. The overridden reaction must go first.
         this.addReaction(
-            new Triggers(this.t1), new Args(this.getSchedulable(this.a1)),
+            new Triggers(this.t1), new Args(this.schedulable(this.a1)),
             /**
              * Schedule the incorrect payload for action a1.
              */
@@ -30,7 +30,7 @@ export class ActionTrigger extends Reactor {
         
         this.addReaction(
            new Triggers(this.t1), 
-           new Args(this.getSchedulable(this.a1), this.a2),
+           new Args(this.schedulable(this.a1), this.a2),
            /**
              * Schedule the correct payload for action a1.
              */
