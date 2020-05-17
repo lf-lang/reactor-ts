@@ -6,12 +6,12 @@ import ULog from 'ulog';
  * @author Marten Lohstroh (marten@berkeley.edu)
  */
 
-export interface PrioritySetNode<P> {
+export interface PrioritySetElement<P> {
 
     /**
      * Pointer to the next node in the priority set.
      */
-    next: PrioritySetNode<P> | undefined;
+    next: PrioritySetElement<P> | undefined;
 
     /**
      * Return the priority of this node.
@@ -22,14 +22,14 @@ export interface PrioritySetNode<P> {
      * Determine whether this node has priority over the given node or not.
      * @param node A node to compare the priority of this node to.
      */
-    hasPriorityOver: (node: PrioritySetNode<P> | undefined) => boolean;
+    hasPriorityOver: (node: PrioritySetElement<P> | undefined) => boolean;
 
     /**
      * If the given node is considered a duplicate of this node, then
      * update this node if needed, and return true. Return false otherwise.
      * @param node A node that may or may not be a duplicate of this node.
      */
-    updateIfDuplicateOf: (node: PrioritySetNode<P> | undefined) => boolean;
+    updateIfDuplicateOf: (node: PrioritySetElement<P> | undefined) => boolean;
 }
 
 export interface Sortable<P> {
@@ -44,10 +44,10 @@ export interface Sortable<P> {
  */
 export class PrioritySet<P> {
 
-    private head: PrioritySetNode<P> | undefined;
+    private head: PrioritySetElement<P> | undefined;
     private count: number = 0;
 
-    push(element: PrioritySetNode<P>) {
+    push(element: PrioritySetElement<P>) {
         // update linked list
         if (this.head == undefined) {
             // create head
@@ -66,9 +66,9 @@ export class PrioritySet<P> {
                 return;
             }
             // seek
-            var curr: PrioritySetNode<P> | undefined = this.head;
+            var curr: PrioritySetElement<P> | undefined = this.head;
             while (curr) {
-                let next: PrioritySetNode<P> | undefined = curr.next;
+                let next: PrioritySetElement<P> | undefined = curr.next;
                 if (next) {
                     if (element.updateIfDuplicateOf(next)) {
                         return;
@@ -91,7 +91,7 @@ export class PrioritySet<P> {
         }
     }
 
-    pop(): PrioritySetNode<P> | undefined {
+    pop(): PrioritySetElement<P> | undefined {
         if (this.head) {
             let node = this.head;
             this.head = this.head.next;
@@ -101,7 +101,7 @@ export class PrioritySet<P> {
         }
     }
 
-    peek(): PrioritySetNode<P> | undefined {
+    peek(): PrioritySetElement<P> | undefined {
         if (this.head) {
             return this.head;
         }
@@ -190,8 +190,8 @@ export class DependencyGraph<T> {
             }
         }
         // Create an entry for `dependsOn` if it doesn't exist.
-        // This is mostly so that the size of the adjacency map
-        // reflects the number of nodes.
+        // This is so that the keys of the map contain all the
+        // nodes in the graph.
         if (!this.adjacencyMap.has(dependsOn)) {
             this.adjacencyMap.set(dependsOn, new Set());
         }

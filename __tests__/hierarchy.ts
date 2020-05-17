@@ -8,7 +8,7 @@ class Component extends Reactor {
 
     constructor(parent: Reactor, alias:string) {
         super(parent);
-        this.setAlias(alias);
+        this._setAlias(alias);
     }
     child: Reactor | undefined;
 }

@@ -5,7 +5,7 @@
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
 
-import {Sortable, PrioritySetNode, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
+import {Sortable, PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
 import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
 
 // Set the default log level.
@@ -62,12 +62,12 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  * @see Read
  * @see Write
  */
-export type Variable = Read<unknown> |
-    Write<unknown> | ReadWrite<unknown> | // FIXME: reduce this to just Read<unknown>
-{
-    [name: string]: (Read<unknown>
-        | Write<unknown> | ReadWrite<unknown>)
-};
+export type Variable = Read<any> | Write<any> | Schedule<any>
+// | ReadWrite<unknown> | // FIXME: reduce this to just Read<unknown>
+// {
+//     [name: string]: (Read<unknown>
+//         | Write<unknown> | ReadWrite<unknown>)
+// };
 
 //--------------------------------------------------------------------------//
 // Constants                                                                //
@@ -95,17 +95,17 @@ export interface Named {
      * Return the alternative name for this object if set, 
      * an empty string otherwise. 
      */
-    getAlias(): string;
+    _getAlias(): string;
 
     /**
      * Return the fully qualified name of this object.
      */ 
-    getFullyQualifiedName(): string;
+    _getFullyQualifiedName(): string;
 
     /**
      * Return this name of this object.
      **/
-    getName(): string;
+    _getName(): string;
 
 }
 
@@ -119,7 +119,7 @@ export interface Read<T> {
 /**
  * Interface for schedulable actions.
  */
-export interface Schedule<T extends Present> {
+export interface Schedule<T> {
     schedule: (extraDelay: TimeValue | 0, value: T) => void;
 }
 
@@ -138,7 +138,6 @@ export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
 
 export abstract class SchedulableAction<T extends Present> implements Schedule<T> {
     abstract schedule(extraDelay: 0 | TimeValue, value: T): void;
-    //abstract get(): T | undefined;
 }
 
 //--------------------------------------------------------------------------//
@@ -146,56 +145,82 @@ export abstract class SchedulableAction<T extends Present> implements Schedule<T
 //--------------------------------------------------------------------------//
 
 /**
- * Base class for named objects that acquire their name on the basis of the
- * hierarchy they are embedded in. Each component can only be associated with a
- * single reactor instance.
+ * Base class for named objects embedded in a hierarchy of reactors. Each
+ * component can only be owned by a single reactor instance. All members of
+ * this class are prefixed with an underscore to avoid name collisions with
+ * ports, actions, timers, or reactor instances that may be part of the 
+ * interface of a `Reactor`, which extends this class.
  */
 class Component implements Named {
 
     /**
      * An optional alias for this component.
      */
-    protected alias: string | undefined;
-
-    protected key: Symbol = Symbol()
+    protected _alias: string | undefined;
 
     /**
-     * Function for staging reactions for execution at the current logical time.
+     * A symbol that identifies this component, and it also used to selectively
+     * grant access to its priviledged functions.
      */
-    protected stage: ((reaction: Reaction<unknown>) => void);
+    protected _key: Symbol = Symbol()
 
-    protected __container__: Reactor;
+    /**
+     * The owner of this component. Each component is owned by a reactor.
+     * Only instances of `App`, which denote top-level reactors, are allowed
+     * to be their own owner.
+     */
+    protected _owner: Reactor;
 
-    constructor(__container__: Reactor | null, alias?:string) {
-        this.alias = alias
+    /**
+     * Function for staging reactions for execution at the current logical
+     * time.
+     */
+    protected _stage: ((reaction: Reaction<unknown>) => void);
+
+    /**
+     * Create a new component and register it with the owner.
+     * @param owner The owner of this component, `null` if this is an instance
+     * of `App`, in which case the ownership will be assigned to the component
+     * itself.
+     * @param alias An optional alias for the component.
+     */
+    constructor(owner: Reactor | null, alias?:string) {
+        this._alias = alias
 
         if (this instanceof App) {
-            this.__container__ = this       // Apps are self-contained.
-            this.stage = this.getLoader()   // Loader inherited from the app.
+            this._owner = this               // Apps are self-owner.
+            this._stage = this.getLoader()   // Get the loader from the app.
         } else {
-            if (__container__ !== null) {
-                this.__container__ = __container__  // Set the container.
-                this.__container__._register(this, this.key) // Register.
-                this.stage = __container__.stage   // Inherited the loader.
+            if (owner !== null) {
+                this._owner = owner          // Set the owner.
+                this._owner._register(this, this._key) // Register with owner.
+                this._stage = owner._stage   // Inherited the loader.
             } else {
                 throw Error("Cannot instantiate component without a parent.")
             }
         }
     }
 
-    public isChildOf(r: Reactor): boolean {
+    /**
+     * Report whether or not this component is owned by the given reactor.
+     * @param reactor The presumptive owner of this component.
+     */
+    public _isOwnedBy(reactor: Reactor): boolean {
 
         if (this instanceof App) return false
-        
-        if (this.__container__ === r) return true
+        else if (this._owner === reactor) return true
     
         return false
     }
 
-    public isGrandChildOf(r: Reactor): boolean {
+    /**
+     * Report whether or not this component is owned by the owner of the given
+     * reactor.
+     * @param reactor The presumptive owner of the owner of this component.
+     */
+    public _isOwnedByOwnerOf(reactor: Reactor): boolean {
         if (this instanceof App) return false
-        
-        if (this.__container__.isChildOf(r)) return true;
+        else if (this._owner._isOwnedBy(reactor)) return true;
     
         return false;
     }
@@ -204,15 +229,15 @@ class Component implements Named {
      * Return a string that identifies this component.
      * The name is a path constructed as App/.../Container/ThisComponent
      */
-    getFullyQualifiedName(): string {
+    _getFullyQualifiedName(): string {
         var path = "";
         if (!(this instanceof App)) {
-            path = this.__container__.getFullyQualifiedName();
+            path = this._owner._getFullyQualifiedName();
         }
         if (path != "") {
-            path += "/" + this.getName();
+            path += "/" + this._getName();
         } else {
-            path = this.getName();
+            path = this._getName();
         }
         return path;
     }
@@ -220,11 +245,11 @@ class Component implements Named {
     /**
      * Return a string that identifies this component within the reactor.
      */
-    public getName(): string {
+    public _getName(): string {
 
         var name = ""
         if (!(this instanceof App)) {
-            for (const [key, value] of Object.entries(this.__container__)) {
+            for (const [key, value] of Object.entries(this._owner)) {
                 if (value === this) {
                     name = `${key}`
                     break
@@ -232,11 +257,11 @@ class Component implements Named {
             }
         }
 
-        if (this.alias) {
+        if (this._alias) {
             if (name == "") {
-                name = this.alias
+                name = this._alias
             } else {
-                name += ` (${this.alias})`
+                name += ` (${this._alias})`
             }
         }
         // Return the constructor name in case the component wasn't found in its
@@ -248,8 +273,8 @@ class Component implements Named {
         return name
     }
 
-    public getAlias(): string {
-        if (this.alias) return this.alias
+    public _getAlias(): string {
+        if (this._alias) return this._alias
         else return ""
     }
 
@@ -258,8 +283,8 @@ class Component implements Named {
      * container.
      * @param alias An alternative name.
      */
-    protected setAlias(alias: string) {
-        this.alias = alias
+    protected _setAlias(alias: string) {
+        this._alias = alias
     }
 }
 
@@ -269,21 +294,38 @@ class Component implements Named {
  * the argument list of the `react` function that that is applied to when this
  * reaction gets triggered.
  */
-export class Reaction<T> implements Sortable<Priority>, PrioritySetNode<Priority> {
+export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Priority> {
 
     /** 
-     * Priority derived from this reaction's location in 
-     * the directed acyclic precedence graph.
+     * Priority derived from this reaction's location in the dependency graph
+     * that spans the entire hierarchy of components inside the top-level reactor
+     * that this reaction is also embedded in.
      */
-    public priority: Priority = Number.MAX_SAFE_INTEGER;
+    private priority: Priority = Number.MAX_SAFE_INTEGER;
 
-    public next: PrioritySetNode<Priority> | undefined;
-
-    /** 
-     * Construct a new reaction by passing in a reference to the reactor that contains it,
-     * the variables that trigger it, and the arguments passed to the react function.
-     * @param state state shared among reactions
+    /**
+     * 
      */
+    public next: PrioritySetElement<Priority> | undefined;
+
+     /**
+      * Construct a new reaction by passing in a reference to the reactor that
+      * will own it, an object to execute the its `react` and `late` functions
+      * on, a list of triggers, the arguments to pass into `react` and `late`,
+      * an implementation of this reaction's `react` function, an optional
+      * deadline to be observed, and an optional custom implementation of the
+      * `late` function that is invoked when logical time lags behind physical time
+      * with a margin that exceeds the time interval denoted by the deadline.
+      * @param reactor The owner of this reaction.
+      * @param sandbox The `this` object for `react` and `late`.
+      * @param trigs The ports, actions, or timers, which, when they receive
+      * values, will trigger this reaction.
+      * @param args The arguments to be passed to `react` and `late`.
+      * @param react Function that gets execute when triggered and "on time."
+      * @param deadline The maximum amount by which logical time may lag behind
+      * physical time when `react` has been triggered and is ready to execute.
+      * @param late Function that gets execute when triggered and "late."
+      */
     constructor(
         private reactor: Reactor,
         private sandbox: ReactionSandbox,
@@ -297,49 +339,12 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetNode<Priority
 
     public active = false
 
-    public toString(): string {
-        return this.reactor.getFullyQualifiedName() + "[R" + this.reactor.getReactionIndex(this) + "]";
-    }
-
-    // getDependencies(): [Set<Variable>, Set<Variable>] {
-    //     var deps: Set<Variable> = new Set();
-    //     var antideps: Set<Variable> = new Set();
-    //     var vars = new Set();
-    //     for (let a of this.args.tuple.concat(this.trigs.list)) {
-    //         if (a instanceof IOPort) {
-    //             if (this.reactor._isUpstream(a)) {
-    //                 deps.add(a);
-    //             }
-    //             if (this.reactor._isDownstream(a)) {
-    //                 antideps.add(a);
-    //             }
-    //         } else if (a instanceof WritablePort) {
-    //             if (this.reactor._isDownstream(a.getPort())) {
-    //                 antideps.add(a.getPort());
-    //             }
-    //         } else {
-    //             // Handle hierarchical references.
-    //             for (let p of Object.getOwnPropertyNames(a)) { // FIXME: remove this
-    //                 let prop = Object.getOwnPropertyDescriptor(a, p);
-    //                 if (prop?.value instanceof Port) {
-    //                     if (this.reactor._isUpstream(prop.value)) {
-    //                         deps.add(prop.value);
-    //                     }
-    //                     if (this.reactor._isDownstream(prop.value)) {
-    //                         antideps.add(prop.value);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return [deps, antideps];
-    // }
-
+    
     getPriority(): Priority {
         return this.priority;
     }
 
-    hasPriorityOver(node: PrioritySetNode<Priority> | undefined): boolean {
+    hasPriorityOver(node: PrioritySetElement<Priority> | undefined): boolean {
         if (node != null && this.getPriority() < node.getPriority()) {
             return true;
         } else {
@@ -347,7 +352,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetNode<Priority
         }
     }
 
-    updateIfDuplicateOf(node: PrioritySetNode<Priority> | undefined) {
+    updateIfDuplicateOf(node: PrioritySetElement<Priority> | undefined) {
         return Object.is(this, node);
     }
 
@@ -369,7 +374,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetNode<Priority
             this.sandbox.util.getCurrentTag()
                 .getLaterTag(this.deadline)
                 .isSmallerThan(new Tag(getCurrentPhysicalTime(), 0))) {
-            this.late.apply(this.sandbox, this.args.tuple);
+            this.late.apply(this.sandbox, this.args.tuple); // late
         } else {
             this.react.apply(this.sandbox, this.args.tuple); // on time
         }
@@ -379,7 +384,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetNode<Priority
      * Set a deadline for this reaction. The given time value denotes the maximum
      * allowable amount by which logical time may lag behind physical time at the
      * point that this reaction is ready to execute. If this maximum lag is
-     * exceeded, the "late" function is executed instead of the "react" function.
+     * exceeded, the `late` function is executed instead of the `react` function.
      * @param deadline The deadline to set to this reaction.
      */
     public setDeadline(deadline: TimeValue): this {
@@ -388,13 +393,17 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetNode<Priority
     }
 
     /**
-     * Setter for reaction priority, to be used only by the runtime environment.
+     * Set for reaction priority, to be used only by the runtime environment.
      * The priority of each reaction is determined on the basis of its
      * dependencies on other reactions.
      * @param priority The priority for this reaction.
      */
     public setPriority(priority: number) {
         this.priority = priority;
+    }
+
+    public toString(): string {
+        return this.reactor._getFullyQualifiedName() + "[R" + this.reactor.getReactionIndex(this) + "]";
     }
 }
 
@@ -404,9 +413,9 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetNode<Priority
  * determine the event's position with respect to other events in the event
  * queue.
  */
-class TaggedEvent<T extends Present> implements PrioritySetNode<Tag> {
+class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
 
-    public next: PrioritySetNode<Tag> | undefined;
+    public next: PrioritySetElement<Tag> | undefined;
 
     /**
      * Construct a new event.
@@ -423,7 +432,7 @@ class TaggedEvent<T extends Present> implements PrioritySetNode<Tag> {
      * otherwise.
      * @param node The event to compare this event's tag against.
      */
-    hasPriorityOver(node: PrioritySetNode<Tag> | undefined) {
+    hasPriorityOver(node: PrioritySetElement<Tag> | undefined) {
         if (node) {
             return this.getPriority().isSmallerThan(node.getPriority());
         } else {
@@ -436,7 +445,7 @@ class TaggedEvent<T extends Present> implements PrioritySetNode<Tag> {
      * value this event to the given one. Otherwise, return false.
      * @param node The event adopt the value from if it is a duplicate of this one.
      */
-    updateIfDuplicateOf(node: PrioritySetNode<Tag> | undefined) {
+    updateIfDuplicateOf(node: PrioritySetElement<Tag> | undefined) {
         if (node && node instanceof TaggedEvent) {
             if (this.trigger === node.trigger && this.tag.isSimultaneousWith(node.tag)) {
                 node.value = this.value; // update the value
@@ -463,7 +472,7 @@ abstract class Trigger extends Component {
     abstract getManager(key: Symbol | undefined): TriggerManager;
 
     public getContainer(): Reactor | null {
-        return this.__container__
+        return this._owner
     }
 
     abstract isPresent():boolean;
@@ -481,14 +490,14 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
      */
     public update(e: TaggedEvent<T>):void {
 
-        if (!e.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
+        if (!e.tag.isSimultaneousWith(this._owner.util.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
         }
         if (e.trigger === this) {
             this.value = e.value
             this.tag = e.tag;
             for (let r of this.reactions) {
-                this.stage(r)
+                this._stage(r)
             }
         } else {
             throw new Error("Attempt to update action using incompatible event.");
@@ -496,7 +505,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
     }
 
     public getManager(key: Symbol | undefined): TriggerManager {
-        if (this.key == key) {
+        if (this._key == key) {
             return this.manager
         }
         throw Error("Unable to grant access to manager.")
@@ -512,7 +521,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
             // This action has never been scheduled before.
             return false;
         }
-        if (this.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
+        if (this.tag.isSimultaneousWith(this._owner.util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -522,7 +531,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
     protected manager = new class implements TriggerManager {
         constructor(private trigger: ScheduledTrigger<T>) { }
         getContainer(): Reactor {
-            return this.trigger.__container__
+            return this.trigger._owner
         }
         addReaction(reaction: Reaction<unknown>): void {
             this.trigger.reactions.add(reaction)
@@ -558,14 +567,14 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
     }
 
     public asSchedulable(key: Symbol | undefined): Schedule<T> {
-        if (this.key === key) {
+        if (this._key === key) {
             return this.scheduler
         }
         throw Error("Invalid reference to container.")
     }
 
     public getManager(key: Symbol | undefined): TriggerManager {
-        if (this.key == key) {
+        if (this._key == key) {
             return this.manager
         }
         throw Error("Unable to grant access to manager.")
@@ -580,7 +589,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
                 extraDelay = new TimeValue(0);
             }
             
-            var tag = this.action.__container__.util.getCurrentTag();
+            var tag = this.action._owner.util.getCurrentTag();
             var delay = this.action.minDelay.add(extraDelay);
 
             if (this.action.origin == Origin.physical) {
@@ -594,9 +603,9 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
             }
             
             Log.debug(this, () => "Scheduling " + this.action.origin +
-                " action " + this.action.getFullyQualifiedName() + " with tag: " + tag);
+                " action " + this.action._getFullyQualifiedName() + " with tag: " + tag);
     
-            this.action.__container__.util.schedule(new TaggedEvent(this.action, tag, value));
+            this.action._owner.util.schedule(new TaggedEvent(this.action, tag, value));
         }
     }(this)
 
@@ -618,7 +627,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
     }
 
     public toString() {
-        return this.getFullyQualifiedName();
+        return this._getFullyQualifiedName();
     }
 }
 
@@ -712,7 +721,7 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
 
     public toString() {
-        return "Timer from " + this.__container__.getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
+        return "Timer from " + this._owner._getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
     }
 
     public get(): Tag | Absent {
@@ -748,7 +757,7 @@ export class Mutation<T> extends Reaction<T> {
      * @override
      */
     public toString(): string {
-        return this.parent.getFullyQualifiedName() + "[M" + this.parent.getReactionIndex(this) + "]";
+        return this.parent._getFullyQualifiedName() + "[M" + this.parent.getReactionIndex(this) + "]";
     }
     
 }
@@ -882,12 +891,12 @@ export abstract class Reactor extends Component {
      * reactor and the component, with at most one level of indirection.
      */
     protected getKey(component: Trigger, key?: Symbol): Symbol | undefined {
-        if (component.isChildOf(this) || this.key === key) {
+        if (component._isOwnedBy(this) || this._key === key) {
             return this.keys.get(component)
         } else if ((component instanceof Startup || 
                     component instanceof Shutdown ||
                   !(component instanceof Action)) && 
-                    component.isGrandChildOf(this)) {
+                    component._isOwnedByOwnerOf(this)) {
             let owner = component.getContainer()
             if (owner !== null) {
                 return owner.getKey(component, this.keys.get(owner))
@@ -935,7 +944,7 @@ export abstract class Reactor extends Component {
         // Utils get passed down the hierarchy. If this is an App,
         // the container refers to this object, making the following
         // assignment idemponent.
-        this.util = (this.__container__ as unknown as Reactor).util    
+        this.util = (this._owner as unknown as Reactor).util    
         
         this._reactionScope = new this._ReactionSandbox(this)
         this._mutationScope = new this._MutationSandbox(this)
@@ -948,7 +957,7 @@ export abstract class Reactor extends Component {
             new Args(),
             function (this) {
                 Log.debug(this, () => "*** Starting up reactor " +
-                self.getFullyQualifiedName());
+                self._getFullyQualifiedName());
                 self._startupChildren();
                 self._setTimers();
                 self._active = true;
@@ -961,7 +970,7 @@ export abstract class Reactor extends Component {
             new Args(),
             function (this) {
                 Log.debug(this, () => "*** Shutting down reactor " + 
-                    self.getFullyQualifiedName());
+                    self._getFullyQualifiedName());
                 self._shutdownChildren();
                 self._unsetTimers();
                 self._active = false;
@@ -1248,7 +1257,7 @@ export abstract class Reactor extends Component {
             // excluded (eg. value != this.parent) this function will loop
             // forever.
             if (value instanceof Reactor && 
-                    value != this.__container__ && !(value instanceof App)) {
+                    value != this._owner && !(value instanceof App)) {
                 // A reactor may not be a child of itself.
                 if (value === this) {
                     throw new Error("A reactor may not have itself as an " +
@@ -1307,12 +1316,12 @@ export abstract class Reactor extends Component {
      */
     public _isDownstream(port: Port<Present>) {
         if (port instanceof InPort) {
-            if (port.isGrandChildOf(this)) {
+            if (port._isOwnedByOwnerOf(this)) {
                 return true;
             }
         } 
         if (port instanceof OutPort) {
-            if (port.isChildOf(this)) {
+            if (port._isOwnedBy(this)) {
                 return true;
             }
         }
@@ -1326,12 +1335,12 @@ export abstract class Reactor extends Component {
      */
     public _isUpstream(port: Port<Present>) {
         if (port instanceof OutPort) {
-            if (port.isGrandChildOf(this)) {
+            if (port._isOwnedByOwnerOf(this)) {
                 return true;
             }
         } 
         if (port instanceof InPort) {
-            if (port.isChildOf(this)) {
+            if (port._isOwnedBy(this)) {
                 return true;
             }
         }
@@ -1372,7 +1381,7 @@ export abstract class Reactor extends Component {
         }
         if (src instanceof CallerPort) {
             if (dst instanceof CalleePort && 
-                src.isGrandChildOf(this) && dst.isGrandChildOf(this)) {
+                src._isOwnedByOwnerOf(this) && dst._isOwnedByOwnerOf(this)) {
                 return true
             }
             return false
@@ -1397,14 +1406,14 @@ export abstract class Reactor extends Component {
         if (src instanceof OutPort) {
             if (dst instanceof InPort) {
                 // OUT to IN
-                if (src.isGrandChildOf(this) && dst.isGrandChildOf(this)) {
+                if (src._isOwnedByOwnerOf(this) && dst._isOwnedByOwnerOf(this)) {
                     return true;
                 } else {
                     return false;
                 }
             } else {
                 // OUT to OUT
-                if (src.isGrandChildOf(this) && dst.isChildOf(this)) {
+                if (src._isOwnedByOwnerOf(this) && dst._isOwnedBy(this)) {
                     return true;
                 } else {
                     return false;
@@ -1413,7 +1422,7 @@ export abstract class Reactor extends Component {
         } else {
             if (dst instanceof InPort) {
                 // IN to IN
-                if (src.isChildOf(this) && dst.isGrandChildOf(this)) {
+                if (src._isOwnedBy(this) && dst._isOwnedByOwnerOf(this)) {
                     return true;
                 } else {
                     return false;
@@ -1657,7 +1666,7 @@ export abstract class Reactor extends Component {
      * Return the fully qualified name of this reactor.
      */
     toString(): string {
-        return this.getFullyQualifiedName();
+        return this._getFullyQualifiedName();
     }
 }
 
@@ -1681,11 +1690,11 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
         Log.debug(this, () => "In isPresent()...")
         Log.debug(this, () => "value: " + this.value);
         Log.debug(this, () => "tag: " + this.tag);
-        Log.debug(this, () => "time: " + this.__container__.util.getCurrentLogicalTime())
+        Log.debug(this, () => "time: " + this._owner.util.getCurrentLogicalTime())
 
         if (this.value !== undefined
             && this.tag !== undefined
-            && this.tag.isSimultaneousWith(this.__container__.util.getCurrentTag())) {
+            && this.tag.isSimultaneousWith(this._owner.util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -1714,7 +1723,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      * @param key
      */
     public asWritable(key: Symbol | undefined): WritablePort<T> {
-        if (this.key === key) {
+        if (this._key === key) {
             return this.writer
         }
         throw Error("Invalid reference to container.")
@@ -1726,7 +1735,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      * (or the container thereof).
      */
     public getManager(key: Symbol | undefined): PortManager<T> {
-        if (this.key == key) {
+        if (this._key == key) {
             return this.manager
         }
         throw Error("Unable to grant access to manager.")
@@ -1742,11 +1751,11 @@ export abstract class IOPort<T extends Present> extends Port<T> {
 
         public set(value: T): void {
             this.port.value = value;
-            this.port.tag = this.port.__container__.util.getCurrentTag();
+            this.port.tag = this.port._owner.util.getCurrentTag();
             // Set values in downstream receivers.
             this.port.receivers.forEach(p => p.set(value))
             // Stage triggered reactions for execution.
-            this.port.reactions.forEach(r => this.port.stage(r))
+            this.port.reactions.forEach(r => this.port._stage(r))
         }
 
         public get(): T | Absent {
@@ -1769,7 +1778,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     protected manager:PortManager<T> = new class implements PortManager<T> {
         constructor(private port:IOPort<T>) {}
         getContainer(): Reactor {
-            return this.port.__container__
+            return this.port._owner
         }
         addReceiver(port: WritablePort<T>): void {
             this.port.receivers.add(port)
@@ -1786,7 +1795,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     }(this)
 
     toString(): string {
-        return this.getFullyQualifiedName();
+        return this._getFullyQualifiedName();
     }
 }
 
@@ -1815,7 +1824,7 @@ export class InPort<T extends Present> extends IOPort<T> {
 export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Write<A>, Read<R> {
     
     public get(): R | undefined {
-        if (this.tag?.isSimultaneousWith(this.__container__.util.getCurrentTag()))
+        if (this.tag?.isSimultaneousWith(this._owner.util.getCurrentTag()))
             return this.remotePort?.retValue
     }
 
@@ -1826,7 +1835,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
         if (this.remotePort) {
             this.remotePort.invoke(value)
         }
-        this.tag = this.__container__.util.getCurrentTag();
+        this.tag = this._owner.util.getCurrentTag();
     }
 
     public invoke(value:A): R | undefined {
@@ -1843,7 +1852,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
      * (or the container thereof).
      */
     public getManager(key: Symbol | undefined): PortManager<R> {
-        if (this.key == key) {
+        if (this._key == key) {
             return this.manager
         }
         throw Error("Unable to grant access to manager.")
@@ -1853,7 +1862,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
     protected manager:PortManager<R> = new class implements PortManager<R> {
         constructor(private port:CallerPort<A, R>) {}
         getContainer(): Reactor {
-            return this.port.__container__
+            return this.port._owner
         }
         addReceiver(port: WritablePort<R>): void {
             //
@@ -1907,7 +1916,7 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
     public set(value: R): void  {
         // NOTE: this will not trigger reactions because
         // connections between caller ports and callee ports
-        // are excluded from the trigger map.
+        // are invoked directly.
         this.retValue = value;
     }
 
@@ -1921,7 +1930,7 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
      * (or the container thereof).
      */
     public getManager(key: Symbol | undefined): CalleeManager<A> {
-        if (this.key == key) {
+        if (this._key == key) {
             return this.manager
         }
         throw Error("Unable to grant access to manager.")
@@ -1930,7 +1939,7 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
     protected manager:CalleeManager<A> = new class implements CalleeManager<A> {
         constructor(private port:CalleePort<A, Present>) {}
         getContainer(): Reactor {
-            return this.port.__container__
+            return this.port._owner
         }
         addReceiver(port: WritablePort<A>): void {
             throw new Error("Method not implemented.");

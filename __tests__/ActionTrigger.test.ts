@@ -18,7 +18,7 @@ export class ActionTrigger extends Reactor {
         super(parent);
         //Reaction priorities matter here. The overridden reaction must go first.
         this.addReaction(
-            new Triggers(this.t1), new Args(this.getSchedulable(this.a1), {foo: this.a1}),
+            new Triggers(this.t1), new Args(this.getSchedulable(this.a1)),
             /**
              * Schedule the incorrect payload for action a1.
              */
@@ -71,7 +71,7 @@ class ActionTriggerTest extends App {
 
     constructor(name: string, timeout: TimeValue, success?: ()=> void, fail?: ()=>void){
         super(timeout, false, false, success, fail);
-        this.setAlias(name);
+        this._setAlias(name);
         this.aTrigger = new ActionTrigger(this);
     }
 }
