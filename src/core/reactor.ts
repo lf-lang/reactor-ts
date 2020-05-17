@@ -1963,7 +1963,6 @@ class ReactionQueue extends PrioritySet<Priority> {
 }
 
 interface AppUtils {
-    //schedule(e: TaggedEvent<any>): void; // FIXME: shouldn't really be here.
     success(): void; // FIXME: These callbacks needs be renamed and their implementation needs to be improved.
     failure(): void;
     requestShutdown(): void;
@@ -1972,7 +1971,6 @@ interface AppUtils {
     getCurrentPhysicalTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
-
 }
 
 export interface MutationSandbox extends ReactionSandbox {
