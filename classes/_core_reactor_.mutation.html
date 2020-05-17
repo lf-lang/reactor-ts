@@ -93,8 +93,8 @@
 			<section class="tsd-panel">
 				<h3>Implements</h3>
 				<ul class="tsd-hierarchy">
-					<li><a href="../interfaces/_core_util_.precedencegraphnode.html" class="tsd-signature-type">PrecedenceGraphNode</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span></li>
-					<li><a href="../interfaces/_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span></li>
+					<li><a href="../interfaces/_core_util_.sortable.html" class="tsd-signature-type">Sortable</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span></li>
+					<li><a href="../interfaces/_core_util_.prioritysetelement.html" class="tsd-signature-type">PrioritySetElement</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -114,7 +114,6 @@
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#args" class="tsd-kind-icon">args</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#next" class="tsd-kind-icon">next</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_core_reactor_.mutation.html#parent" class="tsd-kind-icon">parent</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#priority" class="tsd-kind-icon">priority</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#trigs" class="tsd-kind-icon">trigs</a></li>
 							</ul>
 						</section>
@@ -122,7 +121,6 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#doreact" class="tsd-kind-icon">do<wbr>React</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#getdependencies" class="tsd-kind-icon">get<wbr>Dependencies</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#getpriority" class="tsd-kind-icon">get<wbr>Priority</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#haspriorityover" class="tsd-kind-icon">has<wbr>Priority<wbr>Over</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_core_reactor_.mutation.html#setdeadline" class="tsd-kind-icon">set<wbr>Deadline</a></li>
@@ -147,7 +145,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L731">core/reactor.ts:731</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L732">core/reactor.ts:732</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -206,7 +204,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#active">active</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L299">core/reactor.ts:299</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L330">core/reactor.ts:330</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -217,19 +215,24 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#args">args</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L292">core/reactor.ts:292</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L323">core/reactor.ts:323</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The arguments to be passed to <code>react</code> and <code>late</code>.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="next" class="tsd-anchor"></a>
 					<h3>next</h3>
-					<div class="tsd-signature tsd-kind-icon">next<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
+					<div class="tsd-signature tsd-kind-icon">next<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_core_util_.prioritysetelement.html" class="tsd-signature-type">PrioritySetElement</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
 					<aside class="tsd-sources">
-						<p>Implementation of <a href="../interfaces/_core_util_.prioritysetnode.html">PrioritySetNode</a>.<a href="../interfaces/_core_util_.prioritysetnode.html#next">next</a></p>
+						<p>Implementation of <a href="../interfaces/_core_util_.prioritysetelement.html">PrioritySetElement</a>.<a href="../interfaces/_core_util_.prioritysetelement.html#next">next</a></p>
 						<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#next">next</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L281">core/reactor.ts:281</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L299">core/reactor.ts:299</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -239,26 +242,9 @@
 					<div class="tsd-signature tsd-kind-icon">parent<span class="tsd-signature-symbol">:</span> <a href="_core_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L731">core/reactor.ts:731</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L732">core/reactor.ts:732</a></li>
 						</ul>
 					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
-					<a name="priority" class="tsd-anchor"></a>
-					<h3>priority</h3>
-					<div class="tsd-signature tsd-kind-icon">priority<span class="tsd-signature-symbol">:</span> <a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol"> =&nbsp;Number.MAX_SAFE_INTEGER</span></div>
-					<aside class="tsd-sources">
-						<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#priority">priority</a></p>
-						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L279">core/reactor.ts:279</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Priority derived from this reaction&#39;s location in
-							the directed acyclic precedence graph.</p>
-						</div>
-					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="trigs" class="tsd-anchor"></a>
@@ -267,9 +253,15 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#trigs">trigs</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L291">core/reactor.ts:291</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L322">core/reactor.ts:322</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The ports, actions, or timers, which, when they receive
+							values, will trigger this reaction.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -285,28 +277,10 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#doreact">doReact</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L355">core/reactor.ts:355</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L349">core/reactor.ts:349</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-					<a name="getdependencies" class="tsd-anchor"></a>
-					<h3>get<wbr>Dependencies</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Dependencies<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#variable" class="tsd-signature-type">Variable</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#variable" class="tsd-signature-type">Variable</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">]</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#getdependencies">getDependencies</a></p>
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L305">core/reactor.ts:305</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#variable" class="tsd-signature-type">Variable</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#variable" class="tsd-signature-type">Variable</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">]</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -319,10 +293,10 @@
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Implementation of <a href="../interfaces/_core_util_.prioritysetnode.html">PrioritySetNode</a>.<a href="../interfaces/_core_util_.prioritysetnode.html#getpriority">getPriority</a></p>
+								<p>Implementation of <a href="../interfaces/_core_util_.prioritysetelement.html">PrioritySetElement</a>.<a href="../interfaces/_core_util_.prioritysetelement.html#getpriority">getPriority</a></p>
 								<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#getpriority">getPriority</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L339">core/reactor.ts:339</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L333">core/reactor.ts:333</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a></h4>
@@ -333,20 +307,20 @@
 					<a name="haspriorityover" class="tsd-anchor"></a>
 					<h3>has<wbr>Priority<wbr>Over</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-						<li class="tsd-signature tsd-kind-icon">has<wbr>Priority<wbr>Over<span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><a href="../interfaces/_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">has<wbr>Priority<wbr>Over<span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><a href="../interfaces/_core_util_.prioritysetelement.html" class="tsd-signature-type">PrioritySetElement</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#haspriorityover">hasPriorityOver</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L343">core/reactor.ts:343</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L337">core/reactor.ts:337</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>node: <a href="../interfaces/_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
+									<h5>node: <a href="../interfaces/_core_util_.prioritysetelement.html" class="tsd-signature-type">PrioritySetElement</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -364,7 +338,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#setdeadline">setDeadline</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L386">core/reactor.ts:386</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L380">core/reactor.ts:380</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -372,7 +346,7 @@
 									<p>Set a deadline for this reaction. The given time value denotes the maximum
 										allowable amount by which logical time may lag behind physical time at the
 										point that this reaction is ready to execute. If this maximum lag is
-									exceeded, the &quot;late&quot; function is executed instead of the &quot;react&quot; function.</p>
+									exceeded, the <code>late</code> function is executed instead of the <code>react</code> function.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -399,12 +373,12 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#setpriority">setPriority</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L397">core/reactor.ts:397</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L391">core/reactor.ts:391</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Setter for reaction priority, to be used only by the runtime environment.
+									<p>Set for reaction priority, to be used only by the runtime environment.
 										The priority of each reaction is determined on the basis of its
 									dependencies on other reactions.</p>
 								</div>
@@ -433,7 +407,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#tostring">toString</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L748">core/reactor.ts:748</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L749">core/reactor.ts:749</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -450,20 +424,20 @@
 					<a name="updateifduplicateof" class="tsd-anchor"></a>
 					<h3>update<wbr>IfDuplicate<wbr>Of</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-						<li class="tsd-signature tsd-kind-icon">update<wbr>IfDuplicate<wbr>Of<span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><a href="../interfaces/_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">update<wbr>IfDuplicate<wbr>Of<span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><a href="../interfaces/_core_util_.prioritysetelement.html" class="tsd-signature-type">PrioritySetElement</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_core_reactor_.reaction.html">Reaction</a>.<a href="_core_reactor_.reaction.html#updateifduplicateof">updateIfDuplicateOf</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/reactor.ts#L351">core/reactor.ts:351</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/reactor.ts#L345">core/reactor.ts:345</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>node: <a href="../interfaces/_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
+									<h5>node: <a href="../interfaces/_core_util_.prioritysetelement.html" class="tsd-signature-type">PrioritySetElement</a><span class="tsd-signature-symbol">&lt;</span><a href="../modules/_core_reactor_.html#priority" class="tsd-signature-type">Priority</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -524,16 +498,10 @@
 								<a href="_core_reactor_.mutation.html#parent" class="tsd-kind-icon">parent</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
-								<a href="_core_reactor_.mutation.html#priority" class="tsd-kind-icon">priority</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 								<a href="_core_reactor_.mutation.html#trigs" class="tsd-kind-icon">trigs</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 								<a href="_core_reactor_.mutation.html#doreact" class="tsd-kind-icon">do<wbr>React</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-								<a href="_core_reactor_.mutation.html#getdependencies" class="tsd-kind-icon">get<wbr>Dependencies</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 								<a href="_core_reactor_.mutation.html#getpriority" class="tsd-kind-icon">get<wbr>Priority</a>

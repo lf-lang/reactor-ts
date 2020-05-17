@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>PrioritySetNode | reactor-ts - v0.0.1</title>
+	<title>Sortable | reactor-ts - v0.0.1</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,28 +59,16 @@
 					<a href="../modules/_core_util_.html">&quot;core/util&quot;</a>
 				</li>
 				<li>
-					<a href="_core_util_.prioritysetnode.html">PrioritySetNode</a>
+					<a href="_core_util_.sortable.html">Sortable</a>
 				</li>
 			</ul>
-			<h1>Interface PrioritySetNode&lt;P&gt;</h1>
+			<h1>Interface Sortable&lt;P&gt;</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>Utilities for the reactor runtime.</p>
-					</div>
-					<dl class="tsd-comment-tags">
-						<dt>author</dt>
-						<dd><p>Marten Lohstroh (<a href="mailto:marten@berkeley.edu">marten@berkeley.edu</a>)</p>
-						</dd>
-					</dl>
-				</div>
-			</section>
 			<section class="tsd-panel tsd-type-parameters">
 				<h3>Type parameters</h3>
 				<ul class="tsd-type-parameters">
@@ -93,7 +81,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">PrioritySetNode</span>
+						<span class="target">Sortable</span>
 					</li>
 				</ul>
 			</section>
@@ -103,7 +91,6 @@
 					<li><a href="../classes/_core_reactor_.mutation.html" class="tsd-signature-type">Mutation</a></li>
 					<li><a href="../classes/_core_reactor_.procedure.html" class="tsd-signature-type">Procedure</a></li>
 					<li><a href="../classes/_core_reactor_.reaction.html" class="tsd-signature-type">Reaction</a></li>
-					<li><a href="../classes/_core_reactor_.taggedevent.html" class="tsd-signature-type">TaggedEvent</a></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -111,144 +98,36 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Properties</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#haspriorityover" class="tsd-kind-icon">has<wbr>Priority<wbr>Over</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#next" class="tsd-kind-icon">next</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#updateifduplicateof" class="tsd-kind-icon">update<wbr>IfDuplicate<wbr>Of</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_util_.prioritysetnode.html#getpriority" class="tsd-kind-icon">get<wbr>Priority</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_core_util_.sortable.html#setpriority" class="tsd-kind-icon">set<wbr>Priority</a></li>
 							</ul>
 						</section>
-					</div>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="haspriorityover" class="tsd-anchor"></a>
-					<h3>has<wbr>Priority<wbr>Over</h3>
-					<div class="tsd-signature tsd-kind-icon">has<wbr>Priority<wbr>Over<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/util.ts#L25">core/util.ts:25</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Determine whether this node has priority over the given node or not.</p>
-						</div>
-						<dl class="tsd-comment-tags">
-							<dt>param</dt>
-							<dd><p>A node to compare the priority of this node to.</p>
-							</dd>
-						</dl>
-					</div>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter-siganture">
-								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-property tsd-is-not-exported">
-									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
-								</ul>
-								<ul class="tsd-descriptions">
-									<li class="tsd-description">
-										<h4 class="tsd-parameters-title">Parameters</h4>
-										<ul class="tsd-parameters">
-											<li>
-												<h5>node: <a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
-											</li>
-										</ul>
-										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
-									</li>
-								</ul>
-							</li>
-						</ul>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="next" class="tsd-anchor"></a>
-					<h3>next</h3>
-					<div class="tsd-signature tsd-kind-icon">next<span class="tsd-signature-symbol">:</span> <a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/util.ts#L14">core/util.ts:14</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Pointer to the next node in the priority set.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="updateifduplicateof" class="tsd-anchor"></a>
-					<h3>update<wbr>IfDuplicate<wbr>Of</h3>
-					<div class="tsd-signature tsd-kind-icon">update<wbr>IfDuplicate<wbr>Of<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/util.ts#L32">core/util.ts:32</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>If the given node is considered a duplicate of this node, then
-							update this node if needed, and return true. Return false otherwise.</p>
-						</div>
-						<dl class="tsd-comment-tags">
-							<dt>param</dt>
-							<dd><p>A node that may or may not be a duplicate of this node.</p>
-							</dd>
-						</dl>
-					</div>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter-siganture">
-								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-property tsd-is-not-exported">
-									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>node<span class="tsd-signature-symbol">: </span><a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
-								</ul>
-								<ul class="tsd-descriptions">
-									<li class="tsd-description">
-										<h4 class="tsd-parameters-title">Parameters</h4>
-										<ul class="tsd-parameters">
-											<li>
-												<h5>node: <a href="_core_util_.prioritysetnode.html" class="tsd-signature-type">PrioritySetNode</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
-											</li>
-										</ul>
-										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
-									</li>
-								</ul>
-							</li>
-						</ul>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="getpriority" class="tsd-anchor"></a>
-					<h3>get<wbr>Priority</h3>
+					<a name="setpriority" class="tsd-anchor"></a>
+					<h3>set<wbr>Priority</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Priority<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">P</span></li>
+						<li class="tsd-signature tsd-kind-icon">set<wbr>Priority<span class="tsd-signature-symbol">(</span>priority<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">P</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/e45fca6/src/core/util.ts#L19">core/util.ts:19</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/2d95774/src/core/util.ts#L36">core/util.ts:36</a></li>
 								</ul>
 							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Return the priority of this node.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">P</span></h4>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>priority: <span class="tsd-signature-type">P</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -288,34 +167,28 @@
 					<li class=" tsd-kind-enum tsd-parent-kind-external-module">
 						<a href="../enums/_core_util_.loglevel.html" class="tsd-kind-icon">Log<wbr>Level</a>
 					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_core_util_.dependencygraph.html" class="tsd-kind-icon">Dependency<wbr>Graph</a>
+					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/_core_util_.log.html" class="tsd-kind-icon">Log</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="../classes/_core_util_.precedencegraph.html" class="tsd-kind-icon">Precedence<wbr>Graph</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
 						<a href="../classes/_core_util_.priorityset.html" class="tsd-kind-icon">Priority<wbr>Set</a>
 					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-has-type-parameter">
+						<a href="../classes/_core_util_.sortabledependencygraph.html" class="tsd-kind-icon">Sortable<wbr>Dependency<wbr>Graph</a>
+					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_core_util_.precedencegraphnode.html" class="tsd-kind-icon">Precedence<wbr>Graph<wbr>Node</a>
+						<a href="_core_util_.prioritysetelement.html" class="tsd-kind-icon">Priority<wbr>Set<wbr>Element</a>
 					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-has-type-parameter">
-						<a href="_core_util_.prioritysetnode.html" class="tsd-kind-icon">Priority<wbr>Set<wbr>Node</a>
+						<a href="_core_util_.sortable.html" class="tsd-kind-icon">Sortable</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_core_util_.prioritysetnode.html#haspriorityover" class="tsd-kind-icon">has<wbr>Priority<wbr>Over</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_core_util_.prioritysetnode.html#next" class="tsd-kind-icon">next</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_core_util_.prioritysetnode.html#updateifduplicateof" class="tsd-kind-icon">update<wbr>IfDuplicate<wbr>Of</a>
-							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_core_util_.prioritysetnode.html#getpriority" class="tsd-kind-icon">get<wbr>Priority</a>
+								<a href="_core_util_.sortable.html#setpriority" class="tsd-kind-icon">set<wbr>Priority</a>
 							</li>
 						</ul>
 					</li>
