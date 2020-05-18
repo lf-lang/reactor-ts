@@ -47,7 +47,14 @@ class R1 extends Reactor {
                     if(tmp)
                     {
                         out = tmp + 4;
-                        while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(new UnitBasedTimeValue(1, TimeUnit.sec))));
+                        
+                        let sleep_time =  new UnitBasedTimeValue(2, TimeUnit.sec);
+                        let startTime = util.getCurrentPhysicalTime();
+                        let finishTime = startTime.add(sleep_time)
+                        // Busy wait
+                        while(util.getCurrentPhysicalTime().isEarlierThan(finishTime));
+                        
+                        //while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(new UnitBasedTimeValue(1, TimeUnit.sec))));
                     }
                 } finally {
                     if(out){
@@ -140,9 +147,9 @@ describe("Testing deadlines", function () {
         
         let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), done, fail)
 
-        //spyOn(app, '_start').and.callThrough
+        // spyOn(app, '_start').and.callThrough
 
-        //expect(() => {app._start()}).toThrowError("Deadline violation occurred!");
+        // expect(() => {app._start()}).toThrowError("Deadline violation occurred!");
 
         /* FIXME: Deadlines are not working */
         app._start();
