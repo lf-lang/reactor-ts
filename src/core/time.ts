@@ -249,7 +249,6 @@ export class BinaryTimeValue extends TimeValue {
 
         // To avoid overflow and floating point errors, work with BigInts.
         let bigTime = buffer.readBigUInt64LE(0);
-        console.log("----bigtime: " + bigTime);
         let bigSeconds = bigTime / billion;
         let bigNSeconds = bigTime % billion;
 

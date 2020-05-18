@@ -6,7 +6,9 @@
  */
 
 import {PrecedenceGraphNode, PrioritySetNode, PrioritySet, PrecedenceGraph, Log} from './util';
-import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
+import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm, BinaryTimeValue } from './time';
+import {Socket, createConnection, SocketConnectOpts, Server, createServer} from 'net'
+import {EventEmitter } from 'events';
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -332,10 +334,10 @@ export class Reaction<T> implements PrecedenceGraphNode<Priority>, PrioritySetNo
 }
 
 /**
- * An event is caused by a timer or a scheduled action. Each event is tagged
- * with a time instant and may carry a value of arbitrary type. The tag will
- * determine the event's position with respect to other events in the event
- * queue.
+ * An event is caused by a timer, a scheduled action, or a federate port.
+ * Each event is tagged with a time instant and may carry a value of 
+ * arbitrary type. The tag will determine the event's position with
+ * respect to other events in the event queue.
  */
 class TaggedEvent<T> implements PrioritySetNode<Tag> {
 
@@ -348,7 +350,7 @@ class TaggedEvent<T> implements PrioritySetNode<Tag> {
      * @param value The value associated with this event. 
      * 
      */
-    constructor(public trigger: Action<Present> | Timer, public tag: Tag, 
+    constructor(public trigger: Action<Present> | Timer | FederateInPort<Present>, public tag: Tag, 
             public value: T) {
     }
 
@@ -1256,12 +1258,12 @@ export abstract class Reactor extends Component {
      * Assign a value to this port at the current logical time.
      * Put the reactions this port triggers on the reaction 
      * queue and recursively invoke this function on all connected output ports.
-     * @param value The value to assign to this port.
+     * @param src The upstream port propagating its value.
      */
     public _propagateValue<T extends Present>(src: Port<T>): void {
         var value = src.get();
         if (value === undefined) {
-            Log.debug(this, () => "Retrieving null value from " + src.getFullyQualifiedName());
+            Log.debug(this, () => "Retrieving undefined value from " + src.getFullyQualifiedName());
             return;
         }
         var reactions = this._triggerMap.get(src);
@@ -2099,6 +2101,19 @@ export class App extends Reactor {
     private _startOfExecution: TimeValue;
 
     /**
+     * Set the app's _currentTag to the designated time, but only if
+     * _currentTime hasn't advanced from the default starting time of 0
+     * set in the App constructor. A Federate must be able to do this when
+     * it gets the start time from the RTI.
+     * @param startTag The tag at which execution should begin.
+     */
+    public _setStartingTag(startTag: Tag) {
+        if (this._currentTag.isSimultaneousWith(new Tag( new TimeValue(0,0)))) {
+            this._currentTag = startTag;
+        }
+    }
+
+    /**
      * Report a timer to the app so that it gets scheduled.
      * @param timer The timer to report to the app.
      */
@@ -2207,10 +2222,25 @@ export class App extends Reactor {
      * loop. This prevents the system from being overwhelmed with external
      * stimuli.
      */
-    private _next() {
+    protected _next() {
         var nextEvent = this._eventQ.peek();
         if (nextEvent) {
             // There is an event at the head of the event queue.
+
+            // If this federate has not received a sufficently large time
+            // advance grant from the RTI for the next event, send it a 
+            // Next Event Time message and snooze.
+            if (this instanceof Federate && this._isRTISynchronized()) {
+                let greatestTAG = this._getGreatestTimeAdvanceGrant();
+                let nextTime = nextEvent.tag.time;
+                if (greatestTAG === null || greatestTAG.isEarlierThan(nextTime)) {
+                    this.sendRTINextEventTime(nextTime);
+                    Log.global.debug("The next event on the event queue has a timestamp less" +
+                        "than the greatest time advance grant received from the RTI.");
+                    Log.global.debug("Going to sleep.");
+                    this.getSchedulable(this.snooze).schedule(0, this._currentTag);
+                }
+            }
 
             // If it is too early to handle the next event, set a timer for it
             // (unless the "fast" option is enabled), and give back control to
@@ -2230,6 +2260,10 @@ export class App extends Reactor {
             // resulting events would be in the future, anyway.
             do {
                 // Advance logical time.
+                if (this instanceof Federate && this._currentTag.time.isEarlierThan(nextEvent.tag.time)) {
+                    // Tell the RTI logical time is being advanced to a greater value.
+                    this.sendRTILogicalTimeComplete(this._currentTag.time);
+                }
                 this._currentTag = nextEvent.tag;
 
                 // Keep popping the event queue until the next event has a different tag.
@@ -2249,8 +2283,17 @@ export class App extends Reactor {
                         }
                     }
 
-                    // Load reactions onto the reaction queue.
-                    nextEvent.trigger.update(nextEvent);
+                    // Handle federate messages
+                    if (trigger instanceof FederateInPort) {
+                        if (nextEvent.value instanceof Buffer) {
+                            trigger.setFromRTIMsg(nextEvent.value, nextEvent.tag);
+                        }
+                    } else {
+                        // Note that a FederateInPort has a port's update function
+                        // which requires two arguments instead of one.
+                        trigger.update(nextEvent);
+                    }
+
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
                 }
@@ -2342,6 +2385,7 @@ export class App extends Reactor {
      * @param tag 
      */
     public setAlarmOrYield(tag: Tag) {
+        Log.debug(this, () => {return "in setAlarmOrYield for tag: " + tag});
         if (this._endOfExecution) {
             if (this._endOfExecution.isEarlierThan(tag.time)) {
                 // Ignore this request if the tag is later than the end of execution.
@@ -2384,6 +2428,9 @@ export class App extends Reactor {
      */
     private _shutdown(): void {
         if (this._isActive()) {
+            if (this instanceof Federate) {
+                this.sendRTIResign();
+            }
             this._endOfExecution = this._currentTag.time;
 
             Log.debug(this, () => "Initiating shutdown sequence.");
@@ -2417,7 +2464,7 @@ export class App extends Reactor {
 
     }
 
-    public _start(): void {
+    protected _init(): void {
         Log.info(this, () => Log.hr);
         let initStart = getCurrentPhysicalTime();
         Log.global.info(">>> Initializing");
@@ -2452,13 +2499,963 @@ export class App extends Reactor {
 
         Log.info(this, () => ">>> Spent " + this._currentTag.time.subtract(initStart as TimeValue)
             + " initializing.");
+    }
+
+    protected _scheduleStartup(startTime: Tag): void {
+        this.util.schedule(new TaggedEvent(this.startup, startTime, null));
+    }
+
+    public _start(): void {
+        this._init()
         Log.info(this, () => Log.hr);
-        Log.info(this, () => Log.hr);
-        Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
 
+        Log.info(this, () => ">>> Start of execution: " + this._currentTag);
+        Log.info(this, () => Log.hr);
+        
         // Set in motion the execution of this program by scheduling startup at the current logical time.
-        this.util.schedule(new TaggedEvent(this.startup, this._currentTag, null));
+        this._scheduleStartup(this._currentTag);
         //this.getSchedulable(this.startup).schedule(0);
     }
+}
+
+//---------------------------------------------------------------------//
+// Federated Execution Constants and Enums                             //
+//---------------------------------------------------------------------//
+
+//FIXME: For now this constant is unused.
+/** 
+ *  Size of the buffer used for messages sent between federates.
+ *  This is used by both the federates and the rti, so message lengths
+ *  should generally match.
+ */
+export const BUFFER_SIZE: number = 256;
+
+/** 
+ *  Number of seconds that elapse between a federate's attempts
+ *  to connect to the RTI.
+ */
+export const CONNECT_RETRY_INTERVAL: TimeValue = new UnitBasedTimeValue(2, TimeUnit.sec);
+
+/** 
+ *  Bound on the number of retries to connect to the RTI.
+ *  A federate will retry every CONNECT_RETRY_INTERVAL seconds
+ *  this many times before giving up. E.g., 500 retries every
+ *  2 seconds results in retrying for about 16 minutes.
+ */
+export const CONNECT_NUM_RETRIES: number = 500;
+
+/**
+ * Message types defined for communication between a federate and the
+ * RTI (Run Time Infrastructure).
+ * In the C reactor target these message types are encoded as an unsigned char,
+ * so to maintain compatability the magnitude must not exceed 255
+ */
+enum RTIMessageTypes {
+
+    /**
+     * Byte Identifying a federate ID message, which is 32 bits long.
+     */
+    FED_ID = 1,
+
+    /**
+     * Byte identifying a timestamp message, which is 64 bits long.
+     */
+    TIMESTAMP = 2,
+
+    /** 
+     *  Byte identifying a message to forward to another federate.
+     *  The next two bytes will be the ID of the destination port.
+     *  The next two bytes are the destination federate ID.
+     *  The four bytes after that will be the length of the message.
+     *  The remaining bytes are the message.
+     */
+    MESSAGE = 3,
+
+    /** 
+     * Byte identifying that the federate is ending its execution.
+     */
+    RESIGN = 4,
+
+    /** 
+     *  Byte identifying a timestamped message to forward to another federate.
+     *  The next two bytes will be the ID of the destination port.
+     *  The next two bytes are the destination federate ID.
+     *  The four bytes after that will be the length of the message.
+     *  The next eight bytes will be the timestamp.
+     *  The remaining bytes are the message.
+     */
+    TIMED_MESSAGE = 5,
+
+    /** 
+     *  Byte identifying a next event time (NET) message sent from a federate.
+     *  The next eight bytes will be the timestamp. This message from a
+     *  federate tells the RTI the time of the earliest event on that federate's
+     *  event queue. In other words, absent any further inputs from other federates,
+     *  this will be the logical time of the next set of reactions on that federate.
+     */
+    NEXT_EVENT_TIME = 6,
+
+    /** 
+     *  Byte identifying a time advance grant (TAG) sent to a federate.
+     *  The next eight bytes will be the timestamp.
+     */
+    TIME_ADVANCE_GRANT = 7,
+
+    /** 
+     *  Byte identifying a logical time complete (LTC) message sent by a federate
+     *  to the RTI. The next eight bytes will be the timestamp.
+     */
+    LOGICAL_TIME_COMPLETE = 8
+}
+
+//---------------------------------------------------------------------//
+// Federated Execution Classes                                         //
+//---------------------------------------------------------------------//
+
+// FIXME: add "Federate" and other class names here
+// to the prohibited list of LF names.
+
+// FIXME: change the names of class functions to start with
+// an underscore.
+
+/**
+ * Node.js doesn't export a type for errors with a code, so this is a workaround
+ * for typing such an Error.
+ */
+interface NodeJSCodedError extends Error{
+    code: string;
+}
+
+/**
+ * Custom type guard for a NodeJsCodedError
+ * @param e The Error to be tested as being a NodeJSCodedError
+ */
+function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
+    let hasCode = typeof (e as NodeJSCodedError).code === 'string';
+    if (hasCode) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * An RTIClient is used within a federate to abstract the socket
+ * connection to the RTI and the RTI's binary protocol over the socket.
+ * RTIClient exposes functions for federate-level operations like
+ * establishing a connection to the RTI or sending a message.
+ * RTIClient is an EventEmitter, and asynchronously emits events for:
+ * 'startTime', 'connected', 'message', 'timedMessage', and 
+ * 'timeAdvanceGrant'. The federate is responsible for handling the
+ * events to ensure a correct exeuction. 
+ */
+class RTIClient extends EventEmitter {
+
+    // ID of this federate.
+    private id:number;         
+    
+    // The socket descriptor for communicating with this federate.
+    private socket: Socket | null = null;
+
+    private federateInPorts: Map<number, FederateInPort<Present>> = new Map<number, FederateInPort<Present>>();
+
+    /**
+     * Establish the mapping between a FederatePort object and its ID
+     * @param federatePortID The federate port's ID.
+     * @param federatePort The federate port object.
+     */
+    public registerFederateInPort(federatePortID: number, federatePort: FederateInPort<Present>) {
+        this.federateInPorts.set(federatePortID, federatePort);
+    }
+
+    /**
+     * Constructor for an RTIClient
+     * @param id The ID of the federate this client communicates
+     * on behalf of.
+     */
+    public constructor (id: number) {
+        super();
+        this.id = id;
+    }
+
+    // If the last data sent to handleSocketData contained an incomplete
+    // or chunked message, that data is copied over to chunkedBuffer so it can
+    // be saved until the next time handleSocketData is called. If no data has been
+    // saved, chunkedBuffer is null.
+    private chunkedBuffer : Buffer | null = null;
+
+    // The number of attempts made by this federate to connect to the RTI
+    private connectionAttempts = 0;
+
+    /** 
+     *  Create a socket connection to the RTI and register this federate's
+     *  ID with the RTI. If unable to make a connection, retry 
+     *  @param port The RTI's remote port number.
+     *  @param host The RTI's remote host name. 
+     */
+    public connectToRTI(port: number, host: string) {
+        // Create an IPv4 socket for TCP (not UDP) communication over IP (0)
+    
+        let thiz = this;
+
+        const options: SocketConnectOpts = {
+            "port": port,
+            "family": 4, // IPv4,
+            "localAddress": "0.0.0.0", // All interfaces, 0.0.0.0.
+            "host": host
+        }
+
+        this.socket = createConnection(options, () => {
+            // This function is a listener to the 'connection' socket
+            // event.
+
+            // Only set up an event handler for close if the connection is
+            // created. Otherwise this handler will go off on every reconnection
+            // attempt.
+            this.socket?.on('close', () => {
+                Log.error(this, () => {return 'RTI socket has closed.'});
+            });
+
+            // Immediately send a FED ID message after connecting.
+            const buffer = Buffer.alloc(5);
+            buffer.writeUInt8(RTIMessageTypes.FED_ID, 0);
+            buffer.writeUInt32LE(this.id, 1);
+            try {
+                Log.debug(this, () => {return 'Sending a FED ID message to the RTI.'});
+                this.socket?.write(buffer);
+            } catch (e) {
+                Log.error(this, () => {return e.toString()});
+            }
+
+            // Finally, emit a connected event.
+            this.emit('connected');
+        });
+
+        this.socket?.on('data', thiz.handleSocketData.bind(thiz));
+
+        // If the socket reports a connection refused error,
+        // suppress the message and try to reconnect.
+        this.socket?.on('error', (err: Error ) => {
+            if (isANodeJSCodedError(err) && err.code === 'ECONNREFUSED' ) {
+                Log.info(this, () => {
+                    return `Failed to connect to RTI with error: ${err}.`
+                })
+                if (this.connectionAttempts < CONNECT_NUM_RETRIES) {
+                    Log.info(this, () => {return `Retrying RTI connection in ${CONNECT_RETRY_INTERVAL}.`})
+                    this.connectionAttempts++;
+                    let a = new Alarm();
+                    a.set(this.connectToRTI.bind(this, port, host), CONNECT_RETRY_INTERVAL)
+                } else {
+                    Log.error(this, () => {return `Could not connect to RTI after ${CONNECT_NUM_RETRIES} attempts.`})
+                }
+            } else {
+                Log.error(this, () => {return err.toString()})
+            }
+        });
+    }
+
+    /** 
+     *  Send the specified TimeValue to the RTI and set up
+     *  a handler for the response.
+     *  The specified TimeValue should be current physical time of the
+     *  federate, and the response will be the designated start time for
+     *  the federate. May only be called after the federate emits a
+     *  'connected' event. When the RTI responds, this federate will
+     *  emit a 'startTime' event.
+     *  @param myPhysicalTime The physical time at this federate.
+     */
+    public requestStartTimeFromRTI(myPhysicalTime: TimeValue) {
+        let msg = Buffer.alloc(9)
+        msg.writeUInt8(RTIMessageTypes.TIMESTAMP, 0);
+        let time = myPhysicalTime.get64Bit();
+        time.copy(msg, 1);
+        try {
+            Log.debug(this, () => {return `Sending RTI start time: ${myPhysicalTime}`});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return e});
+        }
+    }
+
+    /**
+     * Send an RTI (untimed) message to a remote federate.
+     * @param data The message encoded as a Buffer. The data may be
+     * arbitrary length.
+     * @param destFederateID The federate ID of the federate
+     * to which this message should be sent.
+     * @param destPortID The port ID for the port on the destination
+     * federate to which this message should be sent.
+     */
+    public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
+        let msg = Buffer.alloc(data.length + 9);
+        msg.writeUInt8(RTIMessageTypes.MESSAGE, 0);
+        msg.writeUInt16LE(destPortID, 1);
+        msg.writeUInt16LE(destFederateID, 3);
+        msg.writeUInt32LE(data.length, 5);
+        data.copy(msg, 9); // Copy data into the message
+        try {
+            Log.debug(this, () => {return `Sending RTI (untimed) message to `
+                + `federate ID: ${destFederateID} and port ID: ${destPortID}.`});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return e});
+        }
+    }
+
+    /**
+     * Send an RTI timed message to a remote federate.
+     * @param data The message encoded as a Buffer. The data may be
+     * arbitrary length.
+     * @param destFederateID The federate ID of the federate
+     * to which this message should be sent.
+     * @param destPortID The port ID for the port on the destination
+     * federate to which this message should be sent.
+     * @param time The time of the message encoded as a 64 bit unsigned
+     * integer in a Buffer.
+     */
+    public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number, time: Buffer) {
+        let msg = Buffer.alloc(data.length + 17);
+        msg.writeUInt8(RTIMessageTypes.TIMED_MESSAGE, 0);
+        msg.writeUInt16LE(destPortID, 1);
+        msg.writeUInt16LE(destFederateID, 3);
+        msg.writeUInt32LE(data.length, 5);
+        time.copy(msg, 9); // Copy the current time into the message
+        data.copy(msg, 17); // Copy data into the message
+        try {
+            Log.debug(this, () => {return `Sending RTI (timed) message to `
+                + `federate ID: ${destFederateID}, port ID: ${destPortID} `
+                + `, time: ${time.toString('hex')}.`});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return e});
+        }
+    }
+
+    /**
+     * Send the RTI a logical time complete message. This should be
+     * called when the federate has completed all events for a given
+     * logical time.
+     * @param completeTime The logical time that is complete. The time
+     * should be encoded as a 64 bit unsigned integer in a Buffer.
+     */
+    public sendRTILogicalTimeComplete(completeTime: Buffer) {
+        let msg = Buffer.alloc(9);
+        msg.writeUInt8(RTIMessageTypes.LOGICAL_TIME_COMPLETE, 0);
+        completeTime.copy(msg,1);
+        try {
+            Log.debug(this, () => {return "Sending RTI logical time complete: " + completeTime.toString('hex');});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return e});
+        }
+    }
+
+    /**
+     * Send the RTI a resign message. This should be called when
+     * the federate is shutting down.
+     */
+    public sendRTIResign() {
+        let msg = Buffer.alloc(1);
+        msg.writeUInt8(RTIMessageTypes.RESIGN, 0);
+        try {
+            Log.debug(this, () => {return "Sending RTI resign.";});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return e});
+        }
+    }
+
+    /**
+     * Send the RTI a next event time message. This should be called when
+     * the federate would like to advance logical time, but has not yet
+     * received a sufficiently large time advance grant.
+     * @param nextTime The time of the message encoded as a 64 bit unsigned
+     * integer in a Buffer.
+     */
+    public sendRTINextEventTime(nextTime: Buffer) {
+        let msg = Buffer.alloc(9);
+        msg.writeUInt8(RTIMessageTypes.NEXT_EVENT_TIME, 0);
+        nextTime.copy(msg,1);
+        try {
+            Log.debug(this, () => {return "Sending RTI Next Event Time.";});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return e});
+        }
+    }
+
+    /**
+     * The handler for the socket's data event. 
+     * The data Buffer given to the handler may contain 0 or more complete messages.
+     * Iterate through the complete messages, and if the last message is incomplete
+     * save it as thiz.chunkedBuffer so it can be prepended onto the
+     * data when handleSocketData is called again.
+     * @param assembledData The Buffer of data received by the socket. It may
+     * contain 0 or more complete messages.
+     */
+    private handleSocketData(data: Buffer) {
+        let thiz = this;
+        if (data.length < 1) {
+            throw new Error( `Received a message from the RTI with 0 length.`);
+        }
+
+        // Used to track the current location within the data Buffer.
+        let bufferIndex = 0;
+
+        // Append the new data to leftover data from chunkedBuffer (if any)
+        // The result is assembledData.
+        let assembledData: Buffer;
+
+        if (thiz.chunkedBuffer) {
+            assembledData = Buffer.alloc(thiz.chunkedBuffer.length + data.length);
+            thiz.chunkedBuffer.copy(assembledData, 0, 0, thiz.chunkedBuffer.length);
+            data.copy(assembledData, thiz.chunkedBuffer.length);
+            thiz.chunkedBuffer = null;
+        } else {
+            assembledData = data;
+        }
+        Log.debug(thiz, () => {return `Assembled data is: ${assembledData.toString('hex')}`});
+
+        while (bufferIndex < assembledData.length) {
+            
+            let messageTypeByte = assembledData[bufferIndex]
+            switch (messageTypeByte) {
+                case RTIMessageTypes.FED_ID: {
+                    // MessageType: 1 byte.
+                    // Federate ID: 2 bytes long.
+                    // Should never be received by a federate.
+                    
+                    Log.error(thiz, () => {return "Received FED_ID message from the RTI."});     
+                    throw new Error('Received a FED_ID message from the RTI. ' 
+                        + 'FED_ID messages may only be sent by federates');
+                    break;
+                }
+                case RTIMessageTypes.TIMESTAMP: {
+                    // MessageType: 1 byte.
+                    // Timestamp: 8 bytes.
+
+                    let incomplete = assembledData.length < 9 + bufferIndex;
+
+                    if (incomplete) {
+                        thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
+                        assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
+                    } else {
+                        let timeBuffer = Buffer.alloc(8);
+                        assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9 );
+                        let startTime = new BinaryTimeValue(timeBuffer);
+                        Log.debug(thiz, () => { return "Received TIMESTAMP buffer from the RTI " +
+                        `with startTime: ${timeBuffer.toString('hex')}`;      
+                        })
+                        Log.debug(thiz, () => { return "Received TIMESTAMP message from the RTI " +
+                            `with startTime: ${startTime}`;      
+                        })
+                        thiz.emit('startTime', startTime);
+                    }
+
+                    bufferIndex += 9;
+                    break;
+                }
+                case RTIMessageTypes.MESSAGE: {
+                    // MessageType: 1 byte.
+                    // Message: The next two bytes will be the ID of the destination port
+                    // The next two bytes are the destination federate ID (which can be ignored).
+                    // The next four bytes after that will be the length of the message
+                    // The remaining bytes are the message.
+
+                    let incomplete = assembledData.length < 9 + bufferIndex;
+
+                    if (incomplete) {
+                        thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
+                        assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
+                        bufferIndex += 9;
+                    } else {
+                        let destPortID = assembledData.readUInt16LE(bufferIndex + 1);
+                        let messageLength = assembledData.readUInt32LE(bufferIndex + 5);
+
+                        // Once the message length is parsed, we can determine whether
+                        // the body of the message has been chunked.
+                        let isChunked = messageLength > (assembledData.length - (bufferIndex + 9));
+
+                        if (isChunked) {
+                            // Copy the unprocessed remainder of assembledData into chunkedBuffer
+                            thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
+                            assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
+                        } else {
+                            // Finish processing the complete message.
+                            let messageBuffer = Buffer.alloc(messageLength);
+                            assembledData.copy(messageBuffer, 0, bufferIndex + 9, bufferIndex + 9 + messageLength);  
+                            let destPort = thiz.federateInPorts.get(destPortID);
+                            
+                            Log.debug(thiz, () => {return `Emitting an RTI (untimed) `
+                            + `message for port ID: ${destPortID}`});
+                            thiz.emit('message', destPort, messageBuffer);
+                        }
+
+                        bufferIndex += messageLength + 9;
+                    }
+                    break;
+                }
+                case RTIMessageTypes.TIMED_MESSAGE: {
+                    // MessageType: 1 byte.
+                    // The next two bytes will be the ID of the destination port.
+                    // The next two bytes are the destination federate ID.
+                    // The next four bytes after that will be the length of the message
+                    // The next eight bytes will be the timestamp.
+                    // The remaining bytes are the message.
+
+                    let incomplete = assembledData.length < 17 + bufferIndex;
+
+                    if (incomplete) {
+                        thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
+                        assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
+                        bufferIndex += 17;
+                    } else {
+                        let destPortID = assembledData.readUInt16LE(bufferIndex + 1);
+                        let messageLength = assembledData.readUInt32LE(bufferIndex + 5);
+
+                        let timeBuffer = Buffer.alloc(8);
+                        assembledData.copy(timeBuffer, 0, bufferIndex + 9, bufferIndex + 17 );
+                        let timestamp = new BinaryTimeValue(timeBuffer);
+
+                        let isChunked = messageLength > (assembledData.length - (bufferIndex + 17));
+
+                        if (isChunked) {
+                            // Copy the unprocessed remainder of assembledData into chunkedBuffer
+                            thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
+                            assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
+                        } else {
+                            // Finish processing the complete message.
+                            let messageBuffer = Buffer.alloc(messageLength);
+                            assembledData.copy(messageBuffer, 0, bufferIndex + 17, bufferIndex + 17 +  messageLength);  
+                            let destPort = thiz.federateInPorts.get(destPortID);
+                            
+                            Log.debug(thiz, () => {return `Emitting an RTI timed `
+                                    + `message for port ID: ${destPortID}`});
+                            thiz.emit('timedMessage', destPort, messageBuffer, timestamp);
+                        }
+
+                        bufferIndex += messageLength + 17;
+                        break;
+                    }
+                }
+                // FIXME: It's unclear what should happen if a federate gets this
+                // message.
+                case RTIMessageTypes.RESIGN: {
+                    // MessageType: 1 byte.
+                    Log.debug(thiz, () => {return 'Received an RTI RESIGN.'});
+                    Log.error(thiz, () => {return 'FIXME: No functionality has '
+                        + 'been implemented yet for a federate receiving a RESIGN message from '
+                        + 'the RTI'});
+                    bufferIndex += 1;
+                    break;
+                }
+                case RTIMessageTypes.NEXT_EVENT_TIME: {
+                    // MessageType: 1 byte.
+                    // Timestamp: 8 bytes.
+                    Log.error(thiz, () => {return 'Received an RTI NEXT_EVENT_TIME. This message type '
+                        + 'should not be received by a federate'});
+                    bufferIndex += 9;
+                    break;
+                }
+                case RTIMessageTypes.TIME_ADVANCE_GRANT: {
+                    // MessageType: 1 byte.
+                    // Timestamp: 8 bytes.
+                    let incomplete = assembledData.length < 9 + bufferIndex;
+
+                    if (incomplete) {
+                        thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
+                        assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
+                    } else {
+                        Log.debug(thiz, () => {return 'Received an RTI TIME_ADVANCE_GRANT'});
+                        let timeBuffer = Buffer.alloc(8);
+                        assembledData.copy(timeBuffer,0,1);
+                        let time = new BinaryTimeValue(timeBuffer);
+                        Log.debug(thiz, () => {return `Emitting a timeAdvanceGrant with time: ${time}`});
+                        thiz.emit('timeAdvanceGrant', time);
+                    }
+                    bufferIndex += 9;
+                    break;
+                }
+                case RTIMessageTypes.LOGICAL_TIME_COMPLETE: {
+                    // Logial Time Complete: The next eight bytes will be the timestamp.
+                    Log.error(thiz, () => {return 'Received an RTI LOGICAL_TIME_COMPLETE.  This message type '
+                        + 'should not be received by a federate'});
+                    bufferIndex += 9;
+                    break;
+                }
+                default: {
+                    throw new Error(`Unrecognized message type in message from the RTI: ${assembledData.toString('hex')}.`)
+                }
+            }
+        }
+        Log.debug(thiz, () => {return 'exiting handleSocketData'})
+    }
+}
+
+/**
+ * A federate is a component in a distributed reactor execution in which
+ * reactors from the same model run in distinct networked processes. 
+ * The federated program is coordinated by the RTI (Run Time Infrastructure).
+ * Like an app, a federate is the top level reactor for a particular process,
+ * but a federate must follow the direction of the RTI for beginning execution,
+ * advancing time, and exchanging messages with other federates.
+ */
+export class Federate extends App {
+
+    /**
+     * A federate's rtiClient establishes the federate's connection to
+     * the RTI (Run Time Infrastructure). When socket events occur,
+     * the rtiClient processes socket-level data into events it emits at the
+     * Federate's level of abstraction.
+     */
+    private rtiClient: RTIClient;
+
+    /**
+     * If a federate has at least one TimedFederateInPort, its execution 
+     * with respect to time advancement must be sychronized with the RTI.
+     * If this variable is true, logical time in this federate
+     * cannot advance beyond the time given in the greatest Time Advance Grant
+     * sent from the RTI.
+     */
+    private rtiSynchronized: boolean = false;
+
+    /**
+     * The largest time advance grant received so far from the RTI,
+     * or null if no time advance grant has been received yet.
+     * An RTI synchronized Federate cannot advance its logical time
+     * beyond this value.
+     */
+    private greatestTimeAdvanceGrant: TimeValue | null = null;
+
+    /**
+     * Getter for rtiSynchronized
+     */
+    public _isRTISynchronized() {
+        return this.rtiSynchronized;
+    }
+
+    /**
+     * Getter for greatestTimeAdvanceGrant
+     */
+    public _getGreatestTimeAdvanceGrant() {
+        return this.greatestTimeAdvanceGrant;
+    }
+
+    /**
+     * Federate constructor. The primary difference from an App constructor
+     * is the federateID and the rtiPort. 
+     * @param federateID The ID for this federate. For compatability with the
+     * C RTI the ID must be expressable as a 16 bit unsigned short. The ID must be
+     * unique among all federates and be a number between 0 and NUMBER_OF_FEDERATES-1
+     * @param rtiPort The network socket port for communication with the RTI.
+     * @param rtiHost The network host (IP address) for communication with the RTI.
+     * @param executionTimeout Terminate execution after the designated delay.
+     * @param keepAlive Continue execution when the event loop is empty.
+     * @param fast Execute as fast as possible, allowing logical time to exceed physical time.
+     * @param success Optional argument. Called when the Federate exits with success.
+     * @param failure Optional argument. Called when the Federate exits with failure.
+     */
+    constructor (federateID: number, private rtiPort: number, private rtiHost: string,
+        executionTimeout?: TimeValue | undefined, keepAlive?: boolean,
+        fast?: boolean, success?: () => void, failure?: () => void) {
+        
+        // Note: the superclass constructor sets the _currentTag to 0.
+        // This must be updated in a federate when the RTI sends
+        // the correct starting time.
+        super(executionTimeout, keepAlive, fast, success, failure);
+        this.rtiClient = new RTIClient(federateID);
+    }
+
+    /**
+     * Register a FederateInPort with the federate. It must be registered
+     * so it is known by the rtiClient and may receive messages via the RTI.
+     * @param federatePortID The designated ID for the federate port. For compatability with the
+     * C RTI the ID must be expressable as a 16 bit unsigned short. The ID must be
+     * unique among all port IDs on this federate and be a number between 0 and NUMBER_OF_PORTS-1
+     * @param federatePort The FederateInPort object for registration.
+     */
+    public registerFederatePort(federatePortID: number, federatePort: FederateInPort<Present>) {
+        if (federatePort instanceof TimedFederateInPort) {
+            this.rtiSynchronized = true;
+        }
+        this.rtiClient.registerFederateInPort(federatePortID, federatePort);
+    }
+
+    /**
+     * Send a message to a potentially remote FederateInPort via the RTI. This message
+     * is untimed, and will be timestamped by the destination Federate when it is received.
+     * @param msg The message encoded as a Buffer.
+     * @param destFederateID The ID of the Federate intended to receive the message.
+     * @param destPortID The ID of the FederateInPort intended to receive the message.
+     */
+    public sendRTIMessage(msg: Buffer, destFederateID: number, destPortID: number ) {
+        Log.debug(this, () => {return `Sending RTI message to federate ID: ${destFederateID}`
+            + ` port ID: ${destPortID}`});
+        this.rtiClient.sendRTIMessage(msg, destFederateID, destPortID);
+    }
+
+    /**
+     * Send a timed message to a potentially remote FederateInPort via the RTI.
+     * This message is timed, meaning it carries the logical timestamp of this Federate
+     * when this function is called.
+     * @param msg The message encoded as a Buffer.
+     * @param destFederateID The ID of the Federate intended to receive the message.
+     * @param destPortID The ID of the FederateInPort intended to receive the message.
+     */
+    public sendRTITimedMessage(msg: Buffer, destFederateID: number, destPortID: number ) {
+        let time = this.util.getCurrentLogicalTime().get64Bit();
+        Log.debug(this, () => {return `Sending RTI timed message to federate ID: ${destFederateID}`
+            + ` port ID: ${destPortID} and time: ${time.toString('hex')}`});
+        this.rtiClient.sendRTITimedMessage(msg, destFederateID, destPortID, time);
+    }
+
+    /**
+     * Send a logical time complete message to the RTI. This should be called whenever
+     * this federate is ready to advance beyond the given logical time.
+     * @param completeTimeValue The TimeValue that is now complete.
+     */
+    public sendRTILogicalTimeComplete(completeTimeValue: TimeValue) {
+        let time = completeTimeValue.get64Bit();
+        Log.debug(this, () => {return `Sending RTI logical time complete with time: ${completeTimeValue}`});
+        this.rtiClient.sendRTILogicalTimeComplete(time)
+    }
+
+    /**
+     * Send a resign message to the RTI. This message indicates this federate
+     * is shutting down, and should not be directed any new messages.
+     */
+    public sendRTIResign() {
+        Log.debug(this, () => {return `Sending RTI resign.`});
+        this.rtiClient.sendRTIResign();
+    }
+
+    /**
+     * Send a next event time message to the RTI. This should be called
+     * when this federate is unable to advance logical time beause it
+     * has not yet received a sufficiently large time advance grant.
+     * @param nextTime The time to which this federate would like to
+     * advance logical time.
+     */
+    public sendRTINextEventTime(nextTime: TimeValue) {
+        let time = nextTime.get64Bit();
+        Log.debug(this, () => {return `Sending RTI next event time with time: ${time.toString('hex')}`});
+        this.rtiClient.sendRTINextEventTime(time);
+    }
+
+    /**
+     * @override
+     * Begin execution of this federate. A federate must register event handlers
+     * for the events produced by its rtiClient and connect to the RTI.
+     * The federate cannot schedule the start of the runtime until the rtiClient
+     * has received a start time message from the RTI.
+     */
+    _start() {
+        this._init();
+        this.rtiClient.on('connected', () => {
+            this.rtiClient.requestStartTimeFromRTI( getCurrentPhysicalTime()); //new UnitBasedTimeValue(10, TimeUnit.sec));
+        });
+        this.rtiClient.on('startTime', (startTime: TimeValue) => {
+            if (startTime) {
+                Log.info(this, () => Log.hr);
+                Log.info(this, () => Log.hr);
+                Log.info(this, () => {return `Scheduling federate start for ${startTime}`;});
+                Log.info(this, () => Log.hr);
+
+                // The starting tag must be set to the same tag as
+                // the startup event, or else the federate will
+                // think it is advancing logical time from the default 
+                // app start time of 0 sec 0 nsec, and send the RTI an
+                // incorrect logical time complete message.
+                this._setStartingTag(new Tag(startTime, 0));
+                this._scheduleStartup(new Tag(startTime, 0));
+            } else {
+                throw Error("RTI start time is not known.")
+            }
+        });
+        this.rtiClient.on('message', (destPort: FederateInPort<Present>, messageBuffer: Buffer) => {
+            // Schedule an event for this federate port, so the runtime will wake up.
+            // When it wakes up, the runtime should set and propagate the value on the FederatePort.
+            // This message is untimed, so use the current physical time as the event's timestamp
+            // console.log(`scheduling `)
+            this.schedule(new TaggedEvent(destPort, new Tag(getCurrentPhysicalTime(), 0), messageBuffer));
+        });
+        this.rtiClient.on('timedMessage', (destPort: FederateInPort<Present>, messageBuffer: Buffer,
+            timestamp: TimeValue) => {
+            // Schedule an event for this federate port, so the runtime will wake up.
+            // When it wakes up, the runtime should set and propagate the value on the FederatePort.
+            // console.log(`scheduling `)
+            this.schedule(new TaggedEvent(destPort, new Tag(timestamp, 0), messageBuffer));
+        });
+        this.rtiClient.on('timeAdvanceGrant', (time: TimeValue) => {
+            if (this.greatestTimeAdvanceGrant?.isEarlierThan(time)) {
+                // Update the time advance grant and immediately wake up _next,
+                // in case it was blocked by the old time advance grant
+                this.greatestTimeAdvanceGrant = time;
+                this.setAlarmOrYield(new Tag(getCurrentPhysicalTime()))                
+            }
+        });
+
+        this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
+        Log.info(this, () => {return `Connecting to RTI on port: ${this.rtiPort}`});
+    }
+
+    /**
+     * @override
+     * When a value is propagated to a TimedFederateOutPort/FederateOutPort
+     * instead of sending a message to a downstream port on this federate,
+     * this function sends a TimedMessage/Message to the connected remote ports.
+     * @param src The upstream port propagating its value.
+     */
+    public _propagateValue<T extends Present>(src: Port<T>): void {
+        Log.debug(this, () => {return `Propagating value from ${src.toString()}`});
+        var value = src.get();
+        if (value === undefined) {
+            Log.error(this, () => "Retrieving undefined value from " + src.getFullyQualifiedName());
+            return;
+        }
+        if (src instanceof TimedFederateOutPort) {
+            for (let remotePort of src.getDestinations()) {
+                this.sendRTITimedMessage(src.encodeMsg(value), remotePort.federateID, remotePort.portID);
+            }
+        } else if (src instanceof FederateOutPort) {
+            for (let remotePort of src.getDestinations()) {
+                this.sendRTIMessage(src.encodeMsg(value), remotePort.federateID, remotePort.portID);
+                //sendRTIMessage(msg: Buffer, destFederateID: number, destPortID: number )
+            }
+        } else {
+            super._propagateValue(src);
+        }
+    }
+}
+
+/**
+ * A FederateInPort is an InPort that may be addressed by the RTI as
+ * the recipient of a message from a remote federate.
+ * Note that a FederateInPort cannot be connected to an upstream port
+ * from its own federate because it can only have a federate as a container
+ * and any such connection to a top level port is disallowed by canConnect().
+ */
+export class FederateInPort<T extends Present> extends InPort<T>{
+
+    /**
+     * Constructor for a FederateInPort. Note that its container must be a Federate.
+     * @param __container__ The federate this FederateInPort is attached to.
+     * @param portID The designated ID for this FederateInPort. For compatability with the
+     * C RTI the ID must be expressable as a 16 bit unsigned short. The ID must be
+     * unique among all port IDs on this federate and be a number between 0 and NUMBER_OF_PORTS-1.
+     * @param parseMsg A function used to parse the Buffer sent to this FederateInPort
+     * as a value of type T.
+     */
+    constructor( protected __container__ : Federate, protected portID : number,
+        private parseMsg: (msg: Buffer) => T) {
+        super(__container__);
+        __container__.registerFederatePort(portID, this);
+    }
+
+    /**
+     * A function used by the runtime to set the value of this port by a
+     * message from the RTI. The message is parsed and its value is 
+     * propagated to connected downstream ports.
+     * @param msg The message buffer recevied as the body of the message
+     * from the RTI.
+     * @param tag The superdense time instant when this port is set. 
+     */
+    public setFromRTIMsg(msg: Buffer, tag: Tag) {
+        Log.debug(this, () => {return `Setting federate port ${this.toString()} with a message from the RTI.`})
+        this.value = this.parseMsg(msg);
+        this.tag = tag;
+        this.__container__._propagateValue(this);
+    }
+}
+
+/**
+ * A FederateOutPort is an OutPort that may be connected upstream
+ * to RemoteFederatePorts. addressed by the RTI as
+ * the recipient of a message from a remote federate.
+ * Note that a FederateOutPort cannot be connected to an ordinary downstream port
+ * from its own federate because it can only have a federate as a container
+ * and any such connection to a top level port is disallowed by canConnect().
+ */
+export class FederateOutPort<T extends Present> extends OutPort<T> { // FederatePort<T> {
+
+    /**
+     * A collection of downstream remote ports. When this 
+     * FederateOutPort is set to a value, it will send RTI messages
+     * to each of these destination ports.
+     */
+    private destinations = new Set<RemoteFederatePort>(); 
+
+    /**
+     * Getter for destinations.
+     */
+    public getDestinations() {
+        return this.destinations;
+    }
+
+    /**
+     * Constructor for a FederateOutPort. Note that its container must be a Federate.
+     * @param __container__ The federate this FederateOutPort is attached to.
+     * @param portID The designated ID for this FederateOutPort. For compatability with the
+     * C RTI the ID must be expressable as a 16 bit unsigned short. The ID must be
+     * unique among all port IDs on this federate and be a number between 0 and NUMBER_OF_PORTS-1.
+     * @param encodeMsg A function used to encode the value of type T sent to this FederateOutPort
+     * as a Buffer.
+     */
+    constructor( protected __container__ : Federate, protected portID : number,
+        public encodeMsg: (msg: T) => Buffer) {
+        super(__container__);
+    }
+
+    /**
+     * Connect this FederateOutPort to a RemoteFederatePort, so this FederateOutPort
+     * can propagate messages to it via the RTI.
+     * @param remoteFederateID The designated ID for the remote federate.
+     * @param remotePortID The designated ID for the remote federate's FederateInPort.
+     */
+    public connectToRemoteFederatePort(remoteFederateID: number, remotePortID: number) {
+        this.destinations.add(new RemoteFederatePort(remoteFederateID, remotePortID));
+    }
+
+    /**
+     * Disconnect this FederateOutPort from a RemoteFederatePort, so this FederateOutPort
+     * will not propagate messages to it via the RTI.
+     * @param remoteFederateID The designated ID for the remote federate.
+     * @param remotePortID The designated ID for the remote federate's FederateInPort.
+     */
+    public disconnectFromRemoteFederatePort(remoteFederateID: number, remotePortID: number) {
+        for (let remotePort of this.destinations) {
+            if (remotePort.federateID == remoteFederateID && remotePort.portID == remotePortID) {
+                this.destinations.delete(remotePort);
+                return;
+            }
+        }
+        throw new Error('Cannot disconnect from specified remote federate port ' +
+            `with federate ID: ${remoteFederateID} and port ID: ${remotePortID} ` + 
+            'because it was not a connection');
+    }
+}
+
+/**
+ * A TimedFederateOutPort is identical to a FederateOutPort except that
+ * it propagates a timed Message to its remote destinations via the RTI instead of
+ * a (untimed) Message.
+ */ 
+export class TimedFederateOutPort<T extends Present> extends FederateOutPort<T> {}
+
+/**
+ * A TimedFederateInPort is essentially identical to a FederateInPort,
+ * only if a Federate registers a TimedFederateInPort the federate is
+ * RTI synchronized: it cannot advance logical time beyond the value
+ * indicated by Time Advance Grant messages sent from the RTI.
+ */
+export class TimedFederateInPort<T extends Present> extends FederateInPort<T> {}
+
+/**
+ * A RemoteFederatePort represents a FederateInPort in another federate.
+ * It contains the information needed to address RTI messages to the remote
+ * port.
+ */
+class RemoteFederatePort {
+    constructor(public federateID: number, public portID: number) {}
 }
