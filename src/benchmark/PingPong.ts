@@ -28,6 +28,14 @@ export class Ping extends Reactor {
                 //this.util.requestShutdown();
             }
         );
+        this.addReaction(
+            new Triggers(this.startup),
+            new Args(this.client, this.count),
+            function (this, __client: CallerPort<number, number>, count: Parameter<number>) {
+                // Dummy
+            }
+        );
+
     }
 }
 
@@ -69,7 +77,7 @@ export class PingPong extends App {
     pong: Pong
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
-        this.ping = new Ping(this, 1000000)
+        this.ping = new Ping(this, 1000000) //1000000
         this.pong = new Pong(this)
         this._connect(this.ping.client, this.pong.server)
     }

@@ -6,12 +6,12 @@ import ULog from 'ulog';
  * @author Marten Lohstroh (marten@berkeley.edu)
  */
 
-export interface PrioritySetNode<P> {
+export interface PrioritySetElement<P> {
 
     /**
      * Pointer to the next node in the priority set.
      */
-    next: PrioritySetNode<P> | undefined;
+    next: PrioritySetElement<P> | undefined;
 
     /**
      * Return the priority of this node.
@@ -22,17 +22,17 @@ export interface PrioritySetNode<P> {
      * Determine whether this node has priority over the given node or not.
      * @param node A node to compare the priority of this node to.
      */
-    hasPriorityOver: (node: PrioritySetNode<P> | undefined) => boolean;
+    hasPriorityOver: (node: PrioritySetElement<P> | undefined) => boolean;
 
     /**
      * If the given node is considered a duplicate of this node, then
      * update this node if needed, and return true. Return false otherwise.
      * @param node A node that may or may not be a duplicate of this node.
      */
-    updateIfDuplicateOf: (node: PrioritySetNode<P> | undefined) => boolean;
+    updateIfDuplicateOf: (node: PrioritySetElement<P> | undefined) => boolean;
 }
 
-export interface PrecedenceGraphNode<P> {
+export interface Sortable<P> {
     setPriority(priority: P): void;
 
     // getSTPUntil(): TimeInstant
@@ -44,10 +44,10 @@ export interface PrecedenceGraphNode<P> {
  */
 export class PrioritySet<P> {
 
-    private head: PrioritySetNode<P> | undefined;
+    private head: PrioritySetElement<P> | undefined;
     private count: number = 0;
 
-    push(element: PrioritySetNode<P>) {
+    push(element: PrioritySetElement<P>) {
         // update linked list
         if (this.head == undefined) {
             // create head
@@ -66,9 +66,9 @@ export class PrioritySet<P> {
                 return;
             }
             // seek
-            var curr: PrioritySetNode<P> | undefined = this.head;
+            var curr: PrioritySetElement<P> | undefined = this.head;
             while (curr) {
-                let next: PrioritySetNode<P> | undefined = curr.next;
+                let next: PrioritySetElement<P> | undefined = curr.next;
                 if (next) {
                     if (element.updateIfDuplicateOf(next)) {
                         return;
@@ -91,7 +91,7 @@ export class PrioritySet<P> {
         }
     }
 
-    pop(): PrioritySetNode<P> | undefined {
+    pop(): PrioritySetElement<P> | undefined {
         if (this.head) {
             let node = this.head;
             this.head = this.head.next;
@@ -101,7 +101,7 @@ export class PrioritySet<P> {
         }
     }
 
-    peek(): PrioritySetNode<P> | undefined {
+    peek(): PrioritySetElement<P> | undefined {
         if (this.head) {
             return this.head;
         }
@@ -117,22 +117,17 @@ export class PrioritySet<P> {
     }
 }
 
-export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
-
+export class DependencyGraph<T> {
     /**
      * Map nodes to the set of nodes that they depend on.
      **/
-    protected graph: Map<T, Set<T>> = new Map();
-    // FIXME: if we add a second map dependentNodes, we can cut down on the algorithmic
-    // complexity of the sorting algorithms. Not really a big deal now because the graphs
-    // are small, and sorting is not expected to happen often during the course of execution.
+    protected adjacencyMap: Map<T, Set<T>> = new Map();
+
     protected numberOfEdges = 0;
 
-    //protected startNodes: Set<T> = new Set(); 
-
     merge(apg: this) {
-        for (const [k, v] of apg.graph) {
-            let nodes = this.graph.get(k);
+        for (const [k, v] of apg.adjacencyMap) {
+            let nodes = this.adjacencyMap.get(k);
             if (nodes) {
                 for (let n of v) {
                     if (!nodes.has(n)) {
@@ -141,24 +136,39 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
                     }
                 }
             } else {
-                this.graph.set(k, v);
+                this.adjacencyMap.set(k, v);
                 this.numberOfEdges += v.size;
             }
         }
     }
 
     addNode(node: T) {
-        if (!this.graph.has(node)) {
-            this.graph.set(node, new Set());
+        if (!this.adjacencyMap.has(node)) {
+            this.adjacencyMap.set(node, new Set());
         }
+    }
+
+    getEdges(node: T): Set<T> {
+        let nodes = this.adjacencyMap.get(node)
+        if (nodes !== undefined) {
+            return nodes
+        } else {
+            return new Set<T>()
+        }
+    }
+
+    getBackEdges(node: T): Set<T> {
+        let backEdges = new Set<T>()
+        this.adjacencyMap.forEach((edges, dep) => edges.forEach((edge) => {if (edge === node) { backEdges.add(dep)}}))
+        return backEdges
     }
 
     removeNode(node: T) {
         let deps: Set<T> | undefined;
-        if (deps = this.graph.get(node)) {
+        if (deps = this.adjacencyMap.get(node)) {
             this.numberOfEdges -= deps.size;
-            this.graph.delete(node);
-            for (const [v, e] of this.graph) {
+            this.adjacencyMap.delete(node);
+            for (const [v, e] of this.adjacencyMap) {
                 if (e.has(node)) {
                     e.delete(node);
                     this.numberOfEdges--;
@@ -169,9 +179,9 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
 
     // node -> deps
     addEdge(node: T, dependsOn: T) {
-        let deps = this.graph.get(node);
+        let deps = this.adjacencyMap.get(node);
         if (!deps) {
-            this.graph.set(node, new Set([dependsOn]));
+            this.adjacencyMap.set(node, new Set([dependsOn]));
             this.numberOfEdges++;
         } else {
             if (!deps.has(dependsOn)) {
@@ -179,8 +189,11 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
                 this.numberOfEdges++;
             }
         }
-        if (!this.graph.has(dependsOn)) {
-            this.graph.set(dependsOn, new Set());
+        // Create an entry for `dependsOn` if it doesn't exist.
+        // This is so that the keys of the map contain all the
+        // nodes in the graph.
+        if (!this.adjacencyMap.has(dependsOn)) {
+            this.adjacencyMap.set(dependsOn, new Set());
         }
     }
 
@@ -191,9 +204,9 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     }
 
     addEdges(node: T, dependsOn: Set<T>) {
-        let deps = this.graph.get(node);
+        let deps = this.adjacencyMap.get(node);
         if (!deps) {
-            this.graph.set(node, new Set(dependsOn));
+            this.adjacencyMap.set(node, new Set(dependsOn));
             this.numberOfEdges += dependsOn.size;
         } else {
             for (let dependency of dependsOn) {
@@ -201,15 +214,15 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
                     deps.add(dependency);
                     this.numberOfEdges++;
                 }
-                if (!this.graph.has(dependency)) {
-                    this.graph.set(dependency, new Set());
+                if (!this.adjacencyMap.has(dependency)) {
+                    this.adjacencyMap.set(dependency, new Set());
                 }
             }
         }
     }
 
     removeEdge(node: T, dependsOn: T) {
-        let deps = this.graph.get(node);
+        let deps = this.adjacencyMap.get(node);
         if (deps && deps.has(dependsOn)) {
             deps.delete(dependsOn);
             this.numberOfEdges--;
@@ -217,51 +230,11 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
     }
 
     size() {
-        return [this.graph.size, this.numberOfEdges];
-    }
-
-    updatePriorities(spacing: number = 100) {
-        var start: Array<T> = new Array();
-        var clone = new Map();
-        var count = 0;
-
-        /* duplicate the graph */
-        for (const [v, e] of this.graph) {
-            clone.set(v, new Set(e));
-        }
-
-        /* Populate start set */
-        for (const [v, e] of this.graph) {
-            if (!e || e.size == 0) {
-                start.push(v); // start nodes have no dependencies
-                clone.delete(v);
-            }
-        }
-
-        /* Sort reactions */
-        for (var n: T | undefined; (n = start.shift()); count += spacing) {
-            n.setPriority(count);
-
-            // for each node v with an edge e from n to v do
-            for (const [v, e] of clone) {
-                if (e.has(n)) { // v depends on n
-                    e.delete(n);
-                }
-                if (e.size == 0) {
-                    start.push(v);
-                    clone.delete(v);
-                }
-            }
-        }
-        if (clone.size != 0) {
-            return false; // ERROR: cycle detected
-        } else {
-            return true;
-        }
+        return [this.adjacencyMap.size, this.numberOfEdges];
     }
 
     nodes() {
-        return this.graph.keys();
+        return this.adjacencyMap.keys();
     }
 
     /**
@@ -269,7 +242,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
      */
     toString() {
         var dot = "";
-        var graph = this.graph;
+        var graph = this.adjacencyMap;
         var visited: Set<T> = new Set();
 
         /**
@@ -333,7 +306,7 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
         
         let start: Array<T> = new Array();
         // Build a start set of node without dependencies.
-        for (const [v, e] of this.graph) {
+        for (const [v, e] of this.adjacencyMap) {
             if (!e || e.size == 0) {
                 start.push(v);
             }
@@ -346,8 +319,72 @@ export class PrecedenceGraph<T extends PrecedenceGraphNode<unknown>> {
 
         return "digraph G {" + dot + "\n}";
     }
+
+    public rootNodes(): Set<T> {
+        var roots: Set<T> = new Set();
+        /* Populate start set */
+        for (const [v, e] of this.adjacencyMap) {
+            if (!e || e.size == 0) {
+                roots.add(v); // leaf nodes have no dependencies
+                //clone.delete(v); // FIXME add a removeNodes function to factor out the duplicate code below
+            }
+        }
+        return roots
+    }
+
+    public leafNodes(): Set<T> {
+        var leafs: Set<T> = new Set(this.nodes());
+        for (let node of this.nodes()) {
+            for (let dep of this.getEdges(node)) {
+                leafs.delete(dep)
+            }
+        }
+        return leafs
+    }
 }
 
+export class SortableDependencyGraph<T extends Sortable<number>> extends DependencyGraph<T> {
+    updatePriorities(destructive: boolean, spacing: number = 100) {
+        var start: Array<T> = new Array();
+        var graph: Map<T, Set<T>>
+        var count = 0; 
+        if (!destructive) { 
+            graph = new Map() 
+            /* duplicate the map */ 
+            for (const [v, e] of this.adjacencyMap) { 
+                graph.set(v, new Set(e)); 
+            } 
+        } else {
+            graph = this.adjacencyMap
+        }
+        
+        /* Populate start set */
+        for (const [v, e] of this.adjacencyMap) {
+            if (!e || e.size == 0) {
+                start.push(v); // start nodes have no dependencies
+                graph.delete(v); 
+            } 
+        }
+        /* Sort reactions */
+        for (var n: T | undefined; (n = start.shift()); count += spacing) {
+            n.setPriority(count);
+            // for each node v with an edge e from n to v do 
+            for (const [v, e] of graph) { 
+                if (e.has(n)) {
+                    // v depends on n 
+                    e.delete(n);
+                } if (e.size == 0) {
+                    start.push(v);
+                    graph.delete(v);
+                }
+            }
+        } if (graph.size != 0) {
+            return false; // ERROR: cycle detected
+        } else {
+            return true;
+        }
+    }
+}
 /**
  * Log levels for `Log`.
  * @see Log

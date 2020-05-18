@@ -29,7 +29,7 @@ describe('Test names for contained reactors', () => {
 
         constructor(name: string, someParam: string) {
             super(undefined);
-            this.setAlias(name);
+            this._setAlias(name);
 
             // it('contained actor name', () => {
             //     expect(this.x._getName()).toBe("MyActor");

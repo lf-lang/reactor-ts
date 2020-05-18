@@ -1,4 +1,4 @@
-import {PrecedenceGraph, PrecedenceGraphNode, PrioritySetNode, PrioritySet, Log, LogLevel} from '../src/core/util';
+import {SortableDependencyGraph, Sortable, PrioritySetElement, PrioritySet, Log, LogLevel} from '../src/core/util';
 import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown} from '../src/core/reactor';
 
 //Log.setGlobalLevel(Log.levels.DEBUG);
@@ -42,7 +42,7 @@ class SR extends Reactor {
     }
 }
 
-class CNode<T> implements PrecedenceGraphNode<Priority> {
+class CNode<T> implements Sortable<Priority> {
     
     public priority: Priority = Number.MAX_SAFE_INTEGER;
 
@@ -57,7 +57,7 @@ class CNode<T> implements PrecedenceGraphNode<Priority> {
 
 describe('Manually constructed simple precedence graphs', () => {
 
-    var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
+    var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
     var reactor = new SR(new App());
 
     var nodes = reactor.getNodes();
@@ -73,15 +73,15 @@ describe('Manually constructed simple precedence graphs', () => {
 
 describe('Test for corner cases', () => {
 
-    var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
-    const node: PrecedenceGraphNode<Priority> = new CNode<Priority>(); 
+    var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
+    const node: Sortable<Priority> = new CNode<Priority>(); 
     graph.addEdge(node, new CNode<Priority>());
 
 });
 
 describe('Manually constructed precedence graphs', () => {
 
-    var graph: PrecedenceGraph<PrecedenceGraphNode<Priority>> = new PrecedenceGraph();
+    var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
     var reactor = new R(new App());
 
     var nodes = reactor.getNodes();
@@ -110,7 +110,7 @@ describe('Manually constructed precedence graphs', () => {
     });
 
     it('initial priorities', () => {
-        graph.updatePriorities();
+        graph.updatePriorities(false);
         expect(nodes[5].getPriority()).toEqual(0);
         expect(nodes[3].getPriority()).toEqual(100);
         expect(nodes[4].getPriority()).toEqual(200);
@@ -158,7 +158,7 @@ describe('Manually constructed precedence graphs', () => {
     });
 
     it('reassign priorities', () => {
-        graph.updatePriorities();
+        graph.updatePriorities(false);
         
         expect(nodes[5].getPriority()).toEqual(0);
         expect(nodes[4].getPriority()).toEqual(100);
@@ -171,7 +171,7 @@ describe('Manually constructed precedence graphs', () => {
 
     it('introduce a cycle', () => {
         graph.addEdge(nodes[5], nodes[2]);
-        expect(graph.updatePriorities()).toBeFalsy();
+        expect(graph.updatePriorities(false)).toBeFalsy();
         Log.global.debug(graph.toString());
     });
 
@@ -179,7 +179,7 @@ describe('Manually constructed precedence graphs', () => {
 
 describe('ReactionQ', () => {
     
-    var graph:PrecedenceGraph<Reaction<unknown>> = new PrecedenceGraph();
+    var graph:SortableDependencyGraph<Reaction<unknown>> = new SortableDependencyGraph();
     var reactor = new R(new App());
 
     var nodes = reactor.getNodes();
@@ -191,7 +191,7 @@ describe('ReactionQ', () => {
     graph.addEdge(nodes[1], nodes[4]);
     graph.addEdge(nodes[0], nodes[1]);
     graph.addEdge(nodes[0], nodes[4]);
-    graph.updatePriorities();
+    graph.updatePriorities(false);
     
     var reactionQ = new PrioritySet<Priority>();
     

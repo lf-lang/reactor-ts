@@ -1,6 +1,6 @@
 import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort, Action, Timer} from '../src/core/reactor';
 import { UnitBasedTimeValue, TimeUnit, TimeValue, Origin } from '../src/core/time';
-import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
+import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { doesNotMatch } from 'assert';
 
 /* Set a port in startup to get thing going */
@@ -11,7 +11,7 @@ class Starter extends Reactor {
         super(parent);
         this.addReaction(
             new Triggers(this.startup),
-            new Args(this.getWriter(this.out)),
+            new Args(this.writable(this.out)),
             function(this, __out) {
                 __out.set(4);
 
@@ -30,7 +30,7 @@ class R1 extends Reactor {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
-            new Args(this.in, this.getWriter(this.out)),
+            new Args(this.in, this.writable(this.out)),
             function(this, __in, __out) {
                 const util = this.util
                 let initialElapsedTime = util.getElapsedPhysicalTime();
@@ -88,7 +88,7 @@ class R2 extends Reactor {
                 /* Do Nothing */               
                 if(tmp)
                 {
-                    console.log("Recieved "+tmp.toString());
+                    console.log("Received "+tmp.toString());
                 }
             }
 
@@ -122,7 +122,7 @@ class ReactorWithAction extends App {
         super(timeout, false, false, success, fail);
         this.addReaction(
             new Triggers(this.t),
-            new Args(this.getSchedulable(this.a)),
+            new Args(this.schedulable(this.a)),
             function(this, a){
                 a.schedule(0, 1);
             }

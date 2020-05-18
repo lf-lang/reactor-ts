@@ -1,11 +1,12 @@
 import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present} from '../src/core/reactor';
 import { UnitBasedTimeValue, TimeUnit } from '../src/core/time';
-import { Log, LogLevel, PrecedenceGraph, PrecedenceGraphNode } from '../src/core/util';
+import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { writer } from 'repl';
 import { doesNotMatch } from 'assert';
 
 class R extends Reactor {
 
+    public inp = new InPort(this)
     public calleep = new CalleePort(this)
     public callerp = new CallerPort(this);
 
@@ -22,8 +23,8 @@ class R extends Reactor {
         )
 
         this.addReaction(
-            new Triggers(this.callerp),
-            new Args(), 
+            new Triggers(this.inp),
+            new Args(this.callerp), 
             function(this) {
                 throw new Error("Method not implemented.");
             },

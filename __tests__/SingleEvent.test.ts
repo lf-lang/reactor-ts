@@ -9,7 +9,7 @@ class SETest extends App {
 
     constructor(timeout: TimeValue, success: ()=> void, failure: ()=>void ) {
         super(timeout, false, false, success, failure);
-        this.setAlias("SETest");
+        this._setAlias("SETest");
         this.singleEvent = new SingleEvent(this, new Parameter("foo"));
         this.logger = new Logger(this, "foo");
 
