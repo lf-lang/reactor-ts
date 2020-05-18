@@ -1009,7 +1009,7 @@ export abstract class Reactor extends Component {
     }
 
     protected schedulable<T extends Present>(action: Action<T>): Schedule<T> {
-        return action.asSchedulable(this._getKey.get(action));
+        return action.asSchedulable(this._getKey(action));
     }
 
     private _recordDeps<T extends Variable[]>(reaction: Reaction<any>) {
