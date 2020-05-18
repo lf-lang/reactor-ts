@@ -1677,7 +1677,8 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         if (this._key === key) {
             return this.writer
         }
-        throw Error("Invalid reference to container.")
+        throw Error("Referenced port is out of scope.") // FIXME: adjust messages for other methods as well
+        // FIXME: we could potentially do this for reads/triggers as well just for scope rule enforcement
     }
 
     /**
@@ -2255,8 +2256,8 @@ export class App extends Reactor {
     public schedule(e: TaggedEvent<any>) {
         let head = this._eventQ.peek();
 
-        // If startup was scheduled during a run-time mutation, bypass the event queue.
-        if (e.trigger instanceof Startup && !this.util.getElapsedLogicalTime().isZero()) {
+        // All start actions bypass the event queue, except for the one scheduled by this app.
+        if (e.trigger instanceof Startup && e.trigger !== this.startup) {
             e.trigger.update(e)
             return
         }
