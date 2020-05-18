@@ -2262,8 +2262,11 @@ export class App extends Reactor {
             return
         }
 
-        this._eventQ.push(e);
-
+        // Don't schedule events past the end of execution.
+        if (!this._endOfExecution || !this._endOfExecution.isEarlierThan(e.tag.time)) {
+            this._eventQ.push(e);
+        }
+        
         Log.debug(this, () => "Scheduling with trigger: " + e.trigger);
         Log.debug(this, () => "Elapsed logical time in schedule: " + this.util.getElapsedLogicalTime());
         Log.debug(this, () => "Elapsed physical time in schedule: " + this.util.getElapsedPhysicalTime());
