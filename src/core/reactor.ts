@@ -53,7 +53,7 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  * @see Write
  * @see Schedule
  */
-export type Variable = Read<any> | Write<any> | Schedule<any>
+export type Variable = Read<unknown>
 
 //--------------------------------------------------------------------------//
 // Constants                                                                //
@@ -105,7 +105,7 @@ export interface Read<T> {
 /**
  * Interface for schedulable actions.
  */
-export interface Schedule<T> {
+export interface Schedule<T> extends Read<T> {
     schedule: (extraDelay: TimeValue | 0, value: T) => void;
 }
 
@@ -123,6 +123,7 @@ export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
 }
 
 export abstract class SchedulableAction<T extends Present> implements Schedule<T> {
+    abstract get(): T | undefined;
     abstract schedule(extraDelay: 0 | TimeValue, value: T): void;
 }
 
@@ -571,6 +572,9 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
     }
 
     protected scheduler = new class extends SchedulableAction<T> {
+        get(): T | undefined {
+            return this.action.get()
+        }
         constructor(private action: Action<T>) {
             super()
         }
@@ -1960,6 +1964,7 @@ interface AppUtils {
 export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
+    //forkJoin(constructor: new () => Reactor, ): void;
     // FIXME: addReaction, removeReaction
     // FIXME: disconnect
 }
