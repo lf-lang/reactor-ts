@@ -985,7 +985,7 @@ export abstract class Reactor extends Component {
     }
 
     protected writable<T extends Present>(port: IOPort<T>): ReadWrite<T> {
-        return port.asWritable(this._keyChain.get(port));
+        return port.asWritable(this._getKey(port));
     }
 
     /**
@@ -1009,7 +1009,7 @@ export abstract class Reactor extends Component {
     }
 
     protected schedulable<T extends Present>(action: Action<T>): Schedule<T> {
-        return action.asSchedulable(this._keyChain.get(action));
+        return action.asSchedulable(this._getKey.get(action));
     }
 
     private _recordDeps<T extends Variable[]>(reaction: Reaction<any>) {
