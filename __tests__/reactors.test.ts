@@ -182,6 +182,8 @@ describe("Testing deadlines", function () {
         //     }
         //     );
 
+        console.log(app.toString());
+
         app._start();
 
         
@@ -202,8 +204,8 @@ describe("Testing deadlines", function () {
         
         let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), done , fail, () => {Log.global.warn("Deadline missed!");},  new TimeValue(1,TimeUnit.nsec))
 
-        /* FIXME: Find a way to trigger deadline misses */
-       app._start();
+
+        app._start();
 
         // expect(deadlineMissed).toEqual("Deadline missed!");
 
