@@ -43,20 +43,21 @@ class R1 extends Reactor {
 
                 let out: number = 0;
 
-                try {
+                try {                        
+                    // let sleep_time =  new UnitBasedTimeValue(2, TimeUnit.sec);
+                    // let startTime = util.getCurrentPhysicalTime();
+                    // let finishTime = startTime.add(sleep_time)
+                    // // Busy wait
+                    // while(util.getCurrentPhysicalTime().isEarlierThan(finishTime));
+                    
+                    while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(new UnitBasedTimeValue(1, TimeUnit.sec))));
+                
+                } finally {
+                    
                     if(tmp)
                     {
-                        out = tmp + 4;
-                        
-                        let sleep_time =  new UnitBasedTimeValue(2, TimeUnit.sec);
-                        let startTime = util.getCurrentPhysicalTime();
-                        let finishTime = startTime.add(sleep_time)
-                        // Busy wait
-                        while(util.getCurrentPhysicalTime().isEarlierThan(finishTime));
-                        
-                        //while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(new UnitBasedTimeValue(1, TimeUnit.sec))));
+                     out = tmp + 4;
                     }
-                } finally {
                     if(out){
                         console.log("Sending "+out.toString())
                         __out.set(out);
@@ -78,19 +79,26 @@ class R1 extends Reactor {
 class R2 extends Reactor {
     public in = new InPort<number>(this);
 
-    constructor(parent: Reactor|null) {
+    constructor(parent: Reactor|null, deadline?: TimeValue, deadlineMiss?: () => void) {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
             new Args(this.in),
             function(this, __in) {
                 let tmp = __in.get();
-                /* Do Nothing */               
-                if(tmp)
-                {
-                    console.log("Received "+tmp.toString());
+                /* Do Nothing */   
+                try
+                {            
+                    if(tmp)
+                    {
+                        console.log("Received "+tmp.toString());
+                    }
+                } finally {
+
                 }
-            }
+            },
+            deadline,
+            deadlineMiss
 
         );
     }
@@ -102,11 +110,11 @@ class testApp extends App {
     reactor1: R1;
     reactor2: R2;
 
-    constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void) {
+    constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void, secondTimeout?: TimeValue) {
         super(timeout, false, false, success, fail);
         this.start = new Starter(this);
         this.reactor1 = new R1(this, timeout, deadlineMiss);
-        this.reactor2 = new R2(this);
+        this.reactor2 = new R2(this, secondTimeout, deadlineMiss);
         this._connect(this.start.out, this.reactor1.in)
         this._connect(this.reactor1.out, this.reactor2.in)
     }
@@ -139,7 +147,7 @@ describe("Testing deadlines", function () {
     jest.setTimeout(5000);
 
     it("Missed reaction deadline on InPort", done => {
-        Log.global.level = LogLevel.DEBUG
+        Log.global.level = LogLevel.WARN
 
         function fail() {
             throw new Error("Test has failed.");
@@ -155,22 +163,52 @@ describe("Testing deadlines", function () {
         app._start();
     });
 
+    it("Missed reaction deadline on the second reaction in the chain", done => {
 
-    it("Missed deadline with custom message", () => {
-        Log.global.level = LogLevel.DEBUG
+        // let consoleOutput: string[] = []
+
+        Log.global.level = LogLevel.WARN
 
         function fail() {
             throw new Error("Test has failed.");
         };
         
-        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), () => {} , fail, () => {throw new Error("Deadline missed!")})
+        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), done, fail, undefined, new TimeValue(1,TimeUnit.nsec))
+
+        // const spy = jest.spyOn(global.console, 'warn').mockImplementation(warn => {
+        //         consoleOutput.push(warn); 
+        //         global.console.error("Deadline missed!");
+        //         done();
+        //     }
+        //     );
+
+        app._start();
+
+        
+        // expect(consoleOutput).toEqual(["Deadline missed!"]);
+
+        // spy.mockRestore()
+    });
+
+
+    it("Missed deadline with custom message", done => {
+        Log.global.level = LogLevel.WARN
+
+        //let deadlineMissed:string = ""
+
+        function fail() {
+            throw new Error("Test has failed.");
+        };
+        
+        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), done , fail, () => {Log.global.warn("Deadline missed!");},  new TimeValue(1,TimeUnit.nsec))
 
         /* FIXME: Find a way to trigger deadline misses */
-        /*let reactions = app.reactor1._getReactions();
+       app._start();
 
-        expect( () => {reactions.forEach( function (reaction) {
-            reaction.doReact();
-        });} ).toThrowError("Deadline missed!");*/
+        // expect(deadlineMissed).toEqual("Deadline missed!");
+
+        //expect(consoleOutput).toEqual(expect.arrayContaining(expect.objectContaining('Deadline missed!')));
+        //expect(consoleOutput).toContain('Deadline missed!');
     });
 
 
@@ -200,7 +238,7 @@ describe("Testing Reactions", function () {
 describe("Testing Actions", function () {
 
         it("Mismatched logical time", () => {
-            Log.global.level = LogLevel.DEBUG
+            Log.global.level = LogLevel.WARN
 
             function fail() {
                 throw new Error("Test has failed.");
