@@ -39,7 +39,7 @@ export enum TimeUnit {
 export class TimeValue {
 
     /**
-     * Create a new time value. Both parameters must be non-zero integers;
+     * Create a new time value. Both parameters must be non-negative integers;
      * an error will be thrown otherwise. The second parameter is optional.
      * @param seconds Number of seconds in the interval.
      * @param nanoseconds Remaining number of nanoseconds (defaults to zero).
