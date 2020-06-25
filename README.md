@@ -8,7 +8,7 @@ A Reactor-Oriented Programming Framework in TypeScript
 
 ## Get Started
 
-Make sure you have a recent version (such as 8.x) of NodeJS installed.
+Make sure you have NodeJS >10.4 installed.
 
 To make sure all Node modules are installed, run:
 

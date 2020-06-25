@@ -8,7 +8,7 @@ class Component extends Reactor {
 
     constructor(parent: Reactor, alias:string) {
         super(parent);
-        this.setAlias(alias);
+        this._setAlias(alias);
     }
     child: Reactor | undefined;
 }
@@ -59,7 +59,7 @@ describe('Container to Contained', () => {
     
     it('contained reactor name', () => {
         // expect(contained._getName()).toBe("Contained");
-        expect(contained.toString()).toBe("App/Container/Contained");
+        expect(contained.toString()).toBe("App/Container/child (Contained)");
     });
 
     it('container reactor name', () =>{

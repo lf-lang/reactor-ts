@@ -4,6 +4,10 @@
     "description": "Reactor runtime written in TypeScript",
     "main": "lib/reactor.js",
     "dependencies": {
+        "@definitelytyped/header-parser": "0.0.29",
+        "@definitelytyped/typescript-versions": "0.0.29",
+        "@types/microtime": "^2.1.0",
+        "@types/parsimmon": "^1.10.1",
         "command-line-args": "^5.1.1",
         "got": "^9.6.0",
         "heap": "^0.2.6",
@@ -21,11 +25,13 @@
         "@babel/preset-env": "^7.4.3",
         "@babel/preset-typescript": "^7.7.7",
         "@types/jest": "^24.0.15",
-        "@types/node": "^13.1.2",
+        "@types/node": "^13.13.5",
+        "dtslint": "^3.5.2",
+        "parsimmon": "1.13.0",
         "jest": "^24.8.0",
         "ts-jest": "^24.0.2",
         "typedoc": "^0.15.5",
-        "typescript": "^3.5.3"
+        "typescript": "^3.8.3"
     },
     "files": [
         "lib"
@@ -35,7 +41,9 @@
         "build": "rm -rf dist && babel src --out-dir dist --extensions .ts",
         "deploy": "npm run build && npm run doc",
         "doc": "typedoc --out docs src",
-        "test": "jest --coverage"
+        "dtslint": "dtslint __tests__/types",
+        "test": "jest --coverage",
+        "postinstall": "mkdir -p node_modules/@types/ulog; cp src/core/ulog.d.ts node_modules/@types/ulog/index.d.ts"
     },
     "jest": {
         "globals": {
@@ -45,7 +53,8 @@
         },
         "testPathIgnorePatterns": [
             "node_modules",
-            "defunct"
+            "defunct",
+            "<rootDir>/__tests__/types"
         ],
         "roots": [
             "<rootDir>/src",

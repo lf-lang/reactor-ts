@@ -9,7 +9,7 @@ class SETest extends App {
 
     constructor(timeout: TimeValue, success: ()=> void, failure: ()=>void ) {
         super(timeout, false, false, success, failure);
-        this.setAlias("SETest");
+        this._setAlias("SETest");
         this.singleEvent = new SingleEvent(this, new Parameter("foo"));
         this.logger = new Logger(this, "foo");
 
@@ -34,6 +34,7 @@ describe('SingleEvent', function () {
 
         expect(expect(seTest.singleEvent).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logger).toBeInstanceOf(Logger));
+        
         
         expect(seTest.canConnect(seTest.singleEvent.o, seTest.logger.i)).toBe(false);
         expect(seTest.canConnect(seTest.logger.i, seTest.singleEvent.o)).toBe(false);

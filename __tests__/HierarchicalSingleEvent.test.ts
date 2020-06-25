@@ -33,7 +33,7 @@ class SETest extends App {
 
     constructor(name:string, timeout: TimeValue, keepAlive: boolean = false, fast: boolean = false, success: ()=> void, fail: ()=>void ){
         super(timeout, keepAlive, fast, success, fail)
-        this.setAlias(name);
+        this._setAlias(name);
         this.seContainer = new SEContainer(this);
         this.logContainer = new LogContainer(this);
 
@@ -71,6 +71,7 @@ describe('HierarchicalSingleEvent', function () {
         expect(expect(seTest.seContainer.child).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logContainer.child).toBeInstanceOf(Logger));
 
+        
         expect(seTest.seContainer.canConnect(seTest.seContainer.child.o, seTest.logContainer.child.i)).toBe(false);
 
         seTest._start();
