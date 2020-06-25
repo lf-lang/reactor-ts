@@ -33,7 +33,7 @@ export class MessageGenerator extends Reactor {
         this.message = new OutPort<string>(this);
         this.addReaction(
             new Triggers(this.t),
-            new Args(this.t, this.getWriter(this.message), this.root, this.count),
+            new Args(this.t, this.writable(this.message), this.root, this.count),
             function (this, __t: Read<Tag>, __message: ReadWrite<string>, __root: Parameter<string>, __count: State<number>) {
                 // =============== START react prologue
                 const util = this.util;
@@ -93,7 +93,7 @@ export class PrintMessage extends Reactor {
 // =============== START reactor class Distributed
 export class Distributed extends FederatedApp {
     dsp: PrintMessage
-    networkMessage: Action<string>;
+    networkMessage: Action<Buffer>;
     constructor (
         timeout: TimeValue | undefined = undefined, 
         keepAlive: boolean = false, 
@@ -103,12 +103,12 @@ export class Distributed extends FederatedApp {
     ) {
         super(1, 15044, "localhost", timeout, keepAlive, fast, success, fail);
         this.dsp = new PrintMessage(this)
-        this.networkMessage = new Action<string>(this, Origin.logical, new UnitBasedTimeValue(10, TimeUnit.msec));
+        this.networkMessage = new Action<Buffer>(this, Origin.logical, new UnitBasedTimeValue(10, TimeUnit.msec));
         this.registerFederatePortAction(0, this.networkMessage);
         this.addReaction(
             new Triggers(this.networkMessage),
-            new Args(this.networkMessage, this.getWriter(this.dsp.message)),
-            function (this, __networkMessage: Read<string>, __dsp_message: ReadWrite<string>) {
+            new Args(this.networkMessage, this.writable(this.dsp.message)),
+            function (this, __networkMessage: Read<Buffer>, __dsp_message: ReadWrite<string>) {
                 // =============== START react prologue
                 const util = this.util;
                 let networkMessage = __networkMessage.get();

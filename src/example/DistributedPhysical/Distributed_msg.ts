@@ -31,7 +31,7 @@ export class MessageGenerator extends Reactor {
         this.message = new OutPort<string>(this);
         this.addReaction(
             new Triggers(this.t),
-            new Args(this.t, this.getWriter(this.message), this.root, this.count),
+            new Args(this.t, this.writable(this.message), this.root, this.count),
             function (this, __t: Read<Tag>, __message: ReadWrite<string>, __root: Parameter<string>, __count: State<number>) {
                 // =============== START react prologue
                 const util = this.util;
@@ -105,7 +105,7 @@ export class Distributed extends FederatedApp {
         this.networkMessage = new Action<string>(this, Origin.physical, new UnitBasedTimeValue(10, TimeUnit.msec));
         this.addReaction(
             new Triggers(this.msg.message),
-            new Args(this.msg.message, this.getSchedulable(this.networkMessage)),
+            new Args(this.msg.message, this.schedulable(this.networkMessage)),
             function (this, __msg_message: Read<string>, __networkMessage: Schedule<string>) {
                 // =============== START react prologue
                 const util = this.util;
