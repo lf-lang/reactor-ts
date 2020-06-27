@@ -2224,12 +2224,19 @@ export class App extends Reactor {
     private _next() {
         var nextEvent = this._eventQ.peek();
         if (nextEvent) {
+
+            // Check whether the next event can be handled, or not quite yet.
+            // A holdup can occur in a federated execution.
+            if (!this.canProceed(nextEvent)) {
+                // If this happens, then a TAG from the RTI will trigger the
+                // next invocation of _next.
+                return; 
+            }
             // If it is too early to handle the next event, set a timer for it
             // (unless the "fast" option is enabled), and give back control to
             // the JS event loop.
-            if (!this.canProceed(nextEvent) ||
-                    (getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time)
-                        && !this._fast)) {
+            if (getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time)
+                        && !this._fast) {
                 this.setAlarmOrYield(nextEvent.tag);
                 return;
             }
