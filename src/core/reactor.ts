@@ -7,7 +7,8 @@
 
 import {Sortable, PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
 import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm, BinaryTimeValue } from './time';
-import {Socket, createConnection, SocketConnectOpts, Server, createServer} from 'net'
+// FIXME: Remove these imports after moving dependent code to federation.ts.
+import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter } from 'events';
 
 
@@ -407,7 +408,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
  * determine the event's position with respect to other events in the event
  * queue.
  */
-class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
+export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
 
     public next: PrioritySetElement<Tag> | undefined;
 
@@ -976,19 +977,17 @@ export abstract class Reactor extends Component {
             new Args(),
             function (this) {
                 Log.debug(this, () => "*** Shutting down reactor " + 
-                self._getFullyQualifiedName());
-                if (self instanceof FederatedApp) {
-                    self.sendRTILogicalTimeComplete(self.util.getCurrentLogicalTime());
-                    self.sendRTIResign();
-                    self.shutdownRTIClient();
-                }
-
-                self._shutdownChildren();
-                self._unsetTimers();
-                self._active = false;
+                    self._getFullyQualifiedName());
+                self._doShutdown();
             }
         );
         
+    }
+
+    protected _doShutdown() {
+        this._shutdownChildren();
+        this._unsetTimers();
+        this._active = false;
     }
 
     protected _initializeReactionScope(): void {
@@ -2048,11 +2047,11 @@ export class App extends Reactor {
         }
         
         public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
-            return this.app._sendRTIMessage(data, destFederateID, destPortID);
+            return this.app.sendRTIMessage(data, destFederateID, destPortID);
         };
 
         public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
-            return this.app._sendRTITimedMessage(data, destFederateID, destPortID);
+            return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         };
 
     }(this);
@@ -2064,12 +2063,8 @@ export class App extends Reactor {
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
-    private _sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
-        if (this instanceof FederatedApp) {
-            this.sendRTIMessage(data, destFederateID, destPortID);
-        } else {
-            throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
-        }
+    protected sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
+        throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
     }
 
     /**
@@ -2079,12 +2074,8 @@ export class App extends Reactor {
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
-    private _sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
-        if (this instanceof FederatedApp) {
-            this.sendRTITimedMessage(data, destFederateID, destPortID);
-        } else {
-            throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
-        }
+    protected sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
+        throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
     }
 
     /**
@@ -2194,6 +2185,23 @@ export class App extends Reactor {
 
     }
 
+    /**
+     * Check whether the next event can be handled or not.
+     *
+     * In a non-federated context this method always returns true.
+     * @param event The next event to be processed.
+     */
+    protected canProceed(event: TaggedEvent<Present>) {
+        return true
+    }
+
+    /**
+     * Hook called when all events with the current tag have been reacted to.
+     * 
+     * @param event The tag of the next event to be handled.
+     */
+    protected finalizeStep(nextTag: Tag) {
+    }
 
     /**
      * Handle the next events on the event queue.
@@ -2216,32 +2224,12 @@ export class App extends Reactor {
     private _next() {
         var nextEvent = this._eventQ.peek();
         if (nextEvent) {
-            // There is an event at the head of the event queue.
-
-            // If this federated app has not received a sufficently large time
-            // advance grant from the RTI for the next event, send it a 
-            // Next Event Time message and return. _next() will be called when a
-            // new greatest Time Advance Grant is received. But if the federated app
-            // is in the process of shutting down and isn't active, don't send
-            // the Next Event Time message because the connection to the RTI has
-            // been closed. Note the federated app may also not be active because it hasn't
-            // been setup yet.
-            if (this instanceof FederatedApp && this._isRTISynchronized() && this._isActive()) {
-                let greatestTAG = this._getGreatestTimeAdvanceGrant();
-                let nextTime = nextEvent.tag.time;
-                if (greatestTAG === null || greatestTAG.isEarlierThan(nextTime)) {
-                    this.sendRTINextEventTime(nextTime);
-                    Log.debug(this, () => {return "The greatest time advance grant received from the RTI is less " +
-                    "than the timestamp of the next event on the event queue"});
-                    Log.global.debug("Exiting _next.");
-                    return;
-                }
-            }
-
             // If it is too early to handle the next event, set a timer for it
             // (unless the "fast" option is enabled), and give back control to
             // the JS event loop.
-            if (getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time) && !this._fast) {
+            if (!this.canProceed(nextEvent) ||
+                    (getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time)
+                        && !this._fast)) {
                 this.setAlarmOrYield(nextEvent.tag);
                 return;
             }
@@ -2256,10 +2244,7 @@ export class App extends Reactor {
             // resulting events would be in the future, anyway.
             do {
                 // Advance logical time.
-                if (this instanceof FederatedApp && this._currentTag.time.isEarlierThan(nextEvent.tag.time)) {
-                    // Tell the RTI logical time is being advanced to a greater value.
-                    this.sendRTILogicalTimeComplete(this._currentTag.time);
-                }
+                this.finalizeStep(nextEvent.tag)
                 this._currentTag = nextEvent.tag;
 
                 // Keep popping the event queue until the next event has a different tag.
@@ -2656,6 +2641,13 @@ enum RTIMessageTypes {
      */
     LOGICAL_TIME_COMPLETE = 8
 }
+
+// FIXME: Move the following code to federation.ts
+// import {Log} from './util';
+// import {TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm, BinaryTimeValue } from './time';
+// import {Socket, createConnection, SocketConnectOpts} from 'net'
+// import {EventEmitter } from 'events';
+// import {Action, Present, TaggedEvent, App} from './reactor'
 
 //---------------------------------------------------------------------//
 // Federated Execution Classes                                         //
@@ -3190,6 +3182,49 @@ export class FederatedApp extends App {
      */
     public _getGreatestTimeAdvanceGrant() {
         return this.greatestTimeAdvanceGrant;
+    }
+
+    /**
+     * Return whether the next event can be handled, or handling the next event
+     * has to be postponed to a later time.
+     * 
+     * If this federated app has not received a sufficiently large time advance
+     * grant (TAG) from the RTI for the next event, send it a Next Event Time
+     * (NET) message and return. _next() will be called when a new greatest TAG
+     * is received. The NET message is not sent if the connection to the RTI is
+     * closed. FIXME: what happens in that case? Will next be called?
+     * @param event 
+     */
+    protected canProceed(event: TaggedEvent<Present>) {
+        if (this._isRTISynchronized() && this._isActive()) {
+            // FIXME: Why would it proceed if the reaction is inactive?
+            let greatestTAG = this._getGreatestTimeAdvanceGrant();
+            let nextTime = event.tag.time;
+            if (greatestTAG === null || greatestTAG.isEarlierThan(nextTime)) {
+                this.sendRTINextEventTime(nextTime);
+                Log.debug(this, () => "The greatest time advance grant \
+                received from the RTI is less than the timestamp of the \
+                next event on the event queue");
+                Log.global.debug("Exiting _next.");
+                return false;
+            }
+        }
+        return true
+    }
+
+    protected finalizeStep(nextTag: Tag) {
+        let currentTime = this.util.getCurrentLogicalTime()
+        if (currentTime.isEarlierThan(nextTag.time)) {
+            // Tell the RTI logical time is being advanced to a greater value.
+            this.sendRTILogicalTimeComplete(currentTime);
+        }
+    }
+
+    protected _doShutdown() {
+        this.sendRTILogicalTimeComplete(this.util.getCurrentLogicalTime());
+        this.sendRTIResign();
+        this.shutdownRTIClient();
+        super._doShutdown()
     }
 
     // FIXME: Some of the App settings (like fast) are probably incompatible
