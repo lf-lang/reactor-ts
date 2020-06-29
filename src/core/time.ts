@@ -212,16 +212,7 @@ export class TimeValue {
             }
         } 
     }
-public static fromBinary(buffer: Buffer): TimeValue {
-        const billion = BigInt(TimeUnit.secs);
-
-        // To avoid overflow and floating point errors, work with BigInts.
-        let bigTime = buffer.readBigUInt64LE(0);
-        let bigSeconds = bigTime / billion;
-        let bigNSeconds = bigTime % billion;
-
-        return new TimeValue(Number(bigSeconds), Number(bigNSeconds));
-}
+    
     /**
      * Get a 64 bit binary, little endian representation of this TimeValue.
      * Used by federates.
