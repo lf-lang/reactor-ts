@@ -6,7 +6,7 @@
  */
 
 import {Sortable, PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
-import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm, BinaryTimeValue } from './time';
+import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;

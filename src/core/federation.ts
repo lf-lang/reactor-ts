@@ -1,5 +1,5 @@
 import {Log} from './util';
-import {Tag, TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm, BinaryTimeValue } from './time';
+import {Tag, TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
 import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter } from 'events';
 import {Action, Present, TaggedEvent, App} from './reactor'
@@ -256,7 +256,7 @@ class RTIClient extends EventEmitter {
     public requestStartTimeFromRTI(myPhysicalTime: TimeValue) {
         let msg = Buffer.alloc(9)
         msg.writeUInt8(RTIMessageTypes.TIMESTAMP, 0);
-        let time = myPhysicalTime.get64Bit();
+        let time = myPhysicalTime.toBinary();
         time.copy(msg, 1);
         try {
             Log.debug(this, () => {return `Sending RTI start time: ${myPhysicalTime}`});
@@ -432,7 +432,7 @@ class RTIClient extends EventEmitter {
                     } else {
                         let timeBuffer = Buffer.alloc(8);
                         assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9 );
-                        let startTime = new BinaryTimeValue(timeBuffer);
+                        let startTime = TimeValue.fromBinary(timeBuffer);
                         Log.debug(thiz, () => { return "Received TIMESTAMP buffer from the RTI " +
                         `with startTime: ${timeBuffer.toString('hex')}`;      
                         })
@@ -502,7 +502,7 @@ class RTIClient extends EventEmitter {
 
                         let timeBuffer = Buffer.alloc(8);
                         assembledData.copy(timeBuffer, 0, bufferIndex + 9, bufferIndex + 17 );
-                        let timestamp = new BinaryTimeValue(timeBuffer);
+                        let timestamp = TimeValue.fromBinary(timeBuffer);
 
                         let isChunked = messageLength > (assembledData.length - (bufferIndex + 17));
 
@@ -553,7 +553,7 @@ class RTIClient extends EventEmitter {
                         Log.debug(thiz, () => {return 'Received an RTI TIME_ADVANCE_GRANT'});
                         let timeBuffer = Buffer.alloc(8);
                         assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9);
-                        let time = new BinaryTimeValue(timeBuffer);
+                        let time = TimeValue.fromBinary(timeBuffer);
                         thiz.emit('timeAdvanceGrant', time);
                     }
                     bufferIndex += 9;
@@ -738,7 +738,7 @@ export class FederatedApp extends App {
      * @param destPortID The ID of the FederateInPort intended to receive the message.
      */
     public sendRTITimedMessage(msg: Buffer, destFederateID: number, destPortID: number ) {
-        let time = this.util.getCurrentLogicalTime().get64Bit();
+        let time = this.util.getCurrentLogicalTime().toBinary();
         Log.debug(this, () => {return `Sending RTI timed message to federate ID: ${destFederateID}`
             + ` port ID: ${destPortID} and time: ${time.toString('hex')}`});
         this.rtiClient.sendRTITimedMessage(msg, destFederateID, destPortID, time);
@@ -750,7 +750,7 @@ export class FederatedApp extends App {
      * @param completeTimeValue The TimeValue that is now complete.
      */
     public sendRTILogicalTimeComplete(completeTimeValue: TimeValue) {
-        let time = completeTimeValue.get64Bit();
+        let time = completeTimeValue.toBinary();
         Log.debug(this, () => {return `Sending RTI logical time complete with time: ${completeTimeValue}`});
         this.rtiClient.sendRTILogicalTimeComplete(time)
     }
@@ -771,7 +771,7 @@ export class FederatedApp extends App {
      * advance logical time.
      */
     public sendRTINextEventTime(nextTime: TimeValue) {
-        let time = nextTime.get64Bit();
+        let time = nextTime.toBinary();
         Log.debug(this, () => {return `Sending RTI next event time with time: ${time.toString('hex')}`});
         this.rtiClient.sendRTINextEventTime(time);
     }

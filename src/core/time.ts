@@ -217,7 +217,7 @@ export class TimeValue {
      * Get a 64 bit binary, little endian representation of this TimeValue.
      * Used by federates.
      */
-    public get64Bit() : Buffer {
+    public toBinary() : Buffer {
         const billion = BigInt(TimeUnit.secs);
         let bigTime =  BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
 
@@ -232,27 +232,20 @@ export class TimeValue {
         buff.writeBigUInt64LE(bigTime, 0);
         return buff;
     }
-}
-
-/**
- * Creates a TimeValue from a 64 bit unsigned integer encoded as a 
- * little endian buffer.
- */
-export class BinaryTimeValue extends TimeValue {
 
     /**
-     * Create a TimeValue from a 64bit unsigned integer.
+     * Create a TimeValue from a 64bit little endian unsigned integer in a buffer.
      * @param buffer A 64 bit unsigned integer. Little endian.
      */
-    constructor(buffer: Buffer) {
+    public static fromBinary(buffer: Buffer) {
         const billion = BigInt(TimeUnit.secs);
 
         // To avoid overflow and floating point errors, work with BigInts.
         let bigTime = buffer.readBigUInt64LE(0);
         let bigSeconds = bigTime / billion;
         let bigNSeconds = bigTime % billion;
-
-        super(Number(bigSeconds), Number(bigNSeconds));
+        
+        return new TimeValue(Number(bigSeconds), Number(bigNSeconds))
     }
 }
 
