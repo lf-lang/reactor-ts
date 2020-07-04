@@ -32,12 +32,12 @@ class SETest extends App {
 
     constructor(timeout: TimeValue, success: () => void, failure: () => void) {
         super(timeout, false, false, success, failure);
-        this.setAlias("SETest");
+        this._setAlias("SETest");
         this.singleEvent = new SingleEvent(this, new Parameter("foo"));
         this.logger = new Logger(this, Number(4));
 
         // Connect output of singleEvent to input of logger.
-        // $ExpectError
+        // @ts-expect-error
         this._connect(this.singleEvent.o, this.logger.i);
     }
 }
@@ -55,9 +55,9 @@ describe('SingleEvent', () => {
         const seTest = new SETest(new TimeValue(3), done, failure);
         // expect(expect(seTest.singleEvent).toBeInstanceOf(SingleEvent));
         // expect(expect(seTest.logger).toBeInstanceOf(Logger));
-        // $ExpectError
+        // @ts-expect-error
         seTest.canConnect(seTest.singleEvent.o, seTest.logger.i);
-        // $ExpectError
+        // @ts-expect-error
         seTest.canConnect(seTest.logger.i, seTest.singleEvent.o);
 
         seTest._start();
