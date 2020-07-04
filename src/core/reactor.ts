@@ -6,7 +6,7 @@
  */
 
 import {Sortable, PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
-import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from './time';
+import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -404,7 +404,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
  * determine the event's position with respect to other events in the event
  * queue.
  */
-class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
+export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
 
     public next: PrioritySetElement<Tag> | undefined;
 
@@ -571,7 +571,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
         throw Error("Unable to grant access to manager.")
     }
 
-    protected scheduler = new class extends SchedulableAction<T> {
+    protected scheduler = new class<T extends Present> extends SchedulableAction<T> {
         get(): T | undefined {
             return this.action.get()
         }
@@ -586,11 +586,20 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
             var tag = this.action._owner.util.getCurrentTag();
             var delay = this.action.minDelay.add(extraDelay);
 
-            if (this.action.origin == Origin.physical) {
-                tag = new Tag(getCurrentPhysicalTime(), 0);
-            }
-    
             tag = tag.getLaterTag(delay);
+
+            if (this.action.origin == Origin.physical) {
+                // If the resulting timestamp from delay is less than the current physical time
+                // on the platform, then the timestamp becomes the current physical time.
+                // Otherwise the tag is computed like a logical action's tag.
+
+                let physicalTime = getCurrentPhysicalTime();
+                if (tag.time.isEarlierThan(physicalTime)) {
+                    tag = new Tag(getCurrentPhysicalTime(), 0);
+                } else {
+                    tag = tag.getMicroStepLater();
+                }
+            }
     
             if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
                 tag = tag.getMicroStepLater();
@@ -931,6 +940,7 @@ export abstract class Reactor extends Component {
      * Create a new reactor.
      * @param owner The owner of this reactor.
      */
+
     constructor(owner: Reactor | null, alias?:string) {
         super(owner, alias);
         
@@ -941,9 +951,10 @@ export abstract class Reactor extends Component {
         
         this._reactionScope = new this._ReactionSandbox(this)
         this._mutationScope = new this._MutationSandbox(this)
+
         // NOTE: beware, if this is an instance of App, `this.util` will be `undefined`.
         // Do not attempt to reference it during the construction of an App.
-        var self = this
+        var self = this;
         // Add default startup reaction.
         this.addMutation(
             new Triggers(this.startup),
@@ -956,7 +967,6 @@ export abstract class Reactor extends Component {
                 self._active = true;
             }
         );
-        
         // Add default shutdown reaction.
         this.addMutation(
             new Triggers(this.shutdown),
@@ -964,12 +974,16 @@ export abstract class Reactor extends Component {
             function (this) {
                 Log.debug(this, () => "*** Shutting down reactor " + 
                     self._getFullyQualifiedName());
-                self._shutdownChildren();
-                self._unsetTimers();
-                self._active = false;
+                self._doShutdown();
             }
         );
         
+    }
+
+    protected _doShutdown() {
+        this._shutdownChildren();
+        this._unsetTimers();
+        this._active = false;
     }
 
     protected _initializeReactionScope(): void {
@@ -1960,6 +1974,8 @@ interface AppUtils {
     getCurrentPhysicalTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
+    sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number): void;
+    sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number): void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -2025,8 +2041,39 @@ export class App extends Reactor {
         public getElapsedPhysicalTime(): TimeValue {
             return getCurrentPhysicalTime().subtract(this.app._startOfExecution);
         }
+        
+        public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
+            return this.app.sendRTIMessage(data, destFederateID, destPortID);
+        };
+
+        public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
+            return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
+        };
+
     }(this);
     
+    /**
+     * Send an (untimed) message to the designated federate port through the RTI.
+     * This function throws an error if it isn't called on a FederatedApp.
+     * @param data A Buffer containing the body of the message.
+     * @param destFederateID The federate ID that is the destination of this message.
+     * @param destPortID The port ID that is the destination of this message.
+     */
+    protected sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
+        throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
+    }
+
+    /**
+     * Send a (timed) message to the designated federate port through the RTI.
+     * This function throws an error if it isn't called on a FederatedApp.
+     * @param data A Buffer containing the body of the message.
+     * @param destFederateID The federate ID that is the destination of this message.
+     * @param destPortID The port ID that is the destination of this message.
+     */
+    protected sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
+        throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
+    }
+
     /**
      * The current time, made available so actions may be scheduled relative to it.
      */
@@ -2035,7 +2082,7 @@ export class App extends Reactor {
     /**
      * Reference to "immediate" invocation of next.
      */
-    private _immediateRef: ReturnType<typeof setImmediate> | undefined;
+    protected _immediateRef: ReturnType<typeof setImmediate> | undefined;
 
     /**
      * The next time the execution will proceed to.
@@ -2134,6 +2181,23 @@ export class App extends Reactor {
 
     }
 
+    /**
+     * Check whether the next event can be handled or not.
+     *
+     * In a non-federated context this method always returns true.
+     * @param event The next event to be processed.
+     */
+    protected canProceed(event: TaggedEvent<Present>) {
+        return true
+    }
+
+    /**
+     * Hook called when all events with the current tag have been reacted to.
+     * 
+     * @param event The tag of the next event to be handled.
+     */
+    protected finalizeStep(nextTag: Tag) {
+    }
 
     /**
      * Handle the next events on the event queue.
@@ -2156,12 +2220,19 @@ export class App extends Reactor {
     private _next() {
         var nextEvent = this._eventQ.peek();
         if (nextEvent) {
-            // There is an event at the head of the event queue.
 
+            // Check whether the next event can be handled, or not quite yet.
+            // A holdup can occur in a federated execution.
+            if (!this.canProceed(nextEvent)) {
+                // If this happens, then a TAG from the RTI will trigger the
+                // next invocation of _next.
+                return; 
+            }
             // If it is too early to handle the next event, set a timer for it
             // (unless the "fast" option is enabled), and give back control to
             // the JS event loop.
-            if (getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time) && !this._fast) {
+            if (getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time)
+                        && !this._fast) {
                 this.setAlarmOrYield(nextEvent.tag);
                 return;
             }
@@ -2176,6 +2247,7 @@ export class App extends Reactor {
             // resulting events would be in the future, anyway.
             do {
                 // Advance logical time.
+                this.finalizeStep(nextEvent.tag)
                 this._currentTag = nextEvent.tag;
 
                 // Keep popping the event queue until the next event has a different tag.
@@ -2183,7 +2255,6 @@ export class App extends Reactor {
                     var trigger = nextEvent.trigger;
                     this._eventQ.pop();
                     Log.debug(this, () => "Popped off the event queue: " + trigger);
-
                     // Handle timers.
                     if (trigger instanceof Timer) {
                         if (!trigger.period.isZero()) {
@@ -2196,7 +2267,8 @@ export class App extends Reactor {
                     }
 
                     // Load reactions onto the reaction queue.
-                    nextEvent.trigger.update(nextEvent);
+                    trigger.update(nextEvent);
+
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
                 }
@@ -2296,6 +2368,7 @@ export class App extends Reactor {
      * @param tag 
      */
     public setAlarmOrYield(tag: Tag) {
+        Log.debug(this, () => {return "In setAlarmOrYield for tag: " + tag});
         if (this._endOfExecution) {
             if (this._endOfExecution.isEarlierThan(tag.time)) {
                 // Ignore this request if the tag is later than the end of execution.
@@ -2313,15 +2386,22 @@ export class App extends Reactor {
             }.bind(this), timeout)
         } else {
             // Either we're in "fast" mode, or we're lagging behind.
-            // Only schedule an immediate if none is already pending.
-            if (!this._immediateRef) {
-                this._immediateRef = setImmediate(function (this: App) {
-                    this._immediateRef = undefined;
-                    this._next()
-                }.bind(this));
-            }
+            this._setImmediateForNext();
         }
     }
+
+    /**
+     * Call setImmediate on this._next()
+     */
+    protected _setImmediateForNext() {
+        // Only schedule an immediate if none is already pending.
+        if (!this._immediateRef) {
+            this._immediateRef = setImmediate(function (this: App) {
+                this._immediateRef = undefined;
+                this._next()
+            }.bind(this));
+        }
+    }  
 
     /**
      * Public method to push reaction on the reaction queue. 
@@ -2371,7 +2451,10 @@ export class App extends Reactor {
 
     }
 
-    public _start(): void {
+    /**
+     * Check the app's precedence graph for cycles.
+     */
+    protected _checkPrecedenceGraph(): void {
         Log.info(this, () => Log.hr);
         let initStart = getCurrentPhysicalTime();
         Log.global.info(">>> Initializing");
@@ -2421,28 +2504,53 @@ export class App extends Reactor {
             throw new Error("Cycle in reaction graph.");
         }
 
+        Log.info(this, () => ">>> Spent " + getCurrentPhysicalTime().subtract(initStart as TimeValue)
+            + " checking the precedence graph.");
+    }
+
+    /**
+     * Use the current physical time to set the app's start of execution.
+     * If an execution timeout is defined, the end of execution is the start time plus
+     * the execution timeout.
+     * @param startTime The beginning of this app's execution. The end of execution is
+     * determined relative to this TimeValue.
+     */
+    protected _alignStartAndEndOfExecution(startTime: TimeValue) {
         // Let the start of the execution be the current physical time.
-        this._startOfExecution = getCurrentPhysicalTime();
+        this._startOfExecution = startTime;
         this._currentTag = new Tag(this._startOfExecution, 0);
 
-        // If an execution timeout is defined, the end of execution be the start time plus
-        // the execution timeout.
         if (this._executionTimeout != null) {
             this._endOfExecution = this._startOfExecution.add(this._executionTimeout);
             Log.debug(this, () => "Execution timeout: " + this._executionTimeout);
+
             // If there is a known end of execution, schedule a shutdown reaction to that effect.
             this.schedule(new TaggedEvent(this.shutdown, new Tag(this._endOfExecution, 1), null));
         }
+    }
 
-        Log.info(this, () => ">>> Spent " + this._currentTag.time.subtract(initStart as TimeValue)
-            + " initializing.");
+    /**
+     * Schedule the App's startup action for the current tag.
+     */
+    protected _scheduleStartup(): void {
+        this.util.schedule(new TaggedEvent(this.startup, this._currentTag, null));
+    }
+
+    /**
+     * Start the app.
+     */
+    public _start(): void {
+        this._checkPrecedenceGraph()
+        this._alignStartAndEndOfExecution(getCurrentPhysicalTime());
+
         Log.info(this, () => Log.hr);
         Log.info(this, () => Log.hr);
+
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
-
+        
         // Set in motion the execution of this program by scheduling startup at the current logical time.
-        this.util.schedule(new TaggedEvent(this.startup, this._currentTag, null));
+        this._scheduleStartup();
         //this.getSchedulable(this.startup).schedule(0);
     }
 }

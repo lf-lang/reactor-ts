@@ -39,7 +39,7 @@ export enum TimeUnit {
 export class TimeValue {
 
     /**
-     * Create a new time value. Both parameters must be non-zero integers;
+     * Create a new time value. Both parameters must be non-negative integers;
      * an error will be thrown otherwise. The second parameter is optional.
      * @param seconds Number of seconds in the interval.
      * @param nanoseconds Remaining number of nanoseconds (defaults to zero).
@@ -212,6 +212,41 @@ export class TimeValue {
             }
         } 
     }
+    
+    /**
+     * Get a 64 bit binary, little endian representation of this TimeValue.
+     * Used by federates.
+     */
+    public toBinary() : Buffer {
+        const billion = BigInt(TimeUnit.secs);
+        let bigTime =  BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
+
+        // Ensure the TimeValue fits into a 64 unsigned integer.
+        let clampedTime = BigInt.asUintN(64, bigTime);
+        if (clampedTime != bigTime) {
+            throw new Error(`TimeValue ${this.toString()} is too big to fit into `
+                + `a 64 bit unsigned integer`);
+        }
+
+        let buff = Buffer.alloc(8);
+        buff.writeBigUInt64LE(bigTime, 0);
+        return buff;
+    }
+
+    /**
+     * Create a TimeValue from a 64bit little endian unsigned integer in a buffer.
+     * @param buffer A 64 bit unsigned integer. Little endian.
+     */
+    public static fromBinary(buffer: Buffer) {
+        const billion = BigInt(TimeUnit.secs);
+
+        // To avoid overflow and floating point errors, work with BigInts.
+        let bigTime = buffer.readBigUInt64LE(0);
+        let bigSeconds = bigTime / billion;
+        let bigNSeconds = bigTime % billion;
+        
+        return new TimeValue(Number(bigSeconds), Number(bigNSeconds))
+    }
 }
 
 /** 
@@ -246,7 +281,7 @@ export class UnitBasedTimeValue extends TimeValue {
         let bigSeconds = bigT / billion;
         
         if(bigSeconds > Number.MAX_SAFE_INTEGER) {
-            throw new Error("Unable to instantiate time interval: value too large.");
+            throw new Error("Unable to instantiate time value: value too large.");
         }
         
         this.seconds = Number(bigSeconds);
