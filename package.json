@@ -40,7 +40,7 @@
         "check-types": "tsc",
         "build": "rm -rf dist && babel src --out-dir dist --extensions .ts",
         "deploy": "npm run build && npm run doc",
-        "doc": "typedoc --out docs src && touch docs/.nojekyll",
+        "doc": "typedoc --exclude \"**/+(example|benchmark|share)/**/*.ts\" --out docs src && touch docs/.nojekyll",
         "dtslint": "dtslint __tests__/types",
         "test": "jest --coverage",
         "postinstall": "mkdir -p node_modules/@types/ulog; cp src/core/ulog.d.ts node_modules/@types/ulog/index.d.ts"
