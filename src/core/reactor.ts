@@ -116,12 +116,22 @@ export interface Write<T> {
     set: (value: T) => void;
 }
 
+/**
+ * Abstract class for a writable port. It is intended as a wrapper for a
+ * regular port. In addition to a get method, it also has a set method and
+ * a method for retrieving the port that it wraps.
+ */
 export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
     abstract get(): T | undefined;
     abstract set(value: T): void;
     abstract getPort(): Port<T>
 }
 
+/**
+ * Abstract class for a schedulable action. It is intended as a wrapper for a
+ * regular action. In addition to a get method, it also has a schedule method
+ * that allows for the action to be scheduled.
+ */
 export abstract class SchedulableAction<T extends Present> implements Schedule<T> {
     abstract get(): T | undefined;
     abstract schedule(extraDelay: 0 | TimeValue, value: T): void;
@@ -156,7 +166,7 @@ class Component implements Named {
      * Only instances of `App`, which denote top-level reactors, are allowed
      * to be their own owner.
      */
-    protected _owner: Reactor; // FIXME: make this private with a getter!
+    private _owner: Reactor;
 
     /**
      * Function for staging reactions for execution at the current logical
@@ -164,6 +174,9 @@ class Component implements Named {
      */
     protected _stage: (reaction: Reaction<unknown>) => void;
 
+    /**
+     * Function for scheduling tagged events.
+     */
     protected _schedule: (e: TaggedEvent<any>) => void;
 
     /**
@@ -262,6 +275,10 @@ class Component implements Named {
         }
         
         return name
+    }
+
+    public _getOwner(): Reactor {
+        return this._owner
     }
 
     public _getAlias(): string {
@@ -463,7 +480,7 @@ abstract class Trigger extends Component {
     abstract getManager(key: Symbol | undefined): TriggerManager;
 
     public getContainer(): Reactor | null {
-        return this._owner
+        return this._getOwner()
     }
 
     abstract isPresent():boolean;
@@ -481,7 +498,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
      */
     public update(e: TaggedEvent<T>):void {
 
-        if (!e.tag.isSimultaneousWith(this._owner.util.getCurrentTag())) {
+        if (!e.tag.isSimultaneousWith(this._getOwner().util.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
         }
         if (e.trigger === this) {
@@ -512,7 +529,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
             // This action has never been scheduled before.
             return false;
         }
-        if (this.tag.isSimultaneousWith(this._owner.util.getCurrentTag())) {
+        if (this.tag.isSimultaneousWith(this._getOwner().util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -522,7 +539,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
     protected manager = new class implements TriggerManager {
         constructor(private trigger: ScheduledTrigger<T>) { }
         getContainer(): Reactor {
-            return this.trigger._owner
+            return this.trigger._getOwner()
         }
         addReaction(reaction: Reaction<unknown>): void {
             this.trigger.reactions.add(reaction)
@@ -583,7 +600,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
                 extraDelay = new TimeValue(0);
             }
             
-            var tag = this.action._owner.util.getCurrentTag();
+            var tag = this.action._getOwner().util.getCurrentTag();
             var delay = this.action.minDelay.add(extraDelay);
 
             tag = tag.getLaterTag(delay);
@@ -724,7 +741,7 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
 
     public toString() {
-        return "Timer from " + this._owner._getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
+        return "Timer from " + this._getOwner()._getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
     }
 
     public get(): Tag | Absent {
@@ -788,7 +805,11 @@ export class Triggers {
  */
 export abstract class Reactor extends Component {
 
-    // NOTE: put this first because components may attempt to register and need access to this datastructore
+    /**
+     * Data structure to keep track of register components.
+     * Note: declare this class member before any other ones as they may
+     * attempt to access it.
+     */
     private _keyChain: Map<Component, Symbol> = new Map()
 
     /**
@@ -947,7 +968,7 @@ export abstract class Reactor extends Component {
         // Utils get passed down the hierarchy. If this is an App,
         // the container refers to this object, making the following
         // assignment idemponent.
-        this.util = (this._owner as unknown as Reactor).util    
+        this.util = (this._getOwner() as unknown as Reactor).util    
         
         this._reactionScope = new this._ReactionSandbox(this)
         this._mutationScope = new this._MutationSandbox(this)
@@ -1655,11 +1676,11 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
         Log.debug(this, () => "In isPresent()...")
         Log.debug(this, () => "value: " + this.value);
         Log.debug(this, () => "tag: " + this.tag);
-        Log.debug(this, () => "time: " + this._owner.util.getCurrentLogicalTime())
+        Log.debug(this, () => "time: " + this._getOwner().util.getCurrentLogicalTime())
 
         if (this.value !== undefined
             && this.tag !== undefined
-            && this.tag.isSimultaneousWith(this._owner.util.getCurrentTag())) {
+            && this.tag.isSimultaneousWith(this._getOwner().util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -1717,7 +1738,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
 
         public set(value: T): void {
             this.port.value = value;
-            this.port.tag = this.port._owner.util.getCurrentTag();
+            this.port.tag = this.port._getOwner().util.getCurrentTag();
             // Set values in downstream receivers.
             this.port.receivers.forEach(p => p.set(value))
             // Stage triggered reactions for execution.
@@ -1744,7 +1765,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     protected manager:IOPortManager<T> = new class implements IOPortManager<T> {
         constructor(private port:IOPort<T>) {}
         getContainer(): Reactor {
-            return this.port._owner
+            return this.port._getOwner()
         }
         addReceiver(port: WritablePort<T>): void {
             this.port.receivers.add(port)
@@ -1795,7 +1816,7 @@ export class InPort<T extends Present> extends IOPort<T> {
 export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Write<A>, Read<R> {
     
     public get(): R | undefined {
-        if (this.tag?.isSimultaneousWith(this._owner.util.getCurrentTag()))
+        if (this.tag?.isSimultaneousWith(this._getOwner().util.getCurrentTag()))
             return this.remotePort?.retValue
     }
 
@@ -1806,7 +1827,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
         if (this.remotePort) {
             this.remotePort.invoke(value)
         }
-        this.tag = this._owner.util.getCurrentTag();
+        this.tag = this._getOwner().util.getCurrentTag();
     }
 
     public invoke(value:A): R | undefined {
@@ -1839,7 +1860,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
             throw new Error("A Caller port cannot use used as a trigger.");
         }
         getContainer(): Reactor {
-            return this.port._owner
+            return this.port._getOwner()
         }
     }(this)
 
@@ -1904,7 +1925,7 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
     protected manager:CalleeManager<A> = new class implements CalleeManager<A> {
         constructor(private port:CalleePort<A, Present>) {}
         getContainer(): Reactor {
-            return this.port._owner
+            return this.port._getOwner()
         }
         addReaction(procedure: Reaction<unknown>): void {
             if (this.port.procedure !== undefined) {
