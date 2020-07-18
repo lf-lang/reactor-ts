@@ -157,7 +157,7 @@ class Component implements Named {
 
     /**
      * A symbol that identifies this component, and it also used to selectively
-     * grant access to its priviledged functions.
+     * grant access to its privileged functions.
      */
     protected _key: Symbol = Symbol()
 
@@ -230,6 +230,14 @@ class Component implements Named {
     }
 
     /**
+     * Return the alias of this component, or an empty string if none was set.
+     */
+    public _getAlias(): string {
+        if (this._alias) return this._alias
+        else return ""
+    }
+
+    /**
      * Return a string that identifies this component.
      * The name is a path constructed as App/.../Container/ThisComponent
      */
@@ -268,8 +276,8 @@ class Component implements Named {
                 name += ` (${this._alias})`
             }
         }
-        // Return the constructor name in case the component wasn't found in its
-        // container and doesn't have an alias.
+        // Return the constructor name in case the component wasn't found in
+        // its container and doesn't have an alias.
         if (name == "") {
             name = this.constructor.name
         }
@@ -277,13 +285,11 @@ class Component implements Named {
         return name
     }
 
+    /**
+     * Return the owner of this component.
+     */
     public _getOwner(): Reactor {
         return this._owner
-    }
-
-    public _getAlias(): string {
-        if (this._alias) return this._alias
-        else return ""
     }
 
     /**
@@ -312,7 +318,8 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
     private priority: Priority = Number.MAX_SAFE_INTEGER;
 
     /**
-     * 
+     * Pointer to the next reaction, used by the runtime when this reaction is staged
+     * for execution at the current logical time.
      */
     public next: PrioritySetElement<Priority> | undefined;
 
@@ -345,25 +352,47 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
             { Log.global.warn("Deadline violation occurred!") }) {
     }
 
+    /**
+     * Indicates whether or not this reaction is active. A reaction become
+     * active when its container starts up, inactive when its container
+     * shuts down.
+     */
     public active = false
 
-    
+    /**
+     * Return the priority of this reaction. It determines the execution order among
+     * reactions staged for execution at the same logical time.
+     */
     getPriority(): Priority {
         return this.priority;
     }
 
-    hasPriorityOver(node: PrioritySetElement<Priority> | undefined): boolean {
-        if (node != null && this.getPriority() < node.getPriority()) {
+    /**
+     * Return whether or not this reaction has priority over another.
+     * @param another Reaction to compare this reaction's priority against.
+     */
+    hasPriorityOver(another: PrioritySetElement<Priority> | undefined): boolean {
+        if (another != null && this.getPriority() < another.getPriority()) {
             return true;
         } else {
             return false;
         }
     }
 
+    /**
+     * Return whether another, newly staged reaction is equal to this one.
+     * Because reactions are just object references, no updating is necessary.
+     * Returning true just signals that the scheduler shouldn't stage it twice.
+     * @param node 
+     */
     updateIfDuplicateOf(node: PrioritySetElement<Priority> | undefined) {
         return Object.is(this, node);
     }
 
+    /**
+     * Invoke the react function in the appropriate sandbox and with the argument
+     * list that was specified upon the construction of this reaction object.
+     */
     public doReact() {
 
         Log.debug(this, () => ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
@@ -410,6 +439,9 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
         this.priority = priority;
     }
 
+    /**
+     * 
+     */
     public toString(): string {
         return this.reactor._getFullyQualifiedName() + "[R" + this.reactor.getReactionIndex(this) + "]";
     }
@@ -470,23 +502,42 @@ export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
         return this.tag;
     }
 }
+/**
+ * Abstract class for a trigger. A trigger may be an action, port, or timer.
+ */
 abstract class Trigger extends Component {
 
     /**
      * Reactions to trigger.
      */
     protected reactions: Set<Reaction<unknown>> = new Set();
-
+    
+    /**
+     * Request the manager of this trigger. The request will only be honored
+     * if the correct key is given. Each component has a unique symbol (a key)
+     * that is handed to the owner upon instantiation of the component. If the
+     * wrong key is supplied, return undefined.
+     * @param key The private key embedded in this trigger.
+     */
     abstract getManager(key: Symbol | undefined): TriggerManager;
 
+    /**
+     * Return the owner of this trigger.
+     */
     public getContainer(): Reactor | null {
         return this._getOwner()
     }
 
-    abstract isPresent():boolean;
+    /**
+     * Return whether or not this trigger is present.
+     */
+    abstract isPresent(): boolean;
 
 }
 
+/**
+ * 
+ */
 abstract class ScheduledTrigger<T extends Present> extends Trigger {
     protected value: T | Absent = undefined;
     protected tag: Tag | undefined;

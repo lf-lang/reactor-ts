@@ -56,6 +56,9 @@ export class PrioritySet<P> {
             this.count++;
             return;
         } else if (element.updateIfDuplicateOf(this.head)) {
+            // updateIfDuplicateOf returned true, i.e., 
+            // it has updated the value of this.head to
+            // equal that of element.
             return;
         } else {
             // prepend
@@ -71,6 +74,9 @@ export class PrioritySet<P> {
                 let next: PrioritySetElement<P> | undefined = curr.next;
                 if (next) {
                     if (element.updateIfDuplicateOf(next)) {
+                        // updateIfDuplicateOf returned true, i.e., 
+                        // it has updated the value of this.head to
+                        // equal that of element.
                         return;
                     } else if (element.hasPriorityOver(next)) {
                         break;
