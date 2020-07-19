@@ -793,7 +793,7 @@ export class FederatedApp extends App {
      * time message from the RTI.
      */
     _start() {
-        this._checkPrecedenceGraph();
+        this._analyzeDependencies();
         this.rtiClient.on('connected', () => {
             this.rtiClient.requestStartTimeFromRTI(getCurrentPhysicalTime());
         });

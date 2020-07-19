@@ -1261,6 +1261,17 @@ export abstract class Reactor extends Component {
         this._mutations.push(mutation);
     }
 
+    /**
+     * Recursively collect the local dependency graph of each contained reactor
+     * and merge them all in one graph.
+     * 
+     * The recursion depth can be limited via the depth parameter. A depth of 0
+     * will only return the local dependency graph of this reactor, a depth
+     * of 1 will merge the local graph only with this reactor's immediate
+     * children, etc. The default dept is -1, which will let this method
+     * recurse until it has reached a reactor with no children.
+     * @param depth The depth of recursion.
+     */
     protected getPrecedenceGraph(depth=-1): DependencyGraph<Port<Present> | Reaction<unknown>> {
         
         var graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph();
@@ -1276,6 +1287,10 @@ export abstract class Reactor extends Component {
             }
         }
         
+        // FIXME: Potentially do this in connect instead upon connecting to a
+        // callee port. So far, it is unclear how RPCs would work when
+        // established at runtime by a mutation.
+        //  
         // Check if there are any callee ports owned by this reactor.
         // If there are, add a dependency from its last caller to the antidependencies
         // of the procedure (excluding the callee port itself).
@@ -1284,11 +1299,14 @@ export abstract class Reactor extends Component {
             let procedure = p.getManager(this._getKey(p)).getProcedure()
             let lastCaller = p.getManager(this._getKey(p)).getLastCaller()
             if (procedure && lastCaller) {
-                let antideps = graph.getBackEdges(procedure)
+                let effects = graph.getBackEdges(procedure)
                 //console.log(">>>>>>>>>>>> last caller:" + lastCaller)
-                for (let a of antideps) {
-                    if (!(a instanceof CalleePort)) {
-                        graph.addEdge(a, lastCaller)
+                for (let e of effects) {
+                    if (!(e instanceof CalleePort)) {
+                        // Add edge to returned graph.
+                        graph.addEdge(e, lastCaller)
+                        // Also add edge to the local graph.
+                        this._dependencyGraph.addEdge(e, lastCaller)
                     }
                 }
             } else {
@@ -1419,43 +1437,61 @@ export abstract class Reactor extends Component {
      */
     public canConnect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
-        // Rule out self loops. 
-        //   - (including trivial ones)
+        // Immediate rule out trivial self loops. 
         if (src === dst) {
             return false
         }
 
-        // FIXME: If elapsed logical time is greater than zero, check the local
-        // dependency graph to figure out whether this change introduces
-        // zero-delay feedback.
-        
-        // Validate connections between callers and callees.
-        if (src instanceof CalleePort) {
-            return false
-        }
-        if (src instanceof CallerPort) {
-            if (dst instanceof CalleePort && 
-                src._isOwnedByOwnerOf(this) && dst._isOwnedByOwnerOf(this)) {
-                return true
+        if (this._active == false) {
+            // Validate connections between callers and callees.
+            if (src instanceof CalleePort) {
+                return false
             }
-            return false
-        }
+            if (src instanceof CallerPort) {
+                if (dst instanceof CalleePort && 
+                    src._isOwnedByOwnerOf(this) && dst._isOwnedByOwnerOf(this)) {
+                    return true
+                }
+                return false
+            }
+            // Additional checks for regular ports.
+            if (dst instanceof IOPort) {
+                // Rule out write conflicts.
+                //   - (between reactors)
+                if (!(dst instanceof CalleePort) &&
+                    this._dependencyGraph.getBackEdges(dst).size > 0) {
+                    return false;
+                }
 
-        // Rule out write conflicts.
-        //   - (between reactors)
-        if (!(dst instanceof CalleePort) && 
-                this._dependencyGraph.getBackEdges(dst).size > 0) {
-            return false;
-        }
+                //   - between reactors and reactions (NOTE: check also needs to happen
+                //     in addReaction)
+                var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
+                if (deps != undefined && deps.size > 0) {
+                    return false;
+                }
 
-        //   - between reactors and reactions (NOTE: check also needs to happen
-        //     in addReaction)
-        //var antideps = this._dependsOnReactions.get(dst);
-        var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
-        if (deps != undefined && deps.size > 0) {
-            return false;
-        }
+                if (this._isInScope(src, dst)) {
+                    return true
+                } else {
+                    return false
+                }
+            }
+        } else {
+            // Attempt to make a connection while executing.
+            // Check the local dependency graph to figure out whether this change
+            // introduces zero-delay feedback.
 
+            // Take the local graph and merge in all the causality interfaces
+            // of contained reactors. Then:
+
+            // 1) check for loops
+
+            // 2) check for direct feed through.
+
+        }
+    }
+
+    private _isInScope(src: IOPort<Present>, dst: IOPort<Present>): boolean {
         // Assure that the general scoping and connection rules are adhered to.
         if (src instanceof OutPort) {
             if (dst instanceof InPort) {
@@ -1541,10 +1577,9 @@ export abstract class Reactor extends Component {
                 
             } else if (src instanceof IOPort && dst instanceof IOPort) {
                 Log.debug(this, () => "connecting " + src + " and " + dst);
-                // Set up sources and destinations for value propagation.
+                // Add dependency implied by connection to local graph.
                 this._dependencyGraph.addEdge(dst, src);
-                this._causalityGraph.addEdge(dst, src);
-
+                // Register receiver for value propagation.
                 src.getManager(this._getKey(src)).addReceiver
                     (dst.asWritable(this._getKey(dst)) as WritablePort<S>);
             }
@@ -2524,9 +2559,14 @@ export class App extends Reactor {
     }
 
     /**
-     * Check the app's precedence graph for cycles.
+     * Analyze the dependencies between reactions in this app.
+     * 
+     * Assign priorities that encode the precedence relations between
+     * reactions. If there exist circular dependencies, throw an exception.
+     * This method should only be invoked prior to the start of execution,
+     * never during execution.
      */
-    protected _checkPrecedenceGraph(): void {
+    protected _analyzeDependencies(): void {
         Log.info(this, () => Log.hr);
         let initStart = getCurrentPhysicalTime();
         Log.global.info(">>> Initializing");
@@ -2612,7 +2652,7 @@ export class App extends Reactor {
      * Start the app.
      */
     public _start(): void {
-        this._checkPrecedenceGraph()
+        this._analyzeDependencies()
         this._alignStartAndEndOfExecution(getCurrentPhysicalTime());
 
         Log.info(this, () => Log.hr);
