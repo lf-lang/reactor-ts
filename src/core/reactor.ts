@@ -1483,11 +1483,34 @@ export abstract class Reactor extends Component {
 
             // Take the local graph and merge in all the causality interfaces
             // of contained reactors. Then:
+            let graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph()
+            graph.merge(this._dependencyGraph)
+
+            for (let r of this._getOwnReactors()) {
+                graph.merge(r._getCausalityInterface())
+            }
+            
+            // Add the new edge.
+            graph.addEdge(dst, src)
 
             // 1) check for loops
+            if (graph.hasCycle()) {
+                return false
+            }
 
             // 2) check for direct feed through.
+            let inputs = this._findOwnInputs()
+            for (let output of this._findOwnOutputs()) {
+                let newReachable = graph.reachableOrigins(output, inputs)
+                let oldReachable = this._causalityGraph.reachableOrigins(output, inputs)
 
+                for (let origin of newReachable) {
+                    if (origin instanceof Port && !oldReachable.has(origin)) {
+                        return false
+                    }
+                }
+            }
+            return true
         }
     }
 

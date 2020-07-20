@@ -154,7 +154,7 @@ export class DependencyGraph<T> {
         }
     }
 
-    getEdges(node: T): Set<T> {
+    getEdges(node: T): Set<T> { // FIXME: use different terminology: origins/effects
         let nodes = this.adjacencyMap.get(node)
         if (nodes !== undefined) {
             return nodes
@@ -167,6 +167,51 @@ export class DependencyGraph<T> {
         let backEdges = new Set<T>()
         this.adjacencyMap.forEach((edges, dep) => edges.forEach((edge) => {if (edge === node) { backEdges.add(dep)}}))
         return backEdges
+    }
+
+    /**
+     * Return the subset of origins that are reachable from the given effect.
+     * @param effect A node in the graph that to search upstream of.
+     * @param origins A set of nodes to be found anywhere upstream of effect.
+     */
+    reachableOrigins(effect: T, origins : Set<T>): Set<T> {
+        let visited = new Set<T>()
+        let reachable = new Set<T>()
+        let self = this
+        
+        /**
+         * Recursively traverse the graph to collect reachable origins.
+         * @param current The current node being visited.
+         */
+        function search(current: T) {
+            for (let next of self.getEdges(current)) {
+                if (!visited.has(current)) {
+                    // Do not visit a node twice.
+                    if (origins.has(current)) {
+                        // If the current node is among the origins searched
+                        // for, add it to the reachable set.
+                        reachable.add(current)
+                    }
+                    // Continue search, depth first.
+                    if (reachable.size == origins.size) {
+                        search(next)
+                    } else {
+                        // Preempt search of all origins are reachable.
+                        return
+                    }
+                }
+            }
+        }
+        
+        search(effect)
+
+        return reachable
+    } 
+
+
+    hasCycle(): boolean {
+        // FIXME
+        return false
     }
 
     removeNode(node: T) {
