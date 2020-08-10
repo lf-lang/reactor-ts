@@ -65,6 +65,10 @@ const defaultMIT = new UnitBasedTimeValue(1, TimeUnit.nsec);
 // Interfaces                                                               //
 //--------------------------------------------------------------------------//
 
+interface ReactorConstructor {
+    new (...args:any[]): Reactor;
+}
+
 /**
  * Interface for the invocation of remote procedures.
  */
@@ -107,6 +111,7 @@ export interface Read<T> {
  */
 export interface Schedule<T> extends Read<T> {
     schedule: (extraDelay: TimeValue | 0, value: T) => void;
+    // FIXME: it makes sense to be able to check the presence of a (re)schedulable action.
 }
 
 /**
@@ -124,7 +129,7 @@ export interface Write<T> {
 export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
     abstract get(): T | undefined;
     abstract set(value: T): void;
-    abstract getPort(): Port<T>
+    abstract getPort(): IOPort<T>
 }
 
 /**
@@ -996,6 +1001,22 @@ export abstract class Reactor extends Component {
                 (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
             return this.reactor._connect(src, dst);
         }
+
+        public getReactor(): Reactor {
+            return this.reactor
+        }
+
+        public start(r: Reactor) {
+            r.startup.asSchedulable(this.reactor._getKey(r.startup)).schedule(0, null)
+        }
+
+        public stop(r: Reactor) {
+            r.shutdown.asSchedulable(this.reactor._getKey(r.shutdown)).schedule(0, null)
+        }
+
+        create(constructor: ReactorConstructor, ...args:[any]): Reactor {
+            return new constructor(args)
+        }
     };
     
     /**
@@ -1443,6 +1464,7 @@ export abstract class Reactor extends Component {
         }
 
         if (this._active == false) {
+            console.log("Connecting before running")
             // Validate connections between callers and callees.
             if (src instanceof CalleePort) {
                 return false
@@ -1456,6 +1478,7 @@ export abstract class Reactor extends Component {
             }
             // Additional checks for regular ports.
             if (dst instanceof IOPort) {
+                console.log("IOPort")
                 // Rule out write conflicts.
                 //   - (between reactors)
                 if (!(dst instanceof CalleePort) &&
@@ -1470,17 +1493,13 @@ export abstract class Reactor extends Component {
                     return false;
                 }
 
-                if (this._isInScope(src, dst)) {
-                    return true
-                } else {
-                    return false
-                }
+                return this._isInScope(src, dst)
             }
         } else {
             // Attempt to make a connection while executing.
             // Check the local dependency graph to figure out whether this change
             // introduces zero-delay feedback.
-
+            // console.log("Runtime connect.")
             // Take the local graph and merge in all the causality interfaces
             // of contained reactors. Then:
             let graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph()
@@ -1821,7 +1840,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         if (this._key === key) {
             return this.writer
         }
-        throw Error("Referenced port is out of scope.") // FIXME: adjust messages for other methods as well
+        throw Error("Referenced port is out of scope: " + this._getFullyQualifiedName()) // FIXME: adjust messages for other methods as well
         // FIXME: we could potentially do this for reads/triggers as well just for scope rule enforcement
     }
 
@@ -1858,7 +1877,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
             return this.port.get()
         }
 
-        public getPort(): Port<T> {
+        public getPort(): IOPort<T> {
             return this.port
         }
         
@@ -2111,6 +2130,15 @@ interface AppUtils {
 export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
+
+    getReactor(): Reactor;
+
+    start(reactor: Reactor): void;
+
+    stop(reactor: Reactor): void;
+    
+    create(constructor: ReactorConstructor, ...args:[any]): Reactor;
+
     //forkJoin(constructor: new () => Reactor, ): void;
     // FIXME: addReaction, removeReaction
     // FIXME: disconnect

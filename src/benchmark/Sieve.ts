@@ -1,4 +1,4 @@
-import {Args, Parameter, InPort, OutPort, State, Triggers, Action, Reactor, App, Present} from "../core/reactor";
+import {Args, Parameter, InPort, OutPort, State, Triggers, Action, Reactor, App, Present, WritablePort} from "../core/reactor";
 import {TimeValue, Origin} from "../core/time"
 import {Log} from "../core/util"
 
@@ -7,7 +7,7 @@ Log.global.level = Log.levels.ERROR;
 class Ramp extends Reactor {
     next = new Action<number>(this, Origin.logical)
     until: Parameter<number>;
-    value: OutPort<number>;
+    value: OutPort<number> = new OutPort(this);
     constructor (parent:Reactor, until: number = 100000) {
         super(parent);
         this.until = new Parameter(until);
@@ -15,15 +15,16 @@ class Ramp extends Reactor {
             new Triggers(this.startup, this.next),
             new Args(this.schedulable(this.next), this.until, this.writable(this.value)),
             function (this, next, until, value) {
-                if (next.get() !== undefined) {
-                    value.set(1)
+                let n = next.get()
+                if (n === undefined) {
+                    console.log(2)
+                    next.schedule(0, 2)
                 } else {
-                    let n = next.get()
-                    if (n > until.get()) {
+                    if (n >= until.get()) {
                         this.util.requestShutdown()
                     } else {
+                        next.schedule(0, n+1)
                         value.set(n)
-                        
                     }
                 }
             }
@@ -32,12 +33,13 @@ class Ramp extends Reactor {
 }
 
 class Filter extends Reactor {
-    inp: InPort<number>
-    out: OutPort<number>
+    inp: InPort<number> = new InPort(this)
+    out: OutPort<number> = new OutPort(this)
     prime: Parameter<number>
     hasSibling: State<boolean>
     constructor (parent:Reactor, prime: number) {
         super(parent);
+        //console.log("Created filter with prime: " + prime)
         this.prime = new Parameter(prime);
         this.hasSibling = new State(false)
         this.addMutation(
@@ -45,12 +47,19 @@ class Filter extends Reactor {
             new Args(this.inp, this.writable(this.out), this.prime, this.hasSibling),
             function (this, inp, out, prime, hasSibling) {
                 let p = inp.get()
-                if (!Number.isInteger(inp.get() / prime.get())) {
-                    if (!hasSibling) {
-                        //this.newSibling()
-                        //this.disconnect()
-                        //this.connect()
+                let q = prime.get()
+                if (!Number.isInteger(p / q)) {
+                    if (!hasSibling.get()) {
+                        let n = new Filter(this.getReactor(), p)
+                        this.start(n)
+                        // console.log("CREATING...")
+                        // let x = this.create(Filter, [this.getReactor(), p])
+                        // console.log("CREATED: " + x._getFullyQualifiedName())
+                        // FIXME: weird hack. Maybe just accept writable ports as well?
+                        var port = (out as unknown as WritablePort<number>).getPort()
+                        this.connect(port, n.inp)
                         hasSibling.set(true)
+                        console.log(p)
                     }
                     out.set(p)
                 }
@@ -60,7 +69,7 @@ class Filter extends Reactor {
 }
 
 class Print<T extends Present> extends Reactor {
-    inp: InPort<T>
+    inp = new InPort<T>(this)
     constructor(parent: Reactor) {
         super(parent)
         this.addReaction(
@@ -79,11 +88,11 @@ class Sieve extends App {
     print: Print<number>
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
-        this.source = new Ramp(this, 1000000)
+        this.source = new Ramp(this, 10000)
         this.filter = new Filter(this, 2)
         this.print = new Print(this)
         this._connect(this.source.value, this.filter.inp)
-        this._connect(this.filter.out, this.print.inp)
+        //this._connect(this.filter.out, this.print.inp)
     }
 }
 

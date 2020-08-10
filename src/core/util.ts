@@ -210,7 +210,29 @@ export class DependencyGraph<T> {
 
 
     hasCycle(): boolean {
-        // FIXME
+        let visited = new Set<T>()
+        let inPath = new Set<T>()
+        let self = this
+
+        function cycleFound(current: T): boolean {
+            if (!visited.has(current)) {
+                for (let node of self.getEdges(current)) {
+                    if (!visited.has(node) && cycleFound(node)) {
+                        return true
+                    } else if (inPath.has(node)) {
+                        return true
+                    }
+                }
+            }
+            inPath.delete(current)
+            return false
+        }
+        
+        for (let node of this.leafNodes()) {
+            if (cycleFound(node)) {
+                return true
+            }
+        }
         return false
     }
 
