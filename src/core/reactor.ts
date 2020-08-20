@@ -365,6 +365,16 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
     public active = false
 
     /**
+     * Return true if this reaction is triggered immediately (by startup or a
+     * timer with zero offset).
+     */
+    isTriggeredImmediately(): boolean {
+        return (this.trigs.list.filter(trig => (
+            trig instanceof Startup || (trig instanceof Timer && trig.offset.isZero())
+        )).length > 0)
+    }
+
+    /**
      * Return the priority of this reaction. It determines the execution order among
      * reactions staged for execution at the same logical time.
      */
@@ -781,6 +791,7 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
      * not reschedule. Cannot be negative.
      */
     constructor(__container__: Reactor, offset: TimeValue | 0, period: TimeValue | 0) {
+        // FIXME: let Timer schedule itself
         super(__container__);
         if (!(offset instanceof TimeValue)) {
             this.offset = new TimeValue(0);
@@ -890,7 +901,7 @@ export abstract class Reactor extends Component {
      * startup action), or not (in which case it either never started up or has
      * reacted to a shutdown action).
      */
-    private _active = false;
+    protected _active = false;
 
     /**
      * This reactor's shutdown action.
@@ -1042,41 +1053,15 @@ export abstract class Reactor extends Component {
         // assignment idemponent.
         this.util = (this._getOwner() as unknown as Reactor).util    
         
+        // Create sandboxes for the reactions and mutations to execute in.
         this._reactionScope = new this._ReactionSandbox(this)
         this._mutationScope = new this._MutationSandbox(this)
-
-        // NOTE: beware, if this is an instance of App, `this.util` will be `undefined`.
-        // Do not attempt to reference it during the construction of an App.
-        var self = this;
-        // Add default startup reaction.
-        this.addMutation(
-            new Triggers(this.startup),
-            new Args(),
-            function (this) {
-                Log.debug(this, () => "*** Starting up reactor " +
-                self._getFullyQualifiedName());
-                self._startupChildren();
-                self._setTimers();
-                self._active = true;
-            }
-        );
-        // Add default shutdown reaction.
-        this.addMutation(
-            new Triggers(this.shutdown),
-            new Args(),
-            function (this) {
-                Log.debug(this, () => "*** Shutting down reactor " + 
-                    self._getFullyQualifiedName());
-                self._doShutdown();
-            }
-        );
-        
     }
 
     protected _doShutdown() {
         this._shutdownChildren();
-        this._unsetTimers();
-        this._active = false;
+        //this._unsetTimers();
+        //this._active = false;
     }
 
     protected _initializeReactionScope(): void {
@@ -1087,9 +1072,9 @@ export abstract class Reactor extends Component {
         this._mutationScope = new this._MutationSandbox(this)
     }
     
-    protected _isActive(): boolean {
-        return this._active
-    }
+    // protected _isActive(): boolean {
+    //     return this._active
+    // }
 
     protected writable<T extends Present>(port: IOPort<T>): ReadWrite<T> {
         return port.asWritable(this._getKey(port));
@@ -1124,12 +1109,13 @@ export abstract class Reactor extends Component {
         // Add a dependency on the previous reaction or mutation, if it exists.
         let prev = this._getLastReactionOrMutation()
         if (prev) {
-            // FIXME: how does this affect the causality graph?
-            // Will any effect of this reaction will now be depending
-            // on the ports that its predecessors list as dependencies?
             this._dependencyGraph.addEdge(reaction, prev)
-            
         }
+
+        // FIXME: Add a dependency on the last mutation that the owner of this reactor
+        // has. How do we know that it is the last? We have a "lastCaller" problem here.
+        // Probably better to solve this at the level of the dependency graph with a function
+        // that allows for a link to be updated.
 
         // Set up the triggers.
         for (let t of reaction.trigs.list) {
@@ -1248,6 +1234,7 @@ export abstract class Reactor extends Component {
         late: (this: ReactionSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
         let calleePorts = trigs.list.filter(trig => trig instanceof CalleePort)
+        
         if (calleePorts.length > 0) {
             // This is a procedure.
             let port = calleePorts[0] as CalleePort<Present, Present>
@@ -1266,6 +1253,10 @@ export abstract class Reactor extends Component {
         } else {
             // This is an ordinary reaction.
             let reaction = new Reaction(this, this._reactionScope, trigs, args, react, deadline, late);
+            // Stage it directly if it to be triggered immediately.
+            if (reaction.isTriggeredImmediately()) {
+                this._stage(reaction as Reaction<unknown>)
+            }
             reaction.active = true;
             this._recordDeps(reaction);
             this._reactions.push(reaction);
@@ -1277,6 +1268,10 @@ export abstract class Reactor extends Component {
         late: (this: MutationSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
         let mutation = new Mutation(this, this._mutationScope, trigs, args, react,  deadline, late);
+        // Stage it directly if it to be triggered immediately.
+        if (mutation.isTriggeredImmediately()) {
+            this._stage(mutation as unknown as Reaction<unknown>) // FIXME: types
+        }
         mutation.active = true
         this._recordDeps(mutation);
         this._mutations.push(mutation);
@@ -1463,7 +1458,7 @@ export abstract class Reactor extends Component {
             return false
         }
 
-        if (this._active == false) {
+        if (this.util.isRunning() == false) {
             console.log("Connecting before running")
             // Validate connections between callers and callees.
             if (src instanceof CalleePort) {
@@ -1726,31 +1721,31 @@ export abstract class Reactor extends Component {
         // this._sourcePort.delete(src);
     }
 
-    /**
-     * Set all the timers of this reactor.
-     */
-    protected _setTimers(): void {
-        Log.debug(this, () => "Setting timers for: " + this);
-        let timers = new Set<Timer>();
-        for (const [k, v] of Object.entries(this)) {
-            if (v instanceof Timer) {
-                this._setTimer(v);
-            }
-        }
-    }
+    // /**
+    //  * Set all the timers of this reactor.
+    //  */
+    // protected _setTimers(): void {
+    //     Log.debug(this, () => "Setting timers for: " + this);
+    //     let timers = new Set<Timer>();
+    //     for (const [k, v] of Object.entries(this)) {
+    //         if (v instanceof Timer) {
+    //             this._setTimer(v);
+    //         }
+    //     }
+    // }
 
-    protected _setTimer(timer: Timer): void {
-        Log.debug(this, () => ">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
-        let startTime;
-        if (timer.offset.isZero()) {
-            // getLaterTime always returns a microstep of zero, so handle the
-            // zero offset case explicitly.
-            startTime = this.util.getCurrentTag().getMicroStepLater();
-        } else {
-            startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
-        }
-        this._schedule(new TaggedEvent(timer, this.util.getCurrentTag().getLaterTag(timer.offset), null));
-    }
+    // protected _setTimer(timer: Timer): void {
+    //     Log.debug(this, () => ">>>>>>>>>>>>>>>>>>>>>>>>Setting timer: " + timer);
+    //     let startTime;
+    //     if (timer.offset.isZero()) {
+    //         // getLaterTime always returns a microstep of zero, so handle the
+    //         // zero offset case explicitly.
+    //         startTime = this.util.getCurrentTag().getMicroStepLater();
+    //     } else {
+    //         startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
+    //     }// FIXME: startup and a timer with offset zero should be simultaneous and not retrigger events
+    //     this._schedule(new TaggedEvent(timer, this.util.getCurrentTag().getLaterTag(timer.offset), null));
+    // }
 
     /**
      * Report a timer to the app so that it gets unscheduled.
@@ -2123,6 +2118,7 @@ interface AppUtils {
     getCurrentPhysicalTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
+    isRunning(): boolean;
     sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number): void;
 }
@@ -2156,6 +2152,8 @@ export class App extends Reactor {
 
     alarm = new Alarm();
 
+    _reactionsAtStartup = new Set<Reaction<unknown>>();
+
     /**
      * Inner class that provides access to utilities that are safe to expose to
      * reaction code.
@@ -2182,6 +2180,10 @@ export class App extends Reactor {
 
         public getCurrentTag(): Tag {
             return this.app._currentTag;
+        }
+
+        public isRunning(): boolean {
+            return this.app._active;
         }
 
         public getCurrentLogicalTime(): TimeValue {
@@ -2253,7 +2255,16 @@ export class App extends Reactor {
     private _eventQ = new EventQueue();
 
     public getLoader(): (reaction: Reaction<unknown>) => void {
-        return (r:Reaction<unknown>) => this._reactionQ.push(r);
+        return (r: Reaction<unknown>) => { 
+            if (this._active) {
+                this._reactionQ.push(r)
+            } else {
+                // If execution hasn't started yet, collect the staged reactions.
+                // They will be queued once they have been assigned priorities.
+                this._reactionsAtStartup.add(r) 
+            }
+            
+        };
     }
 
     public getScheduler(): (e: TaggedEvent<any>) => void {
@@ -2329,6 +2340,9 @@ export class App extends Reactor {
         this._initializeReactionScope()
         this._initializeMutationScope()
 
+        // FIXME: Add to the reaction queue all reactions that are sensitive to startup
+        // or a timer with a zero offset.
+
         this._fast = fast;
         this._keepAlive = keepAlive;
         this._executionTimeout = executionTimeout;
@@ -2355,6 +2369,20 @@ export class App extends Reactor {
      * @param event The tag of the next event to be handled.
      */
     protected finalizeStep(nextTag: Tag) {
+    }
+
+    private _react() {
+        while (this._reactionQ.size() > 0) {
+            try {
+                var r = this._reactionQ.pop();
+                r.doReact();
+            } catch (e) {
+                Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
+                // Allow errors in reactions to kill execution.
+                throw e; 
+            }            
+        }
+        Log.global.debug("Finished handling all events at current time.");
     }
 
     /**
@@ -2431,19 +2459,9 @@ export class App extends Reactor {
                     nextEvent = this._eventQ.peek();
                 }
 
-                while (this._reactionQ.size() > 0) {
-                    try {
-                        var r = this._reactionQ.pop();
-                        r.doReact();
-                    } catch (e) {
-                        Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
-                        // Allow errors in reactions to kill execution.
-                        throw e; 
-                    }
-                    
-                }
-                Log.global.debug("Finished handling all events at current time.");
-
+                // React to all the events loaded onto the reaction queue.
+                this._react()
+                
                 // Peek at the event queue to see whether we can process the next event
                 // or should give control back to the JS event loop.
                 nextEvent = this._eventQ.peek();
@@ -2575,7 +2593,7 @@ export class App extends Reactor {
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
     private _shutdown(): void {
-        if (this._isActive()) {
+        if (this.util.isRunning()) {
             this._endOfExecution = this._currentTag.time;
 
             Log.debug(this, () => "Initiating shutdown sequence.");
@@ -2708,12 +2726,20 @@ export class App extends Reactor {
 
         Log.info(this, () => Log.hr);
         Log.info(this, () => Log.hr);
-
+        
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
         
-        // Set in motion the execution of this program by scheduling startup at the current logical time.
-        this._scheduleStartup();
-        //this.getSchedulable(this.startup).schedule(0);
+        this._active = true;
+
+        // Load all reactions that are staged for immediate execution
+        // onto the reaction queue.
+        this._reactionsAtStartup.forEach(r => this._reactionQ.push(r))
+
+        // Handle the reactions that were loaded onto the reaction queue.
+        this._react()
+
+        // Continue execution by process the next event.
+        this._next()
     }
 }

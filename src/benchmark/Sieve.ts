@@ -47,21 +47,23 @@ class Filter extends Reactor {
             new Args(this.inp, this.writable(this.out), this.prime, this.hasSibling),
             function (this, inp, out, prime, hasSibling) {
                 let p = inp.get()
-                let q = prime.get()
-                if (!Number.isInteger(p / q)) {
-                    if (!hasSibling.get()) {
-                        let n = new Filter(this.getReactor(), p)
-                        this.start(n)
-                        // console.log("CREATING...")
-                        // let x = this.create(Filter, [this.getReactor(), p])
-                        // console.log("CREATED: " + x._getFullyQualifiedName())
-                        // FIXME: weird hack. Maybe just accept writable ports as well?
-                        var port = (out as unknown as WritablePort<number>).getPort()
-                        this.connect(port, n.inp)
-                        hasSibling.set(true)
-                        console.log(p)
+                if (p !== undefined) {                
+                    let q = prime.get()
+                    if (!Number.isInteger(p / q)) {
+                        if (!hasSibling.get()) {
+                            let n = new Filter(this.getReactor(), p)
+                            //this.start(n)
+                            // console.log("CREATING...")
+                            // let x = this.create(Filter, [this.getReactor(), p])
+                            // console.log("CREATED: " + x._getFullyQualifiedName())
+                            // FIXME: weird hack. Maybe just accept writable ports as well?
+                            var port = (out as unknown as WritablePort<number>).getPort()
+                            this.connect(port, n.inp)
+                            hasSibling.set(true)
+                            console.log(p)
+                        }
+                        out.set(p)
                     }
-                    out.set(p)
                 }
             }
         );
