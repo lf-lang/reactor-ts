@@ -2710,19 +2710,20 @@ export class App extends Reactor {
         }
     }
 
-    /**
-     * Schedule the App's startup action for the current tag.
-     */
-    protected _scheduleStartup(): void {
-        this.util.schedule(new TaggedEvent(this.startup, this._currentTag, null));
+    // /**
+    //  * Schedule the App's startup action for the current tag.
+    //  */
+    // protected _scheduleStartup(): void {
+    //     this.util.schedule(new TaggedEvent(this.startup, this._currentTag, null));
+    // }
+
+    protected _loadStartupReactions() {
+        // Load all reactions that are staged for immediate execution
+        // onto the reaction queue.
+        this._reactionsAtStartup.forEach(r => this._reactionQ.push(r))
     }
 
-    /**
-     * Start the app.
-     */
-    public _start(): void {
-        this._analyzeDependencies()
-        this._alignStartAndEndOfExecution(getCurrentPhysicalTime());
+    protected _startExecuting() {
 
         Log.info(this, () => Log.hr);
         Log.info(this, () => Log.hr);
@@ -2732,14 +2733,23 @@ export class App extends Reactor {
         
         this._active = true;
 
-        // Load all reactions that are staged for immediate execution
-        // onto the reaction queue.
-        this._reactionsAtStartup.forEach(r => this._reactionQ.push(r))
-
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
 
         // Continue execution by process the next event.
         this._next()
+    }
+
+    /**
+     * Start the app.
+     */
+    public _start(): void {
+        this._analyzeDependencies()
+
+        this._loadStartupReactions()        
+
+        this._alignStartAndEndOfExecution(getCurrentPhysicalTime());
+        
+        this._startExecuting()
     }
 }
