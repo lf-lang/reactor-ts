@@ -179,6 +179,8 @@ class Component implements Named {
      */
     protected _stage: (reaction: Reaction<unknown>) => void;
 
+    protected _init: (timer: Timer) => void;
+
     /**
      * Function for scheduling tagged events.
      */
@@ -195,15 +197,17 @@ class Component implements Named {
         this._alias = alias
 
         if (this instanceof App) {
-            this._owner = this               // Apps are self-owner.
+            this._owner = this               // Apps are self-owned.
             this._stage = this.getLoader()   // Get the loader from the app.
             this._schedule = this.getScheduler() // Also get the scheduler.
+            this._init = this.getInitializer()   // And the initializer.
         } else {
             if (owner !== null) {
                 this._owner = owner              // Set the owner.
                 this._owner._register(this, this._key) // Register with owner.
                 this._stage = owner._stage       // Inherited the loader.
-                this._schedule = owner._schedule // Inherit the scheduler
+                this._schedule = owner._schedule // Inherit the scheduler.
+                this._init = owner._init         // Inherit the initializer.
             } else {
                 throw Error("Cannot instantiate component without a parent.")
             }
@@ -791,8 +795,8 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
      * not reschedule. Cannot be negative.
      */
     constructor(__container__: Reactor, offset: TimeValue | 0, period: TimeValue | 0) {
-        // FIXME: let Timer schedule itself
         super(__container__);
+        
         if (!(offset instanceof TimeValue)) {
             this.offset = new TimeValue(0);
         } else {
@@ -804,6 +808,8 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
         } else {
             this.period = period;
         }
+        // Initialize this timer.
+        this._init(this)
     }
 
 
@@ -2154,6 +2160,8 @@ export class App extends Reactor {
 
     _reactionsAtStartup = new Set<Reaction<unknown>>();
 
+    _timersToSchedule = new Set<Timer>();
+
     /**
      * Inner class that provides access to utilities that are safe to expose to
      * reaction code.
@@ -2254,7 +2262,34 @@ export class App extends Reactor {
      */
     private _eventQ = new EventQueue();
 
-    public getLoader(): (reaction: Reaction<unknown>) => void {
+
+    public getInitializer(): (timer: Timer) => void {
+        return (timer: Timer) => { 
+            if (this._active) {
+                // Schedule relative to the current tag.
+                var nextTag;
+                if (!timer.offset.isZero()) {
+                    nextTag = this._currentTag.getLaterTag(timer.offset)
+                } else {
+                    if (!timer.period.isZero()) {
+                        nextTag = this._currentTag.getLaterTag(timer.period)
+                    }
+                }
+                if (nextTag) {
+                    this.schedule(new TaggedEvent(timer, nextTag, nextTag))
+                }
+ 
+            } else {
+                // If execution hasn't started yet, collect the timers.
+                // They will be initialized once it is known what the start time is.
+                this._timersToSchedule.add(timer) 
+            }
+            
+        };
+    }
+
+
+    public getLoader(): (reaction: Reaction<unknown>) => void { // FIXME: define this in Reactor
         return (r: Reaction<unknown>) => { 
             if (this._active) {
                 this._reactionQ.push(r)
@@ -2710,13 +2745,6 @@ export class App extends Reactor {
         }
     }
 
-    // /**
-    //  * Schedule the App's startup action for the current tag.
-    //  */
-    // protected _scheduleStartup(): void {
-    //     this.util.schedule(new TaggedEvent(this.startup, this._currentTag, null));
-    // }
-
     protected _loadStartupReactions() {
         // Load all reactions that are staged for immediate execution
         // onto the reaction queue.
@@ -2740,6 +2768,12 @@ export class App extends Reactor {
         this._next()
     }
 
+    protected _initializeTimers() {
+        for (let timer of this._timersToSchedule) {
+            this._init(timer)
+        }
+    }
+    
     /**
      * Start the app.
      */
@@ -2749,7 +2783,9 @@ export class App extends Reactor {
         this._loadStartupReactions()        
 
         this._alignStartAndEndOfExecution(getCurrentPhysicalTime());
-        
+
+        this._initializeTimers()
+
         this._startExecuting()
     }
 }

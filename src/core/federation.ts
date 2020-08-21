@@ -796,7 +796,7 @@ export class FederatedApp extends App {
         this._analyzeDependencies();
 
         this._loadStartupReactions();
-        
+
         this.rtiClient.on('connected', () => {
             this.rtiClient.requestStartTimeFromRTI(getCurrentPhysicalTime());
         });
@@ -818,7 +818,7 @@ export class FederatedApp extends App {
                 }
                 this.alarm.set(() => {
                     this._alignStartAndEndOfExecution(startTime);
-                    
+                    this._initializeTimers();
                     this._startExecuting();
                 }, startDelay);
             } else {
