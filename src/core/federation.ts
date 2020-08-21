@@ -818,7 +818,6 @@ export class FederatedApp extends App {
                 }
                 this.alarm.set(() => {
                     this._alignStartAndEndOfExecution(startTime);
-                    this._initializeTimers();
                     this._startExecuting();
                 }, startDelay);
             } else {

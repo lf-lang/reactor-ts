@@ -808,6 +808,8 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
         } else {
             this.period = period;
         }
+        Log.debug(this, () => "Creating timer: " + this._getFullyQualifiedName())
+        console.log(">>>>>>>>>>>>>>>>>>>>>>>:" + this._getFullyQualifiedName())
         // Initialize this timer.
         this._init(this)
     }
@@ -2266,6 +2268,8 @@ export class App extends Reactor {
     public getInitializer(): (timer: Timer) => void {
         return (timer: Timer) => { 
             if (this._active) {
+                Log.debug(this, () => "Scheduling timer " + timer._getFullyQualifiedName())
+                console.log(">>>>>>>>>Scheduling timer " + timer._getFullyQualifiedName())
                 // Schedule relative to the current tag.
                 var nextTag;
                 if (!timer.offset.isZero()) {
@@ -2276,10 +2280,12 @@ export class App extends Reactor {
                     }
                 }
                 if (nextTag) {
+                    Log.debug(this, () => "Postponed scheduling of timer " + timer._getFullyQualifiedName())
                     this.schedule(new TaggedEvent(timer, nextTag, nextTag))
                 }
  
             } else {
+                console.log(">>>>>>>>>Postponed Scheduling of timer " + timer._getFullyQualifiedName())
                 // If execution hasn't started yet, collect the timers.
                 // They will be initialized once it is known what the start time is.
                 this._timersToSchedule.add(timer) 
@@ -2761,6 +2767,8 @@ export class App extends Reactor {
         
         this._active = true;
 
+        this._initializeTimers()
+
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
 
@@ -2783,8 +2791,6 @@ export class App extends Reactor {
         this._loadStartupReactions()        
 
         this._alignStartAndEndOfExecution(getCurrentPhysicalTime());
-
-        this._initializeTimers()
 
         this._startExecuting()
     }
