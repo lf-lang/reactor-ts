@@ -96,10 +96,8 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-interface tsd-has-type-parameter"><a href="_reactor_.mutationsandbox.html#connect" class="tsd-kind-icon">connect</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.mutationsandbox.html#create" class="tsd-kind-icon">create</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.mutationsandbox.html#getreactor" class="tsd-kind-icon">get<wbr>Reactor</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.mutationsandbox.html#start" class="tsd-kind-icon">start</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.mutationsandbox.html#stop" class="tsd-kind-icon">stop</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_reactor_.mutationsandbox.html#terminate" class="tsd-kind-icon">terminate</a></li>
 							</ul>
 						</section>
 					</div>
@@ -114,7 +112,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_reactor_.reactionsandbox.html">ReactionSandbox</a>.<a href="_reactor_.reactionsandbox.html#util">util</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/76ab86e/src/core/reactor.ts#L2151">src/core/reactor.ts:2151</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/f0e3de9/src/core/reactor.ts#L2180">src/core/reactor.ts:2180</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -136,7 +134,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/76ab86e/src/core/reactor.ts#L2131">src/core/reactor.ts:2131</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/f0e3de9/src/core/reactor.ts#L2163">src/core/reactor.ts:2163</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -168,32 +166,6 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="create" class="tsd-anchor"></a>
-					<h3>create</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">create<span class="tsd-signature-symbol">(</span>constructor<span class="tsd-signature-symbol">: </span><a href="_reactor_.reactorconstructor.html" class="tsd-signature-type">ReactorConstructor</a>, <span class="tsd-signature-symbol">...</span>args<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/76ab86e/src/core/reactor.ts#L2140">src/core/reactor.ts:2140</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>constructor: <a href="_reactor_.reactorconstructor.html" class="tsd-signature-type">ReactorConstructor</a></h5>
-								</li>
-								<li>
-									<h5><span class="tsd-flag ts-flagRest">Rest</span> <span class="tsd-signature-symbol">...</span>args: <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">]</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../classes/_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
 					<a name="getreactor" class="tsd-anchor"></a>
 					<h3>get<wbr>Reactor</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
@@ -203,7 +175,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/76ab86e/src/core/reactor.ts#L2134">src/core/reactor.ts:2134</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/f0e3de9/src/core/reactor.ts#L2168">src/core/reactor.ts:2168</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></h4>
@@ -211,39 +183,16 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="start" class="tsd-anchor"></a>
-					<h3>start</h3>
+					<a name="terminate" class="tsd-anchor"></a>
+					<h3>terminate</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">start<span class="tsd-signature-symbol">(</span>reactor<span class="tsd-signature-symbol">: </span><a href="../classes/_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">terminate<span class="tsd-signature-symbol">(</span>reactor<span class="tsd-signature-symbol">: </span><a href="../classes/_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/76ab86e/src/core/reactor.ts#L2136">src/core/reactor.ts:2136</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>reactor: <a href="../classes/_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="stop" class="tsd-anchor"></a>
-					<h3>stop</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">stop<span class="tsd-signature-symbol">(</span>reactor<span class="tsd-signature-symbol">: </span><a href="../classes/_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/76ab86e/src/core/reactor.ts#L2138">src/core/reactor.ts:2138</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/f0e3de9/src/core/reactor.ts#L2166">src/core/reactor.ts:2166</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -295,16 +244,10 @@
 								<a href="_reactor_.mutationsandbox.html#connect" class="tsd-kind-icon">connect</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_reactor_.mutationsandbox.html#create" class="tsd-kind-icon">create</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="_reactor_.mutationsandbox.html#getreactor" class="tsd-kind-icon">get<wbr>Reactor</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_reactor_.mutationsandbox.html#start" class="tsd-kind-icon">start</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="_reactor_.mutationsandbox.html#stop" class="tsd-kind-icon">stop</a>
+								<a href="_reactor_.mutationsandbox.html#terminate" class="tsd-kind-icon">terminate</a>
 							</li>
 						</ul>
 					</li>
