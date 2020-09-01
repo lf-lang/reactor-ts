@@ -656,12 +656,13 @@ export class FederatedApp extends App {
         return true
     }
 
-    protected finalizeStep(nextTag: Tag) {
+    protected _advanceTime(nextTag: Tag) {
         let currentTime = this.util.getCurrentLogicalTime()
         if (currentTime.isEarlierThan(nextTag.time)) {
             // Tell the RTI logical time is being advanced to a greater value.
             this.sendRTILogicalTimeComplete(currentTime);
         }
+        super._advanceTime(nextTag)
     }
 
     protected _doShutdown() {
@@ -816,7 +817,7 @@ export class FederatedApp extends App {
                 } else {
                     startDelay = startTime.subtract(currentPhysTime);
                 }
-                this.alarm.set(() => {
+                this._alarm.set(() => {
                     this._alignStartAndEndOfExecution(startTime);
                     this._startExecuting();
                 }, startDelay);

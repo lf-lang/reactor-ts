@@ -188,26 +188,27 @@ class Component implements Named {
 
     /**
      * Create a new component and register it with the owner.
-     * @param owner The owner of this component, `null` if this is an instance
+     * @param container The owner of this component, `null` if this is an instance
      * of `App`, in which case the ownership will be assigned to the component
      * itself.
      * @param alias An optional alias for the component.
      */
-    constructor(owner: Reactor | null, alias?:string) {
+    constructor(container: Reactor | null, alias?:string) {
         this._alias = alias
 
         if (this instanceof App) {
-            this._owner = this               // Apps are self-owned.
+            this._owner = this               // Apps are self-contained.
             this._stage = this.getLoader()   // Get the loader from the app.
+            
             this._schedule = this.getScheduler() // Also get the scheduler.
             this._init = this.getInitializer()   // And the initializer.
         } else {
-            if (owner !== null) {
-                this._owner = owner              // Set the owner.
+            if (container !== null) {
+                this._owner = container              // Set the owner.
                 this._owner._register(this, this._key) // Register with owner.
-                this._stage = owner._stage       // Inherited the loader.
-                this._schedule = owner._schedule // Inherit the scheduler.
-                this._init = owner._init         // Inherit the initializer.
+                this._stage = container._stage       // Inherited the loader.
+                this._schedule = container._schedule // Inherit the scheduler.
+                this._init = container._init         // Inherit the initializer.
             } else {
                 throw Error("Cannot instantiate component without a parent.")
             }
@@ -941,8 +942,24 @@ export abstract class Reactor extends Component {
      */
     private _mutationScope: MutationSandbox;
 
+    /**
+     * Register a component with its key.
+     * 
+     * A component that is created as part of this reactor invokes this method
+     * upon creation.
+     * @param component The component to register.
+     * @param key The component's key.
+     */
     public _register(component: Component, key: Symbol) {
-        if (!this._keyChain.has(component)) this._keyChain.set(component, key)
+        if (!this._keyChain.has(component)) {
+            this._keyChain.set(component, key)
+        }
+    }
+
+    public _deregister(component: Component) {
+        this._keyChain.delete(component)
+        // Should the component deregister itself?
+        // 
     }
 
     protected _getLast(reactions: Set<Reaction<any>>): Reaction<unknown> | undefined {
@@ -1014,27 +1031,37 @@ export abstract class Reactor extends Component {
     private _MutationSandbox = class implements MutationSandbox { 
         constructor(private reactor: Reactor) {}
         
+        /**
+         * Basic utilities.
+         */
         public util = this.reactor.util
         
+        /**
+         * 
+         * @param src 
+         * @param dst 
+         */
         public connect<A extends T, R extends Present, T extends Present, S extends R>
                 (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
             return this.reactor._connect(src, dst);
         }
 
+        /**
+         * Return the reactor containing the mutation using this sandbox.
+         */
         public getReactor(): Reactor {
             return this.reactor
         }
 
-        public start(r: Reactor) {
-            r.startup.asSchedulable(this.reactor._getKey(r.startup)).schedule(0, null)
-        }
-
-        public stop(r: Reactor) {
-            r.shutdown.asSchedulable(this.reactor._getKey(r.shutdown)).schedule(0, null)
-        }
-
-        create(constructor: ReactorConstructor, ...args:[any]): Reactor {
-            return new constructor(args)
+        /**
+         * Terminate the given reactor.
+         * 
+         * @param reactor 
+         */
+        public terminate(reactor: Reactor) {
+            //reactor._getOwner()._markForDeletion(reactor)
+            reactor.shutdown.update(new TaggedEvent(reactor.shutdown, this.util.getCurrentTag(), null))
+            reactor._findOwnReactors().forEach(r => this.terminate(r))
         }
     };
     
@@ -1050,11 +1077,11 @@ export abstract class Reactor extends Component {
 
     /**
      * Create a new reactor.
-     * @param owner The owner of this reactor.
+     * @param container The container of this reactor.
      */
 
-    constructor(owner: Reactor | null, alias?:string) {
-        super(owner, alias);
+    constructor(container: Reactor | null, alias?:string) {
+        super(container, alias);
         
         // Utils get passed down the hierarchy. If this is an App,
         // the container refers to this object, making the following
@@ -1264,6 +1291,7 @@ export abstract class Reactor extends Component {
             // Stage it directly if it to be triggered immediately.
             if (reaction.isTriggeredImmediately()) {
                 this._stage(reaction as Reaction<unknown>)
+                // FIXME: if we're already running, then we need to set the priority as well.
             }
             reaction.active = true;
             this._recordDeps(reaction);
@@ -2135,16 +2163,13 @@ export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
-    getReactor(): Reactor;
+    terminate(reactor: Reactor): void;
 
-    start(reactor: Reactor): void;
+    getReactor(): Reactor; // Container
 
-    stop(reactor: Reactor): void;
-    
-    create(constructor: ReactorConstructor, ...args:[any]): Reactor;
-
+    // FIXME:    
     //forkJoin(constructor: new () => Reactor, ): void;
-    // FIXME: addReaction, removeReaction
+
     // FIXME: disconnect
 }
 
@@ -2158,11 +2183,24 @@ export interface ReactionSandbox {
 
 export class App extends Reactor {
 
-    alarm = new Alarm();
+    _alarm = new Alarm();
 
-    _reactionsAtStartup = new Set<Reaction<unknown>>();
+    /**
+     * Set of reactions to stage when this app starts executing.
+     */
+    private _reactionsAtStartup = new Set<Reaction<unknown>>();
 
-    _timersToSchedule = new Set<Timer>();
+    /**
+     * Set of timers to schedule when this app starts executing.
+     */
+    private _timersToSchedule = new Set<Timer>();
+
+    /**
+     * Set of reactors that gets populated during each execution step,
+     * identifying all the terminated reactors that are to be removed
+     * at the end of that execution step.
+     */
+    private _reactorsToRemove = new Set<Reactor>();
 
     /**
      * Inner class that provides access to utilities that are safe to expose to
@@ -2254,10 +2292,10 @@ export class App extends Reactor {
      */
     protected _immediateRef: ReturnType<typeof setImmediate> | undefined;
 
-    /**
-     * The next time the execution will proceed to.
-     */
-    private _nextTime: TimeValue | undefined;
+    // /**
+    //  * The next time the execution will proceed to.
+    //  */
+    // private _nextTime: TimeValue | undefined;
 
     /**
      * Priority set that keeps track of scheduled events.
@@ -2265,6 +2303,15 @@ export class App extends Reactor {
     private _eventQ = new EventQueue();
 
 
+    /**
+     * Return a function that takes a timer and initializes it.
+     * 
+     * If execution has already begun, do the following:
+     *  - if the offset is nonzero, schedule the timer at t + offset; and
+     *  - otherwise, if the period is nonzero, schedule the it at t + period.
+     * If exection is yet to start, postpone initialization until the start
+     * time is known. 
+     */
     public getInitializer(): (timer: Timer) => void {
         return (timer: Timer) => { 
             if (this._active) {
@@ -2274,11 +2321,10 @@ export class App extends Reactor {
                 var nextTag;
                 if (!timer.offset.isZero()) {
                     nextTag = this._currentTag.getLaterTag(timer.offset)
-                } else {
-                    if (!timer.period.isZero()) {
-                        nextTag = this._currentTag.getLaterTag(timer.period)
-                    }
+                } else if (!timer.period.isZero()) {
+                    nextTag = this._currentTag.getLaterTag(timer.period)
                 }
+                
                 if (nextTag) {
                     Log.debug(this, () => "Postponed scheduling of timer " + timer._getFullyQualifiedName())
                     this.schedule(new TaggedEvent(timer, nextTag, nextTag))
@@ -2409,7 +2455,8 @@ export class App extends Reactor {
      * 
      * @param event The tag of the next event to be handled.
      */
-    protected finalizeStep(nextTag: Tag) {
+    protected _advanceTime(nextTag: Tag) {
+        this._currentTag = nextTag;
     }
 
     private _react() {
@@ -2474,8 +2521,7 @@ export class App extends Reactor {
             // resulting events would be in the future, anyway.
             do {
                 // Advance logical time.
-                this.finalizeStep(nextEvent.tag)
-                this._currentTag = nextEvent.tag;
+                this._advanceTime(nextEvent.tag)
 
                 // Keep popping the event queue until the next event has a different tag.
                 while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
@@ -2503,6 +2549,9 @@ export class App extends Reactor {
                 // React to all the events loaded onto the reaction queue.
                 this._react()
                 
+                // End of this execution step. Perform cleanup.
+                // FIXME: this._reactorsToRemove.forEach
+
                 // Peek at the event queue to see whether we can process the next event
                 // or should give control back to the JS event loop.
                 nextEvent = this._eventQ.peek();
@@ -2571,8 +2620,8 @@ export class App extends Reactor {
      * Disable the alarm and clear possible immediate next.
      */
     public _cancelNext() {
-        this._nextTime = undefined;
-        this.alarm.unset();
+        //this._nextTime = undefined;
+        this._alarm.unset();
         if (this._immediateRef) {
             clearImmediate(this._immediateRef);
             this._immediateRef = undefined;
@@ -2592,13 +2641,13 @@ export class App extends Reactor {
                 return;
             }
         }
-        this._nextTime = tag.time;
+        //this._nextTime = tag.time;
         let physicalTime = getCurrentPhysicalTime();
         let timeout = physicalTime.difference(tag.time);
         if (physicalTime.isEarlierThan(tag.time) && !this._fast) {
             // Set an alarm to be woken up when the event's tag matches physical
             // time.
-            this.alarm.set(function (this: App) {
+            this._alarm.set(function (this: App) {
                 this._next();
             }.bind(this), timeout)
         } else {
