@@ -2,7 +2,6 @@ import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Start
 import { UnitBasedTimeValue, TimeUnit, TimeValue, Origin } from '../src/core/time';
 import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { doesNotMatch } from 'assert';
-import { PrintMessage } from '../src/example/generated/DistributedLogical/Distributed_dsp';
 
 class Source extends Reactor {
 
@@ -25,6 +24,7 @@ class AddOne extends Reactor {
         super(owner)
         this.addMutation(new Triggers(this.input), new Args(this.input), function(this, input) {
             let arr = input.get()
+            //new AddOne(this.getReactor()).
             if (arr !== undefined) {
                 // for (let elem of arr) {
                 //     let instance = this.newChild(this, (parent:Reactor) => {new AddOne(parent)})
@@ -64,6 +64,9 @@ class ZenoClock extends Reactor {
         this.tick = new Timer(this, 0, 0)
         this.addReaction(new Triggers(this.tick), new Args(this.tick), function(this, tick) {
             console.log("Tick at " + this.util.getElapsedLogicalTime())
+        })
+        this.addReaction(new Triggers(this.shutdown), new Args(), function(this) {
+            console.log("Shutdown reaction of reactor " + iteration)
         })
         if (iteration < 100) {
             this.addMutation(new Triggers(this.tick), new Args(this.tick), function(this, tick) {

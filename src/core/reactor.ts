@@ -167,11 +167,11 @@ class Component implements Named {
     protected _key: Symbol = Symbol()
 
     /**
-     * The owner of this component. Each component is owned by a reactor.
-     * Only instances of `App`, which denote top-level reactors, are allowed
-     * to be their own owner.
+     * The container of this component. Each component is contained by a
+     * reactor. Only instances of `App`, which denote top-level reactors,
+     * are self-contained.
      */
-    private _owner: Reactor;
+    private _container: Reactor;
 
     /**
      * Function for staging reactions for execution at the current logical
@@ -179,12 +179,17 @@ class Component implements Named {
      */
     protected _stage: (reaction: Reaction<unknown>) => void;
 
+    /**
+     * Function for initializing timers.
+     */
     protected _init: (timer: Timer) => void;
 
     /**
      * Function for scheduling tagged events.
      */
     protected _schedule: (e: TaggedEvent<any>) => void;
+
+    protected _mark: (r: Reactor) => void;
 
     /**
      * Create a new component and register it with the owner.
@@ -197,16 +202,19 @@ class Component implements Named {
         this._alias = alias
 
         if (this instanceof App) {
-            this._owner = this               // Apps are self-contained.
-            this._stage = this.getLoader()   // Get the loader from the app.
-            
-            this._schedule = this.getScheduler() // Also get the scheduler.
-            this._init = this.getInitializer()   // And the initializer.
+            this._container = this           // Apps are self-contained.
+            // Set the following functions that are private to the App
+            // but are inherited manually by contained reactors.
+            this._stage = this.getLoader()
+            this._mark = this.getMarker()
+            this._schedule = this.getScheduler()
+            this._init = this.getInitializer()
         } else {
             if (container !== null) {
-                this._owner = container              // Set the owner.
-                this._owner._register(this, this._key) // Register with owner.
-                this._stage = container._stage       // Inherited the loader.
+                container._register(this, this._key) // Register.
+                this._container = container          // and set the container.
+                this._stage = container._stage       // Inherit the loader.
+                this._mark = container._mark         // Inherit the remover.
                 this._schedule = container._schedule // Inherit the scheduler.
                 this._init = container._init         // Inherit the initializer.
             } else {
@@ -216,13 +224,23 @@ class Component implements Named {
     }
 
     /**
+     * Report whether this component has a container or not. In principle, all
+     * components should have a container, but at the time of their
+     * construction there is a brief period where they are not. This is the
+     * only moment that a component is allowed register with its container.
+     */
+    public _isContained(): boolean {
+        return (this._getContainer() !== undefined)
+    }
+
+    /**
      * Report whether or not this component is owned by the given reactor.
      * @param reactor The presumptive owner of this component.
      */
     public _isOwnedBy(reactor: Reactor): boolean {
 
         if (this instanceof App) return false
-        else if (this._owner === reactor) return true
+        else if (this._container === reactor) return true
     
         return false
     }
@@ -234,7 +252,7 @@ class Component implements Named {
      */
     public _isOwnedByOwnerOf(reactor: Reactor): boolean {
         if (this instanceof App) return false
-        else if (this._owner._isOwnedBy(reactor)) return true;
+        else if (this._container._isOwnedBy(reactor)) return true;
     
         return false;
     }
@@ -254,7 +272,7 @@ class Component implements Named {
     _getFullyQualifiedName(): string {
         var path = "";
         if (!(this instanceof App)) {
-            path = this._owner._getFullyQualifiedName();
+            path = this._container._getFullyQualifiedName();
         }
         if (path != "") {
             path += "/" + this._getName();
@@ -271,7 +289,7 @@ class Component implements Named {
 
         var name = ""
         if (!(this instanceof App)) {
-            for (const [key, value] of Object.entries(this._owner)) {
+            for (const [key, value] of Object.entries(this._container)) {
                 if (value === this) {
                     name = `${key}`
                     break
@@ -298,8 +316,8 @@ class Component implements Named {
     /**
      * Return the owner of this component.
      */
-    public _getOwner(): Reactor {
-        return this._owner
+    protected _getContainer(): Reactor {
+        return this._container
     }
 
     /**
@@ -463,7 +481,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
      * 
      */
     public toString(): string {
-        return this.reactor._getFullyQualifiedName() + "[R" + this.reactor.getReactionIndex(this) + "]";
+        return this.reactor._getFullyQualifiedName() + "[R" + this.reactor._getReactionIndex(this) + "]";
     }
 }
 
@@ -545,7 +563,7 @@ abstract class Trigger extends Component {
      * Return the owner of this trigger.
      */
     public getContainer(): Reactor | null {
-        return this._getOwner()
+        return this._getContainer()
     }
 
     /**
@@ -569,7 +587,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
      */
     public update(e: TaggedEvent<T>):void {
 
-        if (!e.tag.isSimultaneousWith(this._getOwner().util.getCurrentTag())) {
+        if (!e.tag.isSimultaneousWith(this._getContainer().util.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
         }
         if (e.trigger === this) {
@@ -600,7 +618,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
             // This action has never been scheduled before.
             return false;
         }
-        if (this.tag.isSimultaneousWith(this._getOwner().util.getCurrentTag())) {
+        if (this.tag.isSimultaneousWith(this._getContainer().util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -610,7 +628,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
     protected manager = new class implements TriggerManager {
         constructor(private trigger: ScheduledTrigger<T>) { }
         getContainer(): Reactor {
-            return this.trigger._getOwner()
+            return this.trigger._getContainer()
         }
         addReaction(reaction: Reaction<unknown>): void {
             this.trigger.reactions.add(reaction)
@@ -671,7 +689,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
                 extraDelay = new TimeValue(0);
             }
             
-            var tag = this.action._getOwner().util.getCurrentTag();
+            var tag = this.action._getContainer().util.getCurrentTag();
             var delay = this.action.minDelay.add(extraDelay);
 
             tag = tag.getLaterTag(delay);
@@ -817,7 +835,7 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
 
     public toString() {
-        return "Timer from " + this._getOwner()._getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
+        return "Timer from " + this._getContainer()._getFullyQualifiedName() + " with period: " + this.period + " offset: " + this.offset;
     }
 
     public get(): Tag | Absent {
@@ -853,7 +871,7 @@ export class Mutation<T> extends Reaction<T> {
      * @override
      */
     public toString(): string {
-        return this.parent._getFullyQualifiedName() + "[M" + this.parent.getReactionIndex(this) + "]";
+        return this.parent._getFullyQualifiedName() + "[M" + this.parent._getReactionIndex(this) + "]";
     }
     
 }
@@ -943,7 +961,7 @@ export abstract class Reactor extends Component {
     private _mutationScope: MutationSandbox;
 
     /**
-     * Register a component with its key.
+     * Add a component to this container.
      * 
      * A component that is created as part of this reactor invokes this method
      * upon creation.
@@ -951,18 +969,59 @@ export abstract class Reactor extends Component {
      * @param key The component's key.
      */
     public _register(component: Component, key: Symbol) {
+        if (component._isContained()) {
+            throw new Error("Unable to register " 
+            + component._getFullyQualifiedName() 
+            + " as it already has a container.")
+        }
         if (!this._keyChain.has(component)) {
             this._keyChain.set(component, key)
         }
     }
 
-    public _deregister(component: Component) {
-        this._keyChain.delete(component)
-        // Should the component deregister itself?
-        // 
+    /**
+     * Remove all the connections associated with a given reactor.
+     * @param reactor 
+     */
+    private _deleteConnections(reactor: Reactor): void {
+        for (let port of reactor._findOwnPorts()) {
+            this._dependencyGraph.removeNode(port)
+        }
     }
 
-    protected _getLast(reactions: Set<Reaction<any>>): Reaction<unknown> | undefined {
+    /**
+     * Remove this reactor from its container and sever any connections it may
+     * still have. This reactor will become defunct and is ready for garbage
+     * collection.
+     */
+    protected _unplug() {
+        this._getContainer()._deregister(this, this._key)
+    }
+
+    /**
+     * Remove the given reactor and its connections from this container if
+     * the key matches.
+     * @param reactor
+     * @param key 
+     */
+    public _deregister(reactor: Reactor, key: Symbol) {
+        let found
+        for (let v of this._keyChain.values()) {
+            if (v === key) {
+                found = true
+                break
+            }
+        }
+        if (found) {
+            this._keyChain.delete(reactor)
+            this._deleteConnections(reactor)
+        } else {
+            console.log("Unable to deregister reactor: " + reactor._getFullyQualifiedName())
+        }
+    }
+
+
+    private _getLast(reactions: Set<Reaction<any>>): Reaction<unknown> | undefined {
         let index = -1
         let all = this._getReactionsAndMutations()
 
@@ -977,7 +1036,7 @@ export abstract class Reactor extends Component {
         }
     }
 
-    protected _getFirst(reactions: Set<Reaction<any>>): Reaction<unknown> | undefined {
+    private _getFirst(reactions: Set<Reaction<any>>): Reaction<unknown> | undefined {
         let index = -1
         let all = this._getReactionsAndMutations()
 
@@ -1003,7 +1062,7 @@ export abstract class Reactor extends Component {
      * scheduled across hierarchies).
      * @param component The component to look up the key for.
      * @param key The key that verifies the ownership relation between this
-     * reactor and the component, with at most one level of indirection.
+     * reactor and the component, with at most one level of containment.
      */
     protected _getKey(component: Trigger, key?: Symbol): Symbol | undefined {
         if (component._isOwnedBy(this) || this._key === key) {
@@ -1023,6 +1082,18 @@ export abstract class Reactor extends Component {
      * Collection of utility functions for this app.
      */
     public util: AppUtils;
+
+    /**
+     * Mark this reactor for deletion, trigger all of its shutdown reactions
+     * and mutations, and also delete all of the reactors that this reactor
+     * contains.
+     */
+    private _delete() {
+        console.log("Marking for deletion: " + this._getFullyQualifiedName())
+        this._mark(this)
+        this.shutdown.update(new TaggedEvent(this.shutdown, this.util.getCurrentTag(), null))
+        this._findOwnReactors().forEach(r => r._delete())
+    }
 
     /**
      * Inner class intended to provide access to methods that should be
@@ -1054,14 +1125,12 @@ export abstract class Reactor extends Component {
         }
 
         /**
-         * Terminate the given reactor.
+         * Mark the given reactor for deletion.
          * 
          * @param reactor 
          */
-        public terminate(reactor: Reactor) {
-            //reactor._getOwner()._markForDeletion(reactor)
-            reactor.shutdown.update(new TaggedEvent(reactor.shutdown, this.util.getCurrentTag(), null))
-            reactor._findOwnReactors().forEach(r => this.terminate(r))
+        public delete(reactor: Reactor) {
+            reactor._delete()
         }
     };
     
@@ -1086,17 +1155,20 @@ export abstract class Reactor extends Component {
         // Utils get passed down the hierarchy. If this is an App,
         // the container refers to this object, making the following
         // assignment idemponent.
-        this.util = (this._getOwner() as unknown as Reactor).util    
+        this.util = (this._getContainer() as unknown as Reactor).util    
         
         // Create sandboxes for the reactions and mutations to execute in.
         this._reactionScope = new this._ReactionSandbox(this)
         this._mutationScope = new this._MutationSandbox(this)
-    }
 
-    protected _doShutdown() {
-        this._shutdownChildren();
-        //this._unsetTimers();
-        //this._active = false;
+        // Add a default mutation to the top-level reactor that deletes all 
+        // of its contained reactors when it is triggered by shutdown.
+        if (this instanceof App) {
+            this.addMutation(new Triggers(this.shutdown), new Args(), function(this) {
+                console.log(">>>>>>> Top-level shutdown mutation <<<<<<<")
+                this.getReactor()._findOwnReactors().forEach(r => r._delete())
+            })
+        }
     }
 
     protected _initializeReactionScope(): void {
@@ -1119,7 +1191,7 @@ export abstract class Reactor extends Component {
      * Return the index of the reaction given as an argument.
      * @param reaction The reaction to return the index of.
      */
-    public getReactionIndex(reaction: Reaction<any>): number {
+    public _getReactionIndex(reaction: Reaction<any>): number {
         
         var index: number | undefined;
 
@@ -1324,7 +1396,7 @@ export abstract class Reactor extends Component {
      * recurse until it has reached a reactor with no children.
      * @param depth The depth of recursion.
      */
-    protected getPrecedenceGraph(depth=-1): DependencyGraph<Port<Present> | Reaction<unknown>> {
+    protected _getPrecedenceGraph(depth=-1): DependencyGraph<Port<Present> | Reaction<unknown>> {
         
         var graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph();
         
@@ -1335,7 +1407,7 @@ export abstract class Reactor extends Component {
                 depth--
             }
             for (let r of this._getOwnReactors()) {
-                graph.merge(r.getPrecedenceGraph(depth));
+                graph.merge(r._getPrecedenceGraph(depth));
             }
         }
         
@@ -1370,22 +1442,6 @@ export abstract class Reactor extends Component {
 
     }
     
-    private _startupChildren() {
-        for (let r of this._getOwnReactors()) {
-            Log.debug(this, () => "Propagating startup: " + r.startup);
-            // Note that startup reactions are scheduled without a microstep delay
-            r.startup.asSchedulable(this._getKey(r.startup)).schedule(0, null)
-        }
-    }
-
-    private _shutdownChildren() {
-        Log.global.debug("Shutdown children was called")
-        for (let r of this._getOwnReactors()) {
-            Log.debug(this, () => "Propagating shutdown: " + r.shutdown);
-            r.shutdown.asSchedulable(this._getKey(r.shutdown)).schedule(0, null)
-        }
-    }
-
     /**
      * Return the reactors that this reactor owns.
      */
@@ -1406,14 +1462,14 @@ export abstract class Reactor extends Component {
     /**
      * Return a list of reactions and mutations owned by this reactor.
      */
-    public _getReactionsAndMutations(): Array<Reaction<unknown>> {
+    protected _getReactionsAndMutations(): Array<Reaction<unknown>> {
         var arr: Array<Reaction<any>> = new Array();
         this._mutations.forEach((it) => arr.push(it))
         this._reactions.forEach((it) => arr.push(it))
         return arr;
     }
 
-    private _getLastReactionOrMutation(): Reaction<any> | undefined {
+    protected _getLastReactionOrMutation(): Reaction<any> | undefined {
         let len = this._reactions.length
         if (len > 0) {
             return this._reactions[len -1]
@@ -1427,7 +1483,7 @@ export abstract class Reactor extends Component {
     /**
      * Return a list of reactions owned by this reactor.
      */
-    private _getMutations(): Array<Reaction<unknown>> {
+    protected _getMutations(): Array<Reaction<unknown>> {
         var arr: Array<Reaction<any>> = new Array();
         this._mutations.forEach((it) => arr.push(it))
         return arr;
@@ -1697,7 +1753,7 @@ export abstract class Reactor extends Component {
         return ifGraph
     }
 
-    protected _findOwnCalleePorts() {
+    private _findOwnCalleePorts() {
         let ports = new Set<CalleePort<Present, Present>>()
         for(let component of this._keyChain.keys()) {
             if (component instanceof CalleePort) {
@@ -1707,9 +1763,19 @@ export abstract class Reactor extends Component {
         return ports
     }
 
-    protected _findOwnInputs() {
+    private _findOwnPorts() {
+        let ports = new Set<Port<Present>>()
+        for (let component of this._keyChain.keys()) {
+            if (component instanceof Port) {
+                ports.add(component)
+            }
+        }
+        return ports
+    }
+
+    private _findOwnInputs() {
         let inputs = new Set<InPort<Present>>()
-        for(let component of this._keyChain.keys()) {
+        for (let component of this._keyChain.keys()) {
             if (component instanceof InPort) {
                 inputs.add(component)
             }
@@ -1717,9 +1783,9 @@ export abstract class Reactor extends Component {
         return inputs
     }
 
-    protected _findOwnOutputs() {
+    private _findOwnOutputs() {
         let outputs = new Set<OutPort<Present>>()
-        for(let component of this._keyChain.keys()) {
+        for (let component of this._keyChain.keys()) {
             if (component instanceof InPort) {
                 outputs.add(component)
             }
@@ -1727,7 +1793,7 @@ export abstract class Reactor extends Component {
         return outputs
     }
 
-    protected _findOwnReactors() {
+    private _findOwnReactors() {
         let reactors = new Set<Reactor>()
         for(let component of this._keyChain.keys()) {
             if (component instanceof Reactor) {
@@ -1835,11 +1901,11 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
         Log.debug(this, () => "In isPresent()...")
         Log.debug(this, () => "value: " + this.value);
         Log.debug(this, () => "tag: " + this.tag);
-        Log.debug(this, () => "time: " + this._getOwner().util.getCurrentLogicalTime())
+        Log.debug(this, () => "time: " + this._getContainer().util.getCurrentLogicalTime())
 
         if (this.value !== undefined
             && this.tag !== undefined
-            && this.tag.isSimultaneousWith(this._getOwner().util.getCurrentTag())) {
+            && this.tag.isSimultaneousWith(this._getContainer().util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -1897,7 +1963,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
 
         public set(value: T): void {
             this.port.value = value;
-            this.port.tag = this.port._getOwner().util.getCurrentTag();
+            this.port.tag = this.port._getContainer().util.getCurrentTag();
             // Set values in downstream receivers.
             this.port.receivers.forEach(p => p.set(value))
             // Stage triggered reactions for execution.
@@ -1924,7 +1990,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     protected manager:IOPortManager<T> = new class implements IOPortManager<T> {
         constructor(private port:IOPort<T>) {}
         getContainer(): Reactor {
-            return this.port._getOwner()
+            return this.port._getContainer()
         }
         addReceiver(port: WritablePort<T>): void {
             this.port.receivers.add(port)
@@ -1975,7 +2041,7 @@ export class InPort<T extends Present> extends IOPort<T> {
 export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Write<A>, Read<R> {
     
     public get(): R | undefined {
-        if (this.tag?.isSimultaneousWith(this._getOwner().util.getCurrentTag()))
+        if (this.tag?.isSimultaneousWith(this._getContainer().util.getCurrentTag()))
             return this.remotePort?.retValue
     }
 
@@ -1986,7 +2052,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
         if (this.remotePort) {
             this.remotePort.invoke(value)
         }
-        this.tag = this._getOwner().util.getCurrentTag();
+        this.tag = this._getContainer().util.getCurrentTag();
     }
 
     public invoke(value:A): R | undefined {
@@ -2019,7 +2085,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
             throw new Error("A Caller port cannot use used as a trigger.");
         }
         getContainer(): Reactor {
-            return this.port._getOwner()
+            return this.port._getContainer()
         }
     }(this)
 
@@ -2084,7 +2150,7 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
     protected manager:CalleeManager<A> = new class implements CalleeManager<A> {
         constructor(private port:CalleePort<A, Present>) {}
         getContainer(): Reactor {
-            return this.port._getOwner()
+            return this.port._getContainer()
         }
         addReaction(procedure: Reaction<unknown>): void {
             if (this.port.procedure !== undefined) {
@@ -2163,7 +2229,7 @@ export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
-    terminate(reactor: Reactor): void;
+    delete(reactor: Reactor): void;
 
     getReactor(): Reactor; // Container
 
@@ -2200,7 +2266,7 @@ export class App extends Reactor {
      * identifying all the terminated reactors that are to be removed
      * at the end of that execution step.
      */
-    private _reactorsToRemove = new Set<Reactor>();
+    private _reactorsToRemove = new Array<Reactor>();
 
     /**
      * Inner class that provides access to utilities that are safe to expose to
@@ -2292,16 +2358,10 @@ export class App extends Reactor {
      */
     protected _immediateRef: ReturnType<typeof setImmediate> | undefined;
 
-    // /**
-    //  * The next time the execution will proceed to.
-    //  */
-    // private _nextTime: TimeValue | undefined;
-
     /**
      * Priority set that keeps track of scheduled events.
      */
     private _eventQ = new EventQueue();
-
 
     /**
      * Return a function that takes a timer and initializes it.
@@ -2340,6 +2400,11 @@ export class App extends Reactor {
         };
     }
 
+    public getMarker(): (reactor: Reactor) => void {
+        return (r: Reactor) => {
+            this._reactorsToRemove.push(r)
+        }
+    }
 
     public getLoader(): (reaction: Reaction<unknown>) => void { // FIXME: define this in Reactor
         return (r: Reaction<unknown>) => { 
@@ -2446,12 +2511,12 @@ export class App extends Reactor {
      * In a non-federated context this method always returns true.
      * @param event The next event to be processed.
      */
-    protected canProceed(event: TaggedEvent<Present>) {
+    protected _canProceed(event: TaggedEvent<Present>) {
         return true
     }
 
     /**
-     * Hook called when all events with the current tag have been reacted to.
+     * Set the current tag to be the next tag.
      * 
      * @param event The tag of the next event to be handled.
      */
@@ -2459,6 +2524,9 @@ export class App extends Reactor {
         this._currentTag = nextTag;
     }
 
+    /**
+     * Iterate over all reactions in the reaction queue and execute them.
+     */
     private _react() {
         while (this._reactionQ.size() > 0) {
             try {
@@ -2497,7 +2565,7 @@ export class App extends Reactor {
 
             // Check whether the next event can be handled, or not quite yet.
             // A holdup can occur in a federated execution.
-            if (!this.canProceed(nextEvent)) {
+            if (!this._canProceed(nextEvent)) {
                 // If this happens, then a TAG from the RTI will trigger the
                 // next invocation of _next.
                 return; 
@@ -2507,7 +2575,7 @@ export class App extends Reactor {
             // the JS event loop.
             if (getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time)
                         && !this._fast) {
-                this.setAlarmOrYield(nextEvent.tag);
+                this._setAlarmOrYield(nextEvent.tag);
                 return;
             }
 
@@ -2550,7 +2618,13 @@ export class App extends Reactor {
                 this._react()
                 
                 // End of this execution step. Perform cleanup.
-                // FIXME: this._reactorsToRemove.forEach
+                while (this._reactorsToRemove.length > 0) {
+                    let r = this._reactorsToRemove.pop()
+                    // FIXME: doing this for the entire model at the end of execution
+                    // could be a pretty significant performance hit, so we probably
+                    // don't want to do this
+                    // r?._unplug() FIXME: visibility
+                }
 
                 // Peek at the event queue to see whether we can process the next event
                 // or should give control back to the JS event loop.
@@ -2561,19 +2635,18 @@ export class App extends Reactor {
 
         // Once we've reached here, either we're done processing events and the
         // next event is at a future time, or there are no more events in the
-        // queue.
-        if (nextEvent) {
-            Log.global.debug("Event queue not empty.")
-            this.setAlarmOrYield(nextEvent.tag);
+        // queue.        
+        if (this._endOfExecution && this._currentTag.time.isEqualTo(this._endOfExecution)) {
+            // An end of execution has been specified; a shutdown event must
+            // have been scheduled, and all shutdown events must have been
+            // consumed because the next tag is 
+            this._terminateWithSuccess();
         } else {
-            // The queue is empty.
-            if (this._endOfExecution) {
-                // An end of execution has been specified; a shutdown event must
-                // have been scheduled, and all shutdown events must have been
-                // consumed.
-                this._terminateWithSuccess();
+            if (nextEvent) {
+                Log.global.debug("Event queue not empty.")
+                this._setAlarmOrYield(nextEvent.tag);
             } else {
-                // No end of execution has been specified.
+                // The queue is empty, and no end of execution has been specified.
                 if (this._keepAlive) {
                     // Keep alive: snooze and wake up later.
                     Log.global.debug("Going to sleep.");
@@ -2612,7 +2685,7 @@ export class App extends Reactor {
         // If the scheduled event has an earlier tag than whatever is at the
         // head of the queue, set a new alarm.
         if (head == undefined || e.tag.isSmallerThan(head.tag)) {
-            this.setAlarmOrYield(e.tag);
+            this._setAlarmOrYield(e.tag);
         }
     }
 
@@ -2620,7 +2693,6 @@ export class App extends Reactor {
      * Disable the alarm and clear possible immediate next.
      */
     public _cancelNext() {
-        //this._nextTime = undefined;
         this._alarm.unset();
         if (this._immediateRef) {
             clearImmediate(this._immediateRef);
@@ -2633,7 +2705,7 @@ export class App extends Reactor {
      * 
      * @param tag 
      */
-    public setAlarmOrYield(tag: Tag) {
+    public _setAlarmOrYield(tag: Tag) {
         Log.debug(this, () => {return "In setAlarmOrYield for tag: " + tag});
         if (this._endOfExecution) {
             if (this._endOfExecution.isEarlierThan(tag.time)) {
@@ -2641,7 +2713,6 @@ export class App extends Reactor {
                 return;
             }
         }
-        //this._nextTime = tag.time;
         let physicalTime = getCurrentPhysicalTime();
         let timeout = physicalTime.difference(tag.time);
         if (physicalTime.isEarlierThan(tag.time) && !this._fast) {
@@ -2652,14 +2723,14 @@ export class App extends Reactor {
             }.bind(this), timeout)
         } else {
             // Either we're in "fast" mode, or we're lagging behind.
-            this._setImmediateForNext();
+            this._requestImmediateInvocationOfNext();
         }
     }
 
     /**
-     * Call setImmediate on this._next()
+     * Request an immediate invocation of `this._next()`.
      */
-    protected _setImmediateForNext() {
+    protected _requestImmediateInvocationOfNext() {
         // Only schedule an immediate if none is already pending.
         if (!this._immediateRef) {
             this._immediateRef = setImmediate(function (this: App) {
@@ -2670,23 +2741,14 @@ export class App extends Reactor {
     }  
 
     /**
-     * Public method to push reaction on the reaction queue. 
-     * @param e Prioritized reaction to push onto the reaction queue.
-     */
-    public _triggerReaction(r: Reaction<unknown>) {
-        Log.debug(this, () => "Pushing " + r + " onto the reaction queue.")
-        this._reactionQ.push(r);
-    }
-
-    /**
      * Schedule a shutdown event at the current time if no such action has been taken yet. 
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
-    private _shutdown(): void {
+    protected _shutdown(): void {
         if (this.util.isRunning()) {
-            this._endOfExecution = this._currentTag.time;
+            this._endOfExecution = this._currentTag.time; // FIXME: this has to be changed.
 
-            Log.debug(this, () => "Initiating shutdown sequence.");
+            Log.debug(this, () => "Stop requested.");
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
 
             this.schedulable(this.shutdown).schedule(0, null);
@@ -2734,7 +2796,7 @@ export class App extends Reactor {
         
         // Obtain the precedence graph, ensure it has no cycles, 
         // and assign a priority to each reaction in the graph.
-        var apg = this.getPrecedenceGraph();
+        var apg = this._getPrecedenceGraph();
 
         Log.debug(this, () => "Before collapse: " + apg.toString());
         var collapsed = new SortableDependencyGraph()
@@ -2780,16 +2842,25 @@ export class App extends Reactor {
     }
 
     /**
-     * Use the current physical time to set the app's start of execution.
-     * If an execution timeout is defined, the end of execution is the start time plus
-     * the execution timeout.
-     * @param startTime The beginning of this app's execution. The end of execution is
-     * determined relative to this TimeValue.
+     * Set the logical start time of the execution according to the given time
+     * value. If an execution timeout is defined, also determine the end of
+     * execution is as the start time plus the execution timeout. This method
+     * also marks the app as "active" and initializes any timers that may have
+     * been created during the course of this app's instantiation.
+     * @param startTime The beginning of this app's execution. The end of
+     * execution is determined relative to this TimeValue is a timeout has
+     * been set.
      */
-    protected _alignStartAndEndOfExecution(startTime: TimeValue) {
+    protected _determineStartAndEndOfExecution(startTime: TimeValue) {
         // Let the start of the execution be the current physical time.
         this._startOfExecution = startTime;
         this._currentTag = new Tag(this._startOfExecution, 0);
+
+        // Mark the app as active, now that the start time is known.
+        this._active = true;
+
+        // Schedule all timers created during the instantiation of this app.
+        this._timersToSchedule.forEach(timer => this._init(timer))
 
         if (this._executionTimeout != null) {
             this._endOfExecution = this._startOfExecution.add(this._executionTimeout);
@@ -2800,12 +2871,17 @@ export class App extends Reactor {
         }
     }
 
+    /**
+     * Load all reactions that were staged for immediate execution during this
+     * app's instantiation onto the reaction queue.
+     */
     protected _loadStartupReactions() {
-        // Load all reactions that are staged for immediate execution
-        // onto the reaction queue.
         this._reactionsAtStartup.forEach(r => this._reactionQ.push(r))
     }
 
+    /**
+     * Start executing reactions. 
+     */
     protected _startExecuting() {
 
         Log.info(this, () => Log.hr);
@@ -2813,34 +2889,30 @@ export class App extends Reactor {
         
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
-        
-        this._active = true;
-
-        this._initializeTimers()
 
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
 
-        // Continue execution by process the next event.
+        // Continue execution by processing the next event.
         this._next()
-    }
-
-    protected _initializeTimers() {
-        for (let timer of this._timersToSchedule) {
-            this._init(timer)
-        }
     }
     
     /**
      * Start the app.
      */
     public _start(): void {
+
+        // First analyze the dependency graph to determine whether it is valid.
         this._analyzeDependencies()
 
+        // Then load any reactions that were staged during the instantiation of
+        // any of the reactors.
         this._loadStartupReactions()        
 
-        this._alignStartAndEndOfExecution(getCurrentPhysicalTime());
-
+        // Use the current physical time to set the app's start of execution.
+        this._determineStartAndEndOfExecution(getCurrentPhysicalTime());
+        
+        // Start the main event loop.
         this._startExecuting()
     }
 }

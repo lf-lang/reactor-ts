@@ -640,7 +640,7 @@ export class FederatedApp extends App {
      * closed. FIXME: what happens in that case? Will next be called?
      * @param event 
      */
-    protected canProceed(event: TaggedEvent<Present>) {
+    protected _canProceed(event: TaggedEvent<Present>) {
         if (this._isRTISynchronized()) {
             let greatestTAG = this._getGreatestTimeAdvanceGrant();
             let nextTime = event.tag.time;
@@ -665,11 +665,11 @@ export class FederatedApp extends App {
         super._advanceTime(nextTag)
     }
 
-    protected _doShutdown() {
+    protected _shutdown() {
         this.sendRTILogicalTimeComplete(this.util.getCurrentLogicalTime());
         this.sendRTIResign();
         this.shutdownRTIClient();
-        super._doShutdown()
+        super._shutdown()
     }
 
     // FIXME: Some of the App settings (like fast) are probably incompatible
@@ -818,7 +818,7 @@ export class FederatedApp extends App {
                     startDelay = startTime.subtract(currentPhysTime);
                 }
                 this._alarm.set(() => {
-                    this._alignStartAndEndOfExecution(startTime);
+                    this._determineStartAndEndOfExecution(startTime);
                     this._startExecuting();
                 }, startDelay);
             } else {
@@ -877,7 +877,7 @@ export class FederatedApp extends App {
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = time;
-                this._setImmediateForNext();
+                this._requestImmediateInvocationOfNext();
             }
         });
 
