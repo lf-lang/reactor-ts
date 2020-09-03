@@ -153,7 +153,7 @@ export abstract class SchedulableAction<T extends Present> implements Schedule<T
  * ports, actions, timers, or reactor instances that may be part of the 
  * interface of a `Reactor`, which extends this class.
  */
-class Component implements Named {
+abstract class Component implements Named {
 
     /**
      * An optional alias for this component.
@@ -174,24 +174,6 @@ class Component implements Named {
     private _container: Reactor;
 
     /**
-     * Function for staging reactions for execution at the current logical
-     * time.
-     */
-    protected _stage: (reaction: Reaction<unknown>) => void;
-
-    /**
-     * Function for initializing timers.
-     */
-    protected _init: (timer: Timer) => void;
-
-    /**
-     * Function for scheduling tagged events.
-     */
-    protected _schedule: (e: TaggedEvent<any>) => void;
-
-    protected _mark: (r: Reactor) => void;
-
-    /**
      * Create a new component and register it with the owner.
      * @param container The owner of this component, `null` if this is an instance
      * of `App`, in which case the ownership will be assigned to the component
@@ -201,26 +183,22 @@ class Component implements Named {
     constructor(container: Reactor | null, alias?:string) {
         this._alias = alias
 
-        if (this instanceof App) {
-            this._container = this           // Apps are self-contained.
-            // Set the following functions that are private to the App
-            // but are inherited manually by contained reactors.
-            this._stage = this.getLoader()
-            this._mark = this.getMarker()
-            this._schedule = this.getScheduler()
-            this._init = this.getInitializer()
-        } else {
             if (container !== null) {
-                container._register(this, this._key) // Register.
-                this._container = container          // and set the container.
-                this._stage = container._stage       // Inherit the loader.
-                this._mark = container._mark         // Inherit the remover.
-                this._schedule = container._schedule // Inherit the scheduler.
-                this._init = container._init         // Inherit the initializer.
+                // Register.
+                container._register(this, this._key)
+                // And set the container.
+                this._container = container
+                console.log("Component registered with container " + this._getFullyQualifiedName())
             } else {
-                throw Error("Cannot instantiate component without a parent.")
+                if (this instanceof App) {
+                    // Self-register.
+                    this._register(this, this._key)
+                    this._container = this 
+                } else {
+                    throw Error("Cannot instantiate component without a parent.")
+                }
             }
-        }
+        
     }
 
     /**
@@ -579,6 +557,16 @@ abstract class Trigger extends Component {
 abstract class ScheduledTrigger<T extends Present> extends Trigger {
     protected value: T | Absent = undefined;
     protected tag: Tag | undefined;
+    protected _stage: ((reaction: Reaction<unknown>) => void) = () => {
+        throw new Error("Failed to bind to stage function.")
+    };
+
+    /**
+     * Function for scheduling tagged events.
+     */
+    protected _schedule: (e: TaggedEvent<any>) => void = () => {
+        throw new Error("Failed to bind to schedule function.")
+    };
 
     /**
      * Update the current value of this timer in accordance with the given
@@ -637,6 +625,16 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
             this.trigger.reactions.delete(reaction)
         }
     }(this)
+
+    public _setApp(app: App) {
+        if (!this._isContained()) {
+            console.log("Setting app in scheduled trigger.")
+            this._stage = app.getLoader()
+            this._schedule = app.getScheduler()
+        } else {
+            throw new Error("Can only set app once.")
+        }
+    }
 
 }
 
@@ -740,7 +738,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
     }
 }
 
-export class Startup extends Action<Present> {
+export class Startup extends Action<Present> { // FIXME: this should not be a schedulable trigger, just a trigger
     constructor(__parent__: Reactor) {
         super(__parent__, Origin.logical)
     }
@@ -806,6 +804,12 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
     offset: TimeValue;
 
     /**
+     * Function for initializing timers. This field gets initialized by the
+     * container.
+     */
+    private _init!: ((timer: Timer) => void)
+
+    /**
      * Timer constructor. 
      * @param __container__ The reactor this timer is attached to.
      * @param offset The interval between the start of execution and the first
@@ -843,6 +847,14 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
             return this.tag;
         } else {
             return undefined;
+        }
+    }
+
+    public setFuncs(init: ((timer: Timer) => void)) {
+        if (this._init === undefined) {
+            this._init = init
+        } else {
+            throw new Error("Cannot set priviledged functions more than once.")
         }
     }
 }
@@ -906,6 +918,8 @@ export abstract class Reactor extends Component {
      */
     private _keyChain: Map<Component, Symbol> = new Map()
 
+    private _app: App | undefined;
+
     /**
      * This graph has in it all the dependencies implied by this reactor's
      * ports, reactions, and connections.
@@ -960,6 +974,18 @@ export abstract class Reactor extends Component {
      */
     private _mutationScope: MutationSandbox;
 
+    public _setApp(app: App) {
+        if (!this._app || this instanceof App) {
+            console.log("Setting app in reactor.")
+            this._app = app
+            this._stage = app.getLoader()
+            this._schedule = app.getScheduler()
+            this._mark = app.getMarker()
+        } else {
+            throw new Error("Can only set app once.")
+        }
+    }
+
     /**
      * Add a component to this container.
      * 
@@ -974,9 +1000,25 @@ export abstract class Reactor extends Component {
             + component._getFullyQualifiedName() 
             + " as it already has a container.")
         }
-        if (!this._keyChain.has(component)) {
+        // Only add key if the component isn't a self-reference
+        // and isn't already registered.
+        if (component !== this && !this._keyChain.has(component)) {
             this._keyChain.set(component, key)
         }
+        
+        // Pass down priviledged functions unless this is the app.
+        if (!(this instanceof App)) {
+            if (component instanceof Reactor ||
+                component instanceof ScheduledTrigger ||
+                component instanceof Timer ||
+                component instanceof Port) {
+                component._setApp(this._app)
+            }
+            if (component instanceof Timer) {
+                component.setFuncs(this._init)
+            }
+        }
+
     }
 
     /**
@@ -1164,9 +1206,11 @@ export abstract class Reactor extends Component {
         // Add a default mutation to the top-level reactor that deletes all 
         // of its contained reactors when it is triggered by shutdown.
         if (this instanceof App) {
+            this._app = this
+            let self = this
             this.addMutation(new Triggers(this.shutdown), new Args(), function(this) {
                 console.log(">>>>>>> Top-level shutdown mutation <<<<<<<")
-                this.getReactor()._findOwnReactors().forEach(r => r._delete())
+                self._findOwnReactors().forEach(r => r._delete())
             })
         }
     }
@@ -1885,6 +1929,10 @@ export abstract class Reactor extends Component {
 
 export abstract class Port<T extends Present> extends Trigger implements Read<T> {
     
+    protected _stage: ((reaction: Reaction<unknown>) => void) = () => {
+        throw new Error("Failed to bind to stage function.")
+    };
+
     /** The time stamp associated with this port's value. */
     protected tag: Tag | undefined;
 
@@ -1911,6 +1959,16 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
             return false;
         }
     }
+
+    public _setApp(app: App) {
+        if (!this._isContained()) {
+            console.log("Setting app in port.")
+            this._stage = app.getLoader()
+        } else {
+            throw new Error("Can only set app once.")
+        }
+    }
+
 }
 
 export abstract class IOPort<T extends Present> extends Port<T> {
@@ -2211,6 +2269,10 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 }
 
+interface ExecUtils {
+    // FIXME
+}
+
 interface AppUtils {
     success(): void; // FIXME: These callbacks needs be renamed and their implementation needs to be improved.
     failure(): void;
@@ -2225,7 +2287,7 @@ interface AppUtils {
     sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number): void;
 }
 
-export interface MutationSandbox extends ReactionSandbox {
+interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
@@ -2267,6 +2329,70 @@ export class App extends Reactor {
      * at the end of that execution step.
      */
     private _reactorsToRemove = new Array<Reactor>();
+
+    private rtUtil = new class {
+        constructor(private app: App) {
+
+        }
+        /**
+         * Stage the given reaction for execution at the current logical time.
+         * @param reaction The reaction to load onto the reaction queue.
+         */ 
+        public stage(reaction: Reaction<unknown>): void {
+            if (this.app._active) {
+                this.app._reactionQ.push(reaction)
+            } else {
+                // If execution hasn't started yet, collect the staged reactions.
+                // They will be queued once they have been assigned priorities.
+                this.app._reactionsAtStartup.add(reaction) 
+            }
+        }
+
+        /**
+         * Initialize the given timer.
+         * @param timer The timer to initialize.
+         */
+        public initialize(timer: Timer): void {
+            if (this.app._active) {
+                Log.debug(this, () => "Scheduling timer " + timer._getFullyQualifiedName())
+                console.log(">>>>>>>>>Scheduling timer " + timer._getFullyQualifiedName())
+                // Schedule relative to the current tag.
+                var nextTag;
+                if (!timer.offset.isZero()) {
+                    nextTag = this.app._currentTag.getLaterTag(timer.offset)
+                } else if (!timer.period.isZero()) {
+                    nextTag = this.app._currentTag.getLaterTag(timer.period)
+                }
+                
+                if (nextTag) {
+                    Log.debug(this, () => "Postponed scheduling of timer " + timer._getFullyQualifiedName())
+                    this.schedule(new TaggedEvent(timer, nextTag, nextTag))
+                }
+    
+            } else {
+                console.log(">>>>>>>>>Postponed Scheduling of timer " + timer._getFullyQualifiedName())
+                // If execution hasn't started yet, collect the timers.
+                // They will be initialized once it is known what the start time is.
+                this.app._timersToSchedule.add(timer) 
+            }
+        }
+
+        /**
+         * Schedule a tagged event.
+         * @param e The event to schedule.
+         */
+        private schedule(e: TaggedEvent<any>): void {
+            this.app.schedule(e)
+        };
+    
+        /**
+         * 
+         * @param r 
+         */
+        private mark(r: Reactor): void {
+            this.app._reactorsToRemove.push(r)
+        };        
+    }(this)
 
     /**
      * Inner class that provides access to utilities that are safe to expose to
@@ -2363,6 +2489,25 @@ export class App extends Reactor {
      */
     private _eventQ = new EventQueue();
 
+    public _register(component: Component, key: Symbol) {
+        super._register(component, key)
+        
+        // Pass down priviledged functions.
+        if (component instanceof Reactor) {
+
+        }
+        if (component instanceof ScheduledTrigger) {
+
+        }
+        if (component instanceof Timer) {
+            component.setFuncs(this.rtUtil.initialize)
+        }
+        if (component instanceof Port) {
+            
+        }        
+    }
+
+
     /**
      * Return a function that takes a timer and initializes it.
      * 
@@ -2373,7 +2518,7 @@ export class App extends Reactor {
      * time is known. 
      */
     public getInitializer(): (timer: Timer) => void {
-        return (timer: Timer) => { 
+        return (timer: Timer) => {
             if (this._active) {
                 Log.debug(this, () => "Scheduling timer " + timer._getFullyQualifiedName())
                 console.log(">>>>>>>>>Scheduling timer " + timer._getFullyQualifiedName())
@@ -2389,15 +2534,14 @@ export class App extends Reactor {
                     Log.debug(this, () => "Postponed scheduling of timer " + timer._getFullyQualifiedName())
                     this.schedule(new TaggedEvent(timer, nextTag, nextTag))
                 }
- 
+    
             } else {
                 console.log(">>>>>>>>>Postponed Scheduling of timer " + timer._getFullyQualifiedName())
                 // If execution hasn't started yet, collect the timers.
                 // They will be initialized once it is known what the start time is.
                 this._timersToSchedule.add(timer) 
             }
-            
-        };
+        }
     }
 
     public getMarker(): (reactor: Reactor) => void {
@@ -2463,7 +2607,7 @@ export class App extends Reactor {
     /**
      * Unset all the timers of this reactor.
      */
-    public _unsetTimers(): void {
+    protected _unsetTimers(): void {
         Object.entries(this).filter(it => it[1] instanceof Timer).forEach(it => this._unsetTimer(it[1]))
     }
 
@@ -2664,14 +2808,8 @@ export class App extends Reactor {
      * Push events on the event queue. 
      * @param e Prioritized event to push onto the event queue.
      */
-    public schedule(e: TaggedEvent<any>) {
+    protected schedule(e: TaggedEvent<any>) {
         let head = this._eventQ.peek();
-
-        // All start actions bypass the event queue, except for the one scheduled by this app.
-        if (e.trigger instanceof Startup && e.trigger !== this.startup) {
-            e.trigger.update(e)
-            return
-        }
 
         // Don't schedule events past the end of execution.
         if (!this._endOfExecution || !this._endOfExecution.isEarlierThan(e.tag.time)) {
@@ -2692,7 +2830,7 @@ export class App extends Reactor {
     /**
      * Disable the alarm and clear possible immediate next.
      */
-    public _cancelNext() {
+    protected _cancelNext() {
         this._alarm.unset();
         if (this._immediateRef) {
             clearImmediate(this._immediateRef);
@@ -2705,7 +2843,7 @@ export class App extends Reactor {
      * 
      * @param tag 
      */
-    public _setAlarmOrYield(tag: Tag) {
+    protected _setAlarmOrYield(tag: Tag) {
         Log.debug(this, () => {return "In setAlarmOrYield for tag: " + tag});
         if (this._endOfExecution) {
             if (this._endOfExecution.isEarlierThan(tag.time)) {
@@ -2860,7 +2998,7 @@ export class App extends Reactor {
         this._active = true;
 
         // Schedule all timers created during the instantiation of this app.
-        this._timersToSchedule.forEach(timer => this._init(timer))
+        this._timersToSchedule.forEach(timer => this.rtUtil.initialize(timer))
 
         if (this._executionTimeout != null) {
             this._endOfExecution = this._startOfExecution.add(this._executionTimeout);
