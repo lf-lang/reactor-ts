@@ -7,6 +7,7 @@
 
 import {Sortable, PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
 import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
+import {Component} from "./component"
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -77,29 +78,6 @@ export interface Call<A, R> extends Write<A>, Read<R> {
 }
 
 /**
- * Interface for objects that have a name.
- */
-export interface Named {
-    
-    /** 
-     * Return the alternative name for this object if set, 
-     * an empty string otherwise. 
-     */
-    _getAlias(): string;
-
-    /**
-     * Return the fully qualified name of this object.
-     */ 
-    _getFullyQualifiedName(): string;
-
-    /**
-     * Return this name of this object.
-     **/
-    _getName(): string;
-
-}
-
-/**
  * Interface for readable variables.
  */
 export interface Read<T> {
@@ -145,186 +123,6 @@ export abstract class SchedulableAction<T extends Present> implements Schedule<T
 //--------------------------------------------------------------------------//
 // Core Reactor Classes                                                     //
 //--------------------------------------------------------------------------//
-
-/**
- * Base class for named objects embedded in a hierarchy of reactors. Each
- * component can only be owned by a single reactor instance. All members of
- * this class are prefixed with an underscore to avoid name collisions with
- * ports, actions, timers, or reactor instances that may be part of the 
- * interface of a `Reactor`, which extends this class.
- */
-abstract class Component implements Named {
-
-    /**
-     * An optional alias for this component.
-     */
-    protected _alias: string | undefined;
-
-    /**
-     * A symbol that identifies this component, and it also used to selectively
-     * grant access to its privileged functions.
-     */
-    protected _key: Symbol = Symbol()
-
-    /**
-     * The container of this component. Each component is contained by a
-     * reactor. Only instances of `App`, which denote top-level reactors,
-     * are self-contained.
-     */
-    private _container: Reactor;
-
-    /**
-     * Create a new component and register it with the given container.
-     * @param container The reactor that will contain the new component,
-     * `null` if this is an instance of `App`, in which case the component
-     * will be designated as its own container.
-     * 
-     * Note that each subclass implementation needs to call the method
-     * `_linkToRuntimeObject` immediately after calling this super
-     * constructor in order to establish a link with the runtime object.
-     * @param alias An optional alias for the component.
-     */
-    constructor(container: Reactor | null, alias?:string) {
-        this._alias = alias
-
-        if (container !== null) {
-            // Register.
-            container._register(this, this._key)
-            // And set the container.
-            this._container = container
-            console.log("Registered component '" + this._getFullyQualifiedName() + "' with container '" + this._container + "'")
-        } else {
-            if (this instanceof App) {
-                // Apps are self-contained.
-                this._container = this
-            } else {
-                throw Error("Cannot instantiate component without a parent.")
-            }
-        }
-    }
-
-    /**
-     * Store a reference to the given runtime object as a private class member.
-     * @param runtime 
-     */
-    public abstract _receiveRuntimeObject(runtime: Runtime): void;
-
-    /**
-     * Request the container to pass down its runtime object to this component.
-     * This function is to be called once and only once upon the construction
-     * of an object that subclasses `Component`. If it is called more than once
-     * a runtime error results.
-     */
-    protected _linkToRuntimeObject() {
-        this._getContainer()._requestRuntimeObject(this)
-    }
-
-    /**
-     * Report whether this component has been registed with its container or not.
-     * In principle, all components should have a container, but at the time of
-     * their construction there is a brief period where they are not. This is the
-     * only moment that a component is allowed register with its container.
-     */
-    public _isRegistered(): boolean {
-        return (this._getContainer() !== undefined)
-    }
-
-    /**
-     * Report whether or not this component is owned by the given reactor.
-     * @param reactor The presumptive owner of this component.
-     */
-    public _isOwnedBy(reactor: Reactor): boolean {
-
-        if (this instanceof App) return false
-        else if (this._container === reactor) return true
-    
-        return false
-    }
-
-    /**
-     * Report whether or not this component is owned by the owner of the given
-     * reactor.
-     * @param reactor The presumptive owner of the owner of this component.
-     */
-    public _isOwnedByOwnerOf(reactor: Reactor): boolean {
-        if (this instanceof App) return false
-        else if (this._container._isOwnedBy(reactor)) return true;
-    
-        return false;
-    }
-
-    /**
-     * Return the alias of this component, or an empty string if none was set.
-     */
-    public _getAlias(): string {
-        if (this._alias) return this._alias
-        else return ""
-    }
-
-    /**
-     * Return a string that identifies this component.
-     * The name is a path constructed as App/.../Container/ThisComponent
-     */
-    _getFullyQualifiedName(): string {
-        var path = "";
-        if (!(this instanceof App)) {
-            path = this._container._getFullyQualifiedName();
-        }
-        if (path != "") {
-            path += "/" + this._getName();
-        } else {
-            path = this._getName();
-        }
-        return path;
-    }
-
-    /**
-     * Return a string that identifies this component within the reactor.
-     */
-    public _getName(): string {
-
-        var name = ""
-        if (!(this instanceof App)) {
-            for (const [key, value] of Object.entries(this._container)) {
-                if (value === this) {
-                    name = `${key}`
-                    break
-                }
-            }
-        }
-
-        if (this._alias) {
-            if (name == "") {
-                name = this._alias
-            } else {
-                name += ` (${this._alias})`
-            }
-        }
-        // Return the constructor name in case the component wasn't found in
-        // its container and doesn't have an alias.
-        if (name == "") {
-            name = this.constructor.name
-        }
-        
-        return name
-    }
-
-    /**
-     * Return the owner of this component.
-     */
-    protected _getContainer(): Reactor {
-        return this._container
-    }
-
-    /**
-     * Set an alias to override the name assigned to this component by its
-     * container.
-     * @param alias An alternative name.
-     */
-    protected _setAlias(alias: string) {
-        this._alias = alias
-    }
-}
 
 
 /**
@@ -2284,7 +2082,7 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 }
 
-interface Runtime { // RuntimeUtils
+export interface Runtime { // RuntimeUtils
     util:UtilityFunctions;
     stage(reaction: Reaction<unknown>): void;
     initialize(timer: Timer): void;
