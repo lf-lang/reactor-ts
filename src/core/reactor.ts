@@ -174,10 +174,14 @@ abstract class Component implements Named {
     private _container: Reactor;
 
     /**
-     * Create a new component and register it with the owner.
-     * @param container The owner of this component, `null` if this is an instance
-     * of `App`, in which case the ownership will be assigned to the component
-     * itself.
+     * Create a new component and register it with the given container.
+     * @param container The reactor that will contain the new component,
+     * `null` if this is an instance of `App`, in which case the component
+     * will be designated as its own container.
+     * 
+     * Note that each subclass implementation needs to call the method
+     * `_linkToRuntimeObject` immediately after calling this super
+     * constructor in order to establish a link with the runtime object.
      * @param alias An optional alias for the component.
      */
     constructor(container: Reactor | null, alias?:string) {
@@ -188,12 +192,10 @@ abstract class Component implements Named {
             container._register(this, this._key)
             // And set the container.
             this._container = container
-            console.log("Component registered with container " + this._getFullyQualifiedName())
+            console.log("Registered component '" + this._getFullyQualifiedName() + "' with container '" + this._container + "'")
         } else {
             if (this instanceof App) {
-                // Self-register.
-                //this._register(this, this._key)
-                // Set the container. Self-registration is completed in the constructor of App.
+                // Apps are self-contained.
                 this._container = this
             } else {
                 throw Error("Cannot instantiate component without a parent.")
@@ -201,7 +203,21 @@ abstract class Component implements Named {
         }
     }
 
-    public abstract _setPrivateMembers(exec: ExecTools): void; // FIXME: also pass down utils so we can make them protected.
+    /**
+     * Store a reference to the given runtime object as a private class member.
+     * @param runtime 
+     */
+    public abstract _receiveRuntimeObject(runtime: Runtime): void;
+
+    /**
+     * Request the container to pass down its runtime object to this component.
+     * This function is to be called once and only once upon the construction
+     * of an object that subclasses `Component`. If it is called more than once
+     * a runtime error results.
+     */
+    protected _linkToRuntimeObject() {
+        this._getContainer()._requestRuntimeObject(this)
+    }
 
     /**
      * Report whether this component has been registed with its container or not.
@@ -560,7 +576,12 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
     protected value: T | Absent = undefined;
     protected tag: Tag | undefined;
     
-    protected exec!: ExecTools;
+    protected runtime!: Runtime;
+
+    constructor(container: Reactor, alias?: string) { // FIXME: do we really want the alias here? Probably not.
+        super(container, alias)
+        this._linkToRuntimeObject()
+    }
 
     /**
      * Update the current value of this timer in accordance with the given
@@ -569,16 +590,14 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
      */
     public update(e: TaggedEvent<T>):void {
 
-        if (!e.tag.isSimultaneousWith(this._getContainer().util.getCurrentTag())) {
+        if (!e.tag.isSimultaneousWith(this.runtime.util.getCurrentTag())) {
             throw new Error("Time of event does not match current logical time.");
         }
         if (e.trigger === this) {
             this.value = e.value
             this.tag = e.tag;
             for (let r of this.reactions) {
-                console.log("before stage in update")
-                this.exec.stage(r)
-                console.log("after stage in update")
+                this.runtime.stage(r)
             }
         } else {
             throw new Error("Attempt to update action using incompatible event.");
@@ -602,7 +621,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
             // This action has never been scheduled before.
             return false;
         }
-        if (this.tag.isSimultaneousWith(this._getContainer().util.getCurrentTag())) {
+        if (this.tag.isSimultaneousWith(this.runtime.util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -622,14 +641,11 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
         }
     }(this)
 
-    public _setPrivateMembers(exec: ExecTools) {
-        if (!exec) {
-            console.log("Provided exec tools undefined")
-        }
-        if (!this.exec) {
-            this.exec = exec
+    public _receiveRuntimeObject(runtime: Runtime) {
+        if (!this.runtime) {
+            this.runtime = runtime
         } else {
-            throw new Error("Can only set private members once.")
+            throw new Error("Can only establish link to runtime once.")
         }
     }
 
@@ -684,7 +700,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
                 extraDelay = new TimeValue(0);
             }
             
-            var tag = this.action._getContainer().util.getCurrentTag();
+            var tag = this.action.runtime.util.getCurrentTag();
             var delay = this.action.minDelay.add(extraDelay);
 
             tag = tag.getLaterTag(delay);
@@ -709,7 +725,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
             Log.debug(this, () => "Scheduling " + this.action.origin +
                 " action " + this.action._getFullyQualifiedName() + " with tag: " + tag);
     
-            this.action.exec.schedule(new TaggedEvent(this.action, tag, value));
+            this.action.runtime.schedule(new TaggedEvent(this.action, tag, value));
         }
     }(this)
 
@@ -823,9 +839,8 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
             this.period = period;
         }
         Log.debug(this, () => "Creating timer: " + this._getFullyQualifiedName())
-        console.log(">>>>>>>>>>>>>>>>>>>>>>>:" + this._getFullyQualifiedName())
         // Initialize this timer.
-        this.exec.initialize(this)
+        this.runtime.initialize(this)
     }
 
 
@@ -906,7 +921,7 @@ export abstract class Reactor extends Component {
      * Collection of priviledged functions that are passed down from the
      * container.
      */
-    private _exec!: ExecTools;
+    private _runtime!: Runtime;
 
     /**
      * This graph has in it all the dependencies implied by this reactor's
@@ -935,12 +950,12 @@ export abstract class Reactor extends Component {
     /**
      * This reactor's shutdown action.
      */
-    readonly shutdown = new Shutdown(this);
+    readonly shutdown: Shutdown;
 
     /**
      * This reactor's startup action.
      */
-    readonly startup = new Startup(this);
+    readonly startup: Startup;
 
     /**
      * The list of reactions this reactor has.
@@ -962,23 +977,27 @@ export abstract class Reactor extends Component {
      */
     private _mutationScope: MutationSandbox;
 
-    public _setPrivateMembers(exec: ExecTools) {
-        if (!this._exec) {
-            console.log("<><><><><><><><><><><>")
-            this._exec = exec
-        } else {
-            throw new Error("Can only set private members once.")
-        }
-    }
-
     /**
-     * Report whether this component has been registed with its container or not.
-     * In principle, all components should have a container, but at the time of
-     * their construction there is a brief period where they are not. This is the
-     * only moment that a component is allowed register with its container.
+     * Receive the runtime object from the container of this reactor.
+     * Invoking this method in any user-written code will result in a
+     * runtime error.
+     * @param runtime The runtime object handed down from the container.
      */
-    public _isRegistered(): boolean {
-        return (this._getContainer() !== undefined) && this._exec !== undefined
+    public _receiveRuntimeObject(runtime: Runtime) {
+        if (runtime) {
+            console.log("Received exec defined.")
+        } else {
+            console.log("Received exec undefined.")
+        }
+        
+        if (!this._runtime && runtime) {
+            this._runtime = runtime
+            // In addition to setting the runtime object, also make its
+            // utility functions available as a protected member.
+            this.util = runtime.util
+        } else {
+            throw new Error("Can only establish link to runtime once.")
+        }
     }
 
     /**
@@ -1000,15 +1019,12 @@ export abstract class Reactor extends Component {
         if (component !== this && !this._keyChain.has(component)) {
             this._keyChain.set(component, key)
         }
-        
-        // Pass down priviledged functions unless this is the app.
-        if (!(this instanceof App)) {
-            component._setPrivateMembers(this._exec)
+    }
+
+    public _requestRuntimeObject(component: Component): void {
+        if (component._isOwnedBy(this)) {
+            component._receiveRuntimeObject(this._runtime)
         }
-
-        // FIXME: startup and shutdown are a problem because they are added in reactor.
-        // This doesn't work for the top-level reactor because exec isn't initialized yet
-
     }
 
     /**
@@ -1089,19 +1105,16 @@ export abstract class Reactor extends Component {
      * key of this reactor, also look up the component's key and return it.
      * Otherwise, if the component is owned by a reactor that is owned by 
      * this reactor, request the component's key from that reactor and return
-     * it. If the component is an action, this request is only honored if it
-     * is a startup or shutdown action (other actions are not allowed to be
-     * scheduled across hierarchies).
+     * it. If the component is an action, this request is not honored because
+     * actions are never supposed to be accessed across levels of hierarchy.
      * @param component The component to look up the key for.
-     * @param key The key that verifies the ownership relation between this
-     * reactor and the component, with at most one level of containment.
+     * @param key The key that verifies the containment relation between this
+     * reactor and the component, with at most one level of indirection.
      */
     protected _getKey(component: Trigger, key?: Symbol): Symbol | undefined {
         if (component._isOwnedBy(this) || this._key === key) {
             return this._keyChain.get(component)
-        } else if ((component instanceof Startup || 
-                    component instanceof Shutdown ||
-                  !(component instanceof Action)) && 
+        } else if (!(component instanceof Action) && 
                     component._isOwnedByOwnerOf(this)) {
             let owner = component.getContainer()
             if (owner !== null) {
@@ -1111,9 +1124,9 @@ export abstract class Reactor extends Component {
     }
 
     /**
-     * Collection of utility functions for this app.
+     * Collection of utility functions for this reactor and its subclasses.
      */
-    public util: AppUtils;
+    protected util!: UtilityFunctions;
 
     /**
      * Mark this reactor for deletion, trigger all of its shutdown reactions
@@ -1122,10 +1135,8 @@ export abstract class Reactor extends Component {
      */
     private _delete() {
         console.log("Marking for deletion: " + this._getFullyQualifiedName())
-        this._exec.mark(this)
-        console.log("before problem")
+        this._runtime.delete(this)
         this.shutdown.update(new TaggedEvent(this.shutdown, this.util.getCurrentTag(), null))
-        console.log("after problem")
         this._findOwnReactors().forEach(r => r._delete())
     }
 
@@ -1172,7 +1183,7 @@ export abstract class Reactor extends Component {
      * Inner class that furnishes an execution environment for reactions.  
      */
     private _ReactionSandbox = class implements ReactionSandbox {
-        public util: AppUtils;
+        public util: UtilityFunctions;
         constructor(public reactor: Reactor) {
             this.util = reactor.util
         }
@@ -1186,23 +1197,32 @@ export abstract class Reactor extends Component {
     constructor(container: Reactor | null, alias?:string) {
         super(container, alias);
         
+        this._linkToRuntimeObject()
+        
+        this.shutdown = new Shutdown(this);
+        this.startup = new Startup(this);
+
         // Utils get passed down the hierarchy. If this is an App,
         // the container refers to this object, making the following
         // assignment idemponent.
-        this.util = this._getContainer().util    
+        //this.util = this._getContainer().util
         
         // Create sandboxes for the reactions and mutations to execute in.
         this._reactionScope = new this._ReactionSandbox(this)
         this._mutationScope = new this._MutationSandbox(this)
 
-        // Add a default mutation to the top-level reactor that deletes all 
+        // Add a default mutation to the top-level reactor that deletes all
         // of its contained reactors when it is triggered by shutdown.
         if (this instanceof App) {
+            // Pass in a reference to the reactor because the runtime object
+            // is inaccessible since it is created after this code runs.
             let self = this
-            this.addMutation(new Triggers(this.shutdown), new Args(), function(this) { // FIXME: this has to move to app, also the instantiation of startup and shutdown
+            this.addMutation(new Triggers(this.shutdown), new Args(), function(this) {
                 console.log(">>>>>>> Top-level shutdown mutation <<<<<<<")
-                self._findOwnReactors().forEach(r => r._delete()) // FIXM: findOwnReactors then has to become protected instead of private
+                self._findOwnReactors().forEach(r => r._delete())
             })
+        } else {
+            console.log("Exec defined? " + this._runtime)
         }
     }
 
@@ -1397,10 +1417,10 @@ export abstract class Reactor extends Component {
             let reaction = new Reaction(this, this._reactionScope, trigs, args, react, deadline, late);
             // Stage it directly if it to be triggered immediately.
             if (reaction.isTriggeredImmediately()) {
-                console.log("Adding reaction")
-                console.log("Reactor registration completed? " + this._isRegistered())
-                this._exec.stage(reaction as Reaction<unknown>)
-                console.log("After stage")
+                if (this._runtime === undefined) {
+                    throw new Error("undefined exec tools in " + this._getFullyQualifiedName())
+                }
+                this._runtime.stage(reaction as Reaction<unknown>)
                 // FIXME: if we're already running, then we need to set the priority as well.
             }
             reaction.active = true;
@@ -1416,7 +1436,7 @@ export abstract class Reactor extends Component {
         let mutation = new Mutation(this, this._mutationScope, trigs, args, react,  deadline, late);
         // Stage it directly if it to be triggered immediately.
         if (mutation.isTriggeredImmediately()) {
-            this._exec.stage(mutation as unknown as Reaction<unknown>) // FIXME: types
+            this._runtime.stage(mutation as unknown as Reaction<unknown>) // FIXME: types
         }
         mutation.active = true
         this._recordDeps(mutation);
@@ -1588,7 +1608,7 @@ export abstract class Reactor extends Component {
             return false
         }
 
-        if (this.util.isRunning() == false) {
+        if (this._runtime.isRunning() == false) {
             console.log("Connecting before running")
             // Validate connections between callers and callees.
             if (src instanceof CalleePort) {
@@ -1923,7 +1943,12 @@ export abstract class Reactor extends Component {
 
 export abstract class Port<T extends Present> extends Trigger implements Read<T> {
     
-    exec!: ExecTools;
+    runtime!: Runtime;
+
+    constructor(container: Reactor, alias?: string) {
+        super(container, alias)
+        this._linkToRuntimeObject()
+    }
 
     /** The time stamp associated with this port's value. */
     protected tag: Tag | undefined;
@@ -1933,11 +1958,11 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
 
     abstract get(): T | undefined;
 
-    public _setPrivateMembers(exec: ExecTools) {
-        if (!this.exec) {
-            this.exec = exec
+    public _receiveRuntimeObject(runtime: Runtime) {
+        if (!this.runtime) {
+            this.runtime = runtime
         } else {
-            throw new Error("Can only set private members once.")
+            throw new Error("Can only establish link to runtime once. Name: " + this._getFullyQualifiedName())
         }
     }
 
@@ -1949,11 +1974,11 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
         Log.debug(this, () => "In isPresent()...")
         Log.debug(this, () => "value: " + this.value);
         Log.debug(this, () => "tag: " + this.tag);
-        Log.debug(this, () => "time: " + this._getContainer().util.getCurrentLogicalTime())
+        Log.debug(this, () => "time: " + this.runtime.util.getCurrentLogicalTime())
 
         if (this.value !== undefined
             && this.tag !== undefined
-            && this.tag.isSimultaneousWith(this._getContainer().util.getCurrentTag())) {
+            && this.tag.isSimultaneousWith(this.runtime.util.getCurrentTag())) {
             return true;
         } else {
             return false;
@@ -2011,11 +2036,11 @@ export abstract class IOPort<T extends Present> extends Port<T> {
 
         public set(value: T): void {
             this.port.value = value;
-            this.port.tag = this.port._getContainer().util.getCurrentTag();
+            this.port.tag = this.port.runtime.util.getCurrentTag();
             // Set values in downstream receivers.
             this.port.receivers.forEach(p => p.set(value))
             // Stage triggered reactions for execution.
-            this.port.reactions.forEach(r => this.port.exec.stage(r))
+            this.port.reactions.forEach(r => this.port.runtime.stage(r))
         }
 
         public get(): T | Absent {
@@ -2057,14 +2082,6 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     toString(): string {
         return this._getFullyQualifiedName();
     }
-
-    public _setPrivateMembers(exec: ExecTools) {
-        if (!this.exec) {
-            this.exec = exec
-        } else {
-            throw new Error("Can only set private members once.")
-        }
-    }
 }
 
 interface ComponentManager {
@@ -2097,7 +2114,7 @@ export class InPort<T extends Present> extends IOPort<T> {
 export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Write<A>, Read<R> {
     
     public get(): R | undefined {
-        if (this.tag?.isSimultaneousWith(this._getContainer().util.getCurrentTag()))
+        if (this.tag?.isSimultaneousWith(this.runtime.util.getCurrentTag()))
             return this.remotePort?.retValue
     }
 
@@ -2108,7 +2125,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
         if (this.remotePort) {
             this.remotePort.invoke(value)
         }
-        this.tag = this._getContainer().util.getCurrentTag();
+        this.tag = this.runtime.util.getCurrentTag();
     }
 
     public invoke(value:A): R | undefined {
@@ -2267,14 +2284,24 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 }
 
-interface ExecTools {
+interface Runtime { // RuntimeUtils
+    util:UtilityFunctions;
+    stage(reaction: Reaction<unknown>): void;
+    initialize(timer: Timer): void;
+    schedule(e: TaggedEvent<any>): void;
+    delete(r: Reactor): void;
+    isRunning(): boolean;
+}
+
+interface CoreFunctions {
     stage(reaction: Reaction<unknown>): void;
     initialize(timer: Timer): void;
     schedule(e: TaggedEvent<any>): void;
     mark(r: Reactor): void;
+    isRunning(): boolean;
 }
 
-interface AppUtils {
+interface UtilityFunctions { // 
     success(): void; // FIXME: These callbacks needs be renamed and their implementation needs to be improved.
     failure(): void;
     requestShutdown(): void;
@@ -2283,7 +2310,6 @@ interface AppUtils {
     getCurrentPhysicalTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
-    isRunning(): boolean;
     sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number): void;
 }
@@ -2306,7 +2332,7 @@ export interface ReactionSandbox {
     /**
      * Collection of utility functions accessible from within a `react` function.
      */
-    util: AppUtils
+    util: UtilityFunctions
 
 }
 
@@ -2331,13 +2357,77 @@ export class App extends Reactor {
      */
     private _reactorsToRemove = new Array<Reactor>();
 
+
     /**
-     * 
+     * Inner class that provides access to utilities that are safe to expose to
+     * reaction code.
      */
-    private __exec:ExecTools = new class implements ExecTools {
+    protected util: UtilityFunctions = new class implements UtilityFunctions {
         constructor(private app: App) {
 
         }
+
+        public requestShutdown() {
+            this.app._shutdown();
+        }
+
+        public success() {
+            return this.app.success();
+        }
+
+        public failure() {
+            return this.app.failure();
+        }
+
+        public getCurrentTag(): Tag {
+            return this.app._currentTag;
+        }
+
+        public getCurrentLogicalTime(): TimeValue {
+            return this.app._currentTag.time;
+        }
+
+        public getCurrentPhysicalTime(): TimeValue {
+            return getCurrentPhysicalTime();
+        }
+
+        public getElapsedLogicalTime(): TimeValue {
+            return this.app._currentTag.time.difference(this.app._startOfExecution);
+        }
+
+        public getElapsedPhysicalTime(): TimeValue {
+            return getCurrentPhysicalTime().subtract(this.app._startOfExecution);
+        }
+        
+        public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
+            return this.app.sendRTIMessage(data, destFederateID, destPortID);
+        };
+
+        public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
+            return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
+        };
+
+    }(this);
+
+
+    /**
+     * 
+     */
+    private __runtime: Runtime = new class implements Runtime {
+        util: UtilityFunctions        
+        // FIXME: add core
+
+        constructor(private app: App) {
+            this.util = app.util
+        }
+        
+        /**
+         * Report whether the runtime has started processing events yet.
+         */
+        public isRunning(): boolean {
+            return this.app._active;
+        }
+
         /**
          * Stage the given reaction for execution at the current logical time.
          * @param reaction The reaction to load onto the reaction queue.
@@ -2388,81 +2478,41 @@ export class App extends Reactor {
                 this.app._timersToSchedule.add(timer) 
             }
         }
+        /**
+         * Push an event onto the event queue. 
+         * @param e Tagged event to push onto the event queue.
+         */
+        public schedule(e: TaggedEvent<any>) {
+            let head = this.app._eventQ.peek();
+
+            // Don't schedule events past the end of execution.
+            if (!this.app._endOfExecution || !this.app._endOfExecution.isSmallerThan(e.tag)) {
+                this.app._eventQ.push(e);
+            }
+            
+            Log.debug(this, () => "Scheduling with trigger: " + e.trigger);
+            Log.debug(this, () => "Elapsed logical time in schedule: " + this.util.getElapsedLogicalTime());
+            Log.debug(this, () => "Elapsed physical time in schedule: " + this.util.getElapsedPhysicalTime());
+            
+            // If the scheduled event has an earlier tag than whatever is at the
+            // head of the queue, set a new alarm.
+            if (head == undefined || e.tag.isSmallerThan(head.tag)) {
+                this.app._setAlarmOrYield(e.tag);
+            }
+        }
 
         /**
-         * Schedule a tagged event.
-         * @param e The event to schedule.
-         */
-        public schedule(e: TaggedEvent<any>): void {
-            this.app.schedule(e)
-        };
-    
-        /**
-         * 
+         * Mark a reactor for deletion. At the end of logical time at which
+         * this method was invoked the reactor will be removed from its
+         * container.
          * @param r 
          */
-        public mark(r: Reactor): void {
+        public delete(r: Reactor): void {
             this.app._reactorsToRemove.push(r)
-        };        
+        };
+
+
     }(this)
-
-    /**
-     * Inner class that provides access to utilities that are safe to expose to
-     * reaction code.
-     */
-    util = new class implements AppUtils {
-        constructor(private app: App) {
-
-        }
-        public schedule(e: TaggedEvent<any>) {
-            return this.app.schedule(e);
-        }
-
-        public requestShutdown() {
-            this.app._shutdown();
-        }
-
-        public success() {
-            return this.app.success();
-        }
-
-        public failure() {
-            return this.app.failure();
-        }
-
-        public getCurrentTag(): Tag {
-            return this.app._currentTag;
-        }
-
-        public isRunning(): boolean {
-            return this.app._active;
-        }
-
-        public getCurrentLogicalTime(): TimeValue {
-            return this.app._currentTag.time;
-        }
-
-        public getCurrentPhysicalTime(): TimeValue {
-            return getCurrentPhysicalTime();
-        }
-
-        public getElapsedLogicalTime(): TimeValue {
-            return this.app._currentTag.time.difference(this.app._startOfExecution);
-        }
-
-        public getElapsedPhysicalTime(): TimeValue {
-            return getCurrentPhysicalTime().subtract(this.app._startOfExecution);
-        }
-        
-        public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
-            return this.app.sendRTIMessage(data, destFederateID, destPortID);
-        };
-
-        public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
-            return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
-        };
-
-    }(this);
 
     /**
      * Send an (untimed) message to the designated federate port through the RTI.
@@ -2501,74 +2551,6 @@ export class App extends Reactor {
      */
     private _eventQ = new EventQueue();
 
-    public _register(component: Component, key: Symbol) {
-        super._register(component, key)
-        
-        // Pass down priviledged functions.
-        component._setPrivateMembers(this.__exec)
-               
-    }
-
-
-    // /**
-    //  * Return a function that takes a timer and initializes it.
-    //  * 
-    //  * If execution has already begun, do the following:
-    //  *  - if the offset is nonzero, schedule the timer at t + offset; and
-    //  *  - otherwise, if the period is nonzero, schedule the it at t + period.
-    //  * If exection is yet to start, postpone initialization until the start
-    //  * time is known. 
-    //  */
-    // public getInitializer(): (timer: Timer) => void {
-    //     return (timer: Timer) => {
-    //         if (this._active) {
-    //             Log.debug(this, () => "Scheduling timer " + timer._getFullyQualifiedName())
-    //             console.log(">>>>>>>>>Scheduling timer " + timer._getFullyQualifiedName())
-    //             // Schedule relative to the current tag.
-    //             var nextTag;
-    //             if (!timer.offset.isZero()) {
-    //                 nextTag = this._currentTag.getLaterTag(timer.offset)
-    //             } else if (!timer.period.isZero()) {
-    //                 nextTag = this._currentTag.getLaterTag(timer.period)
-    //             }
-                
-    //             if (nextTag) {
-    //                 Log.debug(this, () => "Postponed scheduling of timer " + timer._getFullyQualifiedName())
-    //                 this.schedule(new TaggedEvent(timer, nextTag, nextTag))
-    //             }
-    
-    //         } else {
-    //             console.log(">>>>>>>>>Postponed Scheduling of timer " + timer._getFullyQualifiedName())
-    //             // If execution hasn't started yet, collect the timers.
-    //             // They will be initialized once it is known what the start time is.
-    //             this._timersToSchedule.add(timer) 
-    //         }
-    //     }
-    // }
-
-    // public getMarker(): (reactor: Reactor) => void {
-    //     return (r: Reactor) => {
-    //         this._reactorsToRemove.push(r)
-    //     }
-    // }
-
-    // public getLoader(): (reaction: Reaction<unknown>) => void { // FIXME: define this in Reactor
-    //     return (r: Reaction<unknown>) => { 
-    //         if (this._active) {
-    //             this._reactionQ.push(r)
-    //         } else {
-    //             // If execution hasn't started yet, collect the staged reactions.
-    //             // They will be queued once they have been assigned priorities.
-    //             this._reactionsAtStartup.add(r) 
-    //         }
-            
-    //     };
-    // }
-
-    // public getScheduler(): (e: TaggedEvent<any>) => void {
-    //     return (e: TaggedEvent<any>) => this.schedule(e);
-    // }
-
     /**
      * If not null, finish execution with success, this time interval after the
      * start of execution.
@@ -2604,7 +2586,7 @@ export class App extends Reactor {
      * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
      * Initialized in start().
      */
-    private _startOfExecution: TimeValue;
+    private _startOfExecution!: TimeValue;
 
     /**
      * Unset all the timers of this reactor.
@@ -2613,7 +2595,7 @@ export class App extends Reactor {
         Object.entries(this).filter(it => it[1] instanceof Timer).forEach(it => this._unsetTimer(it[1]))
     }
 
-    private snooze: Action<Tag> = new Action(this, Origin.logical, new TimeValue(1, 0));
+    private snooze: Action<Tag>;
 
     /**
      * Create a new top-level reactor.
@@ -2631,23 +2613,21 @@ export class App extends Reactor {
                     throw new Error("An unexpected error has occurred.") 
                 }) {
         super(null);
-        //console.log("App exectools:")
-        //console.log(this.__exec)
-        // Self-register
-        this._setPrivateMembers(this.__exec)
-        this.startup._setPrivateMembers(this.__exec)
-        this.shutdown._setPrivateMembers(this.__exec)
+        
+        // Update pointer to runtime object for this reactor and
+        // its startup and shutdown action since the inner class
+        // instance this.__runtime isn't initialized up until here.
+        this._receiveRuntimeObject(this.__runtime)
+        this.startup._receiveRuntimeObject(this.__runtime)
+        this.shutdown._receiveRuntimeObject(this.__runtime)
+        this.snooze = new Action(this, Origin.logical, new TimeValue(1, 0))
 
-        console.log("App fully registed: " + this._isRegistered())
-
-        // Initialize the scope in which reactions and mutations of this reactor
-        // will execute. This is already done in the super constructor, but has
-        // to be redone because at that time this.utils hasn't initialized yet.
+        // Initialize the scope in which reactions and mutations of this
+        // reactor will execute. This is already done in the super constructor,
+        // but has to be redone because at that time this.utils was not
+        // initialized at that point.
         this._initializeReactionScope()
         this._initializeMutationScope()
-
-        // FIXME: Add to the reaction queue all reactions that are sensitive to startup
-        // or a timer with a zero offset.
 
         this._fast = fast;
         this._keepAlive = keepAlive;
@@ -2656,7 +2636,6 @@ export class App extends Reactor {
         // NOTE: these will be reset properly during startup.
         this._currentTag = new Tag(new TimeValue(0), 0);
         this._startOfExecution = this._currentTag.time;
-
     }
 
     /**
@@ -2755,18 +2734,15 @@ export class App extends Reactor {
                         if (!trigger.period.isZero()) {
                             Log.debug(this, () => "Rescheduling timer " + trigger);
 
-                            this.schedule(new TaggedEvent(trigger,
+                            this.__runtime.schedule(new TaggedEvent(trigger,
                                 this._currentTag.getLaterTag(trigger.period),
                                 null));
                         }
                     }
 
                     // Load reactions onto the reaction queue.
-                    console.log("before problem1")
-                    console.log("action: " + nextEvent.trigger._getFullyQualifiedName())
                     trigger.update(nextEvent);
-                    console.log("after problem1")
-
+                    
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
                 }
@@ -2814,29 +2790,6 @@ export class App extends Reactor {
                     this._shutdown();
                 }
             }
-        }
-    }
-
-    /**
-     * Push events on the event queue. 
-     * @param e Prioritized event to push onto the event queue.
-     */
-    protected schedule(e: TaggedEvent<any>) {
-        let head = this._eventQ.peek();
-
-        // Don't schedule events past the end of execution.
-        if (!this._endOfExecution || !this._endOfExecution.isSmallerThan(e.tag)) {
-            this._eventQ.push(e);
-        }
-        
-        Log.debug(this, () => "Scheduling with trigger: " + e.trigger);
-        Log.debug(this, () => "Elapsed logical time in schedule: " + this.util.getElapsedLogicalTime());
-        Log.debug(this, () => "Elapsed physical time in schedule: " + this.util.getElapsedPhysicalTime());
-        
-        // If the scheduled event has an earlier tag than whatever is at the
-        // head of the queue, set a new alarm.
-        if (head == undefined || e.tag.isSmallerThan(head.tag)) {
-            this._setAlarmOrYield(e.tag);
         }
     }
 
@@ -2896,7 +2849,7 @@ export class App extends Reactor {
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
     protected _shutdown(): void {
-        if (this.util.isRunning()) {
+        if (this.__runtime.isRunning()) {
             this._endOfExecution = this._currentTag.getMicroStepLater() // FIXME: this could be a longer delay in distributed execution
 
             Log.debug(this, () => "Stop requested.");
@@ -3011,14 +2964,14 @@ export class App extends Reactor {
         this._active = true;
 
         // Schedule all timers created during the instantiation of this app.
-        this._timersToSchedule.forEach(timer => this.__exec.initialize(timer))
+        this._timersToSchedule.forEach(timer => this.__runtime.initialize(timer))
 
         if (this._executionTimeout != null) {
             this._endOfExecution = new Tag(this._startOfExecution.add(this._executionTimeout),0);
             Log.debug(this, () => "Execution timeout: " + this._executionTimeout);
 
             // If there is a known end of execution, schedule a shutdown reaction to that effect.
-            this.schedule(new TaggedEvent(this.shutdown, this._endOfExecution, null));
+            this.__runtime.schedule(new TaggedEvent(this.shutdown, this._endOfExecution, null));
         }
     }
 

@@ -24,7 +24,7 @@ class AddOne extends Reactor {
         super(owner)
         this.addMutation(new Triggers(this.input), new Args(this.input), function(this, input) {
             let arr = input.get()
-            //new AddOne(this.getReactor()).
+            //new AddOne(this.getReactor())
             if (arr !== undefined) {
                 // for (let elem of arr) {
                 //     let instance = this.newChild(this, (parent:Reactor) => {new AddOne(parent)})
