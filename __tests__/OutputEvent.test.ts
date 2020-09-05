@@ -20,7 +20,7 @@ export class OutputResponder extends Reactor {
              * succeed the test.
              */
             function (this) {
-                this.util.success();
+                this.util.requestShutdown(true);
             }
         );
     }

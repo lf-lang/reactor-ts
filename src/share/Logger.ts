@@ -5,9 +5,9 @@ function print(this:ReactionSandbox, i: Read<unknown>, expected: State<unknown>)
     if (received) {
         console.log("Logging: " + received);
         if(received == expected.get()) {
-            this.util.success();
+            this.util.requestShutdown(true);
         } else {
-            this.util.failure();
+            this.util.requestShutdown(true, "Expected" + expected.get() + " but got " + received);
         }
     } else {
         throw new Error("Log had no input available. This shouldn't happen because the logging reaction is triggered by the input");

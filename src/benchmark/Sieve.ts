@@ -21,7 +21,7 @@ class Ramp extends Reactor {
                     next.schedule(0, 2)
                 } else {
                     if (n >= until.get()) {
-                        this.util.requestShutdown()
+                        this.util.requestShutdown(true)
                     } else {
                         next.schedule(0, n+1)
                         value.set(n)

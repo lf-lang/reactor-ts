@@ -73,8 +73,7 @@ class ZenoClock extends Reactor {
                 new ZenoClock(this.getReactor(), iteration + 1)
             })
         } else {
-            this.util.success()
-            this.util.requestShutdown()
+            this.util.requestShutdown(true)
         }        
     }
 }

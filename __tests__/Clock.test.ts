@@ -78,12 +78,12 @@ export class Clock extends App {
                 if (this.util.getElapsedLogicalTime().isEqualTo(new TimeValue(5))) {
                     console.log("reacting in Test");
                     if(a1.get() == 1 && a2.get() == 2 && a3.get() == 3) {
-                        this.util.success();
+                        this.util.requestShutdown(true);
                     } else {
                         console.log("a1: " + a1.get());
                         console.log("a2: " + a2.get());
                         console.log("a3: " + a3.get());
-                        this.util.failure();
+                        this.util.requestShutdown(false);
                     }
                 }
             }

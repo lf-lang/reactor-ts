@@ -1886,7 +1886,7 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 }
 
-export interface Runtime { // RuntimeUtils
+export interface Runtime {
     util:UtilityFunctions;
     stage(reaction: Reaction<unknown>): void;
     initialize(timer: Timer): void;
@@ -1895,18 +1895,16 @@ export interface Runtime { // RuntimeUtils
     isRunning(): boolean;
 }
 
-interface CoreFunctions {
-    stage(reaction: Reaction<unknown>): void;
-    initialize(timer: Timer): void;
-    schedule(e: TaggedEvent<any>): void;
-    mark(r: Reactor): void;
-    isRunning(): boolean;
-}
+// interface CoreFunctions {
+//     stage(reaction: Reaction<unknown>): void;
+//     initialize(timer: Timer): void;
+//     schedule(e: TaggedEvent<any>): void;
+//     mark(r: Reactor): void;
+//     isRunning(): boolean;
+// }
 
 interface UtilityFunctions { // 
-    success(): void; // FIXME: These callbacks needs be renamed and their implementation needs to be improved.
-    failure(): void;
-    requestShutdown(): void;
+    requestShutdown(success: boolean, message?: string): void;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
@@ -1940,7 +1938,10 @@ export interface ReactionSandbox {
 
 export class App extends Reactor {
 
-    _alarm = new Alarm();
+    readonly _alarm = new Alarm();
+
+    private _errored = false
+    private _message?: string
 
     /**
      * Set of reactions to stage when this app starts executing.
@@ -1969,8 +1970,12 @@ export class App extends Reactor {
 
         }
 
-        public requestShutdown() {
-            this.app._shutdown();
+        public requestShutdown(success: boolean, message?: string) {
+            if (!success) {
+                this.app._errored = true
+            }
+            this.app._message = message
+            this.app._shutdown()
         }
 
         public success() {
@@ -2375,7 +2380,7 @@ export class App extends Reactor {
             // An end of execution has been specified; a shutdown event must
             // have been scheduled, and all shutdown events must have been
             // consumed because the next tag is 
-            this._terminateWithSuccess();
+            this._done();
         } else {
             if (nextEvent) {
                 Log.global.debug("Event queue not empty.")
@@ -2464,25 +2469,25 @@ export class App extends Reactor {
         }
     }
 
-    private _terminateWithSuccess(): void {
+    /**
+     * Wrap up execution by logging information and reporting errors if applicable.
+     */
+    private _done(): void {
         this._cancelNext();
         Log.info(this, () => Log.hr);
         Log.info(this, () => ">>> End of execution at (logical) time: " + this.util.getCurrentLogicalTime());
         Log.info(this, () => ">>> Elapsed physical time: " + this.util.getElapsedPhysicalTime());
         Log.info(this, () => Log.hr);
 
-        this.success();
-    }
-
-    private _terminateWithError(): void { // FIXME: this is never read.
-        this._cancelNext();
-        Log.info(this, () => Log.hr);
-        Log.info(this, () => ">>> End of execution at (logical) time: " + this.util.getCurrentLogicalTime());
-        Log.info(this, () => ">>> Elapsed physical time: " + this.util.getElapsedPhysicalTime());
-        Log.info(this, () => Log.hr);
-
-        this.failure();
-
+        if (this._errored) {
+            this.failure()
+            console.error(">>> Erroneous exit.")
+            if (this._message) {
+                console.error("Reason: " + this._message)
+            }
+        } else {
+            this.success()
+        }
     }
 
     /**
