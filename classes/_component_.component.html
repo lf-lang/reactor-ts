@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Trigger | reactor-ts - v0.0.1</title>
+	<title>Component | reactor-ts - v0.0.1</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,13 +56,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_reactor_.html">&quot;reactor&quot;</a>
+					<a href="../modules/_component_.html">&quot;component&quot;</a>
 				</li>
 				<li>
-					<a href="_reactor_.trigger.html">Trigger</a>
+					<a href="_component_.component.html">Component</a>
 				</li>
 			</ul>
-			<h1>Class Trigger</h1>
+			<h1>Class Component</h1>
 		</div>
 	</div>
 </header>
@@ -72,26 +72,30 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Abstract class for a trigger. A trigger may be an action, port, or timer.</p>
+						<p>Base class for named objects embedded in a hierarchy of reactors. Each
+							component can only be owned by a single reactor instance. All members of
+							this class are prefixed with an underscore to avoid name collisions with
+							ports, actions, timers, or reactor instances that may be part of the
+						interface of a <code>Reactor</code>, which extends this class.</p>
 					</div>
+					<dl class="tsd-comment-tags">
+						<dt>author</dt>
+						<dd><p>Marten Lohstroh (<a href="mailto:marten@berkeley.edu">marten@berkeley.edu</a>)</p>
+						</dd>
+					</dl>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<a href="_component_.component.html" class="tsd-signature-type">Component</a>
+						<span class="target">Component</span>
 						<ul class="tsd-hierarchy">
 							<li>
-								<span class="target">Trigger</span>
-								<ul class="tsd-hierarchy">
-									<li>
-										<a href="_reactor_.scheduledtrigger.html" class="tsd-signature-type">ScheduledTrigger</a>
-									</li>
-									<li>
-										<a href="_reactor_.port.html" class="tsd-signature-type">Port</a>
-									</li>
-								</ul>
+								<a href="_reactor_.trigger.html" class="tsd-signature-type">Trigger</a>
+							</li>
+							<li>
+								<a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a>
 							</li>
 						</ul>
 					</li>
@@ -101,53 +105,49 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section tsd-is-inherited tsd-is-not-exported">
+						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported"><a href="_reactor_.trigger.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_component_.component.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-private-protected tsd-is-not-exported">
+						<section class="tsd-index-section tsd-is-private-protected">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported"><a href="_reactor_.trigger.html#_alias" class="tsd-kind-icon">_alias</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported"><a href="_reactor_.trigger.html#_key" class="tsd-kind-icon">_key</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected tsd-is-not-exported"><a href="_reactor_.trigger.html#reactions" class="tsd-kind-icon">reactions</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_component_.component.html#_alias" class="tsd-kind-icon">_alias</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_component_.component.html#_container" class="tsd-kind-icon">_container</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_component_.component.html#_key" class="tsd-kind-icon">_key</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-not-exported">
+						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported"><a href="_reactor_.trigger.html#_getalias" class="tsd-kind-icon">_get<wbr>Alias</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported"><a href="_reactor_.trigger.html#_getcontainer" class="tsd-kind-icon">_get<wbr>Container</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported"><a href="_reactor_.trigger.html#_getfullyqualifiedname" class="tsd-kind-icon">_get<wbr>Fully<wbr>Qualified<wbr>Name</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported"><a href="_reactor_.trigger.html#_getname" class="tsd-kind-icon">_get<wbr>Name</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported"><a href="_reactor_.trigger.html#_iscontainedby" class="tsd-kind-icon">_is<wbr>Contained<wbr>By</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported"><a href="_reactor_.trigger.html#_iscontainedbycontainerof" class="tsd-kind-icon">_is<wbr>Contained<wbr>ByContainer<wbr>Of</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported"><a href="_reactor_.trigger.html#_isregistered" class="tsd-kind-icon">_is<wbr>Registered</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported"><a href="_reactor_.trigger.html#_linktoruntimeobject" class="tsd-kind-icon">_link<wbr>ToRuntime<wbr>Object</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported"><a href="_reactor_.trigger.html#_receiveruntimeobject" class="tsd-kind-icon">_receive<wbr>Runtime<wbr>Object</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported"><a href="_reactor_.trigger.html#_setalias" class="tsd-kind-icon">_set<wbr>Alias</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_reactor_.trigger.html#getcontainer" class="tsd-kind-icon">get<wbr>Container</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_reactor_.trigger.html#getmanager" class="tsd-kind-icon">get<wbr>Manager</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_reactor_.trigger.html#ispresent" class="tsd-kind-icon">is<wbr>Present</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_component_.component.html#_getalias" class="tsd-kind-icon">_get<wbr>Alias</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="_component_.component.html#_getcontainer" class="tsd-kind-icon">_get<wbr>Container</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_component_.component.html#_getfullyqualifiedname" class="tsd-kind-icon">_get<wbr>Fully<wbr>Qualified<wbr>Name</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_component_.component.html#_getname" class="tsd-kind-icon">_get<wbr>Name</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_component_.component.html#_iscontainedby" class="tsd-kind-icon">_is<wbr>Contained<wbr>By</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_component_.component.html#_iscontainedbycontainerof" class="tsd-kind-icon">_is<wbr>Contained<wbr>ByContainer<wbr>Of</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_component_.component.html#_isregistered" class="tsd-kind-icon">_is<wbr>Registered</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="_component_.component.html#_linktoruntimeobject" class="tsd-kind-icon">_link<wbr>ToRuntime<wbr>Object</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_component_.component.html#_receiveruntimeobject" class="tsd-kind-icon">_receive<wbr>Runtime<wbr>Object</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="_component_.component.html#_setalias" class="tsd-kind-icon">_set<wbr>Alias</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-inherited tsd-is-not-exported">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Trigger<span class="tsd-signature-symbol">(</span>container<span class="tsd-signature-symbol">: </span><a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, alias<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_reactor_.trigger.html" class="tsd-signature-type">Trigger</a></li>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Component<span class="tsd-signature-symbol">(</span>container<span class="tsd-signature-symbol">: </span><a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, alias<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_component_.component.html" class="tsd-signature-type">Component</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#constructor">constructor</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L30">src/core/component.ts:30</a></li>
 								</ul>
@@ -181,19 +181,18 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_reactor_.trigger.html" class="tsd-signature-type">Trigger</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_component_.component.html" class="tsd-signature-type">Component</a></h4>
 						</li>
 					</ul>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected tsd-is-not-exported">
+			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 					<a name="_alias" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _alias</h3>
 					<div class="tsd-signature tsd-kind-icon">_alias<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
 					<aside class="tsd-sources">
-						<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_alias">_alias</a></p>
 						<ul>
 							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L17">src/core/component.ts:17</a></li>
 						</ul>
@@ -204,12 +203,28 @@
 						</div>
 					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="_container" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _container</h3>
+					<div class="tsd-signature tsd-kind-icon">_container<span class="tsd-signature-symbol">:</span> <a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L30">src/core/component.ts:30</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The container of this component. Each component is contained by a
+								reactor. Only instances of <code>App</code>, which denote top-level reactors,
+							are self-contained.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 					<a name="_key" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _key</h3>
 					<div class="tsd-signature tsd-kind-icon">_key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Symbol</span><span class="tsd-signature-symbol"> =&nbsp;Symbol()</span></div>
 					<aside class="tsd-sources">
-						<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_key">_key</a></p>
 						<ul>
 							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L23">src/core/component.ts:23</a></li>
 						</ul>
@@ -221,34 +236,18 @@
 						</div>
 					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected tsd-is-not-exported">
-					<a name="reactions" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagProtected">Protected</span> reactions</h3>
-					<div class="tsd-signature tsd-kind-icon">reactions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="_reaction_.reaction.html" class="tsd-signature-type">Reaction</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Set()</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/reactor.ts#L184">src/core/reactor.ts:184</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Reactions to trigger.</p>
-						</div>
-					</div>
-				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="_getalias" class="tsd-anchor"></a>
 					<h3>_get<wbr>Alias</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">_get<wbr>Alias<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_getalias">_getAlias</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L115">src/core/component.ts:115</a></li>
 								</ul>
@@ -262,16 +261,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected">
 					<a name="_getcontainer" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _get<wbr>Container</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
 						<li class="tsd-signature tsd-kind-icon">_get<wbr>Container<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_getcontainer">_getContainer</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L171">src/core/component.ts:171</a></li>
 								</ul>
@@ -285,16 +283,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="_getfullyqualifiedname" class="tsd-anchor"></a>
 					<h3>_get<wbr>Fully<wbr>Qualified<wbr>Name</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">_get<wbr>Fully<wbr>Qualified<wbr>Name<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_getfullyqualifiedname">_getFullyQualifiedName</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L124">src/core/component.ts:124</a></li>
 								</ul>
@@ -309,16 +306,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="_getname" class="tsd-anchor"></a>
 					<h3>_get<wbr>Name</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">_get<wbr>Name<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_getname">_getName</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L140">src/core/component.ts:140</a></li>
 								</ul>
@@ -332,16 +328,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="_iscontainedby" class="tsd-anchor"></a>
 					<h3>_is<wbr>Contained<wbr>By</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">_is<wbr>Contained<wbr>By<span class="tsd-signature-symbol">(</span>reactor<span class="tsd-signature-symbol">: </span><a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_iscontainedby">_isContainedBy</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L91">src/core/component.ts:91</a></li>
 								</ul>
@@ -364,16 +359,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="_iscontainedbycontainerof" class="tsd-anchor"></a>
 					<h3>_is<wbr>Contained<wbr>ByContainer<wbr>Of</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">_is<wbr>Contained<wbr>ByContainer<wbr>Of<span class="tsd-signature-symbol">(</span>reactor<span class="tsd-signature-symbol">: </span><a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_iscontainedbycontainerof">_isContainedByContainerOf</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L105">src/core/component.ts:105</a></li>
 								</ul>
@@ -398,16 +392,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="_isregistered" class="tsd-anchor"></a>
 					<h3>_is<wbr>Registered</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">_is<wbr>Registered<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_isregistered">_isRegistered</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L83">src/core/component.ts:83</a></li>
 								</ul>
@@ -424,16 +417,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected">
 					<a name="_linktoruntimeobject" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _link<wbr>ToRuntime<wbr>Object</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
 						<li class="tsd-signature tsd-kind-icon">_link<wbr>ToRuntime<wbr>Object<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_linktoruntimeobject">_linkToRuntimeObject</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L73">src/core/component.ts:73</a></li>
 								</ul>
@@ -450,16 +442,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="_receiveruntimeobject" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> _receive<wbr>Runtime<wbr>Object</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
 						<li class="tsd-signature tsd-kind-icon">_receive<wbr>Runtime<wbr>Object<span class="tsd-signature-symbol">(</span>runtime<span class="tsd-signature-symbol">: </span><a href="../interfaces/_reactor_.runtime.html" class="tsd-signature-type">Runtime</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_receiveruntimeobject">_receiveRuntimeObject</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L65">src/core/component.ts:65</a></li>
 								</ul>
@@ -481,16 +472,15 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected">
 					<a name="_setalias" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _set<wbr>Alias</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
 						<li class="tsd-signature tsd-kind-icon">_set<wbr>Alias<span class="tsd-signature-symbol">(</span>alias<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_setalias">_setAlias</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/component.ts#L180">src/core/component.ts:180</a></li>
 								</ul>
@@ -514,87 +504,6 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-					<a name="getcontainer" class="tsd-anchor"></a>
-					<h3>get<wbr>Container</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Container<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/reactor.ts#L198">src/core/reactor.ts:198</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Return the owner of this trigger.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a>
-								<span class="tsd-signature-symbol"> | </span>
-								<span class="tsd-signature-type">null</span>
-							</h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-					<a name="getmanager" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> get<wbr>Manager</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Manager<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Symbol</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_reactor_.triggermanager.html" class="tsd-signature-type">TriggerManager</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/reactor.ts#L193">src/core/reactor.ts:193</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Request the manager of this trigger. The request will only be honored
-										if the correct key is given. Each component has a unique symbol (a key)
-										that is handed to the owner upon instantiation of the component. If the
-									wrong key is supplied, return undefined.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>key: <span class="tsd-signature-type">Symbol</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>The private key embedded in this trigger.</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_reactor_.triggermanager.html" class="tsd-signature-type">TriggerManager</a></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-					<a name="ispresent" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> is<wbr>Present</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">is<wbr>Present<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/71f6563/src/core/reactor.ts#L205">src/core/reactor.ts:205</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Return whether or not this trigger is present.</p>
-								</div>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
-						</li>
-					</ul>
-				</section>
 			</section>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
@@ -606,7 +515,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_cli_.html">&quot;cli&quot;</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="../modules/_component_.html">&quot;component&quot;</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -615,7 +524,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_reaction_.html">&quot;reaction&quot;</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_reactor_.html">&quot;reactor&quot;</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -630,59 +539,50 @@
 				<ul class="before-current">
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_reactor_.trigger.html" class="tsd-kind-icon">Trigger</a>
+					<li class="current tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_component_.component.html" class="tsd-kind-icon">Component</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#constructor" class="tsd-kind-icon">constructor</a>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="_component_.component.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_alias" class="tsd-kind-icon">_alias</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="_component_.component.html#_alias" class="tsd-kind-icon">_alias</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_key" class="tsd-kind-icon">_key</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_component_.component.html#_container" class="tsd-kind-icon">_container</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#reactions" class="tsd-kind-icon">reactions</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="_component_.component.html#_key" class="tsd-kind-icon">_key</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_getalias" class="tsd-kind-icon">_get<wbr>Alias</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_component_.component.html#_getalias" class="tsd-kind-icon">_get<wbr>Alias</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_getcontainer" class="tsd-kind-icon">_get<wbr>Container</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-protected">
+								<a href="_component_.component.html#_getcontainer" class="tsd-kind-icon">_get<wbr>Container</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_getfullyqualifiedname" class="tsd-kind-icon">_get<wbr>Fully<wbr>Qualified<wbr>Name</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_component_.component.html#_getfullyqualifiedname" class="tsd-kind-icon">_get<wbr>Fully<wbr>Qualified<wbr>Name</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_getname" class="tsd-kind-icon">_get<wbr>Name</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_component_.component.html#_getname" class="tsd-kind-icon">_get<wbr>Name</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_iscontainedby" class="tsd-kind-icon">_is<wbr>Contained<wbr>By</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_component_.component.html#_iscontainedby" class="tsd-kind-icon">_is<wbr>Contained<wbr>By</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_iscontainedbycontainerof" class="tsd-kind-icon">_is<wbr>Contained<wbr>ByContainer<wbr>Of</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_component_.component.html#_iscontainedbycontainerof" class="tsd-kind-icon">_is<wbr>Contained<wbr>ByContainer<wbr>Of</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_isregistered" class="tsd-kind-icon">_is<wbr>Registered</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_component_.component.html#_isregistered" class="tsd-kind-icon">_is<wbr>Registered</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_linktoruntimeobject" class="tsd-kind-icon">_link<wbr>ToRuntime<wbr>Object</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-protected">
+								<a href="_component_.component.html#_linktoruntimeobject" class="tsd-kind-icon">_link<wbr>ToRuntime<wbr>Object</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_receiveruntimeobject" class="tsd-kind-icon">_receive<wbr>Runtime<wbr>Object</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_component_.component.html#_receiveruntimeobject" class="tsd-kind-icon">_receive<wbr>Runtime<wbr>Object</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-protected tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#_setalias" class="tsd-kind-icon">_set<wbr>Alias</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#getcontainer" class="tsd-kind-icon">get<wbr>Container</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#getmanager" class="tsd-kind-icon">get<wbr>Manager</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_reactor_.trigger.html#ispresent" class="tsd-kind-icon">is<wbr>Present</a>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-protected">
+								<a href="_component_.component.html#_setalias" class="tsd-kind-icon">_set<wbr>Alias</a>
 							</li>
 						</ul>
 					</li>
