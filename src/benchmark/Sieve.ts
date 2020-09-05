@@ -2,7 +2,9 @@ import {Args, Parameter, InPort, OutPort, State, Triggers, Action, Reactor, App,
 import {TimeValue, Origin} from "../core/time"
 import {Log} from "../core/util"
 
-Log.global.level = Log.levels.ERROR;
+Log.global.level = Log.levels.INFO;
+
+var primes: Array<number> = []
 
 class Ramp extends Reactor {
     next = new Action<number>(this, Origin.logical)
@@ -17,7 +19,7 @@ class Ramp extends Reactor {
             function (this, next, until, value) {
                 let n = next.get()
                 if (n === undefined) {
-                    console.log(2)
+                    primes.push(2)
                     next.schedule(0, 2)
                 } else {
                     if (n >= until.get()) {
@@ -60,7 +62,7 @@ class Filter extends Reactor {
                             var port = (out as unknown as WritablePort<number>).getPort()
                             this.connect(port, n.inp)
                             hasSibling.set(true)
-                            console.log(p)
+                            primes.push(p)
                         }
                         out.set(p)
                     }
@@ -90,7 +92,7 @@ class Sieve extends App {
     print: Print<number>
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
-        this.source = new Ramp(this, 10000)
+        this.source = new Ramp(this, 100000)
         this.filter = new Filter(this, 2)
         this.print = new Print(this)
         this._connect(this.source.value, this.filter.inp)
@@ -103,3 +105,5 @@ class Sieve extends App {
 let sieve = new Sieve('Sieve')
 // ************* Starting Runtime for PingPong of class PingPong
 sieve._start();
+
+console.log(primes)

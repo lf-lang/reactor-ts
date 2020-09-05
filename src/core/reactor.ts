@@ -736,7 +736,7 @@ export abstract class Reactor extends Component {
      * contains.
      */
     private _delete() {
-        console.log("Marking for deletion: " + this._getFullyQualifiedName())
+        //console.log("Marking for deletion: " + this._getFullyQualifiedName())
         this._runtime.delete(this)
         this.shutdown.update(new TaggedEvent(this.shutdown, this.util.getCurrentTag(), null))
         this._findOwnReactors().forEach(r => r._delete())
@@ -1451,7 +1451,7 @@ export abstract class Reactor extends Component {
         return outputs
     }
 
-    private _findOwnReactors() {
+    protected _findOwnReactors() {
         let reactors = new Set<Reactor>()
         for(let component of this._keyChain.keys()) {
             if (component instanceof Reactor) {
