@@ -573,7 +573,7 @@ export abstract class Reactor extends Component {
     /**
      * Sandbox for the execution of reactions.
      */
-    private _reactionScope!: ReactionSandbox;
+    private _reactionScope: ReactionSandbox;
 
     /** 
      * The list of mutations this reactor has.
@@ -583,7 +583,7 @@ export abstract class Reactor extends Component {
     /**
      * Sandbox for the execution of mutations.
      */
-    private _mutationScope!: MutationSandbox;
+    private _mutationScope: MutationSandbox;
 
     /**
      * Receive the runtime object from the container of this reactor.
@@ -739,7 +739,7 @@ export abstract class Reactor extends Component {
         //console.log("Marking for deletion: " + this._getFullyQualifiedName())
         this._runtime.delete(this)
         this.shutdown.update(new TaggedEvent(this.shutdown, this.util.getCurrentTag(), null))
-        this._findOwnReactors().forEach(r => r._delete())
+        //this._findOwnReactors().forEach(r => r._delete())
     }
 
     /**
@@ -809,21 +809,18 @@ export abstract class Reactor extends Component {
         // assignment idemponent.
         //this.util = this._getContainer().util
         
-        // Add a default mutation to the top-level reactor that deletes all
-        // of its contained reactors when it is triggered by shutdown.
-        if (this instanceof App) {
-            // Pass in a reference to the reactor because the runtime object
-            // is inaccessible since it is created after this code runs.
-            let self = this as Reactor
-            this.addMutation(new Triggers(this.shutdown), new Args(), function(this) {
-                console.log(">>>>>>> Top-level shutdown mutation <<<<<<<")
-                self._findOwnReactors().forEach(r => r._delete())
-            })
-        } else {
-            // Create sandboxes for the reactions and mutations to execute in.
-            this._reactionScope = new this._ReactionSandbox(this)
-            this._mutationScope = new this._MutationSandbox(this)
-        }
+        
+        // Create sandboxes for the reactions and mutations to execute in.
+        this._reactionScope = new this._ReactionSandbox(this)
+        this._mutationScope = new this._MutationSandbox(this)
+    
+        // Pass in a reference to the reactor because the runtime object
+        // is inaccessible for the top-level reactor (it is created after this constructor returns).
+        let self = this as Reactor
+        this.addMutation(new Triggers(this.shutdown), new Args(), function(this) {
+            self._findOwnReactors().forEach(r => r._delete())
+        })
+        
     }
 
     protected _initializeReactionScope(): void {

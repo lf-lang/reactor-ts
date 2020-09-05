@@ -4,7 +4,7 @@ import {Log} from "../core/util"
 
 Log.global.level = Log.levels.INFO;
 
-var primes: Array<number> = []
+var primes: Array<boolean> = new Array(100000)
 
 class Ramp extends Reactor {
     next = new Action<number>(this, Origin.logical)
@@ -19,11 +19,12 @@ class Ramp extends Reactor {
             function (this, next, until, value) {
                 let n = next.get()
                 if (n === undefined) {
-                    primes.push(2)
+                    primes[2] = true
                     next.schedule(0, 2)
                 } else {
                     if (n >= until.get()) {
                         this.util.requestShutdown(true)
+                        primes.filter((v, i) => v? console.log(i) : {})
                     } else {
                         next.schedule(0, n+1)
                         value.set(n)
@@ -62,7 +63,7 @@ class Filter extends Reactor {
                             var port = (out as unknown as WritablePort<number>).getPort()
                             this.connect(port, n.inp)
                             hasSibling.set(true)
-                            primes.push(p)
+                            primes[p] = true
                         }
                         out.set(p)
                     }
@@ -72,31 +73,28 @@ class Filter extends Reactor {
     }
 }
 
-class Print<T extends Present> extends Reactor {
-    inp = new InPort<T>(this)
-    constructor(parent: Reactor) {
-        super(parent)
-        this.addReaction(
-            new Triggers(this.inp),
-            new Args(this.inp),
-            function (this, inp) {
-                console.log(inp.get())
-            }
-        );
-    }
-}
+// class Print<T extends Present> extends Reactor {
+//     inp = new InPort<T>(this)
+//     constructor(parent: Reactor) {
+//         super(parent)
+//         this.addReaction(
+//             new Triggers(this.inp),
+//             new Args(this.inp),
+//             function (this, inp) {
+//                 console.log(inp.get())
+//             }
+//         );
+//     }
+// }
 
 class Sieve extends App {
     source: Ramp
     filter: Filter
-    print: Print<number>
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
         this.source = new Ramp(this, 100000)
         this.filter = new Filter(this, 2)
-        this.print = new Print(this)
         this._connect(this.source.value, this.filter.inp)
-        //this._connect(this.filter.out, this.print.inp)
     }
 }
 
@@ -105,5 +103,3 @@ class Sieve extends App {
 let sieve = new Sieve('Sieve')
 // ************* Starting Runtime for PingPong of class PingPong
 sieve._start();
-
-console.log(primes)
