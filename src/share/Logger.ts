@@ -1,4 +1,4 @@
-import {Reactor, InPort, Reaction, Read, Triggers, Args, State, Present, ReactionSandbox} from '../core/reactor';
+import {Reactor, InPort, Read, Triggers, Args, State, Present, ReactionSandbox} from '../core/reactor';
 
 function print(this:ReactionSandbox, i: Read<unknown>, expected: State<unknown>) {
     const received = i.get();

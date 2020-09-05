@@ -1,5 +1,6 @@
 import {SortableDependencyGraph, Sortable, PrioritySetElement, PrioritySet, Log, LogLevel} from '../src/core/util';
-import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown} from '../src/core/reactor';
+import {Reactor, App, Triggers, InPort, Args, ArgList, Startup, Shutdown} from '../src/core/reactor';
+import {Reaction, Priority} from "../src/core/reaction"
 
 //Log.setGlobalLevel(Log.levels.DEBUG);
 

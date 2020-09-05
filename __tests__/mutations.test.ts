@@ -1,7 +1,7 @@
-import {Reactor, Reaction, Priority, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort, Action, Timer, State} from '../src/core/reactor';
-import { UnitBasedTimeValue, TimeUnit, TimeValue, Origin } from '../src/core/time';
-import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
-import { doesNotMatch } from 'assert';
+import {Reactor, App, Triggers, InPort, Args, OutPort, Timer} from '../src/core/reactor';
+import {TimeValue} from '../src/core/time';
+import {Log, LogLevel} from '../src/core/util';
+
 
 class Source extends Reactor {
 

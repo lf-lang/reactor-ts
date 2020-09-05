@@ -1,4 +1,4 @@
-import {OutPort, App, Timer, Reaction, Write, Triggers, Args} from '../src/core/reactor';
+import {OutPort, App, Timer, Write, Triggers, Args} from '../src/core/reactor';
 import {TimeValue} from "../src/core/time";
 import { Log } from '../src/core/util';
 

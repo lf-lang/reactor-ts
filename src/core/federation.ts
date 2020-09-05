@@ -656,14 +656,14 @@ export class FederatedApp extends App {
         return true
     }
 
-    protected _advanceTime(nextTag: Tag) {
-        let currentTime = this.util.getCurrentLogicalTime()
-        if (currentTime.isEarlierThan(nextTag.time)) {
-            // Tell the RTI logical time is being advanced to a greater value.
-            this.sendRTILogicalTimeComplete(currentTime);
-        }
-        super._advanceTime(nextTag)
-    }
+    // protected _advanceTime(nextTag: Tag) {
+    //     let currentTime = this.util.getCurrentLogicalTime()
+    //     if (currentTime.isEarlierThan(nextTag.time)) {
+    //         // Tell the RTI logical time is being advanced to a greater value.
+    //         this.sendRTILogicalTimeComplete(currentTime);
+    //     }
+    //     super._advanceTime(nextTag)
+    // }
 
     protected _shutdown() {
         this.sendRTILogicalTimeComplete(this.util.getCurrentLogicalTime());

@@ -5,9 +5,11 @@
  * @author Matt Weber (matt.weber@berkeley.edu)
  */
 
-import {Sortable, PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
+import {PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
 import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
 import {Component} from "./component"
+import {Reaction, Priority, Mutation, Procedure} from "./reaction"
+import {FederatedApp} from './federation';
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -36,13 +38,6 @@ export type ArgList<T> = T extends Variable[] ? T : never;
 export type Present = (number | string | boolean | symbol | object | null);
 
 /**
- * A number that indicates a reaction's position with respect to other
- * reactions in an acyclic precendence graph.
- * @see ReactionQueue
- */
-export type Priority = number;
-
-/**
  * Type for simple variables that are both readable and writable.
  */
 export type ReadWrite<T> = Read<T> & Write<T>;
@@ -60,15 +55,11 @@ export type Variable = Read<unknown>
 // Constants                                                                //
 //--------------------------------------------------------------------------//
 
-const defaultMIT = new UnitBasedTimeValue(1, TimeUnit.nsec);
+const defaultMIT = new UnitBasedTimeValue(1, TimeUnit.nsec); // FIXME
 
 //--------------------------------------------------------------------------//
 // Interfaces                                                               //
 //--------------------------------------------------------------------------//
-
-interface ReactorConstructor {
-    new (...args:any[]): Reactor;
-}
 
 /**
  * Interface for the invocation of remote procedures.
@@ -123,161 +114,6 @@ export abstract class SchedulableAction<T extends Present> implements Schedule<T
 //--------------------------------------------------------------------------//
 // Core Reactor Classes                                                     //
 //--------------------------------------------------------------------------//
-
-
-/**
- * Generic base class for reactions. The type parameter `T` denotes the type of
- * the argument list of the `react` function that that is applied to when this
- * reaction gets triggered.
- */
-export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Priority> {
-
-    /** 
-     * Priority derived from this reaction's location in the dependency graph
-     * that spans the entire hierarchy of components inside the top-level reactor
-     * that this reaction is also embedded in.
-     */
-    private priority: Priority = Number.MAX_SAFE_INTEGER;
-
-    /**
-     * Pointer to the next reaction, used by the runtime when this reaction is staged
-     * for execution at the current logical time.
-     */
-    public next: PrioritySetElement<Priority> | undefined;
-
-     /**
-      * Construct a new reaction by passing in a reference to the reactor that
-      * will own it, an object to execute the its `react` and `late` functions
-      * on, a list of triggers, the arguments to pass into `react` and `late`,
-      * an implementation of this reaction's `react` function, an optional
-      * deadline to be observed, and an optional custom implementation of the
-      * `late` function that is invoked when logical time lags behind physical time
-      * with a margin that exceeds the time interval denoted by the deadline.
-      * @param reactor The owner of this reaction.
-      * @param sandbox The `this` object for `react` and `late`.
-      * @param trigs The ports, actions, or timers, which, when they receive
-      * values, will trigger this reaction.
-      * @param args The arguments to be passed to `react` and `late`.
-      * @param react Function that gets execute when triggered and "on time."
-      * @param deadline The maximum amount by which logical time may lag behind
-      * physical time when `react` has been triggered and is ready to execute.
-      * @param late Function that gets execute when triggered and "late."
-      */
-    constructor(
-        private reactor: Reactor,
-        private sandbox: ReactionSandbox,
-        readonly trigs: Triggers,
-        readonly args: Args<ArgList<T>>,
-        private react: (...args: ArgList<T>) => void,
-        private deadline?: TimeValue,
-        private late: (...args: ArgList<T>) => void = () => 
-            { Log.global.warn("Deadline violation occurred!") }) {
-    }
-
-    /**
-     * Indicates whether or not this reaction is active. A reaction become
-     * active when its container starts up, inactive when its container
-     * shuts down.
-     */
-    public active = false
-
-    /**
-     * Return true if this reaction is triggered immediately (by startup or a
-     * timer with zero offset).
-     */
-    isTriggeredImmediately(): boolean {
-        return (this.trigs.list.filter(trig => (
-            trig instanceof Startup || (trig instanceof Timer && trig.offset.isZero())
-        )).length > 0)
-    }
-
-    /**
-     * Return the priority of this reaction. It determines the execution order among
-     * reactions staged for execution at the same logical time.
-     */
-    getPriority(): Priority {
-        return this.priority;
-    }
-
-    /**
-     * Return whether or not this reaction has priority over another.
-     * @param another Reaction to compare this reaction's priority against.
-     */
-    hasPriorityOver(another: PrioritySetElement<Priority> | undefined): boolean {
-        if (another != null && this.getPriority() < another.getPriority()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Return whether another, newly staged reaction is equal to this one.
-     * Because reactions are just object references, no updating is necessary.
-     * Returning true just signals that the scheduler shouldn't stage it twice.
-     * @param node 
-     */
-    updateIfDuplicateOf(node: PrioritySetElement<Priority> | undefined) {
-        return Object.is(this, node);
-    }
-
-    /**
-     * Invoke the react function in the appropriate sandbox and with the argument
-     * list that was specified upon the construction of this reaction object.
-     */
-    public doReact() {
-
-        Log.debug(this, () => ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString());
-        Log.debug(this, () => "Reaction deadline: " + this.deadline);
-
-        // If this reaction was loaded onto the reaction queue but the trigger(s) 
-        // absorbed by a mutation that routed the value(s) elsewhere, then return
-        // without invoking the reaction.
-        if (!this.active) {
-            return
-        }
-        // Test if this reaction has a deadline which has been violated.
-        // This is the case if the reaction has a defined timeout and
-        // logical time + timeout < physical time
-        if (this.deadline &&
-            this.sandbox.util.getCurrentTag()
-                .getLaterTag(this.deadline)
-                .isSmallerThan(new Tag(getCurrentPhysicalTime(), 0))) {
-            this.late.apply(this.sandbox, this.args.tuple); // late
-        } else {
-            this.react.apply(this.sandbox, this.args.tuple); // on time
-        }
-    }
-
-    /**
-     * Set a deadline for this reaction. The given time value denotes the maximum
-     * allowable amount by which logical time may lag behind physical time at the
-     * point that this reaction is ready to execute. If this maximum lag is
-     * exceeded, the `late` function is executed instead of the `react` function.
-     * @param deadline The deadline to set to this reaction.
-     */
-    public setDeadline(deadline: TimeValue): this {
-        this.deadline = deadline;
-        return this;
-    }
-
-    /**
-     * Set for reaction priority, to be used only by the runtime environment.
-     * The priority of each reaction is determined on the basis of its
-     * dependencies on other reactions.
-     * @param priority The priority for this reaction.
-     */
-    public setPriority(priority: number) {
-        this.priority = priority;
-    }
-
-    /**
-     * 
-     */
-    public toString(): string {
-        return this.reactor._getFullyQualifiedName() + "[R" + this.reactor._getReactionIndex(this) + "]";
-    }
-}
 
 /**
  * An event is caused by a timer or a scheduled action. Each event is tagged
@@ -656,35 +492,6 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
 }
 
-class Procedure<T> extends Reaction<T> {
-
-}
-
-export class Mutation<T> extends Reaction<T> {
-
-    readonly parent: Reactor;
-
-    constructor(
-        __parent__: Reactor,
-        sandbox: MutationSandbox,
-        trigs: Triggers,
-        args: Args<ArgList<T>>,
-        react: (...args: ArgList<T>) => void,
-        deadline?: TimeValue,
-        late?: (...args: ArgList<T>) => void) {
-        super(__parent__, sandbox, trigs, args, react, deadline, late);
-        this.parent = __parent__;
-    }
-
-    /**
-     * @override
-     */
-    public toString(): string {
-        return this.parent._getFullyQualifiedName() + "[M" + this.parent._getReactionIndex(this) + "]";
-    }
-    
-}
-
 export class Args<T extends Variable[]> {
     tuple: T;
     constructor(...args: T) {
@@ -782,12 +589,6 @@ export abstract class Reactor extends Component {
      * @param runtime The runtime object handed down from the container.
      */
     public _receiveRuntimeObject(runtime: Runtime) {
-        if (runtime) {
-            console.log("Received exec defined.")
-        } else {
-            console.log("Received exec undefined.")
-        }
-        
         if (!this._runtime && runtime) {
             this._runtime = runtime
             // In addition to setting the runtime object, also make its
@@ -820,7 +621,7 @@ export abstract class Reactor extends Component {
     }
 
     public _requestRuntimeObject(component: Component): void {
-        if (component._isOwnedBy(this)) {
+        if (component._isContainedBy(this)) {
             component._receiveRuntimeObject(this._runtime)
         }
     }
@@ -910,10 +711,10 @@ export abstract class Reactor extends Component {
      * reactor and the component, with at most one level of indirection.
      */
     protected _getKey(component: Trigger, key?: Symbol): Symbol | undefined {
-        if (component._isOwnedBy(this) || this._key === key) {
+        if (component._isContainedBy(this) || this._key === key) {
             return this._keyChain.get(component)
         } else if (!(component instanceof Action) && 
-                    component._isOwnedByOwnerOf(this)) {
+                    component._isContainedByContainerOf(this)) {
             let owner = component.getContainer()
             if (owner !== null) {
                 return owner._getKey(component, this._keyChain.get(owner))
@@ -1352,12 +1153,12 @@ export abstract class Reactor extends Component {
      */
     public _isDownstream(port: Port<Present>) {
         if (port instanceof InPort) {
-            if (port._isOwnedByOwnerOf(this)) {
+            if (port._isContainedByContainerOf(this)) {
                 return true;
             }
         } 
         if (port instanceof OutPort) {
-            if (port._isOwnedBy(this)) {
+            if (port._isContainedBy(this)) {
                 return true;
             }
         }
@@ -1371,12 +1172,12 @@ export abstract class Reactor extends Component {
      */
     public _isUpstream(port: Port<Present>) {
         if (port instanceof OutPort) {
-            if (port._isOwnedByOwnerOf(this)) {
+            if (port._isContainedByContainerOf(this)) {
                 return true;
             }
         } 
         if (port instanceof InPort) {
-            if (port._isOwnedBy(this)) {
+            if (port._isContainedBy(this)) {
                 return true;
             }
         }
@@ -1414,7 +1215,7 @@ export abstract class Reactor extends Component {
             }
             if (src instanceof CallerPort) {
                 if (dst instanceof CalleePort && 
-                    src._isOwnedByOwnerOf(this) && dst._isOwnedByOwnerOf(this)) {
+                    src._isContainedByContainerOf(this) && dst._isContainedByContainerOf(this)) {
                     return true
                 }
                 return false
@@ -1481,14 +1282,14 @@ export abstract class Reactor extends Component {
         if (src instanceof OutPort) {
             if (dst instanceof InPort) {
                 // OUT to IN
-                if (src._isOwnedByOwnerOf(this) && dst._isOwnedByOwnerOf(this)) {
+                if (src._isContainedByContainerOf(this) && dst._isContainedByContainerOf(this)) {
                     return true;
                 } else {
                     return false;
                 }
             } else {
                 // OUT to OUT
-                if (src._isOwnedByOwnerOf(this) && dst._isOwnedBy(this)) {
+                if (src._isContainedByContainerOf(this) && dst._isContainedBy(this)) {
                     return true;
                 } else {
                     return false;
@@ -1497,7 +1298,7 @@ export abstract class Reactor extends Component {
         } else {
             if (dst instanceof InPort) {
                 // IN to IN
-                if (src._isOwnedBy(this) && dst._isOwnedByOwnerOf(this)) {
+                if (src._isContainedBy(this) && dst._isContainedByContainerOf(this)) {
                     return true;
                 } else {
                     return false;
@@ -2112,7 +1913,7 @@ interface UtilityFunctions { //
     sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number): void;
 }
 
-interface MutationSandbox extends ReactionSandbox {
+export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
@@ -2451,7 +2252,14 @@ export class App extends Reactor {
      * 
      * @param event The tag of the next event to be handled.
      */
-    protected _advanceTime(nextTag: Tag) {
+    private _advanceTime(nextTag: Tag) {
+        if (this instanceof FederatedApp) {
+            let currentTime = this.util.getCurrentLogicalTime()
+            if (currentTime.isEarlierThan(nextTag.time)) {
+                // Tell the RTI logical time is being advanced to a greater value.
+                this.sendRTILogicalTimeComplete(currentTime);
+            }
+        }
         this._currentTag = nextTag;
     }
 
