@@ -9,7 +9,6 @@ import {PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, Dependenc
 import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
 import {Component} from "./component"
 import {Reaction, Priority, Mutation, Procedure} from "./reaction"
-import {FederatedApp} from './federation';
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -2252,14 +2251,7 @@ export class App extends Reactor {
      * 
      * @param event The tag of the next event to be handled.
      */
-    private _advanceTime(nextTag: Tag) {
-        if (this instanceof FederatedApp) {
-            let currentTime = this.util.getCurrentLogicalTime()
-            if (currentTime.isEarlierThan(nextTag.time)) {
-                // Tell the RTI logical time is being advanced to a greater value.
-                this.sendRTILogicalTimeComplete(currentTime);
-            }
-        }
+    protected _advanceTime(nextTag: Tag) {
         this._currentTag = nextTag;
     }
 
