@@ -814,7 +814,7 @@ export abstract class Reactor extends Component {
         if (this instanceof App) {
             // Pass in a reference to the reactor because the runtime object
             // is inaccessible since it is created after this code runs.
-            let self = this
+            let self = this as Reactor
             this.addMutation(new Triggers(this.shutdown), new Args(), function(this) {
                 console.log(">>>>>>> Top-level shutdown mutation <<<<<<<")
                 self._findOwnReactors().forEach(r => r._delete())
@@ -1451,7 +1451,7 @@ export abstract class Reactor extends Component {
         return outputs
     }
 
-    protected _findOwnReactors() {
+    private _findOwnReactors() {
         let reactors = new Set<Reactor>()
         for(let component of this._keyChain.keys()) {
             if (component instanceof Reactor) {
