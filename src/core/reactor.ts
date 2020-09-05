@@ -573,7 +573,7 @@ export abstract class Reactor extends Component {
     /**
      * Sandbox for the execution of reactions.
      */
-    private _reactionScope: ReactionSandbox;
+    private _reactionScope!: ReactionSandbox;
 
     /** 
      * The list of mutations this reactor has.
@@ -583,7 +583,7 @@ export abstract class Reactor extends Component {
     /**
      * Sandbox for the execution of mutations.
      */
-    private _mutationScope: MutationSandbox;
+    private _mutationScope!: MutationSandbox;
 
     /**
      * Receive the runtime object from the container of this reactor.
@@ -809,10 +809,6 @@ export abstract class Reactor extends Component {
         // assignment idemponent.
         //this.util = this._getContainer().util
         
-        // Create sandboxes for the reactions and mutations to execute in.
-        this._reactionScope = new this._ReactionSandbox(this)
-        this._mutationScope = new this._MutationSandbox(this)
-
         // Add a default mutation to the top-level reactor that deletes all
         // of its contained reactors when it is triggered by shutdown.
         if (this instanceof App) {
@@ -824,7 +820,9 @@ export abstract class Reactor extends Component {
                 self._findOwnReactors().forEach(r => r._delete())
             })
         } else {
-            console.log("Exec defined? " + this._runtime)
+            // Create sandboxes for the reactions and mutations to execute in.
+            this._reactionScope = new this._ReactionSandbox(this)
+            this._mutationScope = new this._MutationSandbox(this)
         }
     }
 
@@ -1888,6 +1886,7 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 export interface Runtime {
     util:UtilityFunctions;
+    //core: CoreFunctions;
     stage(reaction: Reaction<unknown>): void;
     initialize(timer: Timer): void;
     schedule(e: TaggedEvent<any>): void;
@@ -1918,6 +1917,8 @@ export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
+    //disconnect(src: Port<Present>, dst?: Port<Present>): void;
+
     delete(reactor: Reactor): void;
 
     getReactor(): Reactor; // Container
@@ -1925,7 +1926,6 @@ export interface MutationSandbox extends ReactionSandbox {
     // FIXME:    
     //forkJoin(constructor: new () => Reactor, ): void;
 
-    // FIXME: disconnect
 }
 
 export interface ReactionSandbox {
@@ -1959,7 +1959,6 @@ export class App extends Reactor {
      * at the end of that execution step.
      */
     private _reactorsToRemove = new Array<Reactor>();
-
 
     /**
      * Inner class that provides access to utilities that are safe to expose to
@@ -2022,7 +2021,6 @@ export class App extends Reactor {
      */
     private __runtime: Runtime = new class implements Runtime {
         util: UtilityFunctions        
-        // FIXME: add core
 
         constructor(private app: App) {
             this.util = app.util

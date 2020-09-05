@@ -1,4 +1,4 @@
-import {Reactor, Reaction, Timer, App} from '../../src/core/reactor';
+import {Reactor, Timer, App} from '../../src/core/reactor';
 import {TimeValue} from "../../src/core/time"
 
 
