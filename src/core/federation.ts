@@ -1,7 +1,7 @@
 import {Log} from './util';
 import {Tag, TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
 import {Socket, createConnection, SocketConnectOpts} from 'net'
-import {EventEmitter } from 'events';
+import {EventEmitter} from 'events';
 import {Action, Present, TaggedEvent, App} from './reactor'
 
 //---------------------------------------------------------------------//

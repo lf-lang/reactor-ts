@@ -122,10 +122,14 @@ export abstract class SchedulableAction<T extends Present> implements Schedule<T
  */
 export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
 
+    /**
+     * Pointer to the next element of the priority set that this event might
+     * be hooked into.
+     */
     public next: PrioritySetElement<Tag> | undefined;
 
     /**
-     * Construct a new event.
+     * Construct a new tagged event.
      * @param trigger The trigger of this event.
      * @param tag The tag at which this event occurs.
      * @param value The value associated with this event. 
