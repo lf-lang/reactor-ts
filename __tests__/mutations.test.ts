@@ -1,17 +1,17 @@
-import {Reactor, App, Triggers, InPort, Args, OutPort, Timer} from '../src/core/reactor';
+import {Reactor, App, Triggers, InPort, Args, OutPort, Timer, State} from '../src/core/reactor';
 import {TimeValue} from '../src/core/time';
 import {Log, LogLevel} from '../src/core/util';
 
 
 class Source extends Reactor {
 
-    timer = new Timer(this, 0, new TimeValue(1000))
-    output = new OutPort<null>(this)
+    timer = new Timer(this, 0, new TimeValue(1))
+    output = new OutPort<Array<number>>(this)
     constructor(parent: Reactor) {
         super(parent)
-        // this.addReaction(new Triggers(this.timer), new Args(this.writable(this.output)), function(this, out, state) {
-        //     out.set(null)
-        // });
+        this.addReaction(new Triggers(this.timer), new Args(this.writable(this.output)), function(this, out) {
+            out.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        });
     }
     
 }
@@ -20,40 +20,93 @@ class AddOne extends Reactor {
     input = new InPort<number[]>(this)
     output = new OutPort<number[]>(this)
 
-    constructor(owner: Reactor) {
+    constructor(owner: Reactor, id: number) {
         super(owner)
-        this.addMutation(new Triggers(this.input), new Args(this.input), function(this, input) {
-            let arr = input.get()
-            //new AddOne(this.getReactor())
-            if (arr !== undefined) {
-                // for (let elem of arr) {
-                //     let instance = this.newChild(this, (parent:Reactor) => {new AddOne(parent)})
-                // }
-            }  
-            
+        this.addReaction(new Triggers(this.input), new Args(this.input, this.writable(this.output)), function(this, input, output) {
+            let val = input.get()
+            if (val) {
+                val[id] = val[id]+1
+                output.set(val)
+            }
+            console.log("AddOne's reaction was invoked (id " + id + ")")
         })
     }
 }
 
 class Print extends Reactor {
     input = new InPort<number[]>(this)
+
+    constructor(owner: Reactor) {
+        super(owner)
+        this.addReaction(new Triggers(this.input), new Args(this.input), function(this, input) {
+            let val = input.get()
+            console.log("Print reacting...")
+            if (val !== undefined) {
+                let expected = [2, 3, 4, 5, 6 ,7, 8, 9, 10, 11]
+                for (let i = 0; i < 10; i++) {
+                    if (val[i] != expected[i]) {
+                        this.util.requestShutdown(false, "Expected: " + expected + " but got: " + val)
+                        return        
+                    }
+                }
+                console.log("Expected: " + expected + " and got: " + val)
+            } else {
+                this.util.requestShutdown(false, "Input undefined.")
+            }
+        })
+    }
 }
 
-/* Set a port in startup to get thing going */
+class Computer extends Reactor {
+
+    in = new InPort<number[]>(this);
+    out = new OutPort<number[]>(this);
+
+    adder = new AddOne(this, 0)
+
+    constructor(container: Reactor) {
+        super(container)
+        this._connect(this.in, this.adder.input)
+        this.addMutation(new Triggers(this.in), new Args(this.in), function(this, src) {
+            let vals = src.get()
+            if (vals) {
+                let skip = true
+                for (let id of vals.keys()) {
+                    if (skip) {
+                        skip = false
+                        continue
+                    }
+                    let x = new AddOne(this.getReactor(), id)
+                    this.connect(src, x.input)
+                }
+            }
+        })
+        this.addReaction(new Triggers(this.adder.output), new Args(this.adder.output, this.writable(this.out)), function(this, adderout, out) {
+            let arr = adderout.get()
+            if (arr) {
+                out.set(arr)
+            }
+        })
+    }
+}
+
 class ScatterGather extends App {
     
     source = new Source(this)
 
-    adder = new AddOne(this)
+    compute = new Computer(this)
 
     print = new Print(this)
 
-    constructor() {
-        super()
-        //this._connect(this.source.output, this.adder.input)
-        this._connect(this.adder.output, this.print.input)
+    constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
+        super(timeout, false, false, success, fail);
+        this._connect(this.source.output, this.compute.in)
+        this._connect(this.compute.out, this.print.input)
+        var self = this
+        this.addReaction(new Triggers(this.shutdown), new Args(), function(this) {
+            console.log(self._getPrecedenceGraph().toString())
+        })
     }
-    
 }
 
 class ZenoClock extends Reactor {
@@ -68,7 +121,7 @@ class ZenoClock extends Reactor {
         this.addReaction(new Triggers(this.shutdown), new Args(), function(this) {
             console.log("Shutdown reaction of reactor " + iteration)
         })
-        if (iteration < 100) {
+        if (iteration < 5) {
             this.addMutation(new Triggers(this.tick), new Args(this.tick), function(this, tick) {
                 new ZenoClock(this.getReactor(), iteration + 1)
             })
@@ -79,9 +132,14 @@ class ZenoClock extends Reactor {
 }
 
 class Zeno extends App {
-    start = new ZenoClock(this, 1)
     constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
         super(timeout, false, false, success, fail);
+        new ZenoClock(this, 1)
+        var self = this;
+    
+        this.addReaction(new Triggers(this.shutdown), new Args(), function(this) {
+            console.log(self._getPrecedenceGraph().toString())
+        })
     }
 }
 
@@ -90,7 +148,7 @@ describe("Creating reactors at runtime", function () {
     jest.setTimeout(5000);
 
     it("Reactor with periodic timer", done => {
-        Log.global.level = LogLevel.DEBUG
+        //Log.global.level = LogLevel.DEBUG
 
         let app = new Zeno(new TimeValue(5),  done, () => {})
 
@@ -99,25 +157,15 @@ describe("Creating reactors at runtime", function () {
 
 });
 
-
-// describe("Building connections at runtime", function () {
+// describe("Simple scatter gather", function () {
 
 //     jest.setTimeout(5000);
 
-//     it("Missed reaction deadline on InPort", done => {
-//         Log.global.level = LogLevel.WARN
+//     it("Simple scatter gather", done => {
+//         Log.global.level = LogLevel.DEBUG
 
-//         function fail() {
-//             throw new Error("Test has failed.");
-//         };
-        
-//         let app = new ScatterGather()
+//         let app = new ScatterGather(new TimeValue(5),  done, () => {})
 
-//         // spyOn(app, '_start').and.callThrough
-
-//         // expect(() => {app._start()}).toThrowError("Deadline violation occurred!");
-
-//         /* FIXME: Deadlines are not working */
 //         app._start();
 //     });
 

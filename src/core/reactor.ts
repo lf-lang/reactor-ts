@@ -535,7 +535,7 @@ export abstract class Reactor extends Component {
      * This graph has in it all the dependencies implied by this reactor's
      * ports, reactions, and connections.
      */
-    private _dependencyGraph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph()
+    private _dependencyGraph: DependencyGraph<Port<Present> | Reaction<any>> = new DependencyGraph()
 
     /**
      * This graph has some overlap with the reactors dependency, but is 
@@ -800,7 +800,6 @@ export abstract class Reactor extends Component {
         super(container, alias);
         
         this._linkToRuntimeObject()
-        
         this.shutdown = new Shutdown(this);
         this.startup = new Startup(this);
 
@@ -820,7 +819,19 @@ export abstract class Reactor extends Component {
         this.addMutation(new Triggers(this.shutdown), new Args(), function(this) {
             self._findOwnReactors().forEach(r => r._delete())
         })
-        
+
+        // If this reactor was created at runtime, simply set the priorty of 
+        // the default to the priority of from the last mutation of its
+        // container plus one. Subsequent reactions and mutations that are added
+        // will get a priority relative to this one.
+        // FIXME: If any of the assigned priorities is larger than any downstream
+        // reaction, then the priorities of those downstream reactions must be
+        // increased.
+        if (!(this instanceof App) && this._runtime.isRunning()) {
+            let toDependOn = this._getContainer()._getLastMutation()
+            if (toDependOn)
+                this._mutations[0].setPriority(toDependOn.getPriority()+1)
+        }
     }
 
     protected _initializeReactionScope(): void {
@@ -1008,28 +1019,26 @@ export abstract class Reactor extends Component {
             // This lets the first caller depend on it.
             port.getManager(this._getKey(port)).setLastCaller(this._getLastReactionOrMutation())
             this._reactions.push(procedure);    
-            
+            // FIXME: set priority manually if this happens at runtime.
         } else {
             // This is an ordinary reaction.
             let reaction = new Reaction(this, this._reactionScope, trigs, args, react, deadline, late);
             // Stage it directly if it to be triggered immediately.
             if (reaction.isTriggeredImmediately()) {
-                if (this._runtime === undefined) {
-                    throw new Error("undefined exec tools in " + this._getFullyQualifiedName())
-                }
                 this._runtime.stage(reaction as Reaction<unknown>)
                 // FIXME: if we're already running, then we need to set the priority as well.
             }
             reaction.active = true;
             this._recordDeps(reaction);
             this._reactions.push(reaction);
+            // FIXME: set priority manually if this happens at runtime.
         }
     }
 
     protected addMutation<T>(trigs: Triggers, args: Args<ArgList<T>>,
         react: (this: MutationSandbox, ...args: ArgList<T>) => void, deadline?: TimeValue,
         late: (this: MutationSandbox, ...args: ArgList<T>) => void =
-            () => { Log.global.warn("Deadline violation occurred!") }) {
+            () => { Log.global.warn("Deadline violation occurred!") }) {        
         let mutation = new Mutation(this, this._mutationScope, trigs, args, react,  deadline, late);
         // Stage it directly if it to be triggered immediately.
         if (mutation.isTriggeredImmediately()) {
@@ -1040,32 +1049,15 @@ export abstract class Reactor extends Component {
         this._mutations.push(mutation);
     }
 
-    /**
-     * Recursively collect the local dependency graph of each contained reactor
-     * and merge them all in one graph.
-     * 
-     * The recursion depth can be limited via the depth parameter. A depth of 0
-     * will only return the local dependency graph of this reactor, a depth
-     * of 1 will merge the local graph only with this reactor's immediate
-     * children, etc. The default dept is -1, which will let this method
-     * recurse until it has reached a reactor with no children.
-     * @param depth The depth of recursion.
-     */
-    protected _getPrecedenceGraph(depth=-1): DependencyGraph<Port<Present> | Reaction<unknown>> {
-        
-        var graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph();
-        
-        graph.merge(this._dependencyGraph)
-
-        if (depth > 0 || depth < 0) {
-            if (depth > 0) {
-                depth--
-            }
-            for (let r of this._getOwnReactors()) {
-                graph.merge(r._getPrecedenceGraph(depth));
-            }
+    private _addHierarchicalDependencies(): void {
+        let dependent = this._getFirstReactionOrMutation()
+        let toDependOn = this._getContainer()._getLastMutation()
+        if (dependent && toDependOn && this._getContainer() !== this) {
+            this._dependencyGraph.addEdge(dependent, toDependOn) // FIXME: this assumes there is always at least one mutation.
         }
-        
+    }
+
+    private _addRPCDependencies(): void {
         // FIXME: Potentially do this in connect instead upon connecting to a
         // callee port. So far, it is unclear how RPCs would work when
         // established at runtime by a mutation.
@@ -1078,12 +1070,10 @@ export abstract class Reactor extends Component {
             let procedure = p.getManager(this._getKey(p)).getProcedure()
             let lastCaller = p.getManager(this._getKey(p)).getLastCaller()
             if (procedure && lastCaller) {
-                let effects = graph.getBackEdges(procedure)
+                let effects = this._dependencyGraph.getBackEdges(procedure)
                 //console.log(">>>>>>>>>>>> last caller:" + lastCaller)
                 for (let e of effects) {
                     if (!(e instanceof CalleePort)) {
-                        // Add edge to returned graph.
-                        graph.addEdge(e, lastCaller)
                         // Also add edge to the local graph.
                         this._dependencyGraph.addEdge(e, lastCaller)
                     }
@@ -1093,6 +1083,42 @@ export abstract class Reactor extends Component {
             }
         }
 
+    }
+
+    /**
+     * Recursively collect the local dependency graph of each contained reactor
+     * and merge them all in one graph.
+     * 
+     * The recursion depth can be limited via the depth parameter. A depth of 0
+     * will only return the local dependency graph of this reactor, a depth
+     * of 1 will merge the local graph only with this reactor's immediate
+     * children, etc. The default dept is -1, which will let this method
+     * recurse until it has reached a reactor with no children.
+     * 
+     * Some additional constraits are added to guarantee the following:
+     *  - The first reaction or mutation has a dependency on the last mutation
+     *    of this reactor's container; and
+     *  - RPCs occur in a deterministic order.
+     * @param depth The depth of recursion.
+     */
+    protected _getPrecedenceGraph(depth=-1): DependencyGraph<Port<Present> | Reaction<unknown>> {
+        
+        var graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph();
+        
+        this._addHierarchicalDependencies();
+        this._addRPCDependencies()
+        
+        graph.merge(this._dependencyGraph)
+
+        if (depth > 0 || depth < 0) {
+            if (depth > 0) {
+                depth--
+            }
+            for (let r of this._getOwnReactors()) {
+                graph.merge(r._getPrecedenceGraph(depth));
+            }
+        }
+        
         return graph;
 
     }
@@ -1124,6 +1150,29 @@ export abstract class Reactor extends Component {
         return arr;
     }
 
+    /**
+     * Return the last mutation of this reactor. All contained reactors
+     * must have their reactions depend on this.
+     */
+    protected _getLastMutation(): Mutation<any> | undefined {
+        let len = this._mutations.length
+        if (len > 0) {
+            return this._mutations[len -1]
+        }
+    }
+
+protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
+    if (this._mutations.length > 0) {
+        return this._mutations[0]
+    }
+    if (this._reactions.length > 0) {
+        return this._reactions[0]
+    }
+}
+
+    /**
+     * Return the last reaction or mutation of this reactor.
+     */
     protected _getLastReactionOrMutation(): Reaction<any> | undefined {
         let len = this._reactions.length
         if (len > 0) {
@@ -1137,6 +1186,9 @@ export abstract class Reactor extends Component {
 
     /**
      * Return a list of reactions owned by this reactor.
+     *
+     * The returned list is a copy of the list kept inside of the reactor,
+     * so changing it will not affect this reactor.
      */
     protected _getMutations(): Array<Reaction<unknown>> {
         var arr: Array<Reaction<any>> = new Array();
@@ -1206,7 +1258,7 @@ export abstract class Reactor extends Component {
         }
 
         if (this._runtime.isRunning() == false) {
-            console.log("Connecting before running")
+            // console.log("Connecting before running")
             // Validate connections between callers and callees.
             if (src instanceof CalleePort) {
                 return false
@@ -1364,9 +1416,16 @@ export abstract class Reactor extends Component {
                 // Add dependency implied by connection to local graph.
                 this._dependencyGraph.addEdge(dst, src);
                 // Register receiver for value propagation.
+                let writer = dst.asWritable(this._getKey(dst));
                 src.getManager(this._getKey(src)).addReceiver
-                    (dst.asWritable(this._getKey(dst)) as WritablePort<S>);
+                    (writer as WritablePort<S>);
+                let val = src.get()
+                if (this._runtime.isRunning() && val !== undefined) {
+                    //console.log(">>>>>>>>>>>>>>>>>>>>>>>>><<<<<>>>>>>>>>>>>>>>>>>>>>")
+                    writer.set(val)
+                }
             }
+
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
         }
@@ -1540,7 +1599,7 @@ export abstract class Reactor extends Component {
 
 export abstract class Port<T extends Present> extends Trigger implements Read<T> {
     
-    runtime!: Runtime;
+    protected runtime!: Runtime;
 
     constructor(container: Reactor, alias?: string) {
         super(container, alias)
@@ -1636,6 +1695,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
             this.port.tag = this.port.runtime.util.getCurrentTag();
             // Set values in downstream receivers.
             this.port.receivers.forEach(p => p.set(value))
+            //console.log("Set called. The number of reactions is: " + this.port.reactions.size)
             // Stage triggered reactions for execution.
             this.port.reactions.forEach(r => this.port.runtime.stage(r))
         }
@@ -1662,14 +1722,28 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         getContainer(): Reactor {
             return this.port._getContainer()
         }
+
+        /**
+         * Add the given port to the list of receivers. If the connection was
+         * established at runtime and the upstream port already has a value,
+         * immediately propagate the value to the newly connected receiver.
+         * @param port A newly connected downstream port.
+         */
         addReceiver(port: WritablePort<T>): void {
             this.port.receivers.add(port)
+            if (this.port.runtime.isRunning()) {
+                let val = this.port.get()
+                if (val !== undefined) {
+                    port.set(val)
+                }
+            }
         }
         delReceiver(port: WritablePort<T>): void {
             this.port.receivers.delete(port)
         }
         addReaction(reaction: Reaction<unknown>): void {
             this.port.reactions.add(reaction)
+            //console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         }
         delReaction(reaction: Reaction<unknown>): void {
             this.port.reactions.delete(reaction)
@@ -1769,7 +1843,7 @@ interface CalleeManager<T extends Present> extends TriggerManager {
     setLastCaller(reaction: Reaction<unknown> | undefined):void;
     getLastCaller(): Reaction<unknown> | undefined;
     addReaction(procedure: Procedure<unknown>): void;
-    getProcedure(): Procedure<unknown> | undefined;
+    getProcedure(): Procedure<any> | undefined;
 }
 
 /**
@@ -2504,6 +2578,8 @@ export class App extends Reactor {
         // and assign a priority to each reaction in the graph.
         var apg = this._getPrecedenceGraph();
 
+        console.log(apg.toString())
+
         Log.debug(this, () => "Before collapse: " + apg.toString());
         var collapsed = new SortableDependencyGraph()
 
@@ -2532,7 +2608,7 @@ export class App extends Reactor {
                 search(leaf, apg.getEdges(leaf))
                 visited.clear()
             }
-        }        
+        }
 
         // 2. Update priorities.
         Log.debug(this, () => "After collapse: " + collapsed.toString());

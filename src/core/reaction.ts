@@ -23,7 +23,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
      * that spans the entire hierarchy of components inside the top-level reactor
      * that this reaction is also embedded in.
      */
-    private priority: Priority = Number.MAX_SAFE_INTEGER;
+    private priority: Priority = 0 //Number.MAX_SAFE_INTEGER;
 
     /**
      * Pointer to the next reaction, used by the runtime when this reaction is staged

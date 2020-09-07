@@ -64,8 +64,9 @@ class Filter extends Reactor {
                             this.connect(port, n.inp)
                             hasSibling.set(true)
                             primes[p] = true
+                        } else {
+                            out.set(p)
                         }
-                        out.set(p)
                     }
                 }
             }
