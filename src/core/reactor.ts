@@ -46,7 +46,7 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  * reactions in an argument list.
  * @see Read
  * @see Write
- * @see Schedule
+ * @see Sched
  */
 export type Variable = Read<unknown>
 
@@ -77,7 +77,7 @@ export interface Read<T> {
 /**
  * Interface for schedulable actions.
  */
-export interface Schedule<T> extends Read<T> {
+export interface Sched<T> extends Read<T> {
     schedule: (extraDelay: TimeValue | 0, value: T) => void;
     // FIXME: it makes sense to be able to check the presence of a (re)schedulable action.
 }
@@ -105,7 +105,7 @@ export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
  * regular action. In addition to a get method, it also has a schedule method
  * that allows for the action to be scheduled.
  */
-export abstract class SchedulableAction<T extends Present> implements Schedule<T> {
+export abstract class SchedulableAction<T extends Present> implements Sched<T> {
     abstract get(): T | undefined;
     abstract schedule(extraDelay: 0 | TimeValue, value: T): void;
 }
@@ -311,7 +311,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
         }
     }
 
-    public asSchedulable(key: Symbol | undefined): Schedule<T> {
+    public asSchedulable(key: Symbol | undefined): Sched<T> {
         if (this._key === key) {
             return this.scheduler
         }
@@ -870,7 +870,7 @@ export abstract class Reactor extends Component {
         throw new Error("Reaction is not listed.");
     }
 
-    protected schedulable<T extends Present>(action: Action<T>): Schedule<T> {
+    protected schedulable<T extends Present>(action: Action<T>): Sched<T> {
         return action.asSchedulable(this._getKey(action));
     }
 

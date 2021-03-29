@@ -1,6 +1,6 @@
 import {App, Triggers, Args} from '../src/core/reactor';
 import {Origin, TimeValue} from '../src/core/time';
-import {Reactor, Timer, Action, Schedule} from '../src/core/reactor';
+import {Reactor, Timer, Action, Sched} from '../src/core/reactor';
 
 //Upon initialization, this reactor should produce an
 //output event
@@ -22,7 +22,7 @@ export class ActionTrigger extends Reactor {
             /**
              * Schedule the incorrect payload for action a1.
              */
-            function(this, a1: Schedule<string>) {
+            function(this, a1: Sched<string>) {
                 a1.schedule(0, "goodbye");
                 console.log("Scheduling the overridden action in ScheduleOverriddenAction to trigger RespondToAction");
             }
