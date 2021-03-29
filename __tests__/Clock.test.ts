@@ -15,7 +15,7 @@ import {TimeValue, TimeUnit, Origin} from "../src/core/time"
  */
 export class Clock extends App {
 
-    t1: Timer = new Timer(this, new TimeValue(3), new TimeValue(1));
+    t1: Timer = new Timer(this, TimeValue.secs(3), TimeValue.secs(1));
     t2: Timer = new Timer(this, TimeValue.withUnits(3500, TimeUnit.msec), 
                                 TimeValue.withUnits(1500, TimeUnit.msec));
 
@@ -75,15 +75,15 @@ export class Clock extends App {
                 // All timers should fire simultaneously at logical time 5 seconds from the start of execution.
                 // This should tricker tick, tock, and, cuckoo to simultanously schedule actions
                 // 1,2, and 3. 
-                if (this.util.getElapsedLogicalTime().isEqualTo(new TimeValue(5))) {
+                if (this.util.getElapsedLogicalTime().isEqualTo(TimeValue.secs(5))) {
                     console.log("reacting in Test");
                     if(a1.get() == 1 && a2.get() == 2 && a3.get() == 3) {
-                        this.util.requestShutdown(true);
+                        this.util.requestStop();
                     } else {
                         console.log("a1: " + a1.get());
                         console.log("a2: " + a2.get());
                         console.log("a3: " + a3.get());
-                        this.util.requestShutdown(false);
+                        this.util.requestErrorStop();
                     }
                 }
             }
@@ -102,7 +102,7 @@ describe('clock', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 6 seconds.
-        var clock = new Clock("Clock", new TimeValue(6), done, fail);
+        var clock = new Clock("Clock", TimeValue.secs(6), done, fail);
 
         //Don't give the runtime the done callback because we don't care if it terminates
         clock._start();

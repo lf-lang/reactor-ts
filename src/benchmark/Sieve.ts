@@ -23,7 +23,7 @@ class Ramp extends Reactor {
                     next.schedule(0, 2)
                 } else {
                     if (n >= until.get()) {
-                        this.util.requestShutdown(true)
+                        this.util.requestStop()
                         primes.filter((v, i) => v? console.log(i) : {})
                     } else {
                         next.schedule(0, n+1)

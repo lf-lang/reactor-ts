@@ -3,10 +3,10 @@
 
 import {Args, Parameter, State,  Read, Triggers, ReadWrite, Action, Sched, Timer, Reactor, OutPort, InPort} from '../../../core/reactor'
 import {FederatedApp} from '../../../core/federation'
-import {TimeUnit, TimeValue, UnitBasedTimeValue, Tag, Origin} from '../../../core/time'
+import {TimeUnit, TimeValue, Tag, Origin} from '../../../core/time'
 
 // ************* App Parameters
-let __timeout: TimeValue | undefined = new UnitBasedTimeValue(10, TimeUnit.secs);
+let __timeout: TimeValue | undefined = TimeValue.withUnits(10, TimeUnit.secs);
 let __keepAlive: boolean = true;
 let __fast: boolean = false;
 
@@ -26,7 +26,7 @@ export class MessageGenerator extends Reactor {
         root: string = ""
     ) {
         super(parent);
-        this.t = new Timer(this, new UnitBasedTimeValue(1, TimeUnit.sec), new UnitBasedTimeValue(1, TimeUnit.sec));
+        this.t = new Timer(this, TimeValue.withUnits(1, TimeUnit.sec), TimeValue.withUnits(1, TimeUnit.sec));
         this.root = new Parameter(root);
         this.count = new State(1);
         this.message = new OutPort<string>(this);
@@ -102,7 +102,7 @@ export class Distributed extends FederatedApp {
     ) {
         super(0, 15044, "localhost", timeout, keepAlive, fast, success, fail);
         this.msg = new MessageGenerator(this, "Hello World")
-        this.networkMessage = new Action<string>(this, Origin.logical, new UnitBasedTimeValue(10, TimeUnit.msec));
+        this.networkMessage = new Action<string>(this, Origin.logical, TimeValue.withUnits(10, TimeUnit.msec));
         this.addReaction(
             new Triggers(this.msg.message),
             new Args(this.msg.message, this.schedulable(this.networkMessage)),

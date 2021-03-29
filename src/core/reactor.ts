@@ -334,7 +334,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
         }
         schedule(extraDelay: 0 | TimeValue, value: T): void {
             if (!(extraDelay instanceof TimeValue)) {
-                extraDelay = new TimeValue(0);
+                extraDelay = TimeValue.secs(0);
             }
             
             var tag = this.action.runtime.util.getCurrentTag();
@@ -377,7 +377,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
      * @param minInterArrival Optional. Defaults to 1 nsec. Specifies the minimum
      * intrinsic delay between to occurrences of this action.
      */
-    constructor(__container__: Reactor, origin: Origin, minDelay: TimeValue = new TimeValue(0), minInterArrival: TimeValue = defaultMIT) {
+    constructor(__container__: Reactor, origin: Origin, minDelay: TimeValue = TimeValue.secs(0), minInterArrival: TimeValue = defaultMIT) {
         super(__container__);
         this.origin = origin;
         this.minDelay = minDelay;
@@ -465,13 +465,13 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
         super(__container__);
         
         if (!(offset instanceof TimeValue)) {
-            this.offset = new TimeValue(0);
+            this.offset = TimeValue.secs(0);
         } else {
             this.offset = offset;
         }
 
         if (!(period instanceof TimeValue)) {
-            this.period = new TimeValue(0);
+            this.period = TimeValue.secs(0);
         } else {
             this.period = period;
         }
@@ -1974,7 +1974,8 @@ export interface Runtime {
 // }
 
 interface UtilityFunctions { //
-    requestShutdown(success: boolean, message?: string): void;
+    requestStop(): void;
+    requestErrorStop(message?: string): void;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
@@ -2040,10 +2041,12 @@ export class App extends Reactor {
 
         }
 
-        public requestShutdown(success: boolean, message?: string) {
-            if (!success) {
-                this.app._errored = true
-            }
+        public requestStop() {
+            this.app._shutdown()
+        }
+
+        public requestErrorStop(message?: string) {
+            this.app._errored = true
             this.app._message = message
             this.app._shutdown()
         }
@@ -2288,7 +2291,7 @@ export class App extends Reactor {
         this._receiveRuntimeObject(this.__runtime)
         this.startup._receiveRuntimeObject(this.__runtime)
         this.shutdown._receiveRuntimeObject(this.__runtime)
-        this.snooze = new Action(this, Origin.logical, new TimeValue(1, 0))
+        this.snooze = new Action(this, Origin.logical, TimeValue.secs(1))
 
         // Initialize the scope in which reactions and mutations of this
         // reactor will execute. This is already done in the super constructor,
@@ -2302,7 +2305,7 @@ export class App extends Reactor {
         this._executionTimeout = executionTimeout;
 
         // NOTE: these will be reset properly during startup.
-        this._currentTag = new Tag(new TimeValue(0), 0);
+        this._currentTag = new Tag(TimeValue.secs(0), 0);
         this._startOfExecution = this._currentTag.time;
     }
 

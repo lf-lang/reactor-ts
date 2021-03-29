@@ -1,6 +1,6 @@
 import commandLineArgs from 'command-line-args';
 import commandLineUsage from 'command-line-usage';
-import { UnitBasedTimeValue, TimeUnit, TimeValue} from './time';
+import {TimeUnit, TimeValue} from './time';
 import { LogLevel } from './util';
 
 //---------------------------------------------------------------------//
@@ -51,7 +51,7 @@ export function unitBasedTimeValueCLAType(timeout: string): TimeValue | null {
             // Units are not well formed.
             return null;
         }
-        return new UnitBasedTimeValue(duration, units);
+        return TimeValue.withUnits(duration, units);
     } else {
         // Duration and units are not well formed.
         return null;
@@ -86,7 +86,7 @@ export function booleanCLAType(bool: string): boolean | null {
  * if the CommandLineOptionDefs changes.
  */
 export type ProcessedCommandLineArgs = {fast: boolean| undefined,
-    keepalive: boolean | undefined, timeout: UnitBasedTimeValue | null | undefined,
+    keepalive: boolean | undefined, timeout: TimeValue | null | undefined,
     logging: LogLevel | undefined, help: boolean}
 
 

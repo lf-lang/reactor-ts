@@ -43,7 +43,7 @@ describe('OutputGetTest', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var oGetTest = new OutputGetTest(new TimeValue(1), "OutputGetTest", done, fail);
+        var oGetTest = new OutputGetTest(TimeValue.secs(1), "OutputGetTest", done, fail);
         
         oGetTest._start();
     })

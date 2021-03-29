@@ -269,7 +269,7 @@ describe('Timer tests', () => {
         var avgError = 0;
         
         var hiResDif = process.hrtime(alarm.hiResStart);
-        var delay0 = new TimeValue(0, 0);
+        var delay0 = TimeValue.zero();
 
 
         var task = function(){

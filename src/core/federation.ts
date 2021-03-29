@@ -1,5 +1,5 @@
 import {Log} from './util';
-import {Tag, TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
+import {Tag, TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, Alarm} from './time';
 import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter} from 'events';
 import {Action, Present, TaggedEvent, App} from './reactor'
@@ -20,7 +20,7 @@ export const BUFFER_SIZE: number = 256;
  *  Number of seconds that elapse between a federate's attempts
  *  to connect to the RTI.
  */
-export const CONNECT_RETRY_INTERVAL: TimeValue = new UnitBasedTimeValue(2, TimeUnit.sec);
+export const CONNECT_RETRY_INTERVAL: TimeValue = TimeValue.secs(2);
 
 /** 
  *  Bound on the number of retries to connect to the RTI.
@@ -813,7 +813,7 @@ export class FederatedApp extends App {
                 let currentPhysTime = getCurrentPhysicalTime();
                 let startDelay : TimeValue;
                 if (startTime.isEarlierThan(currentPhysTime)) {
-                    startDelay = new TimeValue(0);
+                    startDelay = TimeValue.secs(0);
                 } else {
                     startDelay = startTime.subtract(currentPhysTime);
                 }

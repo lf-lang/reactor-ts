@@ -123,7 +123,7 @@ class testApp extends App {
 
 class ReactorWithAction extends App {
     a = new Action<number>(this, Origin.logical);
-    t = new Timer(this, TimeValue.withUnits(1, TimeUnit.msec), new TimeValue(1, TimeUnit.sec))
+    t = new Timer(this, TimeValue.withUnits(1, TimeUnit.msec), TimeValue.withUnits(1, TimeUnit.sec))
     
     
     constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void) {
@@ -173,7 +173,7 @@ describe("Testing deadlines", function () {
             throw new Error("Test has failed.");
         };
         
-        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), done, fail, undefined, new TimeValue(1,TimeUnit.nsec))
+        let app = new testApp("testApp", TimeValue.nsecs(1), done, fail, undefined, TimeValue.nsecs(1))
 
         // const spy = jest.spyOn(global.console, 'warn').mockImplementation(warn => {
         //         consoleOutput.push(warn); 
@@ -220,7 +220,7 @@ describe("Testing deadlines", function () {
 describe("Testing Reactions", function () {
 
     it("Manually call reactions", () => {
-        let app = new testApp("testApp", new TimeValue(5000,TimeUnit.msec), () => {}, fail)
+        let app = new testApp("testApp", TimeValue.withUnits(5000, TimeUnit.msec), () => {}, fail)
 
         /* FIXME: Find a way to manually test reactors */
         /* let reactions = app.reactor1._getReactions();
@@ -247,7 +247,7 @@ describe("Testing Actions", function () {
             };
             
             /* FIXME: Deadlines are not working. Jest throws timeout error before LF */
-            // let app = new ReactorWithAction("testApp", new TimeValue(1,TimeUnit.sec), done, fail)
+            // let app = new ReactorWithAction("testApp", TimeValue.secs(1,TimeUnit.sec), done, fail)
 
             
            

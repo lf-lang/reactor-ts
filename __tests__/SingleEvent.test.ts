@@ -30,7 +30,7 @@ describe('SingleEvent', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        let seTest = new SETest(new TimeValue(3), done, failure);
+        let seTest = new SETest(TimeValue.secs(3), done, failure);
 
         expect(expect(seTest.singleEvent).toBeInstanceOf(SingleEvent));
         expect(expect(seTest.logger).toBeInstanceOf(Logger));

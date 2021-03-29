@@ -85,7 +85,7 @@ import {TimeValue} from "../../src/core/time"
 //         };
 
 //         // Tell the reactor runtime to successfully terminate after 3 seconds.
-//         var sDeadline = new DeadlineTest("ShowDeadline", new TimeValue(3), done, failReactor);
+//         var sDeadline = new DeadlineTest("ShowDeadline", TimeValue.secs(3), done, failReactor);
 //         sDeadline._start();
 //     })
 // });

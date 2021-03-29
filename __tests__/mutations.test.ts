@@ -5,7 +5,7 @@ import {Log, LogLevel} from '../src/core/util';
 
 class Source extends Reactor {
 
-    timer = new Timer(this, 0, new TimeValue(1))
+    timer = new Timer(this, 0, TimeValue.secs(1))
     output = new OutPort<Array<number>>(this)
     constructor(parent: Reactor) {
         super(parent)
@@ -45,13 +45,13 @@ class Print extends Reactor {
                 let expected = [2, 3, 4, 5, 6 ,7, 8, 9, 10, 11]
                 for (let i = 0; i < 10; i++) {
                     if (val[i] != expected[i]) {
-                        this.util.requestShutdown(false, "Expected: " + expected + " but got: " + val)
+                        this.util.requestErrorStop("Expected: " + expected + " but got: " + val)
                         return        
                     }
                 }
                 console.log("Expected: " + expected + " and got: " + val)
             } else {
-                this.util.requestShutdown(false, "Input undefined.")
+                this.util.requestErrorStop("Input undefined.")
             }
         })
     }
@@ -126,7 +126,7 @@ class ZenoClock extends Reactor {
                 new ZenoClock(this.getReactor(), iteration + 1)
             })
         } else {
-            this.util.requestShutdown(true)
+            this.util.requestStop()
         }        
     }
 }
@@ -150,7 +150,7 @@ describe("Creating reactors at runtime", function () {
     it("Reactor with periodic timer", done => {
         //Log.global.level = LogLevel.DEBUG
 
-        let app = new Zeno(new TimeValue(5),  done, () => {})
+        let app = new Zeno(TimeValue.secs(5),  done, () => {})
 
         app._start();
     });
@@ -164,7 +164,7 @@ describe("Creating reactors at runtime", function () {
 //     it("Simple scatter gather", done => {
 //         Log.global.level = LogLevel.DEBUG
 
-//         let app = new ScatterGather(new TimeValue(5),  done, () => {})
+//         let app = new ScatterGather(TimeValue.secs(5),  done, () => {})
 
 //         app._start();
 //     });

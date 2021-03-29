@@ -53,9 +53,9 @@ export class ActionTrigger extends Reactor {
                 const msg = a1.get();
                 const absent = !a2.get();
                 if(msg == "hello" && absent) {
-                    this.util.requestShutdown(true);
+                    this.util.requestStop();
                 } else {
-                    this.util.requestShutdown(false, msg);
+                    this.util.requestErrorStop(msg);
                 }
                 console.log("Response to action is reacting. String payload is: " + msg);
             }
@@ -86,7 +86,7 @@ describe('ActionTrigger', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var aTriggerTest = new ActionTriggerTest("ActionTriggerTest", new TimeValue(3), done, failure);
+        var aTriggerTest = new ActionTriggerTest("ActionTriggerTest", TimeValue.secs(3), done, failure);
         //Don't give the runtime the done callback because we don't care if it terminates
         aTriggerTest._start();
 

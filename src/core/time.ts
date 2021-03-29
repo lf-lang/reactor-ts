@@ -49,6 +49,24 @@ export class TimeValue {
             throw new Error("Cannot instantiate a time interval based on negative or non-integer numbers.");
         }
     }
+    
+    static zero(): TimeValue {
+        return new TimeValue(0,0)
+    }
+
+    static secsAndNs(seconds: number, nanoSeconds:number): TimeValue {
+        return new TimeValue(seconds, nanoSeconds)
+    }
+    
+    static secs(seconds: number): TimeValue {
+        return TimeValue.secsAndNs(seconds, 0)
+    }
+
+    static nsecs(nanoseconds:number) {
+        return TimeValue.withUnits(nanoseconds, TimeUnit.nsec);
+    }
+
+    // FIXME: Add more convenience methods
 
     /**
      * Return a new time value that denotes the duration of the time interval
@@ -65,7 +83,7 @@ export class TimeValue {
             seconds += 1;
             nanoseconds -= TimeUnit.sec;
         }
-        return new TimeValue(seconds, nanoseconds);
+        return TimeValue.secsAndNs(seconds, nanoseconds);
     }
 
     /**
@@ -87,7 +105,7 @@ export class TimeValue {
         if(s < 0){
             throw new Error("Negative time value.");
         }
-        return new TimeValue(s, ns);
+        return TimeValue.secsAndNs(s, ns);
     }
 
     difference(other: TimeValue): TimeValue {
@@ -245,7 +263,7 @@ export class TimeValue {
         let bigSeconds = bigTime / billion;
         let bigNSeconds = bigTime % billion;
         
-        return new TimeValue(Number(bigSeconds), Number(bigNSeconds))
+        return TimeValue.secsAndNs(Number(bigSeconds), Number(bigNSeconds))
     }
 
     /**
@@ -276,7 +294,7 @@ export class TimeValue {
         if(bigSeconds > Number.MAX_SAFE_INTEGER) {
             throw new Error("Unable to instantiate time value: value too large.");
         }
-        return new TimeValue(Number(bigSeconds), Number(bigT % billion))
+        return TimeValue.secsAndNs(Number(bigSeconds), Number(bigT % billion))
     }
 }
 
@@ -445,7 +463,7 @@ export function getCurrentPhysicalTime(): TimeValue {
     let t = MicroTime.now();
     let seconds: number = Math.floor(t / 1000000);
     let nseconds: number = t * 1000 - seconds * TimeUnit.sec;
-    return new TimeValue(seconds, nseconds);
+    return TimeValue.secsAndNs(seconds, nseconds);
 }
 
 /**
@@ -531,7 +549,7 @@ export class Alarm {
                 this.active = false;
                 task();
                 if (callback) {
-                    callback(new TimeValue(...hiResDif));
+                    callback(TimeValue.secsAndNs(...hiResDif));
                 }
             } else {
                 // If this attempt is the result of a direct call to `set`, push
@@ -546,7 +564,7 @@ export class Alarm {
                         thisTimer.active = false;
                         task();
                         if (callback) {
-                            callback(new TimeValue(...hiResDif));
+                            callback(TimeValue.secsAndNs(...hiResDif));
                         }
                     }
                 });
