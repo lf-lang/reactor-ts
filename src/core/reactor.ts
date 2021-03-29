@@ -1974,8 +1974,6 @@ export interface Runtime {
 // }
 
 interface UtilityFunctions { //
-    success(): void;
-    failure(): void;
     requestShutdown(success: boolean, message?: string): void;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
@@ -2048,14 +2046,6 @@ export class App extends Reactor {
             }
             this.app._message = message
             this.app._shutdown()
-        }
-
-        public success() {
-            return this.app.success();
-        }
-
-        public failure() {
-            return this.app.failure();
         }
 
         public getCurrentTag(): Tag {
