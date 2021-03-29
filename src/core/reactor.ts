@@ -2133,7 +2133,6 @@ export class App extends Reactor {
         public initialize(timer: Timer): void {
             if (this.app._active) {
                 Log.debug(this, () => "Scheduling timer " + timer._getFullyQualifiedName())
-                console.log(">>>>>>>>>Scheduling timer " + timer._getFullyQualifiedName())
                 // Schedule relative to the current tag.
                 var nextTag;
                 if (!timer.offset.isZero()) {
@@ -2578,7 +2577,7 @@ export class App extends Reactor {
         // and assign a priority to each reaction in the graph.
         var apg = this._getPrecedenceGraph();
 
-        console.log(apg.toString())
+        //console.log(apg.toString())
 
         Log.debug(this, () => "Before collapse: " + apg.toString());
         var collapsed = new SortableDependencyGraph()

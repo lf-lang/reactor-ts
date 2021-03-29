@@ -157,16 +157,16 @@ describe("Creating reactors at runtime", function () {
 
 });
 
-// describe("Simple scatter gather", function () {
+describe("Simple scatter gather", function () {
 
-//     jest.setTimeout(5000);
+    jest.setTimeout(5000);
 
-//     it("Simple scatter gather", done => {
-//         Log.global.level = LogLevel.DEBUG
+    it("Simple scatter gather", done => {
+        Log.global.level = LogLevel.DEBUG
 
-//         let app = new ScatterGather(new TimeValue(5),  done, () => {})
+        let app = new ScatterGather(new TimeValue(5),  done, () => {})
 
-//         app._start();
-//     });
+        app._start();
+    });
 
-// });
+});
