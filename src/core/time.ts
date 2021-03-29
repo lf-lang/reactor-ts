@@ -142,8 +142,10 @@ export class TimeValue {
      * Return true if this time value denotes a time interval of smaller length
      * than the time interval encoded by the time value given as a parameter;
      * return false otherwise.
+     * 
      * NOTE: Performing this comparison involves a conversion to a big integer
      * and is therefore relatively costly.
+     * 
      * @param other The time value to compare to this one.
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt|BigInt} for further information.
      */
@@ -297,55 +299,6 @@ export class TimeValue {
         return TimeValue.secsAndNs(Number(bigSeconds), Number(bigT % billion))
     }
 }
-
-// /** 
-//  * Subclass of `TimeValue` that is constructed on the basis of a value
-//  * accompanied with a time unit. The value is a `number` that is required to be
-//  * a positive integer. The time unit must be a member of the `TimeUnit` enum.
-//  */
-// export class UnitBasedTimeValue extends TimeValue {
-
-//     /**
-//      * Construct a new time value on the basis of a given a time unit. An error
-//      * is thrown when the given value is negative, non-integer, or both.
-//      * @param value A number (which must be a positive integer) that denotes 
-//      * the length of the specified time interval, expressed as a multiple of
-//      * the given time unit.
-//      * @param unit The unit of measurement that applies to the given value.
-//      */
-//     constructor(private value: number, private unit:TimeUnit) {
-//         super(0, 0); 
-
-//         if (!Number.isInteger(value)) {
-//             throw new Error("Non-integer time values are illegal.");
-//         }
-//         if (value < 0) {
-//             throw new Error("Negative time values are illegal.");
-//         }
-        
-//         const billion = BigInt(TimeUnit.secs);
-        
-//         // To avoid overflow and floating point errors, work with BigInts.
-//         let bigT = BigInt(this.value) * BigInt(this.unit);  
-//         let bigSeconds = bigT / billion;
-        
-//         if(bigSeconds > Number.MAX_SAFE_INTEGER) {
-//             throw new Error("Unable to instantiate time value: value too large.");
-//         }
-        
-//         this.seconds = Number(bigSeconds);
-//         this.nanoseconds = Number(bigT % billion);
-//     }
-
-//     /**
-//      * Print a string representation of this time value using the time unit it
-//      * was originally created with.
-//      */
-//     public toString(): string {
-//         return this.value + " " + TimeUnit[this.unit];
-//     }
-// }
-
 
 /** 
  * A superdense time instant, represented as a time value `time` (i.e., 
