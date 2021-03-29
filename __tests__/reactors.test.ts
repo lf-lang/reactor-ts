@@ -1,5 +1,5 @@
 import {Reactor, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort, Action, Timer} from '../src/core/reactor';
-import { UnitBasedTimeValue, TimeUnit, TimeValue, Origin } from '../src/core/time';
+import {TimeUnit, TimeValue, Origin } from '../src/core/time';
 import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { doesNotMatch } from 'assert';
 
@@ -38,7 +38,7 @@ class R1 extends Reactor {
                 
                 if(tmp)
                 {
-                    console.log("Recieved "+tmp.toString());
+                    console.log("Received "+tmp.toString());
                 }
 
                 let out: number = 0;
@@ -50,7 +50,7 @@ class R1 extends Reactor {
                     // // Busy wait
                     // while(util.getCurrentPhysicalTime().isEarlierThan(finishTime));
                     
-                    while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(new UnitBasedTimeValue(1, TimeUnit.sec))));
+                    while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(TimeValue.withUnits(1, TimeUnit.sec))));
                 
                 } finally {
                     
@@ -123,7 +123,7 @@ class testApp extends App {
 
 class ReactorWithAction extends App {
     a = new Action<number>(this, Origin.logical);
-    t = new Timer(this, new UnitBasedTimeValue(1, TimeUnit.msec), new TimeValue(1, TimeUnit.sec))
+    t = new Timer(this, TimeValue.withUnits(1, TimeUnit.msec), new TimeValue(1, TimeUnit.sec))
     
     
     constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void) {
@@ -153,7 +153,7 @@ describe("Testing deadlines", function () {
             throw new Error("Test has failed.");
         };
         
-        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), done, fail)
+        let app = new testApp("testApp", TimeValue.withUnits(1,TimeUnit.nsec), done, fail)
 
         // spyOn(app, '_start').and.callThrough
 
@@ -202,7 +202,7 @@ describe("Testing deadlines", function () {
             throw new Error("Test has failed.");
         };
         
-        let app = new testApp("testApp", new TimeValue(1,TimeUnit.nsec), done , fail, () => {Log.global.warn("Deadline missed!");},  new TimeValue(1,TimeUnit.nsec))
+        let app = new testApp("testApp", TimeValue.withUnits(1,TimeUnit.nsec), done , fail, () => {Log.global.warn("Deadline missed!");},  TimeValue.withUnits(1,TimeUnit.nsec))
 
 
         app._start();

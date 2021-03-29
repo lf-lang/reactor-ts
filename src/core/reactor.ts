@@ -6,7 +6,7 @@
  */
 
 import {PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
-import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm} from './time';
+import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, Alarm} from './time';
 import {Component} from "./component"
 import {Reaction, Priority, Mutation, Procedure} from "./reaction"
 
@@ -54,7 +54,7 @@ export type Variable = Read<unknown>
 // Constants                                                                //
 //--------------------------------------------------------------------------//
 
-const defaultMIT = new UnitBasedTimeValue(1, TimeUnit.nsec); // FIXME
+const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
 
 //--------------------------------------------------------------------------//
 // Interfaces                                                               //

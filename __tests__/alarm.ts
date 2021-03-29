@@ -1,9 +1,9 @@
-import { TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, UnitBasedTimeValue, Alarm } from '../src/core/time';
+import { TimeValue, TimeUnit, Alarm } from '../src/core/time';
 import NanoTimer from 'nanotimer';
 
 var timerA = new NanoTimer();
 var alarm = new Alarm();
-var delay = new UnitBasedTimeValue(100, TimeUnit.msec);
+var delay = TimeValue.withUnits(100, TimeUnit.msec);
 
 describe('Timer tests', () => {
     

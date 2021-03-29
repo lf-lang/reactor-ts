@@ -1,5 +1,5 @@
 import {Reactor, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Present} from '../src/core/reactor';
-import { UnitBasedTimeValue, TimeUnit } from '../src/core/time';
+import {TimeUnit, TimeValue} from '../src/core/time';
 import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { writer } from 'repl';
 import { doesNotMatch } from 'assert';
@@ -19,7 +19,7 @@ class R extends Reactor {
             function(this) {
                 throw new Error("Method not implemented.");
             },
-            new UnitBasedTimeValue(10,TimeUnit.msec),
+            TimeValue.withUnits(10,TimeUnit.msec),
         )
 
         this.addReaction(
@@ -28,7 +28,7 @@ class R extends Reactor {
             function(this) {
                 throw new Error("Method not implemented.");
             },
-            new UnitBasedTimeValue(10,TimeUnit.msec),
+            TimeValue.withUnits(10,TimeUnit.msec),
         )
 
         

@@ -1,5 +1,4 @@
-import {TimeValue, TimeUnit, Tag, UnitBasedTimeValue} from "../src/core/time";
-import { createSecureServer } from "http2";
+import {TimeValue, TimeUnit, Tag} from "../src/core/time";
 
 /**
  * Test of helper functions for time in reactors
@@ -8,20 +7,20 @@ describe('time helper functions', function () {
     
     // Zero time intervals.
     const straightZero: TimeValue = new TimeValue(0);
-    const zeroSeconds: TimeValue = new UnitBasedTimeValue(0, TimeUnit.sec);
-    const zeroNS: TimeValue = new UnitBasedTimeValue(0, TimeUnit.nsec);
-    const zeroWeeks: TimeValue = new UnitBasedTimeValue(0, TimeUnit.week);
+    const zeroSeconds: TimeValue = TimeValue.withUnits(0, TimeUnit.sec);
+    const zeroNS: TimeValue = TimeValue.withUnits(0, TimeUnit.nsec);
+    const zeroWeeks: TimeValue = TimeValue.withUnits(0, TimeUnit.week);
 
     // Non-zero time intervals.
-    const fiveSeconds: TimeValue = new UnitBasedTimeValue(5, TimeUnit.sec);
-    const fiveSFiveUS: TimeValue = new UnitBasedTimeValue(5000005, TimeUnit.usec);
-    const fortyTwoDays: TimeValue = new UnitBasedTimeValue(42, TimeUnit.days);
-    const threeHundredUS: TimeValue = new UnitBasedTimeValue(300, TimeUnit.usec);
-    const sevenPointFiveBillNS: TimeValue = new UnitBasedTimeValue(7500000000, TimeUnit.nsec);
-    const twoHundredFiftyMillMS: TimeValue = new UnitBasedTimeValue(250000000, TimeUnit.msec);
-    const fiveHundredMilNS: TimeValue = new UnitBasedTimeValue(500000000, TimeUnit.nsec);
-    const oneThousandMS: TimeValue = new UnitBasedTimeValue(1000, TimeUnit.msec);
-    const aboutTenYears: TimeValue = new UnitBasedTimeValue(365 * 10, TimeUnit.day);
+    const fiveSeconds: TimeValue = TimeValue.withUnits(5, TimeUnit.sec);
+    const fiveSFiveUS: TimeValue = TimeValue.withUnits(5000005, TimeUnit.usec);
+    const fortyTwoDays: TimeValue = TimeValue.withUnits(42, TimeUnit.days);
+    const threeHundredUS: TimeValue = TimeValue.withUnits(300, TimeUnit.usec);
+    const sevenPointFiveBillNS: TimeValue = TimeValue.withUnits(7500000000, TimeUnit.nsec);
+    const twoHundredFiftyMillMS: TimeValue = TimeValue.withUnits(250000000, TimeUnit.msec);
+    const fiveHundredMilNS: TimeValue = TimeValue.withUnits(500000000, TimeUnit.nsec);
+    const oneThousandMS: TimeValue = TimeValue.withUnits(1000, TimeUnit.msec);
+    const aboutTenYears: TimeValue = TimeValue.withUnits(365 * 10, TimeUnit.day);
 
     // Tags.
     const tiFiveSeconds0:Tag = new Tag(fiveSeconds, 0);
@@ -52,9 +51,9 @@ describe('time helper functions', function () {
         expect(straightZero.toString()).toEqual("(0 secs; 0 nsecs)");
         expect(new TimeValue(5, 5000).toString()).toEqual("(5 secs; 5000 nsecs)");
         expect(new TimeValue(250000, 0).toString()).toEqual("(250000 secs; 0 nsecs)");
-        expect(fiveSFiveUS.toString()).toEqual("5000005 usec");
-        expect(tiFiveSeconds0.toString()).toEqual("(5 secs, 0)")
-        expect(tiFiveSeconds1.toString()).toEqual("(5 secs, 1)")
+        expect(fiveSFiveUS.toString()).toEqual("(5 secs; 5000 nsecs)");
+        expect(tiFiveSeconds0.toString()).toEqual("((5 secs; 0 nsecs), 0)")
+        expect(tiFiveSeconds1.toString()).toEqual("((5 secs; 0 nsecs), 1)")
     });
 
     
@@ -86,7 +85,7 @@ describe('time helper functions', function () {
         // Creating time intervals with a non-integer 
         // time value results in an error.
         expect(() => {
-            new UnitBasedTimeValue(0.1, TimeUnit.sec);
+            TimeValue.withUnits(0.1, TimeUnit.sec);
         }).toThrowError()
 
         expect(zeroSeconds.isEqualTo(straightZero)).toBeTruthy();
@@ -112,7 +111,7 @@ describe('time helper functions', function () {
         // This test should generate an error because we're trying to convert
         // a number which can't be represented as a numeric time interval.
         expect(() => {
-            new UnitBasedTimeValue(Number.MAX_SAFE_INTEGER, TimeUnit.weeks);
+            TimeValue.withUnits(Number.MAX_SAFE_INTEGER, TimeUnit.weeks);
         }).toThrowError();
 
     });
@@ -226,7 +225,7 @@ describe('time helper functions', function () {
         }).toThrowError()
     
         expect(() => {
-            expect(new UnitBasedTimeValue(-1, TimeUnit.week));
+            expect(TimeValue.withUnits(-1, TimeUnit.week));
         }).toThrowError()
     
         expect(() => {

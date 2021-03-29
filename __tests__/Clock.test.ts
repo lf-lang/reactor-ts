@@ -1,7 +1,7 @@
 'use strict';
 
 import {Timer, Action,  App, Sched, Triggers, Args} from '../src/core/reactor';
-import {TimeValue, TimeUnit, Origin, UnitBasedTimeValue} from "../src/core/time"
+import {TimeValue, TimeUnit, Origin} from "../src/core/time"
 
 /**
  * This app tests simultaneous events.
@@ -16,8 +16,8 @@ import {TimeValue, TimeUnit, Origin, UnitBasedTimeValue} from "../src/core/time"
 export class Clock extends App {
 
     t1: Timer = new Timer(this, new TimeValue(3), new TimeValue(1));
-    t2: Timer = new Timer(this, new UnitBasedTimeValue(3500, TimeUnit.msec), 
-                                new UnitBasedTimeValue(1500, TimeUnit.msec));
+    t2: Timer = new Timer(this, TimeValue.withUnits(3500, TimeUnit.msec), 
+                                TimeValue.withUnits(1500, TimeUnit.msec));
 
     a1 = new Action<number>(this, Origin.logical);
     a2 = new Action<number>(this, Origin.logical);
