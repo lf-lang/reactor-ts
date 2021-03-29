@@ -1973,7 +1973,9 @@ export interface Runtime {
 //     isRunning(): boolean;
 // }
 
-interface UtilityFunctions { // 
+interface UtilityFunctions { //
+    success(): void;
+    failure(): void;
     requestShutdown(success: boolean, message?: string): void;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
