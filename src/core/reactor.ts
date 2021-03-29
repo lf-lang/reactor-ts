@@ -34,7 +34,7 @@ export type ArgList<T> = T extends Variable[] ? T : never;
 /**
  * Type for data exchanged between ports.
  */
-export type Present = (number | string | boolean | symbol | object | null);
+export type Present = (number | bigint | string | boolean | symbol | object | null);
 
 /**
  * Type for simple variables that are both readable and writable.
