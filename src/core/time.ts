@@ -62,9 +62,35 @@ export class TimeValue {
         return TimeValue.secsAndNs(seconds, 0)
     }
 
+    static sec(seconds: number): TimeValue {
+        return TimeValue.secsAndNs(seconds, 0)
+    }
+
+    static msecs(microseconds:number) {
+        return TimeValue.withUnits(microseconds, TimeUnit.msec);
+    }
+
+    static msec(microseconds:number) {
+        return TimeValue.withUnits(microseconds, TimeUnit.msec);
+    }
+
+    static usecs(nanoseconds:number) {
+        return TimeValue.withUnits(nanoseconds, TimeUnit.usec);
+    }
+
+    static usec(nanoseconds:number) {
+        return TimeValue.withUnits(nanoseconds, TimeUnit.usec);
+    }
+
     static nsecs(nanoseconds:number) {
         return TimeValue.withUnits(nanoseconds, TimeUnit.nsec);
     }
+
+    static nsec(nanoseconds:number) {
+        return TimeValue.withUnits(nanoseconds, TimeUnit.nsec);
+    }
+
+    
 
     // FIXME: Add more convenience methods
 

@@ -1975,6 +1975,7 @@ export interface Runtime {
 
 interface UtilityFunctions { //
     requestStop(): void;
+    reportError(message?: string): void;
     requestErrorStop(message?: string): void;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
@@ -2013,7 +2014,7 @@ export class App extends Reactor {
     readonly _alarm = new Alarm();
 
     private _errored = false
-    private _message?: string
+    private _errorMessage?: string
 
     /**
      * Set of reactions to stage when this app starts executing.
@@ -2046,9 +2047,13 @@ export class App extends Reactor {
         }
 
         public requestErrorStop(message?: string) {
-            this.app._errored = true
-            this.app._message = message
+            this.reportError(message)
             this.app._shutdown()
+        }
+
+        public reportError(message?: string) {
+            this.app._errored = true
+            this.app._errorMessage = message
         }
 
         public getCurrentTag(): Tag {
@@ -2280,9 +2285,7 @@ export class App extends Reactor {
                 keepAlive: boolean = false, 
                 fast: boolean = false, 
                 public success: () => void = () => {}, 
-                public failure: () => void = () => { 
-                    throw new Error("An unexpected error has occurred.") 
-                }) {
+                public failure: () => void = () => {}) {
         super(null);
         
         // Update pointer to runtime object for this reactor and
@@ -2546,8 +2549,8 @@ export class App extends Reactor {
         if (this._errored) {
             this.failure()
             console.error(">>> Erroneous exit.")
-            if (this._message) {
-                console.error("Reason: " + this._message)
+            if (this._errorMessage) {
+                console.error("Reason: " + this._errorMessage)
             }
         } else {
             this.success()
