@@ -26,10 +26,10 @@
         "@babel/preset-typescript": "^7.7.7",
         "@types/jest": "^24.0.15",
         "@types/node": "^13.13.5",
-        "dtslint": "^3.5.2",
+        "dtslint": "^4.1.2",
         "parsimmon": "1.13.0",
         "jest": "^24.8.0",
-        "ts-jest": "^24.0.2",
+        "ts-jest": "^27.0.3",
         "typedoc": "^0.15.5",
         "typescript": "^3.8.3"
     },
