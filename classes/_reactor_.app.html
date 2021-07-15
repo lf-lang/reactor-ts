@@ -106,6 +106,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_reactor_.app.html#_alias" class="tsd-kind-icon">_alias</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_currenttag" class="tsd-kind-icon">_current<wbr>Tag</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_endofexecution" class="tsd-kind-icon">_end<wbr>OfExecution</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_errormessage" class="tsd-kind-icon">_error<wbr>Message</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_errored" class="tsd-kind-icon">_errored</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_eventq" class="tsd-kind-icon">_eventQ</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_executiontimeout" class="tsd-kind-icon">_execution<wbr>Timeout</a></li>
@@ -113,7 +114,6 @@
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_reactor_.app.html#_immediateref" class="tsd-kind-icon">_immediate<wbr>Ref</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_keepalive" class="tsd-kind-icon">_keep<wbr>Alive</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_reactor_.app.html#_key" class="tsd-kind-icon">_key</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_message" class="tsd-kind-icon">_message</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_reactionq" class="tsd-kind-icon">_reactionQ</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_reactionsatstartup" class="tsd-kind-icon">_reactions<wbr>AtStartup</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_reactor_.app.html#_reactorstoremove" class="tsd-kind-icon">_reactors<wbr>ToRemove</a></li>
@@ -203,7 +203,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2274">src/core/reactor.ts:2274</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2274">src/core/reactor.ts:2274</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -258,7 +258,7 @@
 									</ul>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> failure: <span class="tsd-signature-type">function</span><span class="tsd-signature-symbol"> =&nbsp;() &#x3D;&gt; {throw new Error(&quot;An unexpected error has occurred.&quot;)}</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> failure: <span class="tsd-signature-type">function</span><span class="tsd-signature-symbol"> =&nbsp;() &#x3D;&gt; {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
 											<p>Optional callback to be used to indicate a failed execution.</p>
@@ -291,7 +291,7 @@
 					<div class="tsd-signature tsd-kind-icon">__runtime<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_reactor_.runtime.html" class="tsd-signature-type">Runtime</a><span class="tsd-signature-symbol"> =&nbsp;new class implements Runtime {util: UtilityFunctionsconstructor(private app: App) {this.util &#x3D; app.util}/*** Report whether the runtime has started processing events yet.*/public isRunning(): boolean {return this.app._active;}/*** Stage the given reaction for execution at the current logical time.* @param reaction The reaction to load onto the reaction queue.*/public stage(reaction: Reaction&lt;unknown&gt;): void {if (this.app._active) {this.app._reactionQ.push(reaction)} else {// If execution hasn&#x27;t started yet, collect the staged reactions.// They will be queued once they have been assigned priorities.this.app._reactionsAtStartup.add(reaction)}}/*** Initialize the given timer.** If execution has already begun, do the following:*  - if the offset is nonzero, schedule the timer at t + offset; and*  - otherwise, if the period is nonzero, schedule the it at t + period.* If exection is yet to start, postpone initialization until the start* time is known.** @param timer The timer to initialize.*/public initialize(timer: Timer): void {if (this.app._active) {Log.debug(this, () &#x3D;&gt; &quot;Scheduling timer &quot; + timer._getFullyQualifiedName())console.log(&quot;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;Scheduling timer &quot; + timer._getFullyQualifiedName())// Schedule relative to the current tag.var nextTag;if (!timer.offset.isZero()) {nextTag &#x3D; this.app._currentTag.getLaterTag(timer.offset)} else if (!timer.period.isZero()) {nextTag &#x3D; this.app._currentTag.getLaterTag(timer.period)}if (nextTag) {Log.debug(this, () &#x3D;&gt; &quot;Postponed scheduling of timer &quot; + timer._getFullyQualifiedName())this.schedule(new TaggedEvent(timer, nextTag, nextTag))}} else {console.log(&quot;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;Postponed Scheduling of timer &quot; + timer._getFullyQualifiedName())// If execution hasn&#x27;t started yet, collect the timers.// They will be initialized once it is known what the start time is.this.app._timersToSchedule.add(timer)}}/*** Push an event onto the event queue.* @param e Tagged event to push onto the event queue.*/public schedule(e: TaggedEvent&lt;any&gt;) {let head &#x3D; this.app._eventQ.peek();// Don&#x27;t schedule events past the end of execution.if (!this.app._endOfExecution || !this.app._endOfExecution.isSmallerThan(e.tag)) {this.app._eventQ.push(e);}Log.debug(this, () &#x3D;&gt; &quot;Scheduling with trigger: &quot; + e.trigger);Log.debug(this, () &#x3D;&gt; &quot;Elapsed logical time in schedule: &quot; + this.util.getElapsedLogicalTime());Log.debug(this, () &#x3D;&gt; &quot;Elapsed physical time in schedule: &quot; + this.util.getElapsedPhysicalTime());// If the scheduled event has an earlier tag than whatever is at the// head of the queue, set a new alarm.if (head &#x3D;&#x3D; undefined || e.tag.isSmallerThan(head.tag)) {this.app._setAlarmOrYield(e.tag);}}/*** Mark a reactor for deletion. At the end of logical time at which* this method was invoked the reactor will be removed from its* container.* @param r*/public delete(r: Reactor): void {this.app._reactorsToRemove.push(r)};}(this)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2093">src/core/reactor.ts:2093</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2093">src/core/reactor.ts:2093</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -302,7 +302,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_active">_active</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L556">src/core/reactor.ts:556</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L556">src/core/reactor.ts:556</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -319,7 +319,7 @@
 					<div class="tsd-signature tsd-kind-icon">_alarm<span class="tsd-signature-symbol">:</span> <a href="_time_.alarm.html" class="tsd-signature-type">Alarm</a><span class="tsd-signature-symbol"> =&nbsp;new Alarm()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2012">src/core/reactor.ts:2012</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2014">src/core/reactor.ts:2014</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -330,7 +330,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_alias">_alias</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L17">src/core/component.ts:17</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L17">src/core/component.ts:17</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -345,7 +345,7 @@
 					<div class="tsd-signature tsd-kind-icon">_current<wbr>Tag<span class="tsd-signature-symbol">:</span> <a href="_time_.tag.html" class="tsd-signature-type">Tag</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2218">src/core/reactor.ts:2218</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2218">src/core/reactor.ts:2218</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -360,7 +360,7 @@
 					<div class="tsd-signature tsd-kind-icon">_end<wbr>OfExecution<span class="tsd-signature-symbol">:</span> <a href="_time_.tag.html" class="tsd-signature-type">Tag</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2241">src/core/reactor.ts:2241</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2241">src/core/reactor.ts:2241</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -372,12 +372,22 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="_errormessage" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> _error<wbr>Message</h3>
+					<div class="tsd-signature tsd-kind-icon">_error<wbr>Message<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2017">src/core/reactor.ts:2017</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="_errored" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _errored</h3>
 					<div class="tsd-signature tsd-kind-icon">_errored<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> =&nbsp;false</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2014">src/core/reactor.ts:2014</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2016">src/core/reactor.ts:2016</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -387,7 +397,7 @@
 					<div class="tsd-signature tsd-kind-icon">_eventQ<span class="tsd-signature-symbol">:</span> <a href="_reactor_.eventqueue.html" class="tsd-signature-type">EventQueue</a><span class="tsd-signature-symbol"> =&nbsp;new EventQueue()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2228">src/core/reactor.ts:2228</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2228">src/core/reactor.ts:2228</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -402,7 +412,7 @@
 					<div class="tsd-signature tsd-kind-icon">_execution<wbr>Timeout<span class="tsd-signature-symbol">:</span> <a href="_time_.timevalue.html" class="tsd-signature-type">TimeValue</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2234">src/core/reactor.ts:2234</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2234">src/core/reactor.ts:2234</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -418,7 +428,7 @@
 					<div class="tsd-signature tsd-kind-icon">_fast<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2248">src/core/reactor.ts:2248</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2248">src/core/reactor.ts:2248</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -435,7 +445,7 @@
 					<div class="tsd-signature tsd-kind-icon">_immediate<wbr>Ref<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ReturnType</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">setImmediate</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2223">src/core/reactor.ts:2223</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2223">src/core/reactor.ts:2223</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -450,7 +460,7 @@
 					<div class="tsd-signature tsd-kind-icon">_keep<wbr>Alive<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> =&nbsp;false</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2254">src/core/reactor.ts:2254</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2254">src/core/reactor.ts:2254</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -467,7 +477,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_key">_key</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L23">src/core/component.ts:23</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L23">src/core/component.ts:23</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -478,22 +488,12 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="_message" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> _message</h3>
-					<div class="tsd-signature tsd-kind-icon">_message<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2015">src/core/reactor.ts:2015</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="_reactionq" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _reactionQ</h3>
 					<div class="tsd-signature tsd-kind-icon">_reactionQ<span class="tsd-signature-symbol">:</span> <a href="_reactor_.reactionqueue.html" class="tsd-signature-type">ReactionQueue</a><span class="tsd-signature-symbol"> =&nbsp;new ReactionQueue()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2259">src/core/reactor.ts:2259</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2259">src/core/reactor.ts:2259</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -508,7 +508,7 @@
 					<div class="tsd-signature tsd-kind-icon">_reactions<wbr>AtStartup<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="_reaction_.reaction.html" class="tsd-signature-type">Reaction</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Set&lt;Reaction&lt;unknown&gt;&gt;()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2020">src/core/reactor.ts:2020</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2022">src/core/reactor.ts:2022</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -523,7 +523,7 @@
 					<div class="tsd-signature tsd-kind-icon">_reactors<wbr>ToRemove<span class="tsd-signature-symbol">:</span> <a href="_reactor_.reactor.html" class="tsd-signature-type">Reactor</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> =&nbsp;new Array&lt;Reactor&gt;()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2032">src/core/reactor.ts:2032</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2034">src/core/reactor.ts:2034</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -540,7 +540,7 @@
 					<div class="tsd-signature tsd-kind-icon">_start<wbr>OfExecution<span class="tsd-signature-symbol">:</span> <a href="_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2265">src/core/reactor.ts:2265</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2265">src/core/reactor.ts:2265</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -556,7 +556,7 @@
 					<div class="tsd-signature tsd-kind-icon">_timers<wbr>ToSchedule<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="_reactor_.timer.html" class="tsd-signature-type">Timer</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> =&nbsp;new Set&lt;Timer&gt;()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2025">src/core/reactor.ts:2025</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2027">src/core/reactor.ts:2027</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -571,7 +571,7 @@
 					<div class="tsd-signature tsd-kind-icon">failure<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2288">src/core/reactor.ts:2288</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2288">src/core/reactor.ts:2288</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -602,7 +602,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#shutdown">shutdown</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L561">src/core/reactor.ts:561</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L561">src/core/reactor.ts:561</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -617,7 +617,7 @@
 					<div class="tsd-signature tsd-kind-icon">snooze<span class="tsd-signature-symbol">:</span> <a href="_reactor_.action.html" class="tsd-signature-type">Action</a><span class="tsd-signature-symbol">&lt;</span><a href="_time_.tag.html" class="tsd-signature-type">Tag</a><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2274">src/core/reactor.ts:2274</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2274">src/core/reactor.ts:2274</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -628,7 +628,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#startup">startup</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L566">src/core/reactor.ts:566</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L566">src/core/reactor.ts:566</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -643,7 +643,7 @@
 					<div class="tsd-signature tsd-kind-icon">success<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2287">src/core/reactor.ts:2287</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2287">src/core/reactor.ts:2287</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -670,11 +670,11 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-protected">
 					<a name="util" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> util</h3>
-					<div class="tsd-signature tsd-kind-icon">util<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_reactor_.utilityfunctions.html" class="tsd-signature-type">UtilityFunctions</a><span class="tsd-signature-symbol"> =&nbsp;new class implements UtilityFunctions {constructor(private app: App) {}public requestShutdown(success: boolean, message?: string) {if (!success) {this.app._errored &#x3D; true}this.app._message &#x3D; messagethis.app._shutdown()}public success() {return this.app.success();}public failure() {return this.app.failure();}public getCurrentTag(): Tag {return this.app._currentTag;}public getCurrentLogicalTime(): TimeValue {return this.app._currentTag.time;}public getCurrentPhysicalTime(): TimeValue {return getCurrentPhysicalTime();}public getElapsedLogicalTime(): TimeValue {return this.app._currentTag.time.difference(this.app._startOfExecution);}public getElapsedPhysicalTime(): TimeValue {return getCurrentPhysicalTime().subtract(this.app._startOfExecution);}public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {return this.app.sendRTIMessage(data, destFederateID, destPortID);};public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {return this.app.sendRTITimedMessage(data, destFederateID, destPortID);};}(this)</span></div>
+					<div class="tsd-signature tsd-kind-icon">util<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_reactor_.utilityfunctions.html" class="tsd-signature-type">UtilityFunctions</a><span class="tsd-signature-symbol"> =&nbsp;new class implements UtilityFunctions {constructor(private app: App) {}public requestStop() {this.app._shutdown()}public requestErrorStop(message?: string) {this.reportError(message)this.app._shutdown()}public reportError(message?: string) {this.app._errored &#x3D; truethis.app._errorMessage &#x3D; message}public getCurrentTag(): Tag {return this.app._currentTag;}public getCurrentLogicalTime(): TimeValue {return this.app._currentTag.time;}public getCurrentPhysicalTime(): TimeValue {return getCurrentPhysicalTime();}public getElapsedLogicalTime(): TimeValue {return this.app._currentTag.time.difference(this.app._startOfExecution);}public getElapsedPhysicalTime(): TimeValue {return getCurrentPhysicalTime().subtract(this.app._startOfExecution);}public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {return this.app.sendRTIMessage(data, destFederateID, destPortID);};public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {return this.app.sendRTITimedMessage(data, destFederateID, destPortID);};}(this)</span></div>
 					<aside class="tsd-sources">
 						<p>Overrides <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#util">util</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2038">src/core/reactor.ts:2038</a></li>
+							<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2040">src/core/reactor.ts:2040</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -697,7 +697,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2332">src/core/reactor.ts:2332</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2330">src/core/reactor.ts:2330</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -725,7 +725,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2570">src/core/reactor.ts:2570</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2568">src/core/reactor.ts:2568</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -751,7 +751,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2323">src/core/reactor.ts:2323</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2321">src/core/reactor.ts:2321</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -783,7 +783,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2475">src/core/reactor.ts:2475</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2473">src/core/reactor.ts:2473</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -806,7 +806,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_connect">_connect</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1375">src/core/reactor.ts:1375</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1375">src/core/reactor.ts:1375</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -866,7 +866,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_deregister">_deregister</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L657">src/core/reactor.ts:657</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L657">src/core/reactor.ts:657</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -900,7 +900,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2636">src/core/reactor.ts:2636</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2634">src/core/reactor.ts:2634</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -937,7 +937,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2544">src/core/reactor.ts:2544</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2542">src/core/reactor.ts:2542</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -960,7 +960,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_getalias">_getAlias</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L115">src/core/component.ts:115</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L115">src/core/component.ts:115</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -983,7 +983,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getcausalityinterface">_getCausalityInterface</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1438">src/core/reactor.ts:1438</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1438">src/core/reactor.ts:1438</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1007,7 +1007,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_getcontainer">_getContainer</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L171">src/core/component.ts:171</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L171">src/core/component.ts:171</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1030,7 +1030,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getfirstreactionormutation">_getFirstReactionOrMutation</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1164">src/core/reactor.ts:1164</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1164">src/core/reactor.ts:1164</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="_reaction_.reaction.html" class="tsd-signature-type">Reaction</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>
@@ -1051,7 +1051,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_getfullyqualifiedname">_getFullyQualifiedName</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L124">src/core/component.ts:124</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L124">src/core/component.ts:124</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1075,7 +1075,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getkey">_getKey</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L716">src/core/reactor.ts:716</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L716">src/core/reactor.ts:716</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1123,7 +1123,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getlastmutation">_getLastMutation</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1157">src/core/reactor.ts:1157</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1157">src/core/reactor.ts:1157</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1150,7 +1150,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getlastreactionormutation">_getLastReactionOrMutation</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1176">src/core/reactor.ts:1176</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1176">src/core/reactor.ts:1176</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1176,7 +1176,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getmutations">_getMutations</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1193">src/core/reactor.ts:1193</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1193">src/core/reactor.ts:1193</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1201,7 +1201,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_getname">_getName</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L140">src/core/component.ts:140</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L140">src/core/component.ts:140</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1224,7 +1224,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getprecedencegraph">_getPrecedenceGraph</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1104">src/core/reactor.ts:1104</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1104">src/core/reactor.ts:1104</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1268,7 +1268,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getreactionindex">_getReactionIndex</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L857">src/core/reactor.ts:857</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L857">src/core/reactor.ts:857</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1300,7 +1300,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getreactions">_getReactions</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1137">src/core/reactor.ts:1137</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1137">src/core/reactor.ts:1137</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1323,7 +1323,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_getreactionsandmutations">_getReactionsAndMutations</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1146">src/core/reactor.ts:1146</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1146">src/core/reactor.ts:1146</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1346,7 +1346,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_initializemutationscope">_initializeMutationScope</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L841">src/core/reactor.ts:841</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L841">src/core/reactor.ts:841</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -1364,7 +1364,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_initializereactionscope">_initializeReactionScope</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L837">src/core/reactor.ts:837</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L837">src/core/reactor.ts:837</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -1382,7 +1382,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_iscontainedby">_isContainedBy</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L91">src/core/component.ts:91</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L91">src/core/component.ts:91</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1414,7 +1414,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_iscontainedbycontainerof">_isContainedByContainerOf</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L105">src/core/component.ts:105</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L105">src/core/component.ts:105</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1448,7 +1448,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_isdownstream">_isDownstream</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1204">src/core/reactor.ts:1204</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1204">src/core/reactor.ts:1204</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1480,7 +1480,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_isregistered">_isRegistered</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L83">src/core/component.ts:83</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L83">src/core/component.ts:83</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1506,7 +1506,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_isupstream">_isUpstream</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1223">src/core/reactor.ts:1223</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1223">src/core/reactor.ts:1223</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1538,7 +1538,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_linktoruntimeobject">_linkToRuntimeObject</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L73">src/core/component.ts:73</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L73">src/core/component.ts:73</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1563,7 +1563,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2660">src/core/reactor.ts:2660</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2658">src/core/reactor.ts:2658</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1586,7 +1586,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2371">src/core/reactor.ts:2371</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2369">src/core/reactor.ts:2369</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1624,7 +1624,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2339">src/core/reactor.ts:2339</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2337">src/core/reactor.ts:2337</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1648,7 +1648,7 @@
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_receiveruntimeobject">_receiveRuntimeObject</a></p>
 								<p>Overrides <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_receiveruntimeobject">_receiveRuntimeObject</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L594">src/core/reactor.ts:594</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L594">src/core/reactor.ts:594</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1682,7 +1682,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_register">_register</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L613">src/core/reactor.ts:613</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L613">src/core/reactor.ts:613</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1721,7 +1721,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2513">src/core/reactor.ts:2513</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2511">src/core/reactor.ts:2511</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1744,7 +1744,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_requestruntimeobject">_requestRuntimeObject</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L626">src/core/reactor.ts:626</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L626">src/core/reactor.ts:626</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1767,7 +1767,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2488">src/core/reactor.ts:2488</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2486">src/core/reactor.ts:2486</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1795,7 +1795,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_component_.component.html">Component</a>.<a href="_component_.component.html#_setalias">_setAlias</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/component.ts#L180">src/core/component.ts:180</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/component.ts#L180">src/core/component.ts:180</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1827,7 +1827,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2527">src/core/reactor.ts:2527</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2525">src/core/reactor.ts:2525</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1850,7 +1850,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2685">src/core/reactor.ts:2685</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2683">src/core/reactor.ts:2683</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1872,7 +1872,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2667">src/core/reactor.ts:2667</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2665">src/core/reactor.ts:2665</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1895,7 +1895,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_unplug">_unplug</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L647">src/core/reactor.ts:647</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L647">src/core/reactor.ts:647</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1920,7 +1920,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_unsettimer">_unsetTimer</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1570">src/core/reactor.ts:1570</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1570">src/core/reactor.ts:1570</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1952,7 +1952,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#_unsettimers">_unsetTimers</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2270">src/core/reactor.ts:2270</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2270">src/core/reactor.ts:2270</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1975,7 +1975,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#addmutation">addMutation</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1038">src/core/reactor.ts:1038</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1038">src/core/reactor.ts:1038</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2059,7 +2059,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#addreaction">addReaction</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1002">src/core/reactor.ts:1002</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1002">src/core/reactor.ts:1002</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2156,7 +2156,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#canconnect">canConnect</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1253">src/core/reactor.ts:1253</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1253">src/core/reactor.ts:1253</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2226,7 +2226,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#nextreaction">nextReaction</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L969">src/core/reactor.ts:969</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L969">src/core/reactor.ts:969</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2262,7 +2262,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#prevreaction">prevReaction</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L943">src/core/reactor.ts:943</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L943">src/core/reactor.ts:943</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2291,14 +2291,14 @@
 					<a name="schedulable" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagProtected">Protected</span> schedulable</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-inherited tsd-is-protected">
-						<li class="tsd-signature tsd-kind-icon">schedulable&lt;T&gt;<span class="tsd-signature-symbol">(</span>action<span class="tsd-signature-symbol">: </span><a href="_reactor_.action.html" class="tsd-signature-type">Action</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_reactor_.schedule.html" class="tsd-signature-type">Schedule</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">schedulable&lt;T&gt;<span class="tsd-signature-symbol">(</span>action<span class="tsd-signature-symbol">: </span><a href="_reactor_.action.html" class="tsd-signature-type">Action</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_reactor_.sched.html" class="tsd-signature-type">Sched</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#schedulable">schedulable</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L873">src/core/reactor.ts:873</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L873">src/core/reactor.ts:873</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2313,7 +2313,7 @@
 									<h5>action: <a href="_reactor_.action.html" class="tsd-signature-type">Action</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_reactor_.schedule.html" class="tsd-signature-type">Schedule</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_reactor_.sched.html" class="tsd-signature-type">Sched</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -2327,7 +2327,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2200">src/core/reactor.ts:2200</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2200">src/core/reactor.ts:2200</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2371,7 +2371,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L2211">src/core/reactor.ts:2211</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L2211">src/core/reactor.ts:2211</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2416,7 +2416,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#tostring">toString</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1595">src/core/reactor.ts:1595</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1595">src/core/reactor.ts:1595</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2439,7 +2439,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_reactor_.reactor.html">Reactor</a>.<a href="_reactor_.reactor.html#writable">writable</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L849">src/core/reactor.ts:849</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L849">src/core/reactor.ts:849</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -2518,6 +2518,9 @@
 								<a href="_reactor_.app.html#_endofexecution" class="tsd-kind-icon">_end<wbr>OfExecution</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_reactor_.app.html#_errormessage" class="tsd-kind-icon">_error<wbr>Message</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
 								<a href="_reactor_.app.html#_errored" class="tsd-kind-icon">_errored</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
@@ -2537,9 +2540,6 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected">
 								<a href="_reactor_.app.html#_key" class="tsd-kind-icon">_key</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_reactor_.app.html#_message" class="tsd-kind-icon">_message</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
 								<a href="_reactor_.app.html#_reactionq" class="tsd-kind-icon">_reactionQ</a>

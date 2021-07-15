@@ -89,7 +89,9 @@
 								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#getcurrenttag" class="tsd-kind-icon">get<wbr>Current<wbr>Tag</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#getelapsedlogicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Logical<wbr>Time</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#getelapsedphysicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Physical<wbr>Time</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#requestshutdown" class="tsd-kind-icon">request<wbr>Shutdown</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#reporterror" class="tsd-kind-icon">report<wbr>Error</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#requesterrorstop" class="tsd-kind-icon">request<wbr>Error<wbr>Stop</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#requeststop" class="tsd-kind-icon">request<wbr>Stop</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#sendrtimessage" class="tsd-kind-icon">sendRTIMessage</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported"><a href="_reactor_.utilityfunctions.html#sendrtitimedmessage" class="tsd-kind-icon">sendRTITimed<wbr>Message</a></li>
 							</ul>
@@ -109,7 +111,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1979">src/core/reactor.ts:1979</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1981">src/core/reactor.ts:1981</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
@@ -126,7 +128,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1980">src/core/reactor.ts:1980</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1982">src/core/reactor.ts:1982</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
@@ -143,7 +145,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1978">src/core/reactor.ts:1978</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1980">src/core/reactor.ts:1980</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.tag.html" class="tsd-signature-type">Tag</a></h4>
@@ -160,7 +162,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1981">src/core/reactor.ts:1981</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1983">src/core/reactor.ts:1983</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
@@ -177,7 +179,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1982">src/core/reactor.ts:1982</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1984">src/core/reactor.ts:1984</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/_time_.timevalue.html" class="tsd-signature-type">TimeValue</a></h4>
@@ -185,27 +187,64 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="requestshutdown" class="tsd-anchor"></a>
-					<h3>request<wbr>Shutdown</h3>
+					<a name="reporterror" class="tsd-anchor"></a>
+					<h3>report<wbr>Error</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">request<wbr>Shutdown<span class="tsd-signature-symbol">(</span>success<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span>, message<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">report<wbr>Error<span class="tsd-signature-symbol">(</span>message<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1977">src/core/reactor.ts:1977</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1978">src/core/reactor.ts:1978</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>success: <span class="tsd-signature-type">boolean</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> message: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
+					<a name="requesterrorstop" class="tsd-anchor"></a>
+					<h3>request<wbr>Error<wbr>Stop</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">request<wbr>Error<wbr>Stop<span class="tsd-signature-symbol">(</span>message<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1979">src/core/reactor.ts:1979</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
 								<li>
 									<h5><span class="tsd-flag ts-flagOptional">Optional</span> message: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
+					<a name="requeststop" class="tsd-anchor"></a>
+					<h3>request<wbr>Stop</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">request<wbr>Stop<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1977">src/core/reactor.ts:1977</a></li>
+								</ul>
+							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
@@ -220,7 +259,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1983">src/core/reactor.ts:1983</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1985">src/core/reactor.ts:1985</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -249,7 +288,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/8764afd/src/core/reactor.ts#L1984">src/core/reactor.ts:1984</a></li>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/d159d59/src/core/reactor.ts#L1986">src/core/reactor.ts:1986</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -322,7 +361,13 @@
 								<a href="_reactor_.utilityfunctions.html#getelapsedphysicaltime" class="tsd-kind-icon">get<wbr>Elapsed<wbr>Physical<wbr>Time</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="_reactor_.utilityfunctions.html#requestshutdown" class="tsd-kind-icon">request<wbr>Shutdown</a>
+								<a href="_reactor_.utilityfunctions.html#reporterror" class="tsd-kind-icon">report<wbr>Error</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
+								<a href="_reactor_.utilityfunctions.html#requesterrorstop" class="tsd-kind-icon">request<wbr>Error<wbr>Stop</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
+								<a href="_reactor_.utilityfunctions.html#requeststop" class="tsd-kind-icon">request<wbr>Stop</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-not-exported">
 								<a href="_reactor_.utilityfunctions.html#sendrtimessage" class="tsd-kind-icon">sendRTIMessage</a>
