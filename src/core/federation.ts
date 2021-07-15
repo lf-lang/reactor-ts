@@ -38,15 +38,32 @@ export const CONNECT_NUM_RETRIES: number = 500;
  */
 enum RTIMessageTypes {
 
-    /**
-     * Byte Identifying a federate ID message, which is 32 bits long.
+    /** 
+     *  Byte identifying a message from a federate to an RTI containing
+     *  the federation ID and the federate ID. The message contains, in
+     *  this order:
+     *  * One byte equal to MSG_TYPE_FED_IDS.
+     *  * Two bytes (ushort) giving the federate ID.
+     *  * One byte (uchar) giving the length N of the federation ID.
+     *  * N bytes containing the federation ID.
+     *  Each federate needs to have a unique ID between 0 and
+     *  NUMBER_OF_FEDERATES-1.
+     *  Each federate, when starting up, should send this message
+     *  to the RTI. This is its first message to the RTI.
+     *  The RTI will respond with either MSG_TYPE_REJECT, MSG_TYPE_ACK, or MSG_TYPE_UDP_PORT.
+     *  If the federate is a C target LF program, the generated federate
+     *  code does this by calling synchronize_with_other_federates(),
+     *  passing to it its federate ID.
      */
-    FED_ID = 1,
+    MSG_TYPE_FED_IDS = 1,
 
     /**
      * Byte identifying a timestamp message, which is 64 bits long.
+     * Each federate sends its starting physical time as a message of this
+     * type, and the RTI broadcasts to all the federates the starting logical
+     * time as a message of this type.
      */
-    TIMESTAMP = 2,
+    MSG_TYPE_TIMESTAMP = 2,
 
     /** 
      *  Byte identifying a message to forward to another federate.
@@ -54,44 +71,82 @@ enum RTIMessageTypes {
      *  The next two bytes are the destination federate ID.
      *  The four bytes after that will be the length of the message.
      *  The remaining bytes are the message.
+     *  NOTE: This is currently not used. All messages are tagged, even
+     *  on physical connections, because if "after" is used, the message
+     *  may preserve the logical timestamp rather than using the physical time.
      */
-    MESSAGE = 3,
+    MSG_TYPE_MESSAGE = 3,
 
     /** 
      * Byte identifying that the federate is ending its execution.
      */
-    RESIGN = 4,
+    MSG_TYPE_RESIGN = 4,
 
     /** 
      *  Byte identifying a timestamped message to forward to another federate.
-     *  The next two bytes will be the ID of the destination port.
+     *  The next two bytes will be the ID of the destination reactor port.
      *  The next two bytes are the destination federate ID.
      *  The four bytes after that will be the length of the message.
-     *  The next eight bytes will be the timestamp.
+     *  The next eight bytes will be the timestamp of the message.
+     *  The next four bytes will be the microstep of the message.
      *  The remaining bytes are the message.
+     *
+     *  With centralized coordination, all such messages flow through the RTI.
+     *  With decentralized coordination, tagged messages are sent peer-to-peer
+     *  between federates and are marked with MSG_TYPE_P2P_TAGGED_MESSAGE.
      */
-    TIMED_MESSAGE = 5,
+    MSG_TYPE_TAGGED_MESSAGE = 5,
 
     /** 
-     *  Byte identifying a next event time (NET) message sent from a federate.
-     *  The next eight bytes will be the timestamp. This message from a
-     *  federate tells the RTI the time of the earliest event on that federate's
-     *  event queue. In other words, absent any further inputs from other federates,
-     *  this will be the logical time of the next set of reactions on that federate.
+     * Byte identifying a next event tag (NET) message sent from a federate
+     * in centralized coordination.
+     * The next eight bytes will be the timestamp.
+     * The next four bytes will be the microstep.
+     * This message from a federate tells the RTI the tag of the earliest event 
+     * on that federate's event queue. In other words, absent any further inputs 
+     * from other federates, this will be the least tag of the next set of
+     * reactions on that federate. If the event queue is empty and a timeout
+     * time has been specified, then the timeout time will be sent. If there is
+     * no timeout time, then FOREVER will be sent. Note that this message should
+     * not be sent if there are physical actions and the earliest event on the event
+     * queue has a tag that is ahead of physical time (or the queue is empty).
+     * In that case, send TAN instead.
      */
-    NEXT_EVENT_TIME = 6,
+     MSG_TYPE_NEXT_EVENT_TAG = 6,
 
     /** 
-     *  Byte identifying a time advance grant (TAG) sent to a federate.
-     *  The next eight bytes will be the timestamp.
+     * Byte identifying a time advance grant (TAG) sent by the RTI to a federate
+     * in centralized coordination. This message is a promise by the RTI to the federate
+     * that no later message sent to the federate will have a tag earlier than or
+     * equal to the tag carried by this TAG message.
+     * The next eight bytes will be the timestamp.
+     * The next four bytes will be the microstep.
      */
-    TIME_ADVANCE_GRANT = 7,
+    MSG_TYPE_TAG_ADVANCE_GRANT = 7,
 
     /** 
-     *  Byte identifying a logical time complete (LTC) message sent by a federate
-     *  to the RTI. The next eight bytes will be the timestamp.
+     * Byte identifying a logical tag complete (LTC) message sent by a federate
+     * to the RTI.
+     * The next eight bytes will be the timestep of the completed tag.
+     * The next four bytes will be the microsteps of the completed tag.
      */
-    LOGICAL_TIME_COMPLETE = 8
+    MSG_TYPE_LOGICAL_TAG_COMPLETE = 9, 
+
+    /**
+     * Byte identifying an acknowledgment of the previously received MSG_TYPE_FED_IDS message
+     * sent by the RTI to the federate
+     * with a payload indicating the UDP port to use for clock synchronization.
+     * The next four bytes will be the port number for the UDP server, or
+     * 0 or USHRT_MAX if there is no UDP server.  0 means that initial clock synchronization
+     * is enabled, whereas USHRT_MAX mean that no synchronization should be performed at all.
+     */
+    MSG_TYPE_UDP_PORT = 254,
+
+    /**
+     * Byte identifying an acknowledgment of the previously received message.
+     * This message carries no payload.
+     */
+    MSG_TYPE_ACK = 255
 }
 
 //---------------------------------------------------------------------//
@@ -196,13 +251,17 @@ class RTIClient extends EventEmitter {
                 Log.info(this, () => {return 'RTI socket has closed.'});
             });
 
-            // Immediately send a FED ID message after connecting.
-            const buffer = Buffer.alloc(5);
-            buffer.writeUInt8(RTIMessageTypes.FED_ID, 0);
-            buffer.writeUInt32LE(this.id, 1);
+            // Immediately send a federate ID message after connecting.
+            const buffer = Buffer.alloc(4);
+            buffer.writeUInt8(RTIMessageTypes.MSG_TYPE_FED_IDS, 0);
+            buffer.writeUInt16LE(this.id, 1);
+            let federationID = 'Unidentified Federation';
+            console.log('hokeun!' + federationID.length);
+            buffer.writeUInt8(federationID.length, 3);
             try {
                 Log.debug(this, () => {return 'Sending a FED ID message to the RTI.'});
                 this.socket?.write(buffer);
+                this.socket?.write(federationID);
             } catch (e) {
                 Log.error(this, () => {return e.toString()});
             }
@@ -243,6 +302,17 @@ class RTIClient extends EventEmitter {
         this.socket?.unref(); // Allow the program to exit
     }
 
+    public sendUDPPortNumToRTI(udpPort: number) {
+        let msg = Buffer.alloc(3);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_UDP_PORT, 0);
+        msg.writeUInt16BE(udpPort, 1);
+        try {
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return e});
+        }
+    }
+
     /** 
      *  Send the specified TimeValue to the RTI and set up
      *  a handler for the response.
@@ -255,7 +325,7 @@ class RTIClient extends EventEmitter {
      */
     public requestStartTimeFromRTI(myPhysicalTime: TimeValue) {
         let msg = Buffer.alloc(9)
-        msg.writeUInt8(RTIMessageTypes.TIMESTAMP, 0);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TIMESTAMP, 0);
         let time = myPhysicalTime.toBinary();
         time.copy(msg, 1);
         try {
@@ -277,7 +347,7 @@ class RTIClient extends EventEmitter {
      */
     public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
         let msg = Buffer.alloc(data.length + 9);
-        msg.writeUInt8(RTIMessageTypes.MESSAGE, 0);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
         msg.writeUInt16LE(destFederateID, 3);
         msg.writeUInt32LE(data.length, 5);
@@ -303,13 +373,14 @@ class RTIClient extends EventEmitter {
      * unsigned integer in a Buffer.
      */
     public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number, time: Buffer) {
-        let msg = Buffer.alloc(data.length + 17);
-        msg.writeUInt8(RTIMessageTypes.TIMED_MESSAGE, 0);
+        let msg = Buffer.alloc(data.length + 21);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TAGGED_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
         msg.writeUInt16LE(destFederateID, 3);
         msg.writeUInt32LE(data.length, 5);
         time.copy(msg, 9); // Copy the current time into the message
-        data.copy(msg, 17); // Copy data into the message
+        // FIXME: Add microstep properly.
+        data.copy(msg, 21); // Copy data into the message
         try {
             Log.debug(this, () => {return `Sending RTI (timed) message to `
                 + `federate ID: ${destFederateID}, port ID: ${destPortID} `
@@ -329,9 +400,10 @@ class RTIClient extends EventEmitter {
      * a Buffer.
      */
     public sendRTILogicalTimeComplete(completeTime: Buffer) {
-        let msg = Buffer.alloc(9);
-        msg.writeUInt8(RTIMessageTypes.LOGICAL_TIME_COMPLETE, 0);
+        let msg = Buffer.alloc(13);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_LOGICAL_TAG_COMPLETE, 0);
         completeTime.copy(msg, 1);
+        // FIXME: Add microstep properly.
         try {
             Log.debug(this, () => {return "Sending RTI logical time complete: " + completeTime.toString('hex');});
             this.socket?.write(msg);
@@ -346,7 +418,7 @@ class RTIClient extends EventEmitter {
      */
     public sendRTIResign() {
         let msg = Buffer.alloc(1);
-        msg.writeUInt8(RTIMessageTypes.RESIGN, 0);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_RESIGN, 0);
         try {
             Log.debug(this, () => {return "Sending RTI resign.";});
             this.socket?.write(msg);
@@ -363,9 +435,10 @@ class RTIClient extends EventEmitter {
      * integer in a Buffer.
      */
     public sendRTINextEventTime(nextTime: Buffer) {
-        let msg = Buffer.alloc(9);
-        msg.writeUInt8(RTIMessageTypes.NEXT_EVENT_TIME, 0);
+        let msg = Buffer.alloc(13);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEXT_EVENT_TAG, 0);
         nextTime.copy(msg,1);
+        // FIXME: Add microstep properly.
         try {
             Log.debug(this, () => {return "Sending RTI Next Event Time.";});
             this.socket?.write(msg);
@@ -410,17 +483,17 @@ class RTIClient extends EventEmitter {
             
             let messageTypeByte = assembledData[bufferIndex]
             switch (messageTypeByte) {
-                case RTIMessageTypes.FED_ID: {
+                case RTIMessageTypes.MSG_TYPE_FED_IDS: {
                     // MessageType: 1 byte.
                     // Federate ID: 2 bytes long.
                     // Should never be received by a federate.
                     
-                    Log.error(thiz, () => {return "Received FED_ID message from the RTI."});     
-                    throw new Error('Received a FED_ID message from the RTI. ' 
-                        + 'FED_ID messages may only be sent by federates');
+                    Log.error(thiz, () => {return "Received MSG_TYPE_FED_IDS message from the RTI."});     
+                    throw new Error('Received a MSG_TYPE_FED_IDS message from the RTI. ' 
+                        + 'MSG_TYPE_FED_IDS messages may only be sent by federates');
                     break;
                 }
-                case RTIMessageTypes.TIMESTAMP: {
+                case RTIMessageTypes.MSG_TYPE_TIMESTAMP: {
                     // MessageType: 1 byte.
                     // Timestamp: 8 bytes.
 
@@ -433,10 +506,10 @@ class RTIClient extends EventEmitter {
                         let timeBuffer = Buffer.alloc(8);
                         assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9 );
                         let startTime = TimeValue.fromBinary(timeBuffer);
-                        Log.debug(thiz, () => { return "Received TIMESTAMP buffer from the RTI " +
+                        Log.debug(thiz, () => { return "Received MSG_TYPE_TIMESTAMP buffer from the RTI " +
                         `with startTime: ${timeBuffer.toString('hex')}`;      
                         })
-                        Log.debug(thiz, () => { return "Received TIMESTAMP message from the RTI " +
+                        Log.debug(thiz, () => { return "Received MSG_TYPE_TIMESTAMP message from the RTI " +
                             `with startTime: ${startTime}`;      
                         })
                         thiz.emit('startTime', startTime);
@@ -445,7 +518,7 @@ class RTIClient extends EventEmitter {
                     bufferIndex += 9;
                     break;
                 }
-                case RTIMessageTypes.MESSAGE: {
+                case RTIMessageTypes.MSG_TYPE_MESSAGE: {
                     // MessageType: 1 byte.
                     // Message: The next two bytes will be the ID of the destination port
                     // The next two bytes are the destination federate ID (which can be ignored).
@@ -482,29 +555,31 @@ class RTIClient extends EventEmitter {
                     }
                     break;
                 }
-                case RTIMessageTypes.TIMED_MESSAGE: {
+                case RTIMessageTypes.MSG_TYPE_TAGGED_MESSAGE: {
                     // MessageType: 1 byte.
                     // The next two bytes will be the ID of the destination port.
                     // The next two bytes are the destination federate ID.
                     // The next four bytes after that will be the length of the message
                     // The next eight bytes will be the timestamp.
+                    // The next four bytes will be the microstep of the message.
                     // The remaining bytes are the message.
 
-                    let incomplete = assembledData.length < 17 + bufferIndex;
+                    let incomplete = assembledData.length < 21 + bufferIndex;
 
                     if (incomplete) {
                         thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
                         assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
-                        bufferIndex += 17;
+                        bufferIndex += 21;
                     } else {
                         let destPortID = assembledData.readUInt16LE(bufferIndex + 1);
                         let messageLength = assembledData.readUInt32LE(bufferIndex + 5);
 
                         let timeBuffer = Buffer.alloc(8);
-                        assembledData.copy(timeBuffer, 0, bufferIndex + 9, bufferIndex + 17 );
+                        assembledData.copy(timeBuffer, 0, bufferIndex + 9, bufferIndex + 17);
                         let timestamp = TimeValue.fromBinary(timeBuffer);
+                        // FIXME: Process microstep properly.
 
-                        let isChunked = messageLength > (assembledData.length - (bufferIndex + 17));
+                        let isChunked = messageLength > (assembledData.length - (bufferIndex + 21));
 
                         if (isChunked) {
                             // Copy the unprocessed remainder of assembledData into chunkedBuffer
@@ -513,57 +588,65 @@ class RTIClient extends EventEmitter {
                         } else {
                             // Finish processing the complete message.
                             let messageBuffer = Buffer.alloc(messageLength);
-                            assembledData.copy(messageBuffer, 0, bufferIndex + 17, bufferIndex + 17 +  messageLength);  
+                            assembledData.copy(messageBuffer, 0, bufferIndex + 21, bufferIndex + 21 +  messageLength);  
                             let destPort = thiz.federatePortActionByID.get(destPortID);
                             thiz.emit('timedMessage', destPort, messageBuffer, timestamp);
                         }
 
-                        bufferIndex += messageLength + 17;
+                        bufferIndex += messageLength + 21;
                         break;
                     }
                 }
                 // FIXME: It's unclear what should happen if a federate gets this
                 // message.
-                case RTIMessageTypes.RESIGN: {
+                case RTIMessageTypes.MSG_TYPE_RESIGN: {
                     // MessageType: 1 byte.
-                    Log.debug(thiz, () => {return 'Received an RTI RESIGN.'});
+                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_RESIGN.'});
                     Log.error(thiz, () => {return 'FIXME: No functionality has '
-                        + 'been implemented yet for a federate receiving a RESIGN message from '
+                        + 'been implemented yet for a federate receiving a MSG_TYPE_RESIGN message from '
                         + 'the RTI'});
                     bufferIndex += 1;
                     break;
                 }
-                case RTIMessageTypes.NEXT_EVENT_TIME: {
+                case RTIMessageTypes.MSG_TYPE_NEXT_EVENT_TAG: {
                     // MessageType: 1 byte.
                     // Timestamp: 8 bytes.
-                    Log.error(thiz, () => {return 'Received an RTI NEXT_EVENT_TIME. This message type '
+                    // Microstep: 4 bytes.
+                    Log.error(thiz, () => {return 'Received an RTI MSG_TYPE_NEXT_EVENT_TAG. This message type '
                         + 'should not be received by a federate'});
-                    bufferIndex += 9;
+                    bufferIndex += 13;
                     break;
                 }
-                case RTIMessageTypes.TIME_ADVANCE_GRANT: {
+                case RTIMessageTypes.MSG_TYPE_TAG_ADVANCE_GRANT: {
                     // MessageType: 1 byte.
                     // Timestamp: 8 bytes.
-                    let incomplete = assembledData.length < 9 + bufferIndex;
+                    // Microstep: 4 bytes.
+                    let incomplete = assembledData.length < 13 + bufferIndex;
 
                     if (incomplete) {
                         thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
                         assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
                     } else {
-                        Log.debug(thiz, () => {return 'Received an RTI TIME_ADVANCE_GRANT'});
+                        Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_TAG_ADVANCE_GRANT'});
                         let timeBuffer = Buffer.alloc(8);
                         assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9);
                         let time = TimeValue.fromBinary(timeBuffer);
+                        // FIXME: Process microstep properly.
                         thiz.emit('timeAdvanceGrant', time);
                     }
-                    bufferIndex += 9;
+                    bufferIndex += 13;
                     break;
                 }
-                case RTIMessageTypes.LOGICAL_TIME_COMPLETE: {
+                case RTIMessageTypes.MSG_TYPE_LOGICAL_TAG_COMPLETE: {
                     // Logial Time Complete: The next eight bytes will be the timestamp.
-                    Log.error(thiz, () => {return 'Received an RTI LOGICAL_TIME_COMPLETE.  This message type '
+                    Log.error(thiz, () => {return 'Received an RTI MSG_TYPE_LOGICAL_TAG_COMPLETE.  This message type '
                         + 'should not be received by a federate'});
-                    bufferIndex += 9;
+                    bufferIndex += 13;
+                    break;
+                }
+                case RTIMessageTypes.MSG_TYPE_ACK: {
+                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_ACK'});
+                    bufferIndex += 1;
                     break;
                 }
                 default: {
@@ -693,7 +776,7 @@ export class FederatedApp extends App {
     constructor (federateID: number, private rtiPort: number, private rtiHost: string,
         executionTimeout?: TimeValue | undefined, keepAlive?: boolean,
         fast?: boolean, success?: () => void, failure?: () => void) {
-        
+
         super(executionTimeout, keepAlive, fast, success, failure);
         this.rtiClient = new RTIClient(federateID);
     }
@@ -799,6 +882,7 @@ export class FederatedApp extends App {
         this._loadStartupReactions();
 
         this.rtiClient.on('connected', () => {
+            this.rtiClient.sendUDPPortNumToRTI(65535);
             this.rtiClient.requestStartTimeFromRTI(getCurrentPhysicalTime());
         });
 
