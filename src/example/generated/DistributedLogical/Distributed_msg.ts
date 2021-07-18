@@ -101,6 +101,7 @@ export class Distributed extends FederatedApp {
         fail?: () => void
     ) {
         super(0, 15045, "localhost", timeout, keepAlive, fast, success, fail);
+        this.addDownstreamFederate(1);
         this.msg = new MessageGenerator(this, "Hello World")
         this.networkMessage = new Action<string>(this, Origin.logical, TimeValue.withUnits(10, TimeUnit.msec));
         this.addReaction(

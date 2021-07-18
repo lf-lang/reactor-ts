@@ -101,6 +101,7 @@ export class Distributed extends FederatedApp {
         fail?: () => void
     ) {
         super(1, 15045, "localhost", timeout, keepAlive, fast, success, fail);
+        this.addUpstreamFederate(0, BigInt(0));
         this.dsp = new PrintMessage(this)
         this.networkMessage = new Action<Buffer>(this, Origin.logical, TimeValue.withUnits(10, TimeUnit.msec));
         this.registerFederatePortAction(0, this.networkMessage);

@@ -137,7 +137,34 @@ enum RTIMessageTypes {
      * The next eight bytes will be the timestep of the completed tag.
      * The next four bytes will be the microsteps of the completed tag.
      */
-    MSG_TYPE_LOGICAL_TAG_COMPLETE = 9, 
+    MSG_TYPE_LOGICAL_TAG_COMPLETE = 9,
+
+    /**
+     * A message that informs the RTI about connections between this federate and
+     * other federates where messages are routed through the RTI. Currently, this
+     * only includes logical connections when the coordination is centralized. This
+     * information is needed for the RTI to perform the centralized coordination.
+     * 
+     * @note Only information about the immediate neighbors is required. The RTI can
+     * transitively obtain the structure of the federation based on each federate's
+     * immediate neighbor information.
+     *
+     * The next 4 bytes is the number of upstream federates. 
+     * The next 4 bytes is the number of downstream federates.
+     * 
+     * Depending on the first four bytes, the next bytes are pairs of (fed ID (2
+     * bytes), delay (8 bytes)) for this federate's connection to upstream federates
+     * (by direct connection). The delay is the minimum "after" delay of all
+     * connections from the upstream federate.
+     *
+     * Depending on the second four bytes, the next bytes are fed IDs (2
+     * bytes each), of this federate's downstream federates (by direct connection).
+     *
+     * @note The upstream and downstream connections are transmitted on the same
+     *  message to prevent (at least to some degree) the scenario where the RTI has
+     *  information about one, but not the other (which is a critical error).
+     */
+    MSG_TYPE_NEIGHBOR_STRUCTURE = 24,
 
     /**
      * Byte identifying an acknowledgment of the previously received MSG_TYPE_FED_IDS message
@@ -307,6 +334,31 @@ class RTIClient extends EventEmitter {
         Log.debug( this, () => {return 'Closing RTI connection by destroying and unrefing socket.'});
         this.socket?.destroy();
         this.socket?.unref(); // Allow the program to exit
+    }
+
+    public sendNeighborStructure(upstreamFedIDs: number[], upstreamFedDelays: bigint[], downstreamFedIDs: number[]) {
+        let msg = Buffer.alloc(9 + upstreamFedIDs.length * 10 + downstreamFedIDs.length * 2);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEIGHBOR_STRUCTURE);
+        msg.writeUInt32LE(upstreamFedIDs.length, 1);
+        msg.writeUInt32LE(downstreamFedIDs.length, 5);
+        
+        let bufferIndex = 9;
+        for (let i = 0; i < upstreamFedIDs.length; i++) {
+            msg.writeUInt16LE(upstreamFedIDs[i], bufferIndex);
+            msg.writeBigUInt64LE(upstreamFedDelays[i], bufferIndex + 2);
+            bufferIndex += 10;
+        }
+
+        for (let i = 0; i < downstreamFedIDs.length; i++) {
+            msg.writeUInt16LE(downstreamFedIDs[i], bufferIndex);
+            bufferIndex += 2;
+        }
+
+        try {
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return e});
+        }
     }
 
     public sendUDPPortNumToRTI(udpPort: number) {
@@ -711,6 +763,19 @@ export class FederatedApp extends App {
      */
     private greatestTimeAdvanceGrant: TimeValue | null = null;
 
+    private upstreamFedIDs: number[] = [];
+    private upstreamFedDelays: bigint[] = [];
+    private downstreamFedIDs: number[] = [];
+
+    public addUpstreamFederate(fedID: number, fedDelay: bigint) {
+        this.upstreamFedIDs.push(fedID);
+        this.upstreamFedDelays.push(fedDelay);
+    }
+
+    public addDownstreamFederate(fedID: number) {
+        this.downstreamFedIDs.push(fedID);
+    }
+
     /**
      * Getter for rtiSynchronized
      */
@@ -895,6 +960,7 @@ export class FederatedApp extends App {
         this._loadStartupReactions();
 
         this.rtiClient.on('connected', () => {
+            this.rtiClient.sendNeighborStructure(this.upstreamFedIDs, this.upstreamFedDelays, this.downstreamFedIDs);
             this.rtiClient.sendUDPPortNumToRTI(65535);
             this.rtiClient.requestStartTimeFromRTI(getCurrentPhysicalTime());
         });
