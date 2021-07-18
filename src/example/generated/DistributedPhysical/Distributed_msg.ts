@@ -40,8 +40,8 @@ export class MessageGenerator extends Reactor {
                 let count = __count.get();
                 // =============== END react prologue
                 try {
-                    message = count.toString();    
-                    console.log(`At time ${util.getElapsedLogicalTime()}, send message: ${count++}`);
+                    message = root + " " + count++;    
+                    console.log(`At time ${util.getElapsedLogicalTime()}, send message: ${message}`);
                 } finally {
                     // =============== START react epilogue
                     if (message !== undefined) {
