@@ -830,7 +830,8 @@ export class FederatedApp extends App {
         this.sendRTILogicalTimeComplete(this.util.getCurrentLogicalTime());
         this.sendRTIResign();
         this.shutdownRTIClient();
-        super._shutdown()
+        // FIXME: Fix errors when calling App._shutdown() from this FederatedApp.
+        //super._shutdown()
     }
 
     // FIXME: Some of the App settings (like fast) are probably incompatible
@@ -855,7 +856,16 @@ export class FederatedApp extends App {
         executionTimeout?: TimeValue | undefined, keepAlive?: boolean,
         fast?: boolean, success?: () => void, failure?: () => void) {
 
-        super(executionTimeout, keepAlive, fast, success, failure);
+        super(executionTimeout, keepAlive, fast,
+            // Let super class (App) call FederateApp's _shutdown in success and failure.
+            () => {
+                success? success(): () => {};
+                this._shutdown();
+            },
+            () => {
+                failure? failure(): () => {};
+                this._shutdown();
+            });
         this.rtiClient = new RTIClient(federateID);
     }
 
