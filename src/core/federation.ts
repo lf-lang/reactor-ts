@@ -38,6 +38,13 @@ export const CONNECT_NUM_RETRIES: number = 500;
  */
 enum RTIMessageTypes {
 
+    /**
+     * Byte identifying a rejection of the previously received message.
+     * The reason for the rejection is included as an additional byte
+     * (uchar) (see below for encodings of rejection reasons).
+     */
+    MSG_TYPE_REJECT = 0,
+
     /** 
      *  Byte identifying a message from a federate to an RTI containing
      *  the federation ID and the federate ID. The message contains, in
@@ -256,7 +263,7 @@ class RTIClient extends EventEmitter {
             buffer.writeUInt8(RTIMessageTypes.MSG_TYPE_FED_IDS, 0);
             buffer.writeUInt16LE(this.id, 1);
             let federationID = 'Unidentified Federation';
-            console.log('hokeun!' + federationID.length);
+
             buffer.writeUInt8(federationID.length, 3);
             try {
                 Log.debug(this, () => {return 'Sending a FED ID message to the RTI.'});
@@ -647,6 +654,12 @@ class RTIClient extends EventEmitter {
                 case RTIMessageTypes.MSG_TYPE_ACK: {
                     Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_ACK'});
                     bufferIndex += 1;
+                    break;
+                }
+                case RTIMessageTypes.MSG_TYPE_REJECT: {
+                    let rejectionReason = assembledData.readUInt8(bufferIndex + 1);
+                    Log.error(thiz, () => {return 'Received an RTI MSG_TYPE_REJECT. Rejection reason: ' + rejectionReason});
+                    bufferIndex += 2;
                     break;
                 }
                 default: {
