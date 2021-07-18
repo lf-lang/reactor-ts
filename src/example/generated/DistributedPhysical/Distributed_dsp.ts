@@ -13,51 +13,6 @@ let __fast: boolean = false;
 let __noStart = false; // If set to true, don't start the app.
 
 // Assign custom command line arguments
-// =============== START reactor class MessageGenerator
-export class MessageGenerator extends Reactor {
-    t: Timer;
-    root: Parameter<string>;
-    count: State<number>;
-    message: OutPort<string>;
-    constructor (
-        parent: Reactor, 
-        root: string = ""
-    ) {
-        super(parent);
-        this.t = new Timer(this, TimeValue.withUnits(1, TimeUnit.sec), TimeValue.withUnits(1, TimeUnit.sec));
-        this.root = new Parameter(root);
-        this.count = new State(1);
-        this.message = new OutPort<string>(this);
-        this.addReaction(
-            new Triggers(this.t),
-            new Args(this.t, this.writable(this.message), this.root, this.count),
-            function (this, __t: Read<Tag>, __message: ReadWrite<string>, __root: Parameter<string>, __count: State<number>) {
-                // =============== START react prologue
-                const util = this.util;
-                let t = __t.get();
-                let message = __message.get();
-                let root = __root.get();
-                let count = __count.get();
-                // =============== END react prologue
-                try {
-                    message = count.toString();    
-                    console.log(`At time ${util.getElapsedLogicalTime()}, send message: ${count++}`);
-                } finally {
-                    // =============== START react epilogue
-                    if (message !== undefined) {
-                        __message.set(message);
-                    }
-                    if (count !== undefined) {
-                        __count.set(count);
-                    }
-                    // =============== END react epilogue
-                }
-            }
-        );
-    }
-}
-// =============== END reactor class MessageGenerator
-
 // =============== START reactor class PrintMessage
 export class PrintMessage extends Reactor {
     message: InPort<string>;
@@ -98,7 +53,8 @@ export class Distributed extends FederatedApp {
         success?: () => void, 
         fail?: () => void
     ) {
-        super(1, 15044, "localhost", timeout, keepAlive, fast, success, fail);
+        super(1, 15045, "localhost", timeout, keepAlive, fast, success, fail);
+        this.addUpstreamFederate(0, BigInt(0));
         this.dsp = new PrintMessage(this)
         this.networkMessage = new Action<Buffer>(this, Origin.physical, TimeValue.withUnits(10, TimeUnit.msec));
         this.registerFederatePortAction(0, this.networkMessage);
