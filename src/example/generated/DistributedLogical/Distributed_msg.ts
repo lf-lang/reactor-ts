@@ -60,35 +60,6 @@ export class MessageGenerator extends Reactor {
 }
 // =============== END reactor class MessageGenerator
 
-// =============== START reactor class PrintMessage
-export class PrintMessage extends Reactor {
-    message: InPort<string>;
-    constructor (
-        parent: Reactor
-    ) {
-        super(parent);
-        this.message = new InPort<string>(this);
-        this.addReaction(
-            new Triggers(this.message),
-            new Args(this.message),
-            function (this, __message: Read<string>) {
-                // =============== START react prologue
-                const util = this.util;
-                let message = __message.get();
-                // =============== END react prologue
-                try {
-                    console.log(`PrintMessage: At (elapsed) logical time ${util.getElapsedLogicalTime()}, receiver receives: ${message}`);
-                } finally {
-                    // =============== START react epilogue
-                    
-                    // =============== END react epilogue
-                }
-            }
-        );
-    }
-}
-// =============== END reactor class PrintMessage
-
 // =============== START reactor class Distributed
 export class Distributed extends FederatedApp {
     msg: MessageGenerator
