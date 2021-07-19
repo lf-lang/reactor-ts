@@ -25,7 +25,7 @@
         "@babel/preset-env": "^7.4.3",
         "@babel/preset-typescript": "^7.7.7",
         "@types/jest": "^26.0.24",
-        "@types/node": "^13.13.5",
+        "@types/node": "^16.3.3",
         "dtslint": "^4.1.2",
         "parsimmon": "1.13.0",
         "jest": "^27.0.6",
