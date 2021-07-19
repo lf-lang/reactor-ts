@@ -31,9 +31,18 @@ describe('Test names for contained reactors', () => {
             super(undefined);
             this._setAlias(name);
 
-            // it('contained actor name', () => {
-            //     expect(this.x._getName()).toBe("MyActor");
-            // });
+            it('contained actor name', () => {
+                expect(this.x._getName()).toBe("x");
+            });
+
+            it('contained actor FQN', () => {
+                expect(this.x._getFullyQualifiedName()).toBe("Hello World/x");
+            });
+
+            it('contained actor toString', () => {
+                expect(this.x.toString()).toBe("Hello World/x");
+            });
+
             it('contained actor FQN', () => {
                 expect(this.x.toString()).toBe("Hello World/x");
             });
@@ -52,11 +61,19 @@ describe('Test names for contained reactors', () => {
             //     }
             //     expect(connectDisjoint).toThrowError(new Error("Unable to connect."));
             // });
-            // it('connect two actors', () => {
-            //     this._add(xx);
-            //     y.b.connect(xx.a) // should not throw an error at this point
-            // });
             
+            it('graph before connect', () => {
+                expect(this._getPrecedenceGraph().toString()).toBe(
+                    "digraph G {" + "\n" +
+                    "\"Hello World/x[M0]\"->\"Hello World[M0]\";" + "\n" +
+                    "\"Hello World/y (Foo)[M0]\"->\"Hello World[M0]\";" + "\n" +
+                    "}");
+             });
+
+            it('connect two actors', () => {
+                this._connect(this.y.b, this.x.a);  // should not throw an error at this point
+            });
+
             // it('auto-indexing of actor names', () => {
             //    expect(xx._getFullyQualifiedName()).toBe("Hello World/MyActor(1)");
             // });
@@ -65,9 +82,16 @@ describe('Test names for contained reactors', () => {
             //    expect(this._getGraph()).toBe("Hello World/MyActor2/b => [Hello World/MyActor/a, Hello World/MyActor(1)/a]");
             // });
 
-            // it('disconnect downstream', () => {
-            //    y.b.disconnect();
-            // });
+            it('graph after connect and before disconnect', () => {
+                expect(this._getPrecedenceGraph().toString()).toBe(
+                     "digraph G {" + "\n" +
+                     "\"Hello World/x/a\"->\"Hello World/y (Foo)/b\";" + "\n" +
+                     "\"Hello World/x[M0]\"->\"Hello World[M0]\";" + "\n" +
+                     "\"Hello World/y (Foo)[M0]\"->\"Hello World[M0]\";" + "\n" +
+                     "}");
+             });
+ 
+ 
 
             // it('graph after disconnect', () => {
             //    expect(this._getGraph()).toBe("");
