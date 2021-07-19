@@ -1,0 +1,1009 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>TimeValue | reactor-ts</title>
+	<meta name="description" content="Documentation for reactor-ts">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">reactor-ts</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../modules.html">reactor-ts</a>
+				</li>
+				<li>
+					<a href="../modules/time.html">time</a>
+				</li>
+				<li>
+					<a href="time.TimeValue.html">TimeValue</a>
+				</li>
+			</ul>
+			<h1>Class TimeValue</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>A time value given in nanosecond precision. To prevent overflow (which would
+							occur for time intervals spanning more than 0.29 years if a single JavaScript
+							number, which has 2^53 bits of precision, were to be used), we use <em>two</em>
+							numbers to store a time value. The first number denotes the number of whole
+							seconds in the interval; the second number denotes the remaining number of
+							nanoseconds in the interval. This class serves as a base class for
+							<code>UnitBasedTimeValue</code>, which provides the convenience of defining time values
+						as a single number accompanied by a unit.</p>
+					</div>
+					<dl class="tsd-comment-tags">
+						<dt>see</dt>
+						<dd><p>TimeUnit</p>
+						</dd>
+						<dt>see</dt>
+						<dd><p>UnitBasedTimeValue</p>
+						</dd>
+					</dl>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">TimeValue</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="time.TimeValue.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-private-protected">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="time.TimeValue.html#nanoseconds" class="tsd-kind-icon">nanoseconds</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="time.TimeValue.html#seconds" class="tsd-kind-icon">seconds</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#add" class="tsd-kind-icon">add</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#difference" class="tsd-kind-icon">difference</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#getNanoTime" class="tsd-kind-icon">get<wbr>Nano<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#isEarlierThan" class="tsd-kind-icon">is<wbr>Earlier<wbr>Than</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#isEqualTo" class="tsd-kind-icon">is<wbr>Equal<wbr>To</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#isZero" class="tsd-kind-icon">is<wbr>Zero</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#subtract" class="tsd-kind-icon">subtract</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#toBinary" class="tsd-kind-icon">to<wbr>Binary</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#toMilliseconds" class="tsd-kind-icon">to<wbr>Milliseconds</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#toString" class="tsd-kind-icon">to<wbr>String</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#toTimeTuple" class="tsd-kind-icon">to<wbr>Time<wbr>Tuple</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#fromBinary" class="tsd-kind-icon">from<wbr>Binary</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#msec" class="tsd-kind-icon">msec</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#msecs" class="tsd-kind-icon">msecs</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#nsec" class="tsd-kind-icon">nsec</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#nsecs" class="tsd-kind-icon">nsecs</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#sec" class="tsd-kind-icon">sec</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#secs" class="tsd-kind-icon">secs</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#secsAndNs" class="tsd-kind-icon">secs<wbr>And<wbr>Ns</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#usec" class="tsd-kind-icon">usec</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#usecs" class="tsd-kind-icon">usecs</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#withUnits" class="tsd-kind-icon">with<wbr>Units</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="time.TimeValue.html#zero" class="tsd-kind-icon">zero</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Time<wbr>Value<span class="tsd-signature-symbol">(</span>seconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, nanoseconds<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L47">src/core/time.ts:47</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a new time value. Both parameters must be non-negative integers;
+									an error will be thrown otherwise. The second parameter is optional.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>seconds: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Number of seconds in the interval.</p>
+										</div>
+									</div>
+								</li>
+								<li>
+									<h5>nanoseconds: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 0</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<div class="lead">
+											<p>Remaining number of nanoseconds (defaults to zero).</p>
+										</div>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+					<a name="nanoseconds" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> nanoseconds</h3>
+					<div class="tsd-signature tsd-kind-icon">nanoseconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 0</span></div>
+					<aside class="tsd-sources">
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+					<a name="seconds" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> seconds</h3>
+					<div class="tsd-signature tsd-kind-icon">seconds<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="add" class="tsd-anchor"></a>
+					<h3>add</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L103">src/core/time.ts:103</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return a new time value that denotes the duration of the time interval
+										encoded by this time value plus the time interval encoded by the time
+									value given as a parameter.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>other: <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time value to add to this one.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="difference" class="tsd-anchor"></a>
+					<h3>difference</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">difference<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L137">src/core/time.ts:137</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>other: <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getNanoTime" class="tsd-anchor"></a>
+					<h3>get<wbr>Nano<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Nano<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L218">src/core/time.ts:218</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get a string representation of this time value that is compatible with
+										<code>nanotimer</code>. Unit specifiers are <code>s</code> for seconds, <code>m</code> for milliseconds
+									<code>u</code> for microseconds, and <code>n</code> for nanoseconds.</p>
+								</div>
+								<dl class="tsd-comment-tags">
+									<dt>see</dt>
+									<dd><p><a href="https://www.npmjs.com/package/nanotimer" class="external">https://www.npmjs.com/package/nanotimer</a> for further
+										information.</p>
+									</dd>
+								</dl>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="isEarlierThan" class="tsd-anchor"></a>
+					<h3>is<wbr>Earlier<wbr>Than</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Earlier<wbr>Than<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L178">src/core/time.ts:178</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return true if this time value denotes a time interval of smaller length
+										than the time interval encoded by the time value given as a parameter;
+									return false otherwise.</p>
+								</div>
+								<p>NOTE: Performing this comparison involves a conversion to a big integer
+								and is therefore relatively costly.</p>
+								<dl class="tsd-comment-tags">
+									<dt>see</dt>
+									<dd><p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt" class="external">BigInt</a> for further information.</p>
+									</dd>
+								</dl>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>other: <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time value to compare to this one.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="isEqualTo" class="tsd-anchor"></a>
+					<h3>is<wbr>Equal<wbr>To</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Equal<wbr>To<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L151">src/core/time.ts:151</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return true if this time value denotes a time interval of equal length as
+									the interval encoded by the time value given as a parameter.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>other: <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time value to compare to this one.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="isZero" class="tsd-anchor"></a>
+					<h3>is<wbr>Zero</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Zero<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L159">src/core/time.ts:159</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return true if this denotes a time interval of length zero.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="subtract" class="tsd-anchor"></a>
+					<h3>subtract</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">subtract<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L121">src/core/time.ts:121</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return a new time value that denotes the duration of the time interval
+										encoded by this time value minus the time interval encoded by the time
+									value given as a parameter.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>other: <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time value to subtract from this one.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="toBinary" class="tsd-anchor"></a>
+					<h3>to<wbr>Binary</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">to<wbr>Binary<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L266">src/core/time.ts:266</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get a 64 bit binary, little endian representation of this TimeValue.
+									Used by federates.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="toMilliseconds" class="tsd-anchor"></a>
+					<h3>to<wbr>Milliseconds</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">to<wbr>Milliseconds<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L191">src/core/time.ts:191</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return a millisecond representation of this time value.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="toString" class="tsd-anchor"></a>
+					<h3>to<wbr>String</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">to<wbr>String<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L199">src/core/time.ts:199</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Print the number of seconds and nanoseconds in the time interval encoded
+									by this time value.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="toTimeTuple" class="tsd-anchor"></a>
+					<h3>to<wbr>Time<wbr>Tuple</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">to<wbr>Time<wbr>Tuple<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">]</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L207">src/core/time.ts:207</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return a tuple that holds the seconds and remaining nanoseconds that
+									jointly represent this time value.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">]</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="fromBinary" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> from<wbr>Binary</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">from<wbr>Binary<span class="tsd-signature-symbol">(</span>buffer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L286">src/core/time.ts:286</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a TimeValue from a 64bit little endian unsigned integer in a buffer.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>buffer: <span class="tsd-signature-type">Buffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>A 64 bit unsigned integer. Little endian.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="msec" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> msec</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">msec<span class="tsd-signature-symbol">(</span>microseconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L73">src/core/time.ts:73</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>microseconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="msecs" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> msecs</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">msecs<span class="tsd-signature-symbol">(</span>microseconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L69">src/core/time.ts:69</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>microseconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="nsec" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> nsec</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">nsec<span class="tsd-signature-symbol">(</span>nanoseconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L89">src/core/time.ts:89</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>nanoseconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="nsecs" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> nsecs</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">nsecs<span class="tsd-signature-symbol">(</span>nanoseconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L85">src/core/time.ts:85</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>nanoseconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="sec" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> sec</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">sec<span class="tsd-signature-symbol">(</span>seconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L65">src/core/time.ts:65</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>seconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="secs" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> secs</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">secs<span class="tsd-signature-symbol">(</span>seconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L61">src/core/time.ts:61</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>seconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="secsAndNs" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> secs<wbr>And<wbr>Ns</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">secs<wbr>And<wbr>Ns<span class="tsd-signature-symbol">(</span>seconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, nanoSeconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L57">src/core/time.ts:57</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>seconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>nanoSeconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="usec" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> usec</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">usec<span class="tsd-signature-symbol">(</span>nanoseconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L81">src/core/time.ts:81</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>nanoseconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="usecs" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> usecs</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">usecs<span class="tsd-signature-symbol">(</span>nanoseconds<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L77">src/core/time.ts:77</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>nanoseconds: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="withUnits" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> with<wbr>Units</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">with<wbr>Units<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, unit<span class="tsd-signature-symbol">: </span><a href="../enums/time.TimeUnit.html" class="tsd-signature-type" data-tsd-kind="Enumeration">TimeUnit</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L308">src/core/time.ts:308</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Give a value and time unit, return a new time value.</p>
+								</div>
+								<p>The value is a <code>number</code> that is required to be
+								a positive integer. The time unit must be a member of the <code>TimeUnit</code> enum.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>value: <span class="tsd-signature-type">number</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>A number (which must be a positive integer) that denotes
+											the length of the specified time interval, expressed as a multiple of
+										the given time unit.</p>
+									</div>
+								</li>
+								<li>
+									<h5>unit: <a href="../enums/time.TimeUnit.html" class="tsd-signature-type" data-tsd-kind="Enumeration">TimeUnit</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The unit of measurement that applies to the given value.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="zero" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> zero</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">zero<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/icyphy/reactor-ts/blob/ae95ba2/src/core/time.ts#L53">src/core/time.ts:53</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="../modules.html">Modules</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/cli.html">cli</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/command_line_args.html">command-<wbr>line-<wbr>args</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/command_line_usage.html">command-<wbr>line-<wbr>usage</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/component.html">component</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/federation.html">federation</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/microtime.html">microtime</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/nanotimer.html">nanotimer</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/reaction.html">reaction</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/reactor.html">reactor</a>
+					</li>
+					<li class="current tsd-kind-module">
+						<a href="../modules/time.html">time</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/ulog.html">ulog</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/util.html">util</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum tsd-parent-kind-module">
+						<a href="../enums/time.Origin.html" class="tsd-kind-icon">Origin</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-parent-kind-module">
+						<a href="../enums/time.TimeUnit.html" class="tsd-kind-icon">Time<wbr>Unit</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="time.Alarm.html" class="tsd-kind-icon">Alarm</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="time.Tag.html" class="tsd-kind-icon">Tag</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class tsd-parent-kind-module">
+						<a href="time.TimeValue.html" class="tsd-kind-icon">Time<wbr>Value</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="time.TimeValue.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="time.TimeValue.html#nanoseconds" class="tsd-kind-icon">nanoseconds</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="time.TimeValue.html#seconds" class="tsd-kind-icon">seconds</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#add" class="tsd-kind-icon">add</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#difference" class="tsd-kind-icon">difference</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#getNanoTime" class="tsd-kind-icon">get<wbr>Nano<wbr>Time</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#isEarlierThan" class="tsd-kind-icon">is<wbr>Earlier<wbr>Than</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#isEqualTo" class="tsd-kind-icon">is<wbr>Equal<wbr>To</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#isZero" class="tsd-kind-icon">is<wbr>Zero</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#subtract" class="tsd-kind-icon">subtract</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#toBinary" class="tsd-kind-icon">to<wbr>Binary</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#toMilliseconds" class="tsd-kind-icon">to<wbr>Milliseconds</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#toString" class="tsd-kind-icon">to<wbr>String</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#toTimeTuple" class="tsd-kind-icon">to<wbr>Time<wbr>Tuple</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#fromBinary" class="tsd-kind-icon">from<wbr>Binary</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#msec" class="tsd-kind-icon">msec</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#msecs" class="tsd-kind-icon">msecs</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#nsec" class="tsd-kind-icon">nsec</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#nsecs" class="tsd-kind-icon">nsecs</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#sec" class="tsd-kind-icon">sec</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#secs" class="tsd-kind-icon">secs</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#secsAndNs" class="tsd-kind-icon">secs<wbr>And<wbr>Ns</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#usec" class="tsd-kind-icon">usec</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#usecs" class="tsd-kind-icon">usecs</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#withUnits" class="tsd-kind-icon">with<wbr>Units</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="time.TimeValue.html#zero" class="tsd-kind-icon">zero</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/time.html#getCurrentPhysicalTime" class="tsd-kind-icon">get<wbr>Current<wbr>Physical<wbr>Time</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>
