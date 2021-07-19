@@ -219,6 +219,10 @@ describe("Testing deadlines", function () {
 
 describe("Testing Reactions", function () {
 
+    function fail() {
+        throw new Error("Test has failed.");
+    };
+
     it("Manually call reactions", () => {
         let app = new testApp("testApp", TimeValue.withUnits(5000, TimeUnit.msec), () => {}, fail)
 

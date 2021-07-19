@@ -44,11 +44,11 @@ describe('Logger functions', function () {
         Log.warn(null, () => "test");
         Log.warn(null, () => "test", "test module");
 
-        spyOn(Log, 'debug').and.callThrough
-        spyOn(Log, 'error').and.callThrough
-        spyOn(Log, 'info').and.callThrough
-        spyOn(Log, 'log').and.callThrough
-        spyOn(Log, 'warn').and.callThrough
+        jest.spyOn(Log, 'debug')
+        jest.spyOn(Log, 'error')
+        jest.spyOn(Log, 'info')
+        jest.spyOn(Log, 'log')
+        jest.spyOn(Log, 'warn')
 
         Log.getInstance("test module")
         Log.debug(null, () => "test");
