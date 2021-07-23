@@ -747,12 +747,11 @@ export abstract class Reactor extends Component {
      * accessible to mutations, not to reactions.
      */
     private _MutationSandbox = class implements MutationSandbox { 
-        constructor(private reactor: Reactor) {}
-        
-        /**
-         * Basic utilities.
-         */
-        public util = this.reactor.util
+        public util: UtilityFunctions;
+        constructor(private reactor: Reactor) {
+            this.reactor = reactor
+            this.util = reactor.util
+        }
         
         /**
          * 
