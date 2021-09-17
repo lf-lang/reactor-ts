@@ -36,6 +36,7 @@ jobs:
           npm install
           npm run test
   docs:
+    runs-on: ubuntu-latest
     steps:
       
       - name: Build the Docs
