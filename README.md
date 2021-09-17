@@ -1,7 +1,7 @@
 A Reactor-Oriented Programming Framework in TypeScript
 ---
 
-[![Build Status](https://api.travis-ci.com/icyphy/reactor-ts.svg?branch=master)](https://travis-ci.com/icyphy/reactor-ts)
+[![CI](https://github.com/lf-lang/reactor-ts/actions/workflows/main.yml/badge.svg)](https://github.com/lf-lang/reactor-ts/actions/workflows/main.yml)
 
 [Documentation](https://icyphy.github.io/reactor-ts)
 
