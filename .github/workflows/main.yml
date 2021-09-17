@@ -35,3 +35,21 @@ jobs:
         run: |
           npm install
           npm run test
+  docs:
+    steps:
+      
+      - name: Build the Docs
+        run: |
+          npm run doc
+
+      - name: Deploy to GitHub Pages
+        uses: Cecilapp/GitHub-Pages-deploy@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          email: username@domain.tld
+          build_dir: docs
+          branch: master
+          #cname: domain.tld              # optional
+          jekyll: no                     # optional
+          #commit_message: custom message # optional
