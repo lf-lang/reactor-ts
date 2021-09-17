@@ -47,7 +47,7 @@ jobs:
         with:
           email: username@domain.tld
           build_dir: docs
-          branch: master
+          branch: gh-pages
           #cname: domain.tld              # optional
           jekyll: no                     # optional
           #commit_message: custom message # optional
