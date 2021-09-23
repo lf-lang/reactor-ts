@@ -3,7 +3,7 @@ A Reactor-Oriented Programming Framework in TypeScript
 
 [![CI](https://github.com/lf-lang/reactor-ts/actions/workflows/main.yml/badge.svg)](https://github.com/lf-lang/reactor-ts/actions/workflows/main.yml)
 
-[Documentation](https://icyphy.github.io/reactor-ts)
+[Documentation](https://lf-lang.github.io/reactor-ts)
 
 
 ## Get Started
