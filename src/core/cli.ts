@@ -77,6 +77,13 @@ export function booleanCLAType(bool: string): boolean | null {
     }
 }
 
+/**
+ * Function to return an argument string as is.
+ */
+export function stringCLAType(arg: string): string {
+    return arg;
+}
+
 //---------------------------------------------------------------------//
 // Exported CLI support                                                //
 //---------------------------------------------------------------------//
@@ -87,7 +94,7 @@ export function booleanCLAType(bool: string): boolean | null {
  */
 export type ProcessedCommandLineArgs = {fast: boolean| undefined,
     keepalive: boolean | undefined, timeout: TimeValue | null | undefined,
-    logging: LogLevel | undefined, help: boolean}
+    logging: LogLevel | undefined, id: string | undefined, help: boolean}
 
 
 export type CommandLineOptionSpec = Array<{name: string, alias?: string, 
@@ -123,6 +130,9 @@ export const CommandLineOptionDefs: CommandLineOptionSpec = [
             'of those. For the duration and units of a timeout argument to be parsed correctly as a ' +
             'single value, these should be specified in quotes with no leading or trailing space ' +
             "'(eg '5 sec')."
+    },
+    { name: 'id', alias: 'i', type: stringCLAType, typeLabel: "{underline '<string>'}", 
+        description: 'The ID of the federation that this reactor will join.'
     },
     { name: 'help', alias: 'h', type: Boolean, 
         description: 'Print this usage guide. The program will not execute if this flag is present.'
