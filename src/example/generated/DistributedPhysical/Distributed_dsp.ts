@@ -53,7 +53,7 @@ export class Distributed extends FederatedApp {
         success?: () => void, 
         fail?: () => void
     ) {
-        super(1, 15045, "localhost", timeout, keepAlive, fast, success, fail);
+        super("Unidentified Federation", 1, 15045, "localhost", timeout, keepAlive, fast, success, fail);
         this.addUpstreamFederate(0, BigInt(0));
         this.dsp = new PrintMessage(this)
         this.networkMessage = new Action<Buffer>(this, Origin.physical, TimeValue.withUnits(10, TimeUnit.msec));
