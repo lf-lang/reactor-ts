@@ -218,6 +218,9 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  */
 class RTIClient extends EventEmitter {
 
+    // ID of federation that this federate will join.
+    private federationID:string;
+
     // ID of this federate.
     private id:number;         
     
@@ -242,8 +245,9 @@ class RTIClient extends EventEmitter {
      * @param id The ID of the federate this client communicates
      * on behalf of.
      */
-    public constructor (id: number) {
+    public constructor (federationID: string, id: number) {
         super();
+        this.federationID = federationID;
         this.id = id;
     }
 
@@ -289,13 +293,12 @@ class RTIClient extends EventEmitter {
             const buffer = Buffer.alloc(4);
             buffer.writeUInt8(RTIMessageTypes.MSG_TYPE_FED_IDS, 0);
             buffer.writeUInt16LE(this.id, 1);
-            let federationID = 'Unidentified Federation';
 
-            buffer.writeUInt8(federationID.length, 3);
+            buffer.writeUInt8(this.federationID.length, 3);
             try {
                 Log.debug(this, () => {return 'Sending a FED ID message to the RTI.'});
                 this.socket?.write(buffer);
-                this.socket?.write(federationID);
+                this.socket?.write(this.federationID);
             } catch (e) {
                 Log.error(this, () => {return e.toString()});
             }
@@ -840,6 +843,7 @@ export class FederatedApp extends App {
     /**
      * Federated app constructor. The primary difference from an App constructor
      * is the federateID and the rtiPort. 
+     * @param federationID Unique ID of the federation that this federate will join.
      * @param federateID The ID for the federate assigned to this federatedApp.
      * For compatability with the C RTI the ID must be expressable as a 16 bit
      * unsigned short. The ID must be unique among all federates and be a number
@@ -852,7 +856,7 @@ export class FederatedApp extends App {
      * @param success Optional argument. Called when the FederatedApp exits with success.
      * @param failure Optional argument. Called when the FederatedApp exits with failure.
      */
-    constructor (federateID: number, private rtiPort: number, private rtiHost: string,
+    constructor (federationID: string, federateID: number, private rtiPort: number, private rtiHost: string,
         executionTimeout?: TimeValue | undefined, keepAlive?: boolean,
         fast?: boolean, success?: () => void, failure?: () => void) {
 
@@ -866,7 +870,7 @@ export class FederatedApp extends App {
                 failure? failure(): () => {};
                 this._shutdown();
             });
-        this.rtiClient = new RTIClient(federateID);
+        this.rtiClient = new RTIClient(federationID, federateID);
     }
 
     /**
