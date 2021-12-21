@@ -561,7 +561,7 @@ export class Alarm {
                     this.immediateRef = setImmediate(() => thisTimer.try(task, callback));
                 }
             } else {
-                this.immediateRef = setImmediate(() => thisTimer.try(task, callback));
+                    this.immediateRef = setImmediate(() => thisTimer.try(task, callback));
             }
             this.active = true;
         }
