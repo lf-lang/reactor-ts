@@ -35,6 +35,10 @@ describe('Test names for contained reactors', () => {
                 expect(this.x._getName()).toBe("x");
             });
 
+            it('contained actor Alias', () => {
+                expect(this.x._getAlias()).toBe("");
+            });
+
             it('contained actor FQN', () => {
                 expect(this.x._getFullyQualifiedName()).toBe("Hello World/x");
             });
@@ -53,6 +57,18 @@ describe('Test names for contained reactors', () => {
 
             it('uncontained actor name', () => {
                 expect(this.toString()).toBe("Hello World");
+            });
+
+            it('uncontained actor Alias', () => {
+                expect(this._getAlias()).toBe(name);
+            });
+
+            it('check whehter App is not contained by itself', () => {
+                expect(this._isContainedBy(this)).toBeFalsy();
+            });
+
+            it('check whether App is not contained by container of itself', () => {
+                expect(this._isContainedByContainerOf(this)).toBeFalsy();
             });
 
             // it('connect two actors, one of which uncontained', () => {
