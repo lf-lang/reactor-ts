@@ -36,16 +36,16 @@ class Filter extends Reactor {
     out: OutPort<number> = new OutPort(this)
     startPrime: Parameter<number>
     localPrimes: State<Array<number>>
-    hasSibling: State<boolean>
+    hasChild: State<boolean>
     constructor (parent:Reactor, startPrime: number, numberOfPrimes: number) {
         super(parent);
         //console.log("Created filter with prime: " + prime)
         this.startPrime = new Parameter(startPrime);
         this.localPrimes = new State(new Array<number>())
-        this.hasSibling = new State(false)
+        this.hasChild = new State(false)
         this.addMutation(
             new Triggers(this.inp),
-            new Args(this.inp, this.writable(this.out), this.startPrime, this.hasSibling, this.localPrimes),
+            new Args(this.inp, this.writable(this.out), this.startPrime, this.hasChild, this.localPrimes),
             function (this, inp, out, prime, hasChild, localPrimes) {
                 let p = inp.get()
                 if (p !== undefined) {            
@@ -74,6 +74,9 @@ class Filter extends Reactor {
                                 // FIXME: weird hack. Maybe just accept writable ports as well?
                                 var port = (out as unknown as WritablePort<number>).getPort()
                                 this.connect(port, n.inp)
+                                // FIXME: this updates the dependency graph, but it doesn't redo the topological sort
+                                // For a pipeline like this one, it is not necessary, but in general it is.
+                                // Can we avoid redoing the entire sort?
                                 hasChild.set(true)
                             } else {
                                 out.set(p)
