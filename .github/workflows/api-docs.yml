@@ -30,6 +30,7 @@ jobs:
       # Runs a single command using the runners shell      
       - name: Build the Docs
         run: |
+          npm install
           npm run doc
 
       - name: Deploy to GitHub Pages
