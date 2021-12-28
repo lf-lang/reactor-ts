@@ -1,16 +1,13 @@
-name: CI
+name: api-docs
+# Build and deploy documentation for code that is pushed to master.
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-  # Allows you to run this workflow manually from the Actions tab
+  # Also allow running this workflow manually from the Actions tab.
   workflow_dispatch:
 
 jobs:
-  test-deploy:
+  gen-api-docs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -30,12 +27,7 @@ jobs:
           # Used to specify the path to a dependency file: package-lock.json, yarn.lock, etc. Supports wildcards or a list of file names for caching multiple dependencies.
           cache-dependency-path: package-lock.json
       
-      # Runs a single command using the runners shell
-      - name: Run the tests
-        run: |
-          npm install
-          npm run test
-      
+      # Runs a single command using the runners shell      
       - name: Build the Docs
         run: |
           npm run doc
