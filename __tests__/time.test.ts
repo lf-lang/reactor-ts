@@ -10,6 +10,9 @@ describe('time helper functions', function () {
     const zeroSeconds: TimeValue = TimeValue.withUnits(0, TimeUnit.sec);
     const zeroNS: TimeValue = TimeValue.withUnits(0, TimeUnit.nsec);
     const zeroWeeks: TimeValue = TimeValue.withUnits(0, TimeUnit.week);
+    const zeroMsecs: TimeValue = TimeValue.msecs(0);
+    const zeroUsec: TimeValue = TimeValue.usec(0);
+    
 
     // Non-zero time intervals.
     const fiveSeconds: TimeValue = TimeValue.withUnits(5, TimeUnit.sec);
@@ -21,6 +24,23 @@ describe('time helper functions', function () {
     const fiveHundredMilNS: TimeValue = TimeValue.withUnits(500000000, TimeUnit.nsec);
     const oneThousandMS: TimeValue = TimeValue.withUnits(1000, TimeUnit.msec);
     const aboutTenYears: TimeValue = TimeValue.withUnits(365 * 10, TimeUnit.day);
+    
+    const fiveSec: TimeValue = TimeValue.sec(5);
+    const fiveSecs: TimeValue = TimeValue.secs(5);
+    const fiveThousandMsec: TimeValue = TimeValue.msec(5000);
+    const fiveThousandMsecs: TimeValue = TimeValue.msecs(5000);
+    const fiveMillUsec: TimeValue = TimeValue.usec(5000000);
+    const fiveMillUsecs: TimeValue = TimeValue.usecs(5000000);
+    const fiveBillNsec: TimeValue = TimeValue.nsec(5000000000);
+    const fiveBillNsecs: TimeValue = TimeValue.nsecs(5000000000);
+    const threeHundredThousandNsec: TimeValue = TimeValue.nsec(300000);
+    const sevenPointFiveMillUsecs: TimeValue = TimeValue.usecs(7500000);
+    const fortyTwoDaysAsMsec: TimeValue = TimeValue.msec(42 * 24 * 60 * 60 * 1000);
+    
+
+
+
+
 
     // Tags.
     const tiFiveSeconds0:Tag = new Tag(fiveSeconds, 0);
@@ -91,6 +111,8 @@ describe('time helper functions', function () {
         expect(zeroSeconds.isEqualTo(straightZero)).toBeTruthy();
         expect(zeroSeconds.isEqualTo(zeroNS)).toBeTruthy();
         expect(zeroSeconds.isEqualTo(zeroWeeks)).toBeTruthy();
+        expect(zeroMsecs.isEqualTo(zeroWeeks)).toBeTruthy();
+        expect(zeroUsec.isEqualTo(zeroSeconds)).toBeTruthy();
 
         expect(oneThousandMS.isEqualTo(TimeValue.secs(1)));
         expect(threeHundredUS.isEqualTo(TimeValue.secsAndNs(1, 300000)));
@@ -107,6 +129,19 @@ describe('time helper functions', function () {
         expect(fortyTwoDays.isEqualTo(fiveSeconds)).toBeFalsy();
         expect(fiveSFiveUS.isEqualTo(fiveSeconds)).toBeFalsy();
         expect(fiveSeconds.isEqualTo(fiveSFiveUS)).toBeFalsy();
+        expect(fiveSeconds.isEqualTo(fiveSec)).toBeTruthy();
+        expect(fiveSeconds.isEqualTo(fiveSecs)).toBeTruthy();
+        expect(fiveSeconds.isEqualTo(fiveThousandMsec)).toBeTruthy();
+        expect(fiveSeconds.isEqualTo(fiveThousandMsecs)).toBeTruthy();
+        expect(fiveSeconds.isEqualTo(fiveMillUsec)).toBeTruthy();
+        expect(fiveSeconds.isEqualTo(fiveMillUsecs)).toBeTruthy();
+        expect(fiveSeconds.isEqualTo(fiveBillNsec)).toBeTruthy();
+        expect(fiveSeconds.isEqualTo(fiveBillNsecs)).toBeTruthy();
+        expect(threeHundredUS.isEqualTo(threeHundredThousandNsec)).toBeTruthy();
+        expect(sevenPointFiveBillNS.isEqualTo(sevenPointFiveMillUsecs)).toBeTruthy();
+        expect(fortyTwoDays.isEqualTo(fortyTwoDaysAsMsec)).toBeTruthy();
+        
+
 
         // This test should generate an error because we're trying to convert
         // a number which can't be represented as a numeric time interval.
@@ -232,9 +267,32 @@ describe('time helper functions', function () {
             expect(TimeValue.secsAndNs(2,1).subtract(TimeValue.secsAndNs(4, 3)));
         }).toThrowError()
 
+        expect(() => { 
+            expect(TimeValue.secsAndNs(Math.pow(2, 40), 0).toBinary());
+        }).toThrowError()
+
     });
 
 
+
+    /**
+     * Test conversion to Binary
+     */
+    it('convert to binary', function() {
+
+        expect(TimeValue.fromBinary(straightZero.toBinary())).toEqual(straightZero);
+        expect(TimeValue.fromBinary(zeroSeconds.toBinary())).toEqual(zeroSeconds);
+        expect(TimeValue.fromBinary(zeroNS.toBinary())).toEqual(zeroNS);
+        expect(TimeValue.fromBinary(zeroWeeks.toBinary())).toEqual(zeroWeeks);
+        expect(TimeValue.fromBinary(fiveSeconds.toBinary())).toEqual(fiveSeconds);
+        expect(TimeValue.fromBinary(fortyTwoDays.toBinary())).toEqual(fortyTwoDays);
+        expect(TimeValue.fromBinary(threeHundredUS.toBinary())).toEqual(threeHundredUS);
+        expect(TimeValue.fromBinary(sevenPointFiveBillNS.toBinary())).toEqual(sevenPointFiveBillNS);
+        expect(TimeValue.fromBinary(twoHundredFiftyMillMS.toBinary())).toEqual(twoHundredFiftyMillMS);
+        expect(TimeValue.fromBinary(fiveSFiveUS.toBinary())).toEqual(fiveSFiveUS);
+        expect(TimeValue.fromBinary(oneThousandMS.toBinary())).toEqual(oneThousandMS);
+
+    });
 
 
 });
