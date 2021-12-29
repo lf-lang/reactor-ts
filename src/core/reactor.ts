@@ -354,8 +354,9 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
                     tag = tag.getMicroStepLater();
                 }
             }
-    
-            if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
+
+            if (this.action.origin == Origin.logical && !(this.action instanceof Startup)
+                && this.action._getName() != "networkMessage") {
                 tag = tag.getMicroStepLater();
             }
             
