@@ -707,6 +707,7 @@ class RTIClient extends EventEmitter {
                     assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
                     let tag = Tag.fromBinary(tagBuffer);
                     Log.debug(thiz, () => {return `PTAG value: ${tag}`});
+                    thiz.emit('provisionalTimeAdvanceGrant', tag);
                     bufferIndex += 13;
                     break;
                 }
@@ -1066,6 +1067,17 @@ export class FederatedApp extends App {
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
                 this._requestImmediateInvocationOfNext();
+            }
+        });
+
+        this.rtiClient.on('provisionalTimeAdvanceGrant', (tag: Tag) => {
+            Log.debug(this, () => {return `Provisional Time Advance Grant received from RTI for ${tag}.`});
+            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+                // Update the greatest time advance grant and immediately 
+                // wake up _next, in case it was blocked by the old time advance grant
+                this.greatestTimeAdvanceGrant = tag;
+                this._requestImmediateInvocationOfNext();
+                // FIXME: Add input control reaction handling.
             }
         });
 
