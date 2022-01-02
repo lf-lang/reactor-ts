@@ -356,7 +356,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
             }
 
             if (this.action.origin == Origin.logical && !(this.action instanceof Startup)
-                && this.action._getName() != "networkMessage") {
+                && !(this.action instanceof FederatePortAction)) {
                 tag = tag.getMicroStepLater();
             }
             
@@ -396,6 +396,12 @@ export class Startup extends Action<Present> { // FIXME: this should not be a sc
 }
 
 export class Shutdown extends Action<Present> {
+    constructor(__parent__: Reactor) {
+        super(__parent__, Origin.logical)
+    }
+}
+
+export class FederatePortAction extends Action<Buffer> {
     constructor(__parent__: Reactor) {
         super(__parent__, Origin.logical)
     }

@@ -2,7 +2,7 @@ import {Log} from './util';
 import {Tag, TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, Alarm} from './time';
 import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter} from 'events';
-import {Action, Present, TaggedEvent, App} from './reactor'
+import {Action, Present, TaggedEvent, App, FederatePortAction} from './reactor'
 
 //---------------------------------------------------------------------//
 // Federated Execution Constants and Enums                             //
@@ -239,7 +239,7 @@ class RTIClient extends EventEmitter {
 
     // The mapping between a federate port ID and the federate port action
     // scheduled upon reception of a message designated for that federate port.
-    private federatePortActionByID: Map<number, Action<Buffer>> = new Map<number, Action<Buffer>>();
+    private federatePortActionByID: Map<number, FederatePortAction> = new Map<number, FederatePortAction>();
 
     /**
      * Establish the mapping between a federate port's action and its ID.
@@ -247,6 +247,7 @@ class RTIClient extends EventEmitter {
      * @param federatePort The federate port's action.
      */
     public registerFederatePortAction<T extends Present>(federatePortID: number, federatePortAction: Action<Buffer>) {
+        Object.setPrototypeOf(federatePortAction, FederatePortAction.prototype);
         this.federatePortActionByID.set(federatePortID, federatePortAction);
     }
 
@@ -1015,14 +1016,14 @@ export class FederatedApp extends App {
             }
         });
 
-        this.rtiClient.on('message', (destPortAction: Action<Buffer>, messageBuffer: Buffer) => {
+        this.rtiClient.on('message', (destPortAction: FederatePortAction, messageBuffer: Buffer) => {
             // Schedule this federate port's action.
             // This message is untimed, so schedule it immediately.
             Log.debug(this, () => {return `(Untimed) Message received from RTI.`})
             destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, messageBuffer);
         });
 
-        this.rtiClient.on('timedMessage', (destPortAction: Action<Buffer>, messageBuffer: Buffer,
+        this.rtiClient.on('timedMessage', (destPortAction: FederatePortAction, messageBuffer: Buffer,
             timestamp: TimeValue) => {
             // Schedule this federate port's action.
 
