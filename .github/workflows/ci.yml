@@ -54,3 +54,9 @@ jobs:
     with:
       runtime-ref: ${{ github.ref }}
       compiler-ref: ${{ needs.determine-refs.outputs.lingua-franca }}
+    if: ${{ github.event_name != 'pull_request' }}
+    uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
+    with:
+      runtime-ref: ${{ github.head_ref }}
+      compiler-ref: ${{ needs.determine-refs.outputs.lingua-franca }}
+    if: ${{ github.event_name == 'pull_request' }}
