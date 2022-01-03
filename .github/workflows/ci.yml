@@ -32,25 +32,22 @@ jobs:
         run: |
           npm install
           npm run test
-  
-  determine-refs:
-    name: Determine the refs to use for integration tests
+
+  # FIXME: turn this into a reusable workflow called fetch-ref  
+  fetch-lf:
     runs-on: ubuntu-latest
     outputs:
-      lingua-franca: ${{ steps.read.outputs.lingua-franca }}
-      reactor-ts: ${{ steps.read.outputs.reactor-ts }}
+      ref: ${{ steps.read.outputs.ref }}
     steps:
-      - name: Check out reactor-ts
+      - name: Check out repository
         uses: actions/checkout@v2
-      - name: Read refs and set outputs
+      - name: Read ref and set output
         id: read
-        run: |
-          echo "::set-output name=lingua-franca::$(cat lingua-franca.sha1)"
-          echo "::set-output name=reactor-ts::$(GITHUB_REF)"
+        run: echo "::set-output name=ref::$(head -n 1 lingua-franca.sha1)"
   
-  integration-tests:
-    needs: determine-refs
+  lf-tests:
+    needs: fetch-lf
     uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
     with:
       runtime-ref: ${{ github.ref }}
-      compiler-ref: ${{ needs.determine-refs.outputs.lingua-franca }}
+      compiler-ref: ${{ needs.fetch-lf.outputs.ref }}
