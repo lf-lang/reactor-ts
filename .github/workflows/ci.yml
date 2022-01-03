@@ -33,7 +33,6 @@ jobs:
           npm install
           npm run test
 
-  # FIXME: Move reuseable workflow to lingua-franca repo
   fetch-lf:
     uses: lf-lang/lingua-franca/.github/workflows/util/extract-ref.yml@ci
     with:
