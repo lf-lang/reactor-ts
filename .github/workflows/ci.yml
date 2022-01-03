@@ -52,5 +52,5 @@ jobs:
     needs: determine-refs
     uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
     with:
-      runtime-ref: ${GITHUB_REF##*/}
+      runtime-ref: ${{ github.ref }}
       compiler-ref: ${{ needs.determine-refs.outputs.lingua-franca }}
