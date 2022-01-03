@@ -1,4 +1,4 @@
-name: api-docs
+name: API docs
 # Build and deploy documentation for code that is pushed to master.
 on:
   push:
