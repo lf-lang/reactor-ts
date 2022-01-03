@@ -1,6 +1,5 @@
-name: unit-tests
-# Perform unit tests for code that is pushed to any branch
-# or is part of any pull request.
+name: CI
+
 on:
   push:
   pull_request:
@@ -8,13 +7,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  npm-run-test:
+  unit-tests:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v2
       
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.0
@@ -33,3 +32,15 @@ jobs:
         run: |
           npm install
           npm run test
+
+  fetch-lf:
+    uses: lf-lang/lingua-franca/.github/workflows/extract-ref.yml@ci
+    with:
+      sha1-file: 'lingua-franca.sha1'
+  
+  lf-tests:
+    needs: fetch-lf
+    uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
+    with:
+      runtime-ref: ${{ github.ref }}
+      compiler-ref: ${{ needs.fetch-lf.outputs.ref }}
