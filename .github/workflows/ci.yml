@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  npm-run-test:
+  unit-tests:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -33,3 +33,13 @@ jobs:
         run: |
           npm install
           npm run test
+  setup-env:
+    name: Set LF_REF environment variable
+    steps:
+      - echo "LF_REF=$(cat lingua-franca.sha1)" >> $GITHUB_ENV
+  lf-ts-tests:
+    needs: setup-env
+    uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
+    with:
+      runtime-ref: ${{ ${github.ref} }}
+      compiler-ref: ${{ ${LF_REF} }}
