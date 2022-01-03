@@ -42,5 +42,5 @@ jobs:
     needs: setup-env
     uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
     with:
-      runtime-ref: ${{ ${github.ref} }}
+      runtime-ref: ${{ ${GITHUB_REF} }}
       compiler-ref: ${{ ${LF_REF} }}
