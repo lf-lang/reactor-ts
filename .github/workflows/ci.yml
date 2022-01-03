@@ -34,13 +34,15 @@ jobs:
           npm install
           npm run test
   setup-env:
-    name: Set LF_REF environment variable
+    name: Setup environment variables
     runs-on: ubuntu-latest
     steps:
-      - echo "LF_REF=$(cat lingua-franca.sha1)" >> $GITHUB_ENV
+      - name: Set LF_REF environment variable 
+        run: |
+          echo "LF_REF=$(cat lingua-franca.sha1)" >> $GITHUB_ENV
   lf-ts-tests:
     needs: setup-env
     uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
     with:
-      runtime-ref: ${{ ${GITHUB_REF} }}
-      compiler-ref: ${{ ${LF_REF} }}
+      runtime-ref: ${GITHUB_REF}
+      compiler-ref: ${LF_REF}
