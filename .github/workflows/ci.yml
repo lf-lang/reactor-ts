@@ -1,6 +1,5 @@
-name: unit-tests
-# Perform unit tests for code that is pushed to any branch
-# or is part of any pull request.
+name: CI
+
 on:
   push:
   pull_request:
@@ -33,17 +32,25 @@ jobs:
         run: |
           npm install
           npm run test
-  setup-env:
-    name: Setup environment variables
+  
+  determine-refs:
+    name: Determine the refs to use for integration tests
     runs-on: ubuntu-latest
+    outputs:
+      lingua-franca: ${{ steps.read.outputs.lingua-franca }}
+      reactor-ts: ${{ steps.read.outputs.reactor-ts }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Set LF_REF environment variable 
+      - name: Check out reactor-ts
+        uses: actions/checkout@v2
+      - name: Read refs and set outputs
+        id: read
         run: |
-          echo "LF_REF=$(cat lingua-franca.sha1)" >> $GITHUB_ENV
+          echo "::set-output name=lingua-franca::$(cat lingua-franca.sha1)"
+          echo "::set-output name=reactor-ts::$(GITHUB_REF)"
+  
   lf-ts-tests:
-    needs: setup-env
+    needs: determine-ref
     uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
     with:
-      runtime-ref: ${GITHUB_REF}
-      compiler-ref: ${LF_REF}
+      runtime-ref: ${{ jobs.determine-refs.outputs.reactor-ts }}
+      compiler-ref: ${{ jobs.determine-refs.outputs.lingua-franca }}
