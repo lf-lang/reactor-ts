@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out reactor-ts repository
       - uses: actions/checkout@v2
       
       - name: Setup Node.js environment
@@ -35,9 +35,9 @@ jobs:
 
   # FIXME: Move reuseable workflow to lingua-franca repo
   fetch-lf:
-    uses: lf-lang/reactor-ts/.github/workflows/extract-ref.yml@ci
+    uses: lf-lang/lingua-franca/.github/workflows/util/extract-ref.yml@ci
     with:
-      name: 'lingua-franca'
+      sha1-file: 'lingua-franca.sha1'
   
   lf-tests:
     needs: fetch-lf
