@@ -34,7 +34,7 @@ jobs:
           npm run test
 
   fetch-lf:
-    uses: lf-lang/lingua-franca/.github/workflows/extract-ref.yml@ci
+    uses: lf-lang/lingua-franca/.github/workflows/extract-ref.yml@master
     with:
       sha1-file: 'lingua-franca.sha1'
   
