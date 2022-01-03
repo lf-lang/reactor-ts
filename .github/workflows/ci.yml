@@ -35,6 +35,7 @@ jobs:
           npm run test
   setup-env:
     name: Set LF_REF environment variable
+    runs-on: ubuntu-latest
     steps:
       - echo "LF_REF=$(cat lingua-franca.sha1)" >> $GITHUB_ENV
   lf-ts-tests:
