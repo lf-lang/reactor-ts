@@ -48,18 +48,9 @@ jobs:
           echo "::set-output name=lingua-franca::$(cat lingua-franca.sha1)"
           echo "::set-output name=reactor-ts::$(GITHUB_REF)"
   
-  lf-push-tests:
+  integration-tests:
     needs: determine-refs
     uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
     with:
       runtime-ref: ${{ github.ref }}
       compiler-ref: ${{ needs.determine-refs.outputs.lingua-franca }}
-    if: ${{ github.event_name != 'pull_request' }}
-
-  lf-pull-req-tests:
-    needs: determine-refs  
-    uses: lf-lang/lingua-franca/.github/workflows/ts-tests.yml@master
-    with:
-      runtime-ref: ${{ github.ref }}
-      compiler-ref: ${{ needs.determine-refs.outputs.lingua-franca }}
-    if: ${{ github.event_name == 'pull_request' }}
