@@ -33,17 +33,11 @@ jobs:
           npm install
           npm run test
 
-  # FIXME: turn this into a reusable workflow called fetch-ref  
+  # FIXME: Move reuseable workflow to lingua-franca repo
   fetch-lf:
-    runs-on: ubuntu-latest
-    outputs:
-      ref: ${{ steps.read.outputs.ref }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v2
-      - name: Read ref and set output
-        id: read
-        run: echo "::set-output name=ref::$(head -n 1 lingua-franca.sha1)"
+    uses: lf-lang/reactor-ts/.github/workflows/benchmark-tests.yml@master
+    with:
+      name: 'lingua-franca'
   
   lf-tests:
     needs: fetch-lf
