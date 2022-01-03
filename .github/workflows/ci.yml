@@ -37,6 +37,7 @@ jobs:
     name: Setup environment variables
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Set LF_REF environment variable 
         run: |
           echo "LF_REF=$(cat lingua-franca.sha1)" >> $GITHUB_ENV
