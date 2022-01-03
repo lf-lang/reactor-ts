@@ -35,7 +35,7 @@ jobs:
 
   # FIXME: Move reuseable workflow to lingua-franca repo
   fetch-lf:
-    uses: lf-lang/reactor-ts/.github/workflows/benchmark-tests.yml@master
+    uses: lf-lang/reactor-ts/.github/workflows/benchmark-tests.yml@ci
     with:
       name: 'lingua-franca'
   
