@@ -1,7 +1,7 @@
+[![CI](https://github.com/lf-lang/reactor-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/lf-lang/reactor-ts/actions/workflows/ci.yml)
+
 A Reactor-Oriented Programming Framework in TypeScript
 ---
-
-[![CI](https://github.com/lf-lang/reactor-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/lf-lang/reactor-ts/actions/workflows/ci.yml)
 
 [Documentation](https://lf-lang.github.io/reactor-ts)
 
