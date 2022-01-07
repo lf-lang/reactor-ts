@@ -364,7 +364,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
                 if (indicatedTag === undefined) {
                     throw new Error("FederatedPortAction must have an indicated tag from RTI.");
                 }
-                Log.debug(this, () => "Using indicated tag from RTI, similarto schedule_at_tag(tag) with an indicated tag: " +
+                Log.debug(this, () => "Using indicated tag from RTI, similar to schedule_at_tag(tag) with an indicated tag: " +
                     indicatedTag);
                 tag = indicatedTag;
             }
