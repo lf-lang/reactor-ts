@@ -78,7 +78,7 @@ export interface Read<T> {
  * Interface for schedulable actions.
  */
 export interface Sched<T> extends Read<T> {
-    schedule: (extraDelay: TimeValue | 0, value: T) => void;
+    schedule: (extraDelay: TimeValue | 0, value: T, indicatedTag?: Tag) => void;
     // FIXME: it makes sense to be able to check the presence of a (re)schedulable action.
 }
 
@@ -107,7 +107,7 @@ export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
  */
 export abstract class SchedulableAction<T extends Present> implements Sched<T> {
     abstract get(): T | undefined;
-    abstract schedule(extraDelay: 0 | TimeValue, value: T): void;
+    abstract schedule(extraDelay: 0 | TimeValue, value: T, indicatedTag?: Tag): void;
 }
 
 //--------------------------------------------------------------------------//
@@ -332,7 +332,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
         constructor(private action: Action<T>) {
             super()
         }
-        schedule(extraDelay: 0 | TimeValue, value: T): void {
+        schedule(extraDelay: 0 | TimeValue, value: T, indicatedTag?: Tag): void {
             if (!(extraDelay instanceof TimeValue)) {
                 extraDelay = TimeValue.secs(0);
             }
@@ -358,6 +358,15 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
             if (this.action.origin == Origin.logical && !(this.action instanceof Startup)
                 && !(this.action instanceof FederatePortAction)) {
                 tag = tag.getMicroStepLater();
+            }
+
+            if (this.action instanceof FederatePortAction) {
+                if (indicatedTag === undefined) {
+                    throw new Error("FederatedPortAction must have an indicated tag from RTI.");
+                }
+                Log.debug(this, () => "Using indicated tag from RTI, similarto schedule_at_tag(tag) with an indicated tag: " +
+                    indicatedTag);
+                tag = indicatedTag;
             }
             
             Log.debug(this, () => "Scheduling " + this.action.origin +

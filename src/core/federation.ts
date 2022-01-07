@@ -647,9 +647,9 @@ class RTIClient extends EventEmitter {
                         let destPortID = assembledData.readUInt16LE(bufferIndex + 1);
                         let messageLength = assembledData.readUInt32LE(bufferIndex + 5);
 
-                        let timeBuffer = Buffer.alloc(8);
-                        assembledData.copy(timeBuffer, 0, bufferIndex + 9, bufferIndex + 17);
-                        let timestamp = TimeValue.fromBinary(timeBuffer);
+                        let tagBuffer = Buffer.alloc(12);
+                        assembledData.copy(tagBuffer, 0, bufferIndex + 9, bufferIndex + 21);
+                        let tag = Tag.fromBinary(tagBuffer);
                         // FIXME: Process microstep properly.
 
                         let isChunked = messageLength > (assembledData.length - (bufferIndex + 21));
@@ -663,7 +663,7 @@ class RTIClient extends EventEmitter {
                             let messageBuffer = Buffer.alloc(messageLength);
                             assembledData.copy(messageBuffer, 0, bufferIndex + 21, bufferIndex + 21 +  messageLength);  
                             let destPort = thiz.federatePortActionByID.get(destPortID);
-                            thiz.emit('timedMessage', destPort, messageBuffer, timestamp);
+                            thiz.emit('timedMessage', destPort, messageBuffer, tag);
                         }
 
                         bufferIndex += messageLength + 21;
@@ -1024,7 +1024,7 @@ export class FederatedApp extends App {
         });
 
         this.rtiClient.on('timedMessage', (destPortAction: FederatePortAction, messageBuffer: Buffer,
-            timestamp: TimeValue) => {
+            tag: Tag) => {
             // Schedule this federate port's action.
 
             /**
@@ -1047,12 +1047,9 @@ export class FederatedApp extends App {
 
             // FIXME: implement decentralized control.
 
-            Log.debug(this, () => {return `Timed Message received from RTI with timestamp ${timestamp}.`})
+            Log.debug(this, () => {return `Timed Message received from RTI with tag ${tag}.`})
             if (destPortAction.origin == Origin.logical) {
-                // delay together with the schedule function for logical actions implements
-                // Tr = Ts + A
-                let delay = timestamp.subtract(this.util.getCurrentLogicalTime());
-                destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(delay, messageBuffer);
+                destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, messageBuffer, tag);
 
             } else {
                 // The schedule function for physical actions implements
