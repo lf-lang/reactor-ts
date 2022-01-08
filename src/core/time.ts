@@ -422,6 +422,32 @@ export class Tag {
     public toString(): string {
         return "(" + this.time.toString() + ", " + this.microstep + ")"; 
     }
+    
+    /**
+     * Get a 12-byte buffer for the tag.
+     * Used by federates.
+     */
+    public toBinary(): Buffer {
+        let timeBuffer = this.time.toBinary();
+        let buf = Buffer.alloc(12);
+        timeBuffer.copy(buf, 0, 0);
+        buf.writeInt32LE(this.microstep);
+        return buf;
+    }
+
+    /**
+     * Create a Tag from 8-byte TimeValue and 4-byte microstep in a buffer.
+     * @param buffer A buffer of TimeValue and microstep.
+     */
+    public static fromBinary(buffer: Buffer) {
+        let timeBuffer = Buffer.alloc(8);
+        buffer.copy(timeBuffer, 0, 0, 8);
+        let time = TimeValue.fromBinary(timeBuffer);
+        let microstep = buffer.readUInt32LE(8);
+        const billion = BigInt(TimeUnit.secs);
+        
+        return new Tag(time, microstep);
+    }
 }
 
 /**

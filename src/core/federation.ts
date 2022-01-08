@@ -2,7 +2,7 @@ import {Log} from './util';
 import {Tag, TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, Alarm} from './time';
 import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter} from 'events';
-import {Action, Present, TaggedEvent, App} from './reactor'
+import {Action, Present, TaggedEvent, App, FederatePortAction} from './reactor'
 
 //---------------------------------------------------------------------//
 // Federated Execution Constants and Enums                             //
@@ -132,6 +132,16 @@ enum RTIMessageTypes {
     MSG_TYPE_TAG_ADVANCE_GRANT = 7,
 
     /** 
+     * Byte identifying a provisional time advance grant (PTAG) sent by the RTI to a federate
+     * in centralized coordination. This message is a promise by the RTI to the federate
+     * that no later message sent to the federate will have a tag earlier than the tag
+     * carried by this PTAG message.
+     * The next eight bytes will be the timestamp.
+     * The next four bytes will be the microstep.
+     */
+    MSG_TYPE_PROVISIONAL_TAG_ADVANCE_GRANT = 8,
+
+    /** 
      * Byte identifying a logical tag complete (LTC) message sent by a federate
      * to the RTI.
      * The next eight bytes will be the timestep of the completed tag.
@@ -229,7 +239,7 @@ class RTIClient extends EventEmitter {
 
     // The mapping between a federate port ID and the federate port action
     // scheduled upon reception of a message designated for that federate port.
-    private federatePortActionByID: Map<number, Action<Buffer>> = new Map<number, Action<Buffer>>();
+    private federatePortActionByID: Map<number, FederatePortAction> = new Map<number, FederatePortAction>();
 
     /**
      * Establish the mapping between a federate port's action and its ID.
@@ -237,6 +247,7 @@ class RTIClient extends EventEmitter {
      * @param federatePort The federate port's action.
      */
     public registerFederatePortAction<T extends Present>(federatePortID: number, federatePortAction: Action<Buffer>) {
+        Object.setPrototypeOf(federatePortAction, FederatePortAction.prototype);
         this.federatePortActionByID.set(federatePortID, federatePortAction);
     }
 
@@ -636,9 +647,9 @@ class RTIClient extends EventEmitter {
                         let destPortID = assembledData.readUInt16LE(bufferIndex + 1);
                         let messageLength = assembledData.readUInt32LE(bufferIndex + 5);
 
-                        let timeBuffer = Buffer.alloc(8);
-                        assembledData.copy(timeBuffer, 0, bufferIndex + 9, bufferIndex + 17);
-                        let timestamp = TimeValue.fromBinary(timeBuffer);
+                        let tagBuffer = Buffer.alloc(12);
+                        assembledData.copy(tagBuffer, 0, bufferIndex + 9, bufferIndex + 21);
+                        let tag = Tag.fromBinary(tagBuffer);
                         // FIXME: Process microstep properly.
 
                         let isChunked = messageLength > (assembledData.length - (bufferIndex + 21));
@@ -652,7 +663,7 @@ class RTIClient extends EventEmitter {
                             let messageBuffer = Buffer.alloc(messageLength);
                             assembledData.copy(messageBuffer, 0, bufferIndex + 21, bufferIndex + 21 +  messageLength);  
                             let destPort = thiz.federatePortActionByID.get(destPortID);
-                            thiz.emit('timedMessage', destPort, messageBuffer, timestamp);
+                            thiz.emit('timedMessage', destPort, messageBuffer, tag);
                         }
 
                         bufferIndex += messageLength + 21;
@@ -683,19 +694,21 @@ class RTIClient extends EventEmitter {
                     // MessageType: 1 byte.
                     // Timestamp: 8 bytes.
                     // Microstep: 4 bytes.
-                    let incomplete = assembledData.length < 13 + bufferIndex;
-
-                    if (incomplete) {
-                        thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
-                        assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
-                    } else {
-                        Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_TAG_ADVANCE_GRANT'});
-                        let timeBuffer = Buffer.alloc(8);
-                        assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9);
-                        let time = TimeValue.fromBinary(timeBuffer);
-                        // FIXME: Process microstep properly.
-                        thiz.emit('timeAdvanceGrant', time);
-                    }
+                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_TAG_ADVANCE_GRANT'});
+                    let tagBuffer = Buffer.alloc(12);
+                    assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
+                    let tag = Tag.fromBinary(tagBuffer);
+                    thiz.emit('timeAdvanceGrant', tag);
+                    bufferIndex += 13;
+                    break;
+                }
+                case RTIMessageTypes.MSG_TYPE_PROVISIONAL_TAG_ADVANCE_GRANT: {
+                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_PROVISIONAL_TAG_ADVANCE_GRANT'});
+                    let tagBuffer = Buffer.alloc(12);
+                    assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
+                    let tag = Tag.fromBinary(tagBuffer);
+                    Log.debug(thiz, () => {return `PTAG value: ${tag}`});
+                    thiz.emit('provisionalTimeAdvanceGrant', tag);
                     bufferIndex += 13;
                     break;
                 }
@@ -764,7 +777,7 @@ export class FederatedApp extends App {
      * An RTI synchronized Federate cannot advance its logical time
      * beyond this value.
      */
-    private greatestTimeAdvanceGrant: TimeValue | null = null;
+    private greatestTimeAdvanceGrant: Tag | null = null;
 
     private upstreamFedIDs: number[] = [];
     private upstreamFedDelays: bigint[] = [];
@@ -807,9 +820,9 @@ export class FederatedApp extends App {
     protected _canProceed(event: TaggedEvent<Present>) {
         if (this._isRTISynchronized()) {
             let greatestTAG = this._getGreatestTimeAdvanceGrant();
-            let nextTime = event.tag.time;
-            if (greatestTAG === null || greatestTAG.isEarlierThan(nextTime)) {
-                this.sendRTINextEventTime(nextTime);
+            let nextTag = event.tag;
+            if (greatestTAG === null || greatestTAG.isSmallerThan(nextTag)) {
+                this.sendRTINextEventTime(nextTag);
                 Log.debug(this, () => "The greatest time advance grant \
                 received from the RTI is less than the timestamp of the \
                 next event on the event queue");
@@ -943,13 +956,13 @@ export class FederatedApp extends App {
      * Send a next event time message to the RTI. This should be called
      * when this federated app is unable to advance logical time beause it
      * has not yet received a sufficiently large time advance grant.
-     * @param nextTime The time to which this federate would like to
+     * @param nextTag The time to which this federate would like to
      * advance logical time.
      */
-    public sendRTINextEventTime(nextTime: TimeValue) {
-        let time = nextTime.toBinary();
-        Log.debug(this, () => {return `Sending RTI next event time with time: ${time.toString('hex')}`});
-        this.rtiClient.sendRTINextEventTime(time);
+    public sendRTINextEventTime(nextTag: Tag) {
+        let tag = nextTag.toBinary();
+        Log.debug(this, () => {return `Sending RTI next event time with time: ${tag}`});
+        this.rtiClient.sendRTINextEventTime(tag);
     }
 
     /**
@@ -1003,15 +1016,15 @@ export class FederatedApp extends App {
             }
         });
 
-        this.rtiClient.on('message', (destPortAction: Action<Buffer>, messageBuffer: Buffer) => {
+        this.rtiClient.on('message', (destPortAction: FederatePortAction, messageBuffer: Buffer) => {
             // Schedule this federate port's action.
             // This message is untimed, so schedule it immediately.
             Log.debug(this, () => {return `(Untimed) Message received from RTI.`})
             destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, messageBuffer);
         });
 
-        this.rtiClient.on('timedMessage', (destPortAction: Action<Buffer>, messageBuffer: Buffer,
-            timestamp: TimeValue) => {
+        this.rtiClient.on('timedMessage', (destPortAction: FederatePortAction, messageBuffer: Buffer,
+            tag: Tag) => {
             // Schedule this federate port's action.
 
             /**
@@ -1034,12 +1047,9 @@ export class FederatedApp extends App {
 
             // FIXME: implement decentralized control.
 
-            Log.debug(this, () => {return `Timed Message received from RTI with timestamp ${timestamp}.`})
+            Log.debug(this, () => {return `Timed Message received from RTI with tag ${tag}.`})
             if (destPortAction.origin == Origin.logical) {
-                // delay together with the schedule function for logical actions implements
-                // Tr = Ts + A
-                let delay = timestamp.subtract(this.util.getCurrentLogicalTime());
-                destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(delay, messageBuffer);
+                destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, messageBuffer, tag);
 
             } else {
                 // The schedule function for physical actions implements
@@ -1048,13 +1058,24 @@ export class FederatedApp extends App {
             }
         });
 
-        this.rtiClient.on('timeAdvanceGrant', (time: TimeValue) => {
-            Log.debug(this, () => {return `Time Advance Grant received from RTI for ${time}.`});
-            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isEarlierThan(time)) {
+        this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
+            Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
+            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
-                this.greatestTimeAdvanceGrant = time;
+                this.greatestTimeAdvanceGrant = tag;
                 this._requestImmediateInvocationOfNext();
+            }
+        });
+
+        this.rtiClient.on('provisionalTimeAdvanceGrant', (tag: Tag) => {
+            Log.debug(this, () => {return `Provisional Time Advance Grant received from RTI for ${tag}.`});
+            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+                // Update the greatest time advance grant and immediately 
+                // wake up _next, in case it was blocked by the old time advance grant
+                this.greatestTimeAdvanceGrant = tag;
+                this._requestImmediateInvocationOfNext();
+                // FIXME: Add input control reaction handling.
             }
         });
 
