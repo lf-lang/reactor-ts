@@ -155,7 +155,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/reactor.Sched.html">Sched</a>.<a href="../interfaces/reactor.Sched.html#get">get</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/b00e5af/src/core/reactor.ts#L109">src/core/reactor.ts:109</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/b3bafb4/src/core/reactor.ts#L109">src/core/reactor.ts:109</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">T</span></h4>
@@ -166,14 +166,14 @@
 					<a name="schedule" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> schedule</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">schedule<span class="tsd-signature-symbol">(</span>extraDelay<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">0</span><span class="tsd-signature-symbol"> | </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">schedule<span class="tsd-signature-symbol">(</span>extraDelay<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">0</span><span class="tsd-signature-symbol"> | </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span>, intendedTag<span class="tsd-signature-symbol">?: </span><a href="time.Tag.html" class="tsd-signature-type" data-tsd-kind="Class">Tag</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/reactor.Sched.html">Sched</a>.<a href="../interfaces/reactor.Sched.html#schedule">schedule</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/b00e5af/src/core/reactor.ts#L110">src/core/reactor.ts:110</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/b3bafb4/src/core/reactor.ts#L110">src/core/reactor.ts:110</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -183,6 +183,9 @@
 								</li>
 								<li>
 									<h5>value: <span class="tsd-signature-type">T</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> intendedTag: <a href="time.Tag.html" class="tsd-signature-type" data-tsd-kind="Class">Tag</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -251,6 +254,9 @@
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="reactor.CallerPort.html" class="tsd-kind-icon">Caller<wbr>Port</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="reactor.FederatePortAction.html" class="tsd-kind-icon">Federate<wbr>Port<wbr>Action</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="reactor.IOPort.html" class="tsd-kind-icon">IOPort</a>
