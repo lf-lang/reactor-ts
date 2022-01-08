@@ -78,7 +78,7 @@ export interface Read<T> {
  * Interface for schedulable actions.
  */
 export interface Sched<T> extends Read<T> {
-    schedule: (extraDelay: TimeValue | 0, value: T, indicatedTag?: Tag) => void;
+    schedule: (extraDelay: TimeValue | 0, value: T, intendedTag?: Tag) => void;
     // FIXME: it makes sense to be able to check the presence of a (re)schedulable action.
 }
 
@@ -107,7 +107,7 @@ export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
  */
 export abstract class SchedulableAction<T extends Present> implements Sched<T> {
     abstract get(): T | undefined;
-    abstract schedule(extraDelay: 0 | TimeValue, value: T, indicatedTag?: Tag): void;
+    abstract schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void;
 }
 
 //--------------------------------------------------------------------------//
@@ -332,7 +332,7 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
         constructor(private action: Action<T>) {
             super()
         }
-        schedule(extraDelay: 0 | TimeValue, value: T, indicatedTag?: Tag): void {
+        schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
             if (!(extraDelay instanceof TimeValue)) {
                 extraDelay = TimeValue.secs(0);
             }
@@ -356,16 +356,16 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
             }
 
             if (this.action instanceof FederatePortAction) {
-                if (indicatedTag === undefined) {
-                    throw new Error("FederatedPortAction must have an indicated tag from RTI.");
+                if (intendedTag === undefined) {
+                    throw new Error("FederatedPortAction must have an intended tag from RTI.");
                 }
-                if (indicatedTag <= this.action.runtime.util.getCurrentTag()) {
-                    throw new Error("Indicated tag must be greater than current tag. Indicated tag" +
-                        indicatedTag + " Current tag: " + this.action.runtime.util.getCurrentTag());
+                if (intendedTag <= this.action.runtime.util.getCurrentTag()) {
+                    throw new Error("Intended tag must be greater than current tag. Intended tag" +
+                    intendedTag + " Current tag: " + this.action.runtime.util.getCurrentTag());
                 }
-                Log.debug(this, () => "Using indicated tag from RTI, similar to schedule_at_tag(tag) with an indicated tag: " +
-                    indicatedTag);
-                tag = indicatedTag;
+                Log.debug(this, () => "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
+                intendedTag);
+                tag = intendedTag;
             } else if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
                 tag = tag.getMicroStepLater();
             }
