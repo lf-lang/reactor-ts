@@ -355,11 +355,6 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
                 }
             }
 
-            if (this.action.origin == Origin.logical && !(this.action instanceof Startup)
-                && !(this.action instanceof FederatePortAction)) {
-                tag = tag.getMicroStepLater();
-            }
-
             if (this.action instanceof FederatePortAction) {
                 if (indicatedTag === undefined) {
                     throw new Error("FederatedPortAction must have an indicated tag from RTI.");
@@ -371,6 +366,8 @@ export class Action<T extends Present> extends ScheduledTrigger<T> implements Re
                 Log.debug(this, () => "Using indicated tag from RTI, similar to schedule_at_tag(tag) with an indicated tag: " +
                     indicatedTag);
                 tag = indicatedTag;
+            } else if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
+                tag = tag.getMicroStepLater();
             }
             
             Log.debug(this, () => "Scheduling " + this.action.origin +
