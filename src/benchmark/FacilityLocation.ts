@@ -53,14 +53,23 @@ class Box {
     }
 }
 
+enum Position {
+    UNKNOWN = -2,
+    ROOT = -1,
+    TOP_LEFT = 0,
+    TOP_RIGHT = 1,
+    BOT_LEFT = 2,
+    BOT_RIGHT = 3,
+}
+
 abstract class Msg {}
 
 class FacilityMsg extends Msg {
-    positionRelativeToParent: number
+    positionRelativeToParent: Position
     depth: number
     point: Point
     fromChild: boolean
-    constructor(positionRelativeToParent: number,
+    constructor(positionRelativeToParent: Position,
         depth: number,
         point: Point,
         fromChild: boolean) {
@@ -75,12 +84,12 @@ class FacilityMsg extends Msg {
 class NextCustomerMsg extends Msg {}
 
 class CustomerMsg extends Msg {
-    producer: Reactor
+    // The producer variable is not needed since hasQuadrantProducer
+    // is used to determin whether a quadrant producer (parent) exists and
+    // toProducer is used for a port to the producer.
     point: Point
-    constructor(producer: Reactor,
-        point: Point) {
+    constructor(point: Point) {
             super()
-            this.producer = producer
             this.point = point
         }
 }
@@ -98,6 +107,7 @@ class ConfirmExitMsg extends Msg {
         }
 }
 
+// Top level producer reactor that is not a quadrant.
 export class Producer extends Reactor {
     nextCustomer: Action<NextCustomerMsg>
     numPoints: Parameter<number>
@@ -117,7 +127,7 @@ export class Producer extends Reactor {
                 if (itemsProduced.get() < numPoints.get()) {
                     // Send CustomerMsg to the consumer.
                     // `this` is reaction, and parent is reactor containing this reaction.
-                    toConsumer.set(new CustomerMsg(parent, Point.random(gridSize.get())))
+                    toConsumer.set(new CustomerMsg(Point.random(gridSize.get())))
                     // Increase itemsProduced by 1.
                     itemsProduced.set(itemsProduced.get() + 1)
                     // Schedule next customer (NextCustomerMsg).
@@ -131,7 +141,12 @@ export class Producer extends Reactor {
 }
 
 export class Quadrant extends Reactor {
-    fromParent: InPort<Msg> = new InPort(this)
+    hasQuadrantProducer: Parameter<boolean> // Only the rootQuadrant doesn't have quadrant producer.
+    positionRelativeToParent: Parameter<Position>
+    threshold: Parameter<number>
+    depth: Parameter<number>
+    fromProducer: InPort<Msg> = new InPort(this)
+    toProducer: OutPort<Msg> = new OutPort(this)
     facility: State<Point>
     // hasChildren, firstChild, secondChild, thirdChild, fourthChild are used for
     // children in Akka actor implementation.
@@ -139,25 +154,47 @@ export class Quadrant extends Reactor {
     localFacilities: State<Array<Point>> = new State(new Array<Point>()) 
     supportCustomers: State<Array<Point>> = new State(new Array<Point>()) 
     totalCost: State<number> = new State(0)
+
     constructor (parent:Reactor,
+            hasQuadrantProducer: boolean,
+            positionRelativeToParent: Position,
             boundary: Box,
+            threshold: number,
+            depth: number,
             initLocalFacilities: Array<Point>) {
         super(parent)
+        this.hasQuadrantProducer = new Parameter(hasQuadrantProducer)
+        this.positionRelativeToParent = new Parameter(positionRelativeToParent)
+        this.threshold = new Parameter(threshold)
         this.facility = new State<Point>(boundary.midPoint())
+        this.depth = new Parameter(depth)
         initLocalFacilities.forEach(val => this.localFacilities.get().push(val))
         this.localFacilities.get().push(this.facility.get())
         this.localFacilities.get().forEach(val => console.log(`Element: ${val}`))
-        
+
         // Main reaction for QuadrantActor.process() of Akka implementation
         this.addReaction(
-            new Triggers(this.fromParent),
-            new Args(this.fromParent,
+            new Triggers(this.fromProducer),
+            new Args(
+                this.hasQuadrantProducer,
+                this.positionRelativeToParent,
+                this.threshold,
+                this.facility,
+                this.depth,
+                this.fromProducer,
+                this.writable(this.toProducer),
                 this.localFacilities,
                 this.supportCustomers,
                 this.totalCost,
                 this.hasChildren),
             function (this,
-                    fromParent,
+                    hasQuadrantProducer,
+                    positionRelativeToParent,
+                    threshold,
+                    facility,
+                    depth,
+                    fromProducer,
+                    toProducer,
                     localFacilities,
                     supportCustomers,
                     totalCost,
@@ -179,20 +216,35 @@ export class Quadrant extends Reactor {
                     totalCost.set(totalCost.get() + minCost)
                     console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
                 }
+                let notifyParentOfFacility = function(p: Point): void {
+                    if (hasQuadrantProducer.get()) {
+                        toProducer.set(new FacilityMsg(
+                            positionRelativeToParent.get(), depth.get(), p, true))
+                    }
+                }
+                let partition = function(): void {
+                    console.log("Partition is called.")
+                    notifyParentOfFacility(facility.get().clone())
+                    // TODO(hokeun): Implement partition().
+                }
 
                 // Reaction
-                let msg = fromParent.get()
+                let msg = fromProducer.get()
                 switch (msg?.constructor) {
                     case CustomerMsg:
                         if (!hasChildren.get()) {
                             // No open facility, thus, addCustomer(), then partition().
                             let point = (<CustomerMsg>msg).point;
                             addCustomer(point)
+                            if (totalCost.get() > threshold.get()) {
+                                partition()
+                            }
                         }
                         console.log(`Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
                         break
                     default:
                         console.log("Error: Recieved unknown message.")
+                        this.util.requestErrorStop()
                         break
                 }
             }
@@ -202,14 +254,28 @@ export class Quadrant extends Reactor {
 
 export class FacilityLocation extends App {
     producer: Producer
-    quadrant: Quadrant
+    rootQuadrant: Quadrant
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
         // TODO(hokeun): Change default for numPoints to 100000.
-        this.producer = new Producer(this, 10, 500, TimeValue.nsec(1))
-        //this.quadrant = new Quadrant(this, new Box(1, 2, 10, 11), new Array<Point>())
-        this.quadrant = new Quadrant(this, new Box(1, 2, 10, 11), [new Point(1, 2), new Point(3, 4)])
-        this._connect(this.producer.toConsumer, this.quadrant.fromParent)
+        let NUM_POINTS = 10
+        let GRID_SIZE = 500
+        let F = Math.sqrt(2) * GRID_SIZE
+        let ALPHA = 2.0
+
+        this.producer = new Producer(this, NUM_POINTS, GRID_SIZE, TimeValue.nsec(1))
+
+        // TODO(hokeun): Set hasQuadrantProducer = true for other quadrants.
+        // TODO(hokeun): Use an empty array, i.e., new Array<Point>(), for initLocalFacilities.
+        this.rootQuadrant = new Quadrant(this,
+                false, // hasQuadrantProducer
+                Position.ROOT, // positionRelativeToParent
+                new Box(0, 0, GRID_SIZE, GRID_SIZE), // boundry
+                ALPHA * F, // threshold
+                0, // depth
+                [new Point(1, 2), new Point(3, 4)] // initLocalFacilities
+            )
+        this._connect(this.producer.toConsumer, this.rootQuadrant.fromProducer)
     }
 }
 
