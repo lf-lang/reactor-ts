@@ -1,5 +1,11 @@
-import {Args, Parameter, OutPort, InPort, State, Triggers, Timer, Reactor, App} from "../core/reactor";
-import {TimeValue} from "../core/time"
+/**
+ * Typescript runtime implementation of Online Facility Location benchmark program
+ * of Savina benchmark suite.
+ * 
+ * @author Hokeun Kim (hokeunkim@berkeley.edu)
+ */
+import {Args, Parameter, OutPort, InPort, State, Triggers, Action, Timer, Reactor, App} from "../core/reactor";
+import {TimeValue, Origin} from "../core/time"
 import {Log} from "../core/util"
 
 Log.global.level = Log.levels.INFO;
@@ -59,33 +65,46 @@ class ConfirmExitMsg extends Msg {
 }
 
 export class Producer extends Reactor {
-    out: OutPort<Msg> = new OutPort(this)
+    nextCustomer: Action<NextCustomerMsg>
+    numPoints: Parameter<number>
+    gridSize: Parameter<number>
+    toConsumer: OutPort<Msg> = new OutPort(this)
     itemsProduced: State<number> = new State(0)
-    constructor (parent:Reactor) {
+    // TODO(hokeun): Change default for numPoints to 100000.
+    constructor (parent:Reactor, numPoints: number = 10, gridSize: number = 500, period: TimeValue) {
         super(parent)
+        this.numPoints = new Parameter(numPoints)
+        this.gridSize = new Parameter(gridSize)
+        this.nextCustomer = new Action<NextCustomerMsg>(this, Origin.logical, period)
         this.addReaction(
-            new Triggers(this.startup),
-            new Args(this.writable(this.out)),
-            function (this, out) {
-                var startTime = this.util.getCurrentPhysicalTime()
-                // `this` is reaction, and parent is reactor containing this reaction.
-                out.set(new CustomerMsg(parent, new Point(12.345, 67.89)))
-                let elapsedTime = this.util.getCurrentPhysicalTime().subtract(startTime)
-                console.log("Elapsed time: " + elapsedTime)
+            new Triggers(this.startup, this.nextCustomer),
+            new Args(this.schedulable(this.nextCustomer), this.numPoints, this.gridSize, this.writable(this.toConsumer), this.itemsProduced),
+            function (this, nextCustomer, numPoints, gridSize, toConsumer, itemsProduced) {
+                if (itemsProduced.get() < numPoints.get()) {
+                    // Send CustomerMsg to the consumer.
+                    // `this` is reaction, and parent is reactor containing this reaction.
+                    toConsumer.set(new CustomerMsg(parent, new Point(Math.random() * gridSize.get(), Math.random() * gridSize.get())))
+                    // Increase itemsProduced by 1.
+                    itemsProduced.set(itemsProduced.get() + 1)
+                    // Schedule next customer (NextCustomerMsg).
+                    nextCustomer.schedule(0, new NextCustomerMsg())
+                } else {
+                    this.util.requestStop()
+                }
             }
         )
     }
 }
 
 export class Quadrant extends Reactor {
-    in: InPort<Msg> = new InPort(this)
+    fromParent: InPort<Msg> = new InPort(this)
     constructor (parent:Reactor) {
         super(parent)
         this.addReaction(
-            new Triggers(this.in),
-            new Args(this.in),
-            function (this, __in) {
-                let msg = __in.get()
+            new Triggers(this.fromParent),
+            new Args(this.fromParent),
+            function (this, fromParent) {
+                let msg = fromParent.get()
                 switch (msg?.constructor) {
                     case CustomerMsg:
                         console.log("Received CustomerMsg.")
@@ -106,9 +125,10 @@ export class FacilityLocation extends App {
     quadrant: Quadrant
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
-        this.producer = new Producer(this)
+        // TODO(hokeun): Change default for numPoints to 100000.
+        this.producer = new Producer(this, 10, 500, TimeValue.nsec(1))
         this.quadrant = new Quadrant(this)
-        this._connect(this.producer.out, this.quadrant.in)
+        this._connect(this.producer.toConsumer, this.quadrant.fromParent)
     }
 }
 
