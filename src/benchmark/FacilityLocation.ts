@@ -17,6 +17,15 @@ class Point {
             this.x = x
             this.y = y
     }
+    public clone(): Point {
+        return new Point(this.x, this.y)
+    }
+    public getDistance(p: Point): number {
+        let xDiff = p.x - this.x;
+        let yDiff = p.y - this.y;
+        let distance = Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
+        return distance;
+    }
     public toString(): string {
         return `Point (x: ${this.x}, y: ${this.y})`
     }
@@ -128,25 +137,57 @@ export class Quadrant extends Reactor {
     // children in Akka actor implementation.
     hasChildren: State<boolean> = new State(false)
     localFacilities: State<Array<Point>> = new State(new Array<Point>()) 
-    supportCustomers: State<Array<number>> = new State(new Array<number>()) 
+    supportCustomers: State<Array<Point>> = new State(new Array<Point>()) 
     totalCost: State<number> = new State(0)
     constructor (parent:Reactor,
             boundary: Box,
             initLocalFacilities: Array<Point>) {
         super(parent)
         this.facility = new State<Point>(boundary.midPoint())
-        initLocalFacilities.forEach(val => this.localFacilities.get().push(new Point(val.x, val.y)))
+        initLocalFacilities.forEach(val => this.localFacilities.get().push(val))
         this.localFacilities.get().push(this.facility.get())
-        // this.localFacilities.get().forEach(val => console.log(`Element: ${val}`))
+        this.localFacilities.get().forEach(val => console.log(`Element: ${val}`))
+        
+        // Main reaction for QuadrantActor.process() of Akka implementation
         this.addReaction(
             new Triggers(this.fromParent),
-            new Args(this.fromParent, this.hasChildren),
-            function (this, fromParent, hasChildren) {
+            new Args(this.fromParent,
+                this.localFacilities,
+                this.supportCustomers,
+                this.totalCost,
+                this.hasChildren),
+            function (this,
+                    fromParent,
+                    localFacilities,
+                    supportCustomers,
+                    totalCost,
+                    hasChildren) {
+                // Helper functions
+                let findCost = function(point: Point): number {
+                    let result = Number.MAX_VALUE
+                    localFacilities.get().forEach(loopPoint => {
+                        let distance = loopPoint.getDistance(point)
+                        if (distance < result) {
+                            result = distance
+                        }
+                    });
+                    return result
+                }
+                let addCustomer = function(point: Point): void {
+                    supportCustomers.get().push(point)
+                    let minCost = findCost(point)
+                    totalCost.set(totalCost.get() + minCost)
+                    console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
+                }
+
+                // Reaction
                 let msg = fromParent.get()
                 switch (msg?.constructor) {
                     case CustomerMsg:
-                        if (!hasChildren) {
+                        if (!hasChildren.get()) {
                             // No open facility, thus, addCustomer(), then partition().
+                            let point = (<CustomerMsg>msg).point;
+                            addCustomer(point)
                         }
                         console.log(`Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
                         break
@@ -166,8 +207,8 @@ export class FacilityLocation extends App {
         super(timeout, keepAlive, fast, success, fail);
         // TODO(hokeun): Change default for numPoints to 100000.
         this.producer = new Producer(this, 10, 500, TimeValue.nsec(1))
-        this.quadrant = new Quadrant(this, new Box(1, 2, 10, 11), new Array<Point>())
-        // this.quadrant = new Quadrant(this, new Box(1, 2, 10, 11), [new Point(1, 2), new Point(3, 4)])
+        //this.quadrant = new Quadrant(this, new Box(1, 2, 10, 11), new Array<Point>())
+        this.quadrant = new Quadrant(this, new Box(1, 2, 10, 11), [new Point(1, 2), new Point(3, 4)])
         this._connect(this.producer.toConsumer, this.quadrant.fromParent)
     }
 }
