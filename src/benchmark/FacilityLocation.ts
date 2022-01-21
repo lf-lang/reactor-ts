@@ -302,7 +302,7 @@ export class FacilityLocation extends App {
                 new Box(0, 0, GRID_SIZE, GRID_SIZE), // boundry
                 ALPHA * F, // threshold
                 0, // depth
-                [new Point(1, 2), new Point(3, 4)] ,// initLocalFacilities
+                [new Point(1, 2), new Point(3, 4)], // initLocalFacilities
                 1, // initKnownFacilities
                 -1, //initMaxDepthOfKnownOpenFacility
                 [new Point(12, 34), new Point(56, 78)] // initCustomers
