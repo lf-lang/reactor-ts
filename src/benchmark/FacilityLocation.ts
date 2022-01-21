@@ -109,6 +109,11 @@ class ConfirmExitMsg extends Msg {
 
 // Top level producer reactor that is not a quadrant.
 export class Producer extends Reactor {
+    // TODO(hokeun): Consider using NextCustomerMsg from the rootQuadrant as a trigger
+    // instead of using this nextCustomer action with some delay.
+    // Without some delay, it will become a zero-dely loop.
+    // Note that either way we can implement the benchmark correctly.
+    // It will be just a matter of style (using actions vs. messages).
     nextCustomer: Action<NextCustomerMsg>
     numPoints: Parameter<number>
     gridSize: Parameter<number>
@@ -140,19 +145,46 @@ export class Producer extends Reactor {
     }
 }
 
+// Global helper functions used by both the Quadrant reactor's constructor and reaction.
+function findCost(point: Point,
+        localFacilities: State<Array<Point>>): number {
+    let result = Number.MAX_VALUE
+    localFacilities.get().forEach(loopPoint => {
+        let distance = loopPoint.getDistance(point)
+        if (distance < result) {
+            result = distance
+        }
+    });
+    return result
+}
+function addCustomer(point: Point,
+        localFacilities: State<Array<Point>>,
+        supportCustomers: State<Array<Point>>,
+        totalCost: State<number>): void {
+    supportCustomers.get().push(point.clone())
+    let minCost = findCost(point, localFacilities)
+    totalCost.set(totalCost.get() + minCost)
+    console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
+}
+
 export class Quadrant extends Reactor {
+    // Parameters.
     hasQuadrantProducer: Parameter<boolean> // Only the rootQuadrant doesn't have quadrant producer.
     positionRelativeToParent: Parameter<Position>
     threshold: Parameter<number>
     depth: Parameter<number>
     fromProducer: InPort<Msg> = new InPort(this)
     toProducer: OutPort<Msg> = new OutPort(this)
+
+    // States.
     facility: State<Point>
+    localFacilities: State<Array<Point>> = new State(new Array<Point>()) 
+    knownFacilities: State<number> = new State(0)
+    maxDepthOfKnownOpenFacility: State<number> = new State(0)
+    supportCustomers: State<Array<Point>> = new State(new Array<Point>()) 
     // hasChildren, firstChild, secondChild, thirdChild, fourthChild are used for
     // children in Akka actor implementation.
     hasChildren: State<boolean> = new State(false)
-    localFacilities: State<Array<Point>> = new State(new Array<Point>()) 
-    supportCustomers: State<Array<Point>> = new State(new Array<Point>()) 
     totalCost: State<number> = new State(0)
 
     constructor (parent:Reactor,
@@ -161,7 +193,10 @@ export class Quadrant extends Reactor {
             boundary: Box,
             threshold: number,
             depth: number,
-            initLocalFacilities: Array<Point>) {
+            initLocalFacilities: Array<Point>,
+            initKnownFacilities: number,
+            initMaxDepthOfKnownOpenFacility: number,
+            initCustomers: Array<Point>) {
         super(parent)
         this.hasQuadrantProducer = new Parameter(hasQuadrantProducer)
         this.positionRelativeToParent = new Parameter(positionRelativeToParent)
@@ -171,6 +206,13 @@ export class Quadrant extends Reactor {
         initLocalFacilities.forEach(val => this.localFacilities.get().push(val))
         this.localFacilities.get().push(this.facility.get())
         this.localFacilities.get().forEach(val => console.log(`Element: ${val}`))
+        this.knownFacilities.set(initKnownFacilities)
+        this.maxDepthOfKnownOpenFacility.set(initMaxDepthOfKnownOpenFacility)
+        initCustomers.forEach(val => {
+            if (boundary.contains(val)) {
+                addCustomer(val, this.localFacilities, this.supportCustomers, this.totalCost)
+            }
+        })
 
         // Main reaction for QuadrantActor.process() of Akka implementation
         this.addReaction(
@@ -200,22 +242,6 @@ export class Quadrant extends Reactor {
                     totalCost,
                     hasChildren) {
                 // Helper functions
-                let findCost = function(point: Point): number {
-                    let result = Number.MAX_VALUE
-                    localFacilities.get().forEach(loopPoint => {
-                        let distance = loopPoint.getDistance(point)
-                        if (distance < result) {
-                            result = distance
-                        }
-                    });
-                    return result
-                }
-                let addCustomer = function(point: Point): void {
-                    supportCustomers.get().push(point)
-                    let minCost = findCost(point)
-                    totalCost.set(totalCost.get() + minCost)
-                    console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
-                }
                 let notifyParentOfFacility = function(p: Point): void {
                     if (hasQuadrantProducer.get()) {
                         toProducer.set(new FacilityMsg(
@@ -235,10 +261,13 @@ export class Quadrant extends Reactor {
                         if (!hasChildren.get()) {
                             // No open facility, thus, addCustomer(), then partition().
                             let point = (<CustomerMsg>msg).point;
-                            addCustomer(point)
+                            addCustomer(point, localFacilities, supportCustomers, totalCost)
                             if (totalCost.get() > threshold.get()) {
                                 partition()
                             }
+                        } else {
+                            // A facility is already open, propagate customer to correct child.
+                            // TODO(hokeun): Implement this part.
                         }
                         console.log(`Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
                         break
@@ -266,14 +295,17 @@ export class FacilityLocation extends App {
         this.producer = new Producer(this, NUM_POINTS, GRID_SIZE, TimeValue.nsec(1))
 
         // TODO(hokeun): Set hasQuadrantProducer = true for other quadrants.
-        // TODO(hokeun): Use an empty array, i.e., new Array<Point>(), for initLocalFacilities.
+        // TODO(hokeun): Use an empty array, i.e., new Array<Point>(), for initLocalFacilities and initCustomers.
         this.rootQuadrant = new Quadrant(this,
                 false, // hasQuadrantProducer
                 Position.ROOT, // positionRelativeToParent
                 new Box(0, 0, GRID_SIZE, GRID_SIZE), // boundry
                 ALPHA * F, // threshold
                 0, // depth
-                [new Point(1, 2), new Point(3, 4)] // initLocalFacilities
+                [new Point(1, 2), new Point(3, 4)] ,// initLocalFacilities
+                1, // initKnownFacilities
+                -1, //initMaxDepthOfKnownOpenFacility
+                [new Point(12, 34), new Point(56, 78)] // initCustomers
             )
         this._connect(this.producer.toConsumer, this.rootQuadrant.fromProducer)
     }
