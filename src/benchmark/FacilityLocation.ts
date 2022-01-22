@@ -185,6 +185,10 @@ export class Quadrant extends Reactor {
     boundary: Parameter<Box>
     threshold: Parameter<number>
     depth: Parameter<number>
+    initLocalFacilities: Parameter<Array<Point>>
+    initKnownFacilities: Parameter<number>
+    initMaxDepthOfKnownOpenFacility: Parameter<number>
+    initCustomers: Parameter<Array<Point>>
 
     // Ports.
     fromProducer: InPort<Msg> = new InPort(this)
@@ -219,33 +223,62 @@ export class Quadrant extends Reactor {
         super(parent)
         this.hasQuadrantProducer = new Parameter(hasQuadrantProducer)
         this.positionRelativeToParent = new Parameter(positionRelativeToParent)
-        this.boundary = new Parameter(boundary.clone())
+        this.boundary = new Parameter(boundary)
         this.threshold = new Parameter(threshold)
         this.depth = new Parameter(depth)
-        initLocalFacilities.forEach(val => this.localFacilities.get().push(val))
-        this.localFacilities.get().push(this.facility.get())
-        this.localFacilities.get().forEach(val => console.log(`Element: ${val}`))
-        this.knownFacilities.set(initKnownFacilities)
-        this.maxDepthOfKnownOpenFacility.set(initMaxDepthOfKnownOpenFacility)
-        initCustomers.forEach(val => {
-            if (this.boundary.get().contains(val)) {
-                addCustomer(val, this.localFacilities, this.supportCustomers, this.totalCost)
-            }
-        })
+        this.initLocalFacilities = new Parameter(initLocalFacilities)
+        this.initKnownFacilities = new Parameter(initKnownFacilities)
+        this.initMaxDepthOfKnownOpenFacility = new Parameter(initMaxDepthOfKnownOpenFacility)
+        this.initCustomers = new Parameter(initCustomers)
+
         console.log(`New Quadrant actor created. boundary: ${this.boundary.get()}`)
 
         // Startup reaction for initialization of state variables using given parameters.
         this.addReaction(
             new Triggers(this.startup),
             new Args(
+                // Parameters.
                 this.boundary,
-                this.facility),
+                this.initLocalFacilities,
+                this.initKnownFacilities,
+                this.initMaxDepthOfKnownOpenFacility,
+                this.initCustomers,
+                // States to be initialized.
+                this.facility,
+                this.localFacilities,
+                this.knownFacilities,
+                this.maxDepthOfKnownOpenFacility,
+                this.supportCustomers,
+                // Statie variable totalCost is initialized inside addCustomer().
+                this.totalCost),
             function (this,
+                    // Parameters.
                     boundary,
-                    facility) {
-                        facility.set((boundary.get().midPoint()))
-                        // TODO(hokeun): Move more state variable initialization here from constructor.
-                        console.log(`New Quadrant actor initialized. facility: ${facility.get()}`)
+                    initLocalFacilities,
+                    initKnownFacilities,
+                    initMaxDepthOfKnownOpenFacility,
+                    initCustomers,
+                    // States to be initialized.
+                    facility,
+                    localFacilities,
+                    knownFacilities,
+                    maxDepthOfKnownOpenFacility,
+                    supportCustomers,
+                    totalCost) {
+                facility.set((boundary.get().midPoint()))
+                initLocalFacilities.get().forEach(val => localFacilities.get().push(val))
+                localFacilities.get().push(facility.get())
+                localFacilities.get().forEach(val => console.log(`Element: ${val}`))
+                knownFacilities.set(initKnownFacilities.get())
+                maxDepthOfKnownOpenFacility.set(initMaxDepthOfKnownOpenFacility.get())
+                initCustomers.get().forEach(val => {
+                    if (boundary.get().contains(val)) {
+                        addCustomer(val, localFacilities, supportCustomers, totalCost)
+                    }
+                })
+
+                // TODO(hokeun): Move more state variable initialization here from constructor.
+                console.log(`New Quadrant actor initialized. facility: ${facility.get()}`)
             }
         )
 
@@ -393,7 +426,7 @@ export class FacilityLocation extends App {
                 new Box(0, 0, GRID_SIZE, GRID_SIZE), // boundry
                 ALPHA * F, // threshold
                 0, // depth
-                [new Point(1, 2), new Point(3, 4)], // initLocalFacilities
+                new Array<Point>(), // initLocalFacilities
                 1, // initKnownFacilities
                 -1, //initMaxDepthOfKnownOpenFacility
                 [new Point(12, 34), new Point(56, 78)] // initCustomers
