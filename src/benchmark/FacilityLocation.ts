@@ -4,7 +4,7 @@
  * 
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
-import {Args, Parameter, OutPort, InPort, State, Triggers, Action, Timer, Reactor, App} from "../core/reactor";
+import {Args, Parameter, OutPort, InPort, State, Triggers, Action, Timer, Reactor, App, WritablePort} from "../core/reactor";
 import {TimeValue, Origin} from "../core/time"
 import {Log} from "../core/util"
 
@@ -19,6 +19,11 @@ class Point {
     }
     public clone(): Point {
         return new Point(this.x, this.y)
+    }
+    public static arrayClone(points: Point[]): Point[] {
+        let newPoints = new Array<Point>()
+        points.forEach(val => newPoints.push(val.clone()))
+        return newPoints
     }
     public toString(): string {
         return `Point (x: ${this.x}, y: ${this.y})`
@@ -201,7 +206,7 @@ export class Quadrant extends Reactor {
     totalCost: State<number> = new State(0)
     childrenBoundaries: State<Array<Box>> = new State(new Array<Box>())
 
-    constructor (parent:Reactor,
+    constructor (parent: Reactor,
             hasQuadrantProducer: boolean,
             positionRelativeToParent: Position,
             boundary: Box,
@@ -227,6 +232,7 @@ export class Quadrant extends Reactor {
                 addCustomer(val, this.localFacilities, this.supportCustomers, this.totalCost)
             }
         })
+        console.log(`New Quadrant actor created. boundary: ${this.boundary.get()}`)
 
         // Startup reaction for initialization of state variables using given parameters.
         this.addReaction(
@@ -239,11 +245,12 @@ export class Quadrant extends Reactor {
                     facility) {
                         facility.set((boundary.get().midPoint()))
                         // TODO(hokeun): Move more state variable initialization here from constructor.
+                        console.log(`New Quadrant actor initialized. facility: ${facility.get()}`)
             }
         )
 
-        // Main reaction for QuadrantActor.process() of Akka implementation
-        this.addReaction(
+        // Main reaction for QuadrantActor.process() of Akka implementation.
+        this.addMutation(
             new Triggers(this.fromProducer),
             new Args(
                 this.hasQuadrantProducer,
@@ -254,7 +261,12 @@ export class Quadrant extends Reactor {
                 this.depth,
                 this.fromProducer,
                 this.writable(this.toProducer),
+                this.writable(this.toFirstChild),
+                this.writable(this.toSecondChild),
+                this.writable(this.toThirdChild),
+                this.writable(this.toFourthChild),
                 this.localFacilities,
+                this.knownFacilities,
                 this.maxDepthOfKnownOpenFacility,
                 this.supportCustomers,
                 this.totalCost,
@@ -269,13 +281,21 @@ export class Quadrant extends Reactor {
                     depth,
                     fromProducer,
                     toProducer,
+                    toFirstChild,
+                    toSecondChild,
+                    toThirdChild,
+                    toFourthChild,
                     localFacilities,
+                    knownFacilities,
                     maxDepthOfKnownOpenFacility,
                     supportCustomers,
                     totalCost,
                     hasChildren,
                     childrenBoundaries) {
-                // Helper functions
+                let thisReactor = this.getReactor()
+                let thisMutationSandbox = this
+
+                // Helper functions for reaction.
                 let notifyParentOfFacility = function(p: Point): void {
                     if (hasQuadrantProducer.get()) {
                         toProducer.set(new FacilityMsg(
@@ -283,7 +303,7 @@ export class Quadrant extends Reactor {
                     }
                 }
                 let partition = function(): void {
-                    console.log("Partition is called.")
+                    console.log(`Quadrant at ${facility.get()} - Partition is called.`)
                     notifyParentOfFacility(facility.get().clone())
                     maxDepthOfKnownOpenFacility.set(
                         Math.max(maxDepthOfKnownOpenFacility.get(), depth.get()))
@@ -294,16 +314,42 @@ export class Quadrant extends Reactor {
                     childrenBoundaries.get().push(new Box(facility.get().x, boundary.get().y1, boundary.get().x2, facility.get().y))
 
                     console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
-                    // TODO(hokeun): Finish implementation of partition().
+                    
+                    let firstChild = new Quadrant(
+                        thisReactor, true, Position.BOT_LEFT, childrenBoundaries.get()[0], threshold.get(), depth.get() + 1,
+                        Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
+                    var toFirstChildPort = (toFirstChild as unknown as WritablePort<Msg>).getPort()
+                    thisMutationSandbox.connect(toFirstChildPort, firstChild.fromProducer)
 
+                    let secondChild = new Quadrant(
+                        thisReactor, true, Position.TOP_RIGHT, childrenBoundaries.get()[1], threshold.get(), depth.get() + 1,
+                        Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
+                    var toSecondChildPort = (toSecondChild as unknown as WritablePort<Msg>).getPort()
+                    thisMutationSandbox.connect(toSecondChildPort, secondChild.fromProducer)
+
+                    let thirdChild = new Quadrant(
+                        thisReactor, true, Position.BOT_LEFT, childrenBoundaries.get()[2], threshold.get(), depth.get() + 1,
+                        Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
+                    var toThirdChildPort = (toThirdChild as unknown as WritablePort<Msg>).getPort()
+                    thisMutationSandbox.connect(toThirdChildPort, thirdChild.fromProducer)
+
+                    let fourthChild = new Quadrant(
+                        thisReactor, true, Position.BOT_RIGHT, childrenBoundaries.get()[3], threshold.get(), depth.get() + 1,
+                        Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
+                    var toFourthChildPort = (toFourthChild as unknown as WritablePort<Msg>).getPort()
+                    thisMutationSandbox.connect(toFourthChildPort, fourthChild.fromProducer)
+
+                    supportCustomers.set(new Array<Point>());
                     // Indicate that children quadrant actors have been created.
+                    // After this partition() will never be called.
                     hasChildren.set(true)
                 }
 
-                // Reaction
+                // Reaction.
                 let msg = fromProducer.get()
                 switch (msg?.constructor) {
                     case CustomerMsg:
+                        console.log(`Quadrant at ${facility.get()} - Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
                         if (!hasChildren.get()) {
                             // No open facility, thus, addCustomer(), then partition().
                             let point = (<CustomerMsg>msg).point;
@@ -314,8 +360,8 @@ export class Quadrant extends Reactor {
                         } else {
                             // A facility is already open, propagate customer to correct child.
                             // TODO(hokeun): Implement this part.
+                            console.log(`Quadrant at ${facility.get()} - A child facility is already open.`)
                         }
-                        console.log(`Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
                         break
                     default:
                         console.log("Error: Recieved unknown message.")
@@ -340,7 +386,6 @@ export class FacilityLocation extends App {
 
         this.producer = new Producer(this, NUM_POINTS, GRID_SIZE, TimeValue.nsec(1))
 
-        // TODO(hokeun): Set hasQuadrantProducer = true for other quadrants.
         // TODO(hokeun): Use an empty array, i.e., new Array<Point>(), for initLocalFacilities and initCustomers.
         this.rootQuadrant = new Quadrant(this,
                 false, // hasQuadrantProducer
