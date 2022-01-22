@@ -8,7 +8,7 @@ import {Args, Parameter, OutPort, InPort, State, Triggers, Action, Timer, Reacto
 import {TimeValue, Origin} from "../core/time"
 import {Log} from "../core/util"
 
-Log.global.level = Log.levels.DEBUG;
+Log.global.level = Log.levels.INFO;
 
 class Point {
     x: number
@@ -176,7 +176,7 @@ function addCustomer(point: Point,
     supportCustomers.get().push(point.clone())
     let minCost = findCost(point, localFacilities)
     totalCost.set(totalCost.get() + minCost)
-    console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
+    // console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
 }
 
 export class Quadrant extends Reactor {
@@ -193,11 +193,6 @@ export class Quadrant extends Reactor {
 
     // Input ports.
     fromProducer: InPort<Msg> = new InPort(this)
-    // TODO(hokeun): After implementing multiports, change these into a multiport, fromChildren.
-    fromFirstChild: InPort<Msg> = new InPort(this)
-    fromSecondChild: InPort<Msg> = new InPort(this)
-    fromThirdChild: InPort<Msg> = new InPort(this)
-    fromFourthChild: InPort<Msg> = new InPort(this)
 
     // Output ports.
     toProducer: OutPort<Msg> = new OutPort(this)
@@ -240,7 +235,7 @@ export class Quadrant extends Reactor {
         this.initMaxDepthOfKnownOpenFacility = new Parameter(initMaxDepthOfKnownOpenFacility)
         this.initCustomers = new Parameter(initCustomers)
 
-        console.log(`New Quadrant actor created. boundary: ${this.boundary.get()}`)
+        // console.log(`New Quadrant actor created. boundary: ${this.boundary.get()}`)
 
         // Startup reaction for initialization of state variables using given parameters.
         this.addReaction(
@@ -277,7 +272,7 @@ export class Quadrant extends Reactor {
                 facility.set((boundary.get().midPoint()))
                 initLocalFacilities.get().forEach(val => localFacilities.get().push(val))
                 localFacilities.get().push(facility.get())
-                localFacilities.get().forEach(val => console.log(`Element: ${val}`))
+                // localFacilities.get().forEach(val => console.log(`Element: ${val}`))
                 knownFacilities.set(initKnownFacilities.get())
                 maxDepthOfKnownOpenFacility.set(initMaxDepthOfKnownOpenFacility.get())
                 initCustomers.get().forEach(val => {
@@ -286,8 +281,7 @@ export class Quadrant extends Reactor {
                     }
                 })
 
-                // TODO(hokeun): Move more state variable initialization here from constructor.
-                console.log(`New Quadrant actor initialized. facility: ${facility.get()}`)
+                // console.log(`New Quadrant actor initialized. facility: ${facility.get()}`)
             }
         )
 
@@ -302,10 +296,6 @@ export class Quadrant extends Reactor {
                 this.facility,
                 this.depth,
                 this.fromProducer,
-                this.fromFirstChild,
-                this.fromSecondChild,
-                this.fromThirdChild,
-                this.fromFourthChild,
                 this.writable(this.toProducer),
                 this.writable(this.toFirstChild),
                 this.writable(this.toSecondChild),
@@ -326,10 +316,6 @@ export class Quadrant extends Reactor {
                     facility,
                     depth,
                     fromProducer,
-                    fromFirstChild,
-                    fromSecondChild,
-                    fromThirdChild,
-                    fromFourthChild,
                     toProducer,
                     toFirstChild,
                     toSecondChild,
@@ -353,7 +339,7 @@ export class Quadrant extends Reactor {
                     }
                 }
                 let partition = function(): void {
-                    console.log(`Quadrant at ${facility.get()} - Partition is called.`)
+                    // console.log(`Quadrant at ${facility.get()} - Partition is called.`)
                     notifyParentOfFacility(facility.get().clone())
                     maxDepthOfKnownOpenFacility.set(
                         Math.max(maxDepthOfKnownOpenFacility.get(), depth.get()))
@@ -363,34 +349,29 @@ export class Quadrant extends Reactor {
                     childrenBoundaries.get().push(new Box(boundary.get().x1, boundary.get().y1, facility.get().x, facility.get().y))
                     childrenBoundaries.get().push(new Box(facility.get().x, boundary.get().y1, boundary.get().x2, facility.get().y))
 
-                    console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
+                    // console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
                     
                     let firstChild = new Quadrant(
                         thisReactor, true, Position.BOT_LEFT, childrenBoundaries.get()[0], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
-                    // FIXME: If I uncomment the following line, I get ERROR connecting... error.
-                    //thisMutationSandbox.connect(firstChild.toProducer, fromFirstChild)
                     var toFirstChildPort = (toFirstChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toFirstChildPort, firstChild.fromProducer)
 
                     let secondChild = new Quadrant(
                         thisReactor, true, Position.TOP_RIGHT, childrenBoundaries.get()[1], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
-                    //thisMutationSandbox.connect(secondChild.toProducer, fromSecondChild)
                     var toSecondChildPort = (toSecondChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toSecondChildPort, secondChild.fromProducer)
 
                     let thirdChild = new Quadrant(
                         thisReactor, true, Position.BOT_LEFT, childrenBoundaries.get()[2], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
-                    //thisMutationSandbox.connect(thirdChild.toProducer, fromThirdChild)
                     var toThirdChildPort = (toThirdChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toThirdChildPort, thirdChild.fromProducer)
 
                     let fourthChild = new Quadrant(
                         thisReactor, true, Position.BOT_RIGHT, childrenBoundaries.get()[3], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
-                    //thisMutationSandbox.connect(fourthChild.toProducer, fromFourthChild)
                     var toFourthChildPort = (toFourthChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toFourthChildPort, fourthChild.fromProducer)
 
@@ -406,7 +387,7 @@ export class Quadrant extends Reactor {
                     case CustomerMsg:
                         // Handling CustomerMsg for a new customoer.
                         // This message is propagated from root to the leaf facility.
-                        console.log(`Quadrant at ${facility.get()} - Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
+                        // console.log(`Quadrant at ${facility.get()} - Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
                         let point = (<CustomerMsg>msg).point;
                         if (!hasChildren.get()) {
                             // No open facility, thus, addCustomer(), then partition().
@@ -416,7 +397,7 @@ export class Quadrant extends Reactor {
                             }
                         } else {
                             // A facility is already open, propagate customer to correct child.
-                            console.log(`Quadrant at ${facility.get()} - A child facility is already open.`)
+                            // console.log(`Quadrant at ${facility.get()} - A child facility is already open.`)
                             for (let i = 0; i < childrenBoundaries.get().length; i++) {
                                 if (childrenBoundaries.get()[i].contains(point)) {
                                     switch (i) {
@@ -445,49 +426,6 @@ export class Quadrant extends Reactor {
                 }
             }
         )
-
-        this.addReaction(
-            new Triggers(this.fromFirstChild, this.fromSecondChild, this.fromThirdChild, this.fromFourthChild),
-            new Args(
-                this.facility,
-                this.fromFirstChild,
-                this.fromSecondChild,
-                this.fromThirdChild,
-                this.fromFourthChild),
-            function(this,
-                    facility,
-                    fromFirstChild,
-                    fromSecondChild,
-                    fromThirdChild,
-                    fromFourthChild) {
-
-                // Helper functions for mutation reaction.
-                let handleMessageFreomChild = function(msg: Msg, childIndex: number): void {
-                    switch(msg?.constructor) {
-                        case FacilityMsg:
-                            console.log(`Quadrant at ${facility.get()} - Received FacilityMsg from Child index: ${childIndex}`)
-                    }
-                }
-
-                // Reaction.
-                let msgFromFirstChild = fromFirstChild.get()
-                if (msgFromFirstChild !== undefined) {
-                    handleMessageFreomChild(msgFromFirstChild, 0)
-                }
-                let msgFromSecondChild = fromSecondChild.get()
-                if (msgFromSecondChild !== undefined) {
-                    handleMessageFreomChild(msgFromSecondChild, 1)
-                }
-                let msgFromThirdChild = fromThirdChild.get()
-                if (msgFromThirdChild !== undefined) {
-                    handleMessageFreomChild(msgFromThirdChild, 1)
-                }
-                let msgFromFourthChild = fromFourthChild.get()
-                if (msgFromFourthChild !== undefined) {
-                    handleMessageFreomChild(msgFromFourthChild, 1)
-                }
-            }
-        )
     }
 }
 
@@ -497,7 +435,7 @@ export class FacilityLocation extends App {
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
         // TODO(hokeun): Change default for numPoints to 100000.
-        let NUM_POINTS = 10
+        let NUM_POINTS = 100000
         let GRID_SIZE = 500
         let F = Math.sqrt(2) * GRID_SIZE
         let ALPHA = 2.0
