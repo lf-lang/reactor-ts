@@ -8,7 +8,7 @@ import {Args, Parameter, OutPort, InPort, State, Triggers, Action, Timer, Reacto
 import {TimeValue, Origin} from "../core/time"
 import {Log} from "../core/util"
 
-Log.global.level = Log.levels.INFO;
+Log.global.level = Log.levels.DEBUG;
 
 class Point {
     x: number
@@ -149,6 +149,7 @@ export class Producer extends Reactor {
                     // Schedule next customer (NextCustomerMsg).
                     nextCustomer.schedule(0, new NextCustomerMsg())
                 } else {
+                    // TODO(hokeun): Replace this with sending RequestExitMsg.
                     this.util.requestStop()
                 }
             }
@@ -190,9 +191,17 @@ export class Quadrant extends Reactor {
     initMaxDepthOfKnownOpenFacility: Parameter<number>
     initCustomers: Parameter<Array<Point>>
 
-    // Ports.
+    // Input ports.
     fromProducer: InPort<Msg> = new InPort(this)
+    // TODO(hokeun): After implementing multiports, change these into a multiport, fromChildren.
+    fromFirstChild: InPort<Msg> = new InPort(this)
+    fromSecondChild: InPort<Msg> = new InPort(this)
+    fromThirdChild: InPort<Msg> = new InPort(this)
+    fromFourthChild: InPort<Msg> = new InPort(this)
+
+    // Output ports.
     toProducer: OutPort<Msg> = new OutPort(this)
+    // TODO(hokeun): After implementing multiports, change these into a multiport, toChildren.
     toFirstChild: OutPort<Msg> = new OutPort(this)
     toSecondChild: OutPort<Msg> = new OutPort(this)
     toThirdChild: OutPort<Msg> = new OutPort(this)
@@ -282,7 +291,7 @@ export class Quadrant extends Reactor {
             }
         )
 
-        // Main reaction for QuadrantActor.process() of Akka implementation.
+        // Main mutation reaction for QuadrantActor.process() of Akka implementation.
         this.addMutation(
             new Triggers(this.fromProducer),
             new Args(
@@ -293,6 +302,10 @@ export class Quadrant extends Reactor {
                 this.facility,
                 this.depth,
                 this.fromProducer,
+                this.fromFirstChild,
+                this.fromSecondChild,
+                this.fromThirdChild,
+                this.fromFourthChild,
                 this.writable(this.toProducer),
                 this.writable(this.toFirstChild),
                 this.writable(this.toSecondChild),
@@ -313,6 +326,10 @@ export class Quadrant extends Reactor {
                     facility,
                     depth,
                     fromProducer,
+                    fromFirstChild,
+                    fromSecondChild,
+                    fromThirdChild,
+                    fromFourthChild,
                     toProducer,
                     toFirstChild,
                     toSecondChild,
@@ -328,7 +345,7 @@ export class Quadrant extends Reactor {
                 let thisReactor = this.getReactor()
                 let thisMutationSandbox = this
 
-                // Helper functions for reaction.
+                // Helper functions for mutation reaction.
                 let notifyParentOfFacility = function(p: Point): void {
                     if (hasQuadrantProducer.get()) {
                         toProducer.set(new FacilityMsg(
@@ -351,24 +368,29 @@ export class Quadrant extends Reactor {
                     let firstChild = new Quadrant(
                         thisReactor, true, Position.BOT_LEFT, childrenBoundaries.get()[0], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
+                    // FIXME: If I uncomment the following line, I get ERROR connecting... error.
+                    //thisMutationSandbox.connect(firstChild.toProducer, fromFirstChild)
                     var toFirstChildPort = (toFirstChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toFirstChildPort, firstChild.fromProducer)
 
                     let secondChild = new Quadrant(
                         thisReactor, true, Position.TOP_RIGHT, childrenBoundaries.get()[1], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
+                    //thisMutationSandbox.connect(secondChild.toProducer, fromSecondChild)
                     var toSecondChildPort = (toSecondChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toSecondChildPort, secondChild.fromProducer)
 
                     let thirdChild = new Quadrant(
                         thisReactor, true, Position.BOT_LEFT, childrenBoundaries.get()[2], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
+                    //thisMutationSandbox.connect(thirdChild.toProducer, fromThirdChild)
                     var toThirdChildPort = (toThirdChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toThirdChildPort, thirdChild.fromProducer)
 
                     let fourthChild = new Quadrant(
                         thisReactor, true, Position.BOT_RIGHT, childrenBoundaries.get()[3], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
+                    //thisMutationSandbox.connect(fourthChild.toProducer, fromFourthChild)
                     var toFourthChildPort = (toFourthChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toFourthChildPort, fourthChild.fromProducer)
 
@@ -382,24 +404,87 @@ export class Quadrant extends Reactor {
                 let msg = fromProducer.get()
                 switch (msg?.constructor) {
                     case CustomerMsg:
+                        // Handling CustomerMsg for a new customoer.
+                        // This message is propagated from root to the leaf facility.
                         console.log(`Quadrant at ${facility.get()} - Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
+                        let point = (<CustomerMsg>msg).point;
                         if (!hasChildren.get()) {
                             // No open facility, thus, addCustomer(), then partition().
-                            let point = (<CustomerMsg>msg).point;
                             addCustomer(point, localFacilities, supportCustomers, totalCost)
                             if (totalCost.get() > threshold.get()) {
                                 partition()
                             }
                         } else {
                             // A facility is already open, propagate customer to correct child.
-                            // TODO(hokeun): Implement this part.
                             console.log(`Quadrant at ${facility.get()} - A child facility is already open.`)
+                            for (let i = 0; i < childrenBoundaries.get().length; i++) {
+                                if (childrenBoundaries.get()[i].contains(point)) {
+                                    switch (i) {
+                                        case 0:
+                                            toFirstChild.set(msg)
+                                            break
+                                        case 1:
+                                            toSecondChild.set(msg)
+                                            break
+                                        case 2:
+                                            toThirdChild.set(msg)
+                                            break
+                                        case 3:
+                                            toFourthChild.set(msg)
+                                            break
+                                    }
+                                    break
+                                }
+                            }
                         }
                         break
                     default:
                         console.log("Error: Recieved unknown message.")
                         this.util.requestErrorStop()
                         break
+                }
+            }
+        )
+
+        this.addReaction(
+            new Triggers(this.fromFirstChild, this.fromSecondChild, this.fromThirdChild, this.fromFourthChild),
+            new Args(
+                this.facility,
+                this.fromFirstChild,
+                this.fromSecondChild,
+                this.fromThirdChild,
+                this.fromFourthChild),
+            function(this,
+                    facility,
+                    fromFirstChild,
+                    fromSecondChild,
+                    fromThirdChild,
+                    fromFourthChild) {
+
+                // Helper functions for mutation reaction.
+                let handleMessageFreomChild = function(msg: Msg, childIndex: number): void {
+                    switch(msg?.constructor) {
+                        case FacilityMsg:
+                            console.log(`Quadrant at ${facility.get()} - Received FacilityMsg from Child index: ${childIndex}`)
+                    }
+                }
+
+                // Reaction.
+                let msgFromFirstChild = fromFirstChild.get()
+                if (msgFromFirstChild !== undefined) {
+                    handleMessageFreomChild(msgFromFirstChild, 0)
+                }
+                let msgFromSecondChild = fromSecondChild.get()
+                if (msgFromSecondChild !== undefined) {
+                    handleMessageFreomChild(msgFromSecondChild, 1)
+                }
+                let msgFromThirdChild = fromThirdChild.get()
+                if (msgFromThirdChild !== undefined) {
+                    handleMessageFreomChild(msgFromThirdChild, 1)
+                }
+                let msgFromFourthChild = fromFourthChild.get()
+                if (msgFromFourthChild !== undefined) {
+                    handleMessageFreomChild(msgFromFourthChild, 1)
                 }
             }
         )
