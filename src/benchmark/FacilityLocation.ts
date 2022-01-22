@@ -20,14 +20,14 @@ class Point {
     public clone(): Point {
         return new Point(this.x, this.y)
     }
+    public toString(): string {
+        return `Point (x: ${this.x}, y: ${this.y})`
+    }
     public getDistance(p: Point): number {
         let xDiff = p.x - this.x;
         let yDiff = p.y - this.y;
         let distance = Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
         return distance;
-    }
-    public toString(): string {
-        return `Point (x: ${this.x}, y: ${this.y})`
     }
     public static random(gridSize: number): Point {
         return new Point(Math.random() * gridSize, Math.random() * gridSize)
@@ -44,6 +44,12 @@ class Box {
         this.y1 = y1
         this.x2 = x2
         this.y2 = y2
+    }
+    public clone(): Box {
+        return new Box(this.x1, this.y1, this.x2, this.y2)
+    }
+    public toString(): string {
+        return `Box (x1: ${this.x1}, y1: ${this.y1}, x2: ${this.x2}, y2: ${this.y2})`
     }
     public contains(p: Point): boolean {
         return this.x1 <= p.x && this.y1 <= p.y && p.x <= this.x2 && p.y <= this.y2
@@ -171,13 +177,20 @@ export class Quadrant extends Reactor {
     // Parameters.
     hasQuadrantProducer: Parameter<boolean> // Only the rootQuadrant doesn't have quadrant producer.
     positionRelativeToParent: Parameter<Position>
+    boundary: Parameter<Box>
     threshold: Parameter<number>
     depth: Parameter<number>
+
+    // Ports.
     fromProducer: InPort<Msg> = new InPort(this)
     toProducer: OutPort<Msg> = new OutPort(this)
+    toFirstChild: OutPort<Msg> = new OutPort(this)
+    toSecondChild: OutPort<Msg> = new OutPort(this)
+    toThirdChild: OutPort<Msg> = new OutPort(this)
+    toFourthChild: OutPort<Msg> = new OutPort(this)
 
     // States.
-    facility: State<Point>
+    facility: State<Point> = new State(new Point(0, 0))
     localFacilities: State<Array<Point>> = new State(new Array<Point>()) 
     knownFacilities: State<number> = new State(0)
     maxDepthOfKnownOpenFacility: State<number> = new State(0)
@@ -186,6 +199,7 @@ export class Quadrant extends Reactor {
     // children in Akka actor implementation.
     hasChildren: State<boolean> = new State(false)
     totalCost: State<number> = new State(0)
+    childrenBoundaries: State<Array<Box>> = new State(new Array<Box>())
 
     constructor (parent:Reactor,
             hasQuadrantProducer: boolean,
@@ -200,8 +214,8 @@ export class Quadrant extends Reactor {
         super(parent)
         this.hasQuadrantProducer = new Parameter(hasQuadrantProducer)
         this.positionRelativeToParent = new Parameter(positionRelativeToParent)
+        this.boundary = new Parameter(boundary.clone())
         this.threshold = new Parameter(threshold)
-        this.facility = new State<Point>(boundary.midPoint())
         this.depth = new Parameter(depth)
         initLocalFacilities.forEach(val => this.localFacilities.get().push(val))
         this.localFacilities.get().push(this.facility.get())
@@ -209,10 +223,24 @@ export class Quadrant extends Reactor {
         this.knownFacilities.set(initKnownFacilities)
         this.maxDepthOfKnownOpenFacility.set(initMaxDepthOfKnownOpenFacility)
         initCustomers.forEach(val => {
-            if (boundary.contains(val)) {
+            if (this.boundary.get().contains(val)) {
                 addCustomer(val, this.localFacilities, this.supportCustomers, this.totalCost)
             }
         })
+
+        // Startup reaction for initialization of state variables using given parameters.
+        this.addReaction(
+            new Triggers(this.startup),
+            new Args(
+                this.boundary,
+                this.facility),
+            function (this,
+                    boundary,
+                    facility) {
+                        facility.set((boundary.get().midPoint()))
+                        // TODO(hokeun): Move more state variable initialization here from constructor.
+            }
+        )
 
         // Main reaction for QuadrantActor.process() of Akka implementation
         this.addReaction(
@@ -220,27 +248,33 @@ export class Quadrant extends Reactor {
             new Args(
                 this.hasQuadrantProducer,
                 this.positionRelativeToParent,
+                this.boundary,
                 this.threshold,
                 this.facility,
                 this.depth,
                 this.fromProducer,
                 this.writable(this.toProducer),
                 this.localFacilities,
+                this.maxDepthOfKnownOpenFacility,
                 this.supportCustomers,
                 this.totalCost,
-                this.hasChildren),
+                this.hasChildren,
+                this.childrenBoundaries),
             function (this,
                     hasQuadrantProducer,
                     positionRelativeToParent,
+                    boundary,
                     threshold,
                     facility,
                     depth,
                     fromProducer,
                     toProducer,
                     localFacilities,
+                    maxDepthOfKnownOpenFacility,
                     supportCustomers,
                     totalCost,
-                    hasChildren) {
+                    hasChildren,
+                    childrenBoundaries) {
                 // Helper functions
                 let notifyParentOfFacility = function(p: Point): void {
                     if (hasQuadrantProducer.get()) {
@@ -251,7 +285,19 @@ export class Quadrant extends Reactor {
                 let partition = function(): void {
                     console.log("Partition is called.")
                     notifyParentOfFacility(facility.get().clone())
-                    // TODO(hokeun): Implement partition().
+                    maxDepthOfKnownOpenFacility.set(
+                        Math.max(maxDepthOfKnownOpenFacility.get(), depth.get()))
+
+                    childrenBoundaries.get().push(new Box(boundary.get().x1, facility.get().y, facility.get().x, boundary.get().y2))
+                    childrenBoundaries.get().push(new Box(facility.get().x, facility.get().y, boundary.get().x2, boundary.get().y2))
+                    childrenBoundaries.get().push(new Box(boundary.get().x1, boundary.get().y1, facility.get().x, facility.get().y))
+                    childrenBoundaries.get().push(new Box(facility.get().x, boundary.get().y1, boundary.get().x2, facility.get().y))
+
+                    console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
+                    // TODO(hokeun): Finish implementation of partition().
+
+                    // Indicate that children quadrant actors have been created.
+                    hasChildren.set(true)
                 }
 
                 // Reaction
