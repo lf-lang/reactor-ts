@@ -176,7 +176,7 @@ function addCustomer(point: Point,
     supportCustomers.get().push(point.clone())
     let minCost = findCost(point, localFacilities)
     totalCost.set(totalCost.get() + minCost)
-    console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
+    // console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
 }
 
 export class Summary extends Reactor {
@@ -189,8 +189,13 @@ export class Summary extends Reactor {
             new Args(this.fromRootQuadrant),
             function(this,
                     fromRootQuadrant) {
-                // TODO(hokeun): Print out final summary.
-                console.log("Done!")
+                let msgFromRootQuadrant = fromRootQuadrant.get()
+                if (msgFromRootQuadrant) {
+                    console.log(`Num Facilities: ${msgFromRootQuadrant.facilities}, Num customers: ${msgFromRootQuadrant.supportCustomers}`)
+                } else {
+                    console.log("Summary Error: ConfirmExitMsg from root quadrant is undefined.")
+                    this.util.requestStop()
+                }
                 this.util.requestStop()
             }
         )
@@ -231,12 +236,31 @@ export class Accumulator extends Reactor {
                         !fromSecondQuadrant.isPresent() ||
                         !fromThirdQuadrant.isPresent() ||
                         !fromFourthQuadrant.isPresent()) {
-                    console.log("Error: some inputs are missing.")
+                    console.log("Accumulator Error: some inputs are missing.")
                     this.util.requestStop()
                 }
-                console.log("ConfirmExitMsg is received in Accumulator!")
-                // TODO(hokeun): Implement accumulation of information.
-                toNextAccumulator.set(new ConfirmExitMsg(0, 0))
+                let msgFromFirstQuadrant = fromFirstQuadrant.get()
+                let msgFromSecondQuadrant = fromSecondQuadrant.get()
+                let msgFromThirdQuadrant = fromThirdQuadrant.get()
+                let msgFromFourthQuadrant = fromFourthQuadrant.get()
+
+                if (msgFromFirstQuadrant && msgFromSecondQuadrant && msgFromThirdQuadrant && msgFromFourthQuadrant) {
+                    let numFacilities = msgFromFirstQuadrant.facilities +
+                        msgFromSecondQuadrant.facilities +
+                        msgFromThirdQuadrant.facilities +
+                        msgFromFourthQuadrant.facilities
+                    let numCustomers = msgFromFirstQuadrant.supportCustomers +
+                        msgFromSecondQuadrant.supportCustomers +
+                        msgFromThirdQuadrant.supportCustomers +
+                        msgFromFourthQuadrant.supportCustomers
+                    toNextAccumulator.set(
+                        new ConfirmExitMsg(
+                            numFacilities + 1, // Add one for the facility itself. (A quadrant with four children = 1 facility.)
+                            numCustomers))
+                } else {
+                    console.log("Accumulator Error: some input ConfirmExitMsg's are undefined.")
+                    this.util.requestStop()
+                }
             }
 
         )
@@ -276,8 +300,8 @@ export class Quadrant extends Reactor {
     // hasChildren, firstChild, secondChild, thirdChild, fourthChild are used for
     // children in Akka actor implementation.
     hasChildren: State<boolean> = new State(false)
-    totalCost: State<number> = new State(0)
     childrenBoundaries: State<Array<Box>> = new State(new Array<Box>())
+    totalCost: State<number> = new State(0)
 
     constructor (parent: Reactor,
             hasQuadrantProducer: boolean,
@@ -371,9 +395,9 @@ export class Quadrant extends Reactor {
                 this.knownFacilities,
                 this.maxDepthOfKnownOpenFacility,
                 this.supportCustomers,
-                this.totalCost,
                 this.hasChildren,
-                this.childrenBoundaries),
+                this.childrenBoundaries,
+                this.totalCost),
             function (this,
                     hasQuadrantProducer,
                     positionRelativeToParent,
@@ -392,9 +416,9 @@ export class Quadrant extends Reactor {
                     knownFacilities,
                     maxDepthOfKnownOpenFacility,
                     supportCustomers,
-                    totalCost,
                     hasChildren,
-                    childrenBoundaries) {
+                    childrenBoundaries,
+                    totalCost) {
                 let thisReactor = this.getReactor()
                 let thisMutationSandbox = this
 
@@ -406,7 +430,7 @@ export class Quadrant extends Reactor {
                     }
                 }
                 let partition = function(): void {
-                    console.log(`Quadrant at ${facility.get()} - Partition is called.`)
+                    // console.log(`Quadrant at ${facility.get()} - Partition is called.`)
                     notifyParentOfFacility(facility.get().clone())
                     maxDepthOfKnownOpenFacility.set(
                         Math.max(maxDepthOfKnownOpenFacility.get(), depth.get()))
@@ -496,8 +520,8 @@ export class Quadrant extends Reactor {
                         break
                     case RequestExitMsg:
                         if (!hasChildren.get()) {
-                            // TODO(hokeun): Implement counting for confirm exit message.
-                            toAccumulator.set(new ConfirmExitMsg(0, 0))
+                            // No children, number of facilities will be counted on parent's side.
+                            toAccumulator.set(new ConfirmExitMsg(0, supportCustomers.get().length))
                         } else {
                             toFirstChild.set(msg)
                             toSecondChild.set(msg)
