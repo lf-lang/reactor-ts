@@ -110,11 +110,16 @@ class RequestExitMsg extends Msg {}
 class ConfirmExitMsg extends Msg {
     facilities: number
     supportCustomers: number
+    // This 'quadrantReactors' is additional information for reactor-ts.
+    // And it is not in the Akka-version implementation.
+    quadrantReactors: number
     constructor(facilities: number,
-        supportCustomers: number) {
+        supportCustomers: number,
+        quadrantReactors: number) {
             super()
             this.facilities = facilities
             this.supportCustomers = supportCustomers
+            this.quadrantReactors = quadrantReactors
         }
 }
 
@@ -191,7 +196,9 @@ export class Summary extends Reactor {
                     fromRootQuadrant) {
                 let msgFromRootQuadrant = fromRootQuadrant.get()
                 if (msgFromRootQuadrant) {
-                    console.log(`Num Facilities: ${msgFromRootQuadrant.facilities}, Num customers: ${msgFromRootQuadrant.supportCustomers}`)
+                    console.log(`Num Facilities: ${msgFromRootQuadrant.facilities}, ` +
+                        `Num customers: ${msgFromRootQuadrant.supportCustomers}, ` +
+                        `Num quadrant reactors: ${msgFromRootQuadrant.quadrantReactors}`)
                 } else {
                     console.log("Summary Error: ConfirmExitMsg from root quadrant is undefined.")
                     this.util.requestStop()
@@ -253,10 +260,17 @@ export class Accumulator extends Reactor {
                         msgFromSecondQuadrant.supportCustomers +
                         msgFromThirdQuadrant.supportCustomers +
                         msgFromFourthQuadrant.supportCustomers
+                    let numQuadrantReactors = msgFromFirstQuadrant.quadrantReactors +
+                        msgFromSecondQuadrant.quadrantReactors +
+                        msgFromThirdQuadrant.quadrantReactors +
+                        msgFromFourthQuadrant.quadrantReactors
                     toNextAccumulator.set(
                         new ConfirmExitMsg(
-                            numFacilities + 1, // Add one for the facility itself. (A quadrant with four children = 1 facility.)
-                            numCustomers))
+                                numFacilities + 1, // Add one for the facility itself.
+                                                   // (A quadrant with four children is considered as one facility in Akka-version implementation.)
+                                numCustomers,
+                                numQuadrantReactors + 1 // Add one for the quadrant reactor itself.
+                            ))
                 } else {
                     console.log("Accumulator Error: some input ConfirmExitMsg's are undefined.")
                     this.util.requestStop()
@@ -521,7 +535,11 @@ export class Quadrant extends Reactor {
                     case RequestExitMsg:
                         if (!hasChildren.get()) {
                             // No children, number of facilities will be counted on parent's side.
-                            toAccumulator.set(new ConfirmExitMsg(0, supportCustomers.get().length))
+                            toAccumulator.set(new ConfirmExitMsg(
+                                    0, // facilities
+                                    supportCustomers.get().length, // supportCustomers
+                                    1 // quadrantReactors
+                                ))
                         } else {
                             toFirstChild.set(msg)
                             toSecondChild.set(msg)
