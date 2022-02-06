@@ -1448,6 +1448,33 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     }
 
     /**
+     * Connect multiports.
+     * @param leftPorts The source ports to connect.
+     * @param rightPorts The destination ports to connect.
+     * @param repeatLeft Wheter left ports can be repeated when there are more right ports.
+     */
+     protected _connectMultiplePorts<A extends T, R extends Present, T extends Present, S extends R> (
+            leftPorts: Array<CallerPort<A,R> | IOPort<S>>,
+            rightPorts: Array<CalleePort<T,S> | IOPort<R>>,
+            repeatLeft: boolean) {
+        if (repeatLeft) {
+            // TODO(hokeun): Handle repeat left case.
+        }
+
+        if (leftPorts.length < rightPorts.length) {
+            Log.warn(null, () => "There are more right ports than left ports. ",
+                "Not all ports will be connected!")
+        } else if (leftPorts.length > rightPorts.length) {
+            Log.warn(null, () => "There are more left ports than right ports. ",
+                "Not all ports will be connected!")
+        }
+
+        for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
+            this._connect(leftPorts[i], rightPorts[i])
+        }
+     }
+
+    /**
      * Return a dependency graph consisting of only this reactor's own ports
      * and the dependencies between them.
      */
