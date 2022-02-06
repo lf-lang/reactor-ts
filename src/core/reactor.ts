@@ -48,7 +48,7 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  * @see Write
  * @see Sched
  */
-export type Variable = Read<unknown>
+export type Variable = Read<unknown> | Array<Read<unknown>>
 
 //--------------------------------------------------------------------------//
 // Constants                                                                //
