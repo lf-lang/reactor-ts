@@ -1764,8 +1764,9 @@ enum PortType {
 }
 
 export abstract class MultiPort<T extends Present> extends Component {
+    protected runtime!: Runtime;
     public ports: Array<IOPort<T>>
-
+    
     constructor(container: Reactor, width: number, portType: PortType) {
         super(container)
         switch (portType) {
@@ -1782,6 +1783,25 @@ export abstract class MultiPort<T extends Present> extends Component {
                 }
                 break
         }
+    }
+
+    public _receiveRuntimeObject(runtime: Runtime) {
+        if (!this.runtime) {
+            this.runtime = runtime
+        } else {
+            throw new Error("Can only establish link to runtime once. Name: " + this._getFullyQualifiedName())
+        }
+    }
+}
+
+export class InMultiPort<T extends Present> extends MultiPort<T> {
+    constructor(container: Reactor, width: number) {
+        super(container, width, PortType.INPUT)
+    }
+}
+export class OutMultiPort<T extends Present> extends MultiPort<T> {
+    constructor(container: Reactor, width: number) {
+        super(container, width, PortType.OUTPUT)
     }
 }
 
