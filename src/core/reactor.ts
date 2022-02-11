@@ -48,7 +48,7 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  * @see Write
  * @see Sched
  */
-export type Variable = Read<unknown> | Array<Read<unknown>>
+export type Variable = Read<unknown> | Array<Read<unknown>> | MultiPort
 
 export type Container = Reactor | Bank
 
@@ -1441,8 +1441,41 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         }
     }
 
-    protected _connectMulti(src:MultiPort, dest: MultiPort) {
-        
+    protected _connectMulti<R extends Present, S extends R>(
+            src: Array<MultiPort<S>>,
+            dest: Array<MultiPort<R>>,
+            repeatLeft: boolean) {
+        let leftPorts = new Array<IOPort<S>>(0)
+        let rightPorts = new Array<IOPort<R>>(0)
+
+        // TODO(hokeun): Check if the multiport's container is Bank when Bank is implemented.
+        src.forEach(multiPort => {
+            multiPort.ports.forEach(port => {
+                leftPorts.push(port)
+            })
+        })
+
+        dest.forEach(multiPort => {
+            multiPort.ports.forEach(port => {
+                rightPorts.push(port)
+            })
+        })
+
+        if (repeatLeft) {
+            // TODO(hokeun): Handle repeat left case.
+        }
+
+        if (leftPorts.length < rightPorts.length) {
+            Log.warn(null, () => "There are more right ports than left ports. ",
+                "Not all ports will be connected!")
+        } else if (leftPorts.length > rightPorts.length) {
+            Log.warn(null, () => "There are more left ports than right ports. ",
+                "Not all ports will be connected!")
+        }
+
+        for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
+            this._connect(leftPorts[i], rightPorts[i])
+        }
     }
 
     protected _connectCall<A extends T, R extends Present, T extends Present, S extends R>
@@ -1510,9 +1543,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         }
 
         for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
-
             this._connect(leftPorts[i], rightPorts[i])
-
         }
     }
 
@@ -1727,10 +1758,33 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
     }
 }
 
-export class MultiPort {
-
-
+enum PortType {
+    INPUT = 0,
+    OUTPUT = 1
 }
+
+export abstract class MultiPort<T extends Present> extends Component {
+    public ports: Array<IOPort<T>>
+
+    constructor(container: Reactor, width: number, portType: PortType) {
+        super(container)
+        switch (portType) {
+            case PortType.INPUT:
+                this.ports = new Array<InPort<T>>(width)
+                for (let i = 0; i < width; i++) {
+                    this.ports[i] = new InPort<T>(container)
+                }
+                break
+            case PortType.OUTPUT:
+                this.ports = new Array<OutPort<T>>(width)
+                for (let i = 0; i < width; i++) {
+                    this.ports[i] = new OutPort<T>(container)
+                }
+                break
+        }
+    }
+}
+
 export abstract class IOPort<T extends Present> extends Port<T> {
 
     protected receivers: Set<WritablePort<T>> = new Set();
