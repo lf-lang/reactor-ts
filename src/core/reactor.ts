@@ -50,8 +50,6 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  */
 export type Variable = Read<unknown> | Array<Read<unknown>> | MultiPort<Present>
 
-export type Container = Reactor | Bank
-
 //--------------------------------------------------------------------------//
 // Constants                                                                //
 //--------------------------------------------------------------------------//
@@ -197,7 +195,7 @@ abstract class Trigger extends Component {
     /**
      * Return the owner of this trigger.
      */
-    public getContainer(): Container | null {
+    public getContainer(): Reactor | null {
         return this._getContainer()
     }
 
@@ -269,7 +267,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
 
     protected manager = new class implements TriggerManager {
         constructor(private trigger: ScheduledTrigger<T>) { }
-        getContainer(): Container {
+        getContainer(): Reactor {
             return this.trigger._getContainer()
         }
         addReaction(reaction: Reaction<unknown>): void {
@@ -288,24 +286,6 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
         }
     }
 
-}
-
-export class Bank extends Component {
-    protected runtime!: Runtime;
-    public reactors!: Array<Reactor>
-
-    constructor(container: Reactor, reactors: Array<Reactor>, alias?:string) {
-        super(container, alias);
-        this.reactors = reactors
-    }
-
-    public _receiveRuntimeObject(runtime: Runtime) {
-        if (!this.runtime) {
-            this.runtime = runtime
-        } else {
-            throw new Error("Can only establish link to runtime once.")
-        }
-    }
 }
 
 /**
@@ -1713,6 +1693,25 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     }
 }
 
+export abstract class Bank extends Reactor {
+    protected runtime!: Runtime;
+    // TODO(hokeun): Use _keyChain to store an array of reactors.
+    // See _getOwnReactors() for hints.
+    public reactors!: Array<Reactor>
+
+    constructor(container: Reactor, reactors: Array<Reactor>, alias?:string) {
+        super(container, alias);
+        this.reactors = reactors
+    }
+
+    public _receiveRuntimeObject(runtime: Runtime) {
+        if (!this.runtime) {
+            this.runtime = runtime
+        } else {
+            throw new Error("Can only establish link to runtime once.")
+        }
+    }
+}
 export abstract class Port<T extends Present> extends Trigger implements Read<T> {
     
     protected runtime!: Runtime;
@@ -1924,7 +1923,7 @@ interface ComponentManager {
 }
 
 interface TriggerManager {
-    getContainer():Reactor;
+    getContainer(): Reactor;
     addReaction(reaction: Reaction<unknown>): void;
     delReaction(reaction: Reaction<unknown>): void;    
 }
@@ -2056,7 +2055,7 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
 
     protected manager:CalleeManager<A> = new class implements CalleeManager<A> {
         constructor(private port:CalleePort<A, Present>) {}
-        getContainer(): Container {
+        getContainer(): Reactor {
             return this.port._getContainer()
         }
         addReaction(procedure: Reaction<unknown>): void {
