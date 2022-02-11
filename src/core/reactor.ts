@@ -868,7 +868,7 @@ export abstract class Reactor extends Component {
     //     return this._active
     // }
 
-    protected writable<T extends Present>(port: IOPort<T>): ReadWrite<T> {
+    public writable<T extends Present>(port: IOPort<T>): ReadWrite<T> {
         return port.asWritable(this._getKey(port));
     }
 
@@ -1422,23 +1422,31 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     }
 
     protected _connectMulti<R extends Present, S extends R>(
-            src: Array<MultiPort<S>>,
-            dest: Array<MultiPort<R>>,
+            src: Array<MultiPort<S> | IOPort<S>>,
+            dest: Array<MultiPort<R> | IOPort<R>>,
             repeatLeft: boolean) {
         let leftPorts = new Array<IOPort<S>>(0)
         let rightPorts = new Array<IOPort<R>>(0)
 
         // TODO(hokeun): Check if the multiport's container is Bank when Bank is implemented.
-        src.forEach(multiPort => {
-            multiPort.ports.forEach(port => {
+        src.forEach(port => {
+            if (port instanceof MultiPort) {
+                port.ports.forEach(singlePort => {
+                    leftPorts.push(singlePort)
+                })
+            } else if (port instanceof IOPort) {
                 leftPorts.push(port)
-            })
+            }
         })
 
-        dest.forEach(multiPort => {
-            multiPort.ports.forEach(port => {
+        dest.forEach(port => {
+            if (port instanceof MultiPort) {
+                port.ports.forEach(singlePort => {
+                    rightPorts.push(singlePort)
+                })
+            } else if (port instanceof IOPort) {
                 rightPorts.push(port)
-            })
+            }
         })
 
         if (repeatLeft) {
@@ -1784,6 +1792,10 @@ export abstract class MultiPort<T extends Present> extends Component {
         }
     }
 
+    public width(): number {
+        return this.ports.length
+    }
+
     public _receiveRuntimeObject(runtime: Runtime) {
         if (!this.runtime) {
             this.runtime = runtime
@@ -1797,10 +1809,22 @@ export class InMultiPort<T extends Present> extends MultiPort<T> {
     constructor(container: Reactor, width: number) {
         super(container, width, PortType.INPUT)
     }
+    public getValueArray() : Array<T | undefined> {
+        let valueArray = new Array<T | undefined>(this.width());
+        for (let i = 0; i < valueArray.length; i++) {
+            valueArray[i] = this.ports[i].get();
+        }
+        return valueArray
+    }
 }
 export class OutMultiPort<T extends Present> extends MultiPort<T> {
+    public writablePorts: Array<ReadWrite<T>>
     constructor(container: Reactor, width: number) {
         super(container, width, PortType.OUTPUT)
+        this.writablePorts = new Array<ReadWrite<T>>(width)
+        for (let i = 0; i < width; i++) {
+            this.writablePorts[i] = container.writable(this.ports[i])
+        }
     }
 }
 
