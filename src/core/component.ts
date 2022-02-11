@@ -1,4 +1,4 @@
-import {Reactor, App, Runtime} from "./reactor";
+import {Container, App, Runtime} from "./reactor";
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -27,11 +27,11 @@ export abstract class Component {
      * reactor. Only instances of `App`, which denote top-level reactors,
      * are self-contained.
      */
-    private _container: Reactor;
+    private _container: Container;
 
     /**
      * Create a new component and register it with the given container.
-     * @param container The reactor that will contain the new component,
+     * @param container The container that will contain the new component,
      * `null` if this is an instance of `App`, in which case the component
      * will be designated as its own container.
      * 
@@ -40,7 +40,7 @@ export abstract class Component {
      * constructor in order to establish a link with the runtime object.
      * @param alias An optional alias for the component.
      */
-    constructor(container: Reactor | null, alias?:string) {
+    constructor(container: Container | null, alias?:string) {
         this._alias = alias
 
         if (container !== null) {
@@ -88,7 +88,7 @@ export abstract class Component {
      * Confirm whether or not this component is contained by the given reactor.
      * @param reactor The presumptive container of this component.
      */
-    public _isContainedBy(reactor: Reactor): boolean {
+    public _isContainedBy(reactor: Container): boolean {
 
         if (this instanceof App) return false
         else if (this._container === reactor) return true
@@ -102,7 +102,7 @@ export abstract class Component {
      * @param reactor The container presumptive container of the container of
      * this component.
      */
-    public _isContainedByContainerOf(reactor: Reactor): boolean {
+    public _isContainedByContainerOf(reactor: Container): boolean {
         if (this instanceof App) return false
         else if (this._container._isContainedBy(reactor)) return true;
     
@@ -168,7 +168,7 @@ export abstract class Component {
     /**
      * Return the container of this component.
      */
-    protected _getContainer(): Reactor {
+    protected _getContainer(): Container {
         return this._container
     }
 

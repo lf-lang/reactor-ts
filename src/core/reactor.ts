@@ -50,6 +50,8 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  */
 export type Variable = Read<unknown> | Array<Read<unknown>>
 
+export type Container = Reactor | Bank
+
 //--------------------------------------------------------------------------//
 // Constants                                                                //
 //--------------------------------------------------------------------------//
@@ -195,7 +197,7 @@ abstract class Trigger extends Component {
     /**
      * Return the owner of this trigger.
      */
-    public getContainer(): Reactor | null {
+    public getContainer(): Container | null {
         return this._getContainer()
     }
 
@@ -267,7 +269,7 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
 
     protected manager = new class implements TriggerManager {
         constructor(private trigger: ScheduledTrigger<T>) { }
-        getContainer(): Reactor {
+        getContainer(): Container {
             return this.trigger._getContainer()
         }
         addReaction(reaction: Reaction<unknown>): void {
@@ -286,6 +288,10 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
         }
     }
 
+}
+
+export class Bank extends Component {
+    
 }
 
 /**
@@ -1421,6 +1427,10 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         }
     }
 
+    protected _connectMulti(src:MultiPort, dest: MultiPort) {
+        
+    }
+
     protected _connectCall<A extends T, R extends Present, T extends Present, S extends R>
     (src: CallerPort<A,R>, dst: CalleePort<T,S>) {
         if (this.canConnectCall(src, dst)) {
@@ -1463,7 +1473,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         }
     }
 
-    
     /**
      * Connect multiports.
      * @param leftPorts The source ports to connect.
@@ -1704,6 +1713,10 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
     }
 }
 
+export class MultiPort {
+
+
+}
 export abstract class IOPort<T extends Present> extends Port<T> {
 
     protected receivers: Set<WritablePort<T>> = new Set();
@@ -1955,7 +1968,7 @@ export class CalleePort<A extends Present, R extends Present> extends Port<A> im
 
     protected manager:CalleeManager<A> = new class implements CalleeManager<A> {
         constructor(private port:CalleePort<A, Present>) {}
-        getContainer(): Reactor {
+        getContainer(): Container {
             return this.port._getContainer()
         }
         addReaction(procedure: Reaction<unknown>): void {
@@ -2049,6 +2062,7 @@ interface UtilityFunctions { //
 }
 
 export interface MutationSandbox extends ReactionSandbox {
+    
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
