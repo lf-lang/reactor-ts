@@ -291,7 +291,21 @@ abstract class ScheduledTrigger<T extends Present> extends Trigger {
 }
 
 export class Bank extends Component {
-    
+    protected runtime!: Runtime;
+    public reactors!: Array<Reactor>
+
+    constructor(container: Reactor, reactors: Array<Reactor>, alias?:string) {
+        super(container, alias);
+        this.reactors = reactors
+    }
+
+    public _receiveRuntimeObject(runtime: Runtime) {
+        if (!this.runtime) {
+            this.runtime = runtime
+        } else {
+            throw new Error("Can only establish link to runtime once.")
+        }
+    }
 }
 
 /**
