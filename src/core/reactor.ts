@@ -9,6 +9,7 @@ import {PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, Dependenc
 import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, Alarm} from './time';
 import {Component} from "./component"
 import {Reaction, Priority, Mutation, Procedure} from "./reaction"
+import {Bank} from './bank' 
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -30,6 +31,8 @@ export type Absent = undefined;
  * @see Reaction
  */
 export type ArgList<T> = T extends Variable[] ? T : never;
+
+export type ParmList<T> = T extends any[] ? T : never;
 
 /**
  * Type for data exchanged between ports.
@@ -526,6 +529,8 @@ export class Triggers {
     }
 }
 
+
+
 /**
  * A reactor is a software component that reacts to input events, timer events,
  * and action events. It has private state variables that are not visible to any
@@ -536,26 +541,26 @@ export class Triggers {
 export abstract class Reactor extends Component {
 
     /**
-     * Data structure to keep track of register components.
+     * Data structure to keep track of registered components.
      * Note: declare this class member before any other ones as they may
      * attempt to access it.
      */
     private _keyChain: Map<Component, Symbol> = new Map()
 
     /**
-     * Collection of priviledged functions that are passed down from the
+     * This graph has in it all the dependencies implied by this container's
+     * ports, reactions, and connections.
+     */
+    protected _dependencyGraph: DependencyGraph<Port<Present> | Reaction<any>> = new DependencyGraph()
+
+    /**
+     * The runtime object, which has a collection of privileged functions that are passed down from the
      * container.
      */
     private _runtime!: Runtime;
 
     /**
-     * This graph has in it all the dependencies implied by this reactor's
-     * ports, reactions, and connections.
-     */
-    private _dependencyGraph: DependencyGraph<Port<Present> | Reaction<any>> = new DependencyGraph()
-
-    /**
-     * This graph has some overlap with the reactors dependency, but is 
+     * This graph has some overlap with the reactors dependency graph, but is 
      * different in two respects:
      * - transitive dependencies between ports have been collapsed; and
      * - it incorporates the causality interfaces of all contained reactors.
@@ -603,6 +608,11 @@ export abstract class Reactor extends Component {
     private _mutationScope: MutationSandbox;
 
     /**
+     * A mapping from reactor instance to bank index.
+     */
+    private _bankMap: Map<Reactor, number> = new Map()
+
+    /**
      * Receive the runtime object from the container of this reactor.
      * Invoking this method in any user-written code will result in a
      * runtime error.
@@ -638,6 +648,15 @@ export abstract class Reactor extends Component {
         if (component !== this && !this._keyChain.has(component)) {
             this._keyChain.set(component, key)
         }
+        // Record bank members so that their index can be looked up.
+        if (component instanceof Bank) {
+            let idx = 0
+            component.all().forEach(inst => {this._bankMap.set(inst, idx); idx++})
+        }
+    }
+
+    public _bankIndex(r: Reactor): number | undefined {
+        return this._bankMap.get(r)
     }
 
     public _requestRuntimeObject(component: Component): void {
@@ -1701,25 +1720,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     }
 }
 
-export abstract class Bank extends Reactor {
-    protected runtime!: Runtime;
-    // TODO(hokeun): Use _keyChain to store an array of reactors.
-    // See _getOwnReactors() for hints.
-    public reactors!: Array<Reactor>
-
-    constructor(container: Reactor, reactors: Array<Reactor>, alias?:string) {
-        super(container, alias);
-        this.reactors = reactors
-    }
-
-    public _receiveRuntimeObject(runtime: Runtime) {
-        if (!this.runtime) {
-            this.runtime = runtime
-        } else {
-            throw new Error("Can only establish link to runtime once.")
-        }
-    }
-}
 export abstract class Port<T extends Present> extends Trigger implements Read<T> {
     
     protected runtime!: Runtime;
