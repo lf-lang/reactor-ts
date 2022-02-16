@@ -2,7 +2,8 @@
  * Core of the reactor runtime.
  * 
  * @author Marten Lohstroh (marten@berkeley.edu),
- * @author Matt Weber (matt.weber@berkeley.edu)
+ * @author Matt Weber (matt.weber@berkeley.edu),
+ * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
 
 import {PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
@@ -649,10 +650,12 @@ export abstract class Reactor extends Component {
             this._keyChain.set(component, key)
         }
         // Record bank members so that their index can be looked up.
-        if (component instanceof Bank) {
-            let idx = 0
-            component.all().forEach(inst => {this._bankMap.set(inst, idx); idx++})
-        }
+        // FIXME: Disabled this due to the following error:
+        // TypeError: Cannot read properties of undefined (reading 'forEach')
+        // if (component instanceof Bank) {
+        //     let idx = 0
+        //     component.all().forEach(inst => {this._bankMap.set(inst, idx); idx++})
+        // }
     }
 
     public _bankIndex(r: Reactor): number | undefined {
