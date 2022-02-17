@@ -9,7 +9,6 @@ import {PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, Dependenc
 import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, Alarm} from './time';
 import {Component} from "./component"
 import {Reaction, Priority, Mutation, Procedure} from "./reaction"
-import {Bank} from './bank' 
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -176,6 +175,7 @@ export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
         return this.tag;
     }
 }
+
 /**
  * Abstract class for a trigger. A trigger may be an action, port, or timer.
  */
@@ -559,6 +559,18 @@ export abstract class Reactor extends Component {
      */
     private _runtime!: Runtime;
 
+    private _bankIndex: number = -1;
+
+    public getBankIndex(): number {
+        return this._bankIndex
+    }
+
+    public setBankIndex(index: number): void {
+        if (this._bankIndex == -1) {
+            this._bankIndex = index
+        }
+    }
+
     /**
      * This graph has some overlap with the reactors dependency graph, but is 
      * different in two respects:
@@ -608,11 +620,6 @@ export abstract class Reactor extends Component {
     private _mutationScope: MutationSandbox;
 
     /**
-     * A mapping from reactor instance to bank index.
-     */
-    private _bankMap: Map<Reactor, number> = new Map()
-
-    /**
      * Receive the runtime object from the container of this reactor.
      * Invoking this method in any user-written code will result in a
      * runtime error.
@@ -638,6 +645,9 @@ export abstract class Reactor extends Component {
      * @param key The component's key.
      */
     public _register(component: Component, key: Symbol) {
+        if (component === undefined || component === null) {
+            throw new Error("Unable to register undefined or null component")
+        }
         if (component._isRegistered()) {
             throw new Error("Unable to register " 
             + component._getFullyQualifiedName() 
@@ -648,15 +658,6 @@ export abstract class Reactor extends Component {
         if (component !== this && !this._keyChain.has(component)) {
             this._keyChain.set(component, key)
         }
-        // Record bank members so that their index can be looked up.
-        if (component instanceof Bank) {
-            let idx = 0
-            component.all().forEach(inst => {this._bankMap.set(inst, idx); idx++})
-        }
-    }
-
-    public _bankIndex(r: Reactor): number | undefined {
-        return this._bankMap.get(r)
     }
 
     public _requestRuntimeObject(component: Component): void {
@@ -787,7 +788,9 @@ export abstract class Reactor extends Component {
         constructor(private reactor: Reactor) {
             this.reactor = reactor
             this.util = reactor.util
+            this.getBankIndex = () => reactor.getBankIndex()
         }
+        getBankIndex: () => number;
         
         /**
          * 
@@ -827,9 +830,12 @@ export abstract class Reactor extends Component {
      */
     private _ReactionSandbox = class implements ReactionSandbox {
         public util: UtilityFunctions;
+        public getBankIndex: () => number;
         constructor(public reactor: Reactor) {
             this.util = reactor.util
+            this.getBankIndex = () => reactor._bankIndex
         }
+        
     }
 
     /**
@@ -2193,7 +2199,7 @@ export interface ReactionSandbox {
      * Collection of utility functions accessible from within a `react` function.
      */
     util: UtilityFunctions
-
+    getBankIndex: () => number
 }
 
 export class App extends Reactor {
@@ -2881,5 +2887,20 @@ export class App extends Reactor {
         
         // Start the main event loop.
         this._startExecuting()
+    }
+}
+
+class X extends Reactor {
+    a = new InPort(this);
+    constructor(parent: Reactor) {
+        super(parent)
+        this.getBankIndex()
+        this.addReaction(
+            new Triggers(this.a), // replace this with `server` and an error is thrown.
+            new Args(this.a),
+            function (this) {
+                
+            }
+        );
     }
 }
