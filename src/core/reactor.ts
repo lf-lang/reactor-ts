@@ -1476,7 +1476,10 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         })
 
         if (repeatLeft) {
-            // TODO(hokeun): Handle repeat left case.
+            const leftPortsSize = leftPorts.length
+            for (let i = 0; leftPorts.length < rightPorts.length; i++) {
+                leftPorts.push(leftPorts[i % leftPortsSize])
+            }
         }
 
         if (leftPorts.length < rightPorts.length) {
@@ -1531,33 +1534,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             }
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
-        }
-    }
-
-    /**
-     * Connect multiports.
-     * @param leftPorts The source ports to connect.
-     * @param rightPorts The destination ports to connect.
-     * @param repeatLeft Whether left ports can be repeated when there are more right ports.
-     */
-    protected _connectMultiplePorts<R extends Present, S extends R>(
-        leftPorts: Array<IOPort<S>>,
-        rightPorts: Array<IOPort<R>>,
-        repeatLeft: boolean) {
-        if (repeatLeft) {
-            // TODO(hokeun): Handle repeat left case.
-        }
-
-        if (leftPorts.length < rightPorts.length) {
-            Log.warn(null, () => "There are more right ports than left ports. ",
-                "Not all ports will be connected!")
-        } else if (leftPorts.length > rightPorts.length) {
-            Log.warn(null, () => "There are more left ports than right ports. ",
-                "Not all ports will be connected!")
-        }
-
-        for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
-            this._connect(leftPorts[i], rightPorts[i])
         }
     }
 
