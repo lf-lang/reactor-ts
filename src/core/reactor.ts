@@ -2889,18 +2889,3 @@ export class App extends Reactor {
         this._startExecuting()
     }
 }
-
-class X extends Reactor {
-    a = new InPort(this);
-    constructor(parent: Reactor) {
-        super(parent)
-        this.getBankIndex()
-        this.addReaction(
-            new Triggers(this.a), // replace this with `server` and an error is thrown.
-            new Args(this.a),
-            function (this) {
-                
-            }
-        );
-    }
-}
