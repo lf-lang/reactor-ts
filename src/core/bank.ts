@@ -1,4 +1,4 @@
-import { InPort, Present, Reactor } from './reactor'
+import { InPort, Port, Present, Reactor } from './reactor'
 
 type ReactorConstructor<T extends Reactor, S> = {
     new (...args:ReactorArgs<S>): T;
@@ -23,5 +23,9 @@ export class Bank<T extends Reactor,S> {
 
     public all():Array<T> {
         return this.members
+    }
+
+    public select<P extends Port<Present>>(selector: (reactor:T) => P):Array<P> {
+        return [...this.all().reduce((acc, val) => acc.concat(selector(val)), new Array<P>(0))]
     }
 }
