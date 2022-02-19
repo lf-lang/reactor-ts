@@ -1,4 +1,4 @@
-import {Reactor, OutPort, InPort, App} from '../src/core/reactor';
+import {Reactor, App, InPort, OutPort} from '../src/core/reactor';
 
 var app = new App();
 

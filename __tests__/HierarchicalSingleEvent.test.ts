@@ -1,4 +1,4 @@
-import {Reactor, OutPort, InPort, App, Parameter} from '../src/core/reactor';
+import {Reactor, App, Parameter, OutPort, InPort} from '../src/core/reactor';
 import {TimeValue} from "../src/core/time"
 import {SingleEvent} from '../src/share/SingleEvent';
 import {Logger} from '../src/share/Logger';

@@ -1,4 +1,4 @@
-import {Reactor, App, Triggers, InPort, Args, OutPort, Timer} from '../src/core/reactor';
+import {Reactor, App, Triggers, Args, Timer, OutPort, InPort} from '../src/core/reactor';
 import {TimeValue} from '../src/core/time';
 
 class Source extends Reactor {

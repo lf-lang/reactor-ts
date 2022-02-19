@@ -5,6 +5,7 @@ import { Tag } from "./time";
 import { Trigger, TriggerManager } from "./trigger";
 import { Log } from "./util";
 
+
 export abstract class Port<T extends Present> extends Trigger implements Read<T> {
     
     protected runtime!: Runtime;
@@ -55,40 +56,6 @@ enum PortType {
     OUTPUT = 1
 }
 
-export abstract class MultiPort<T extends Present> extends Component {
-    protected runtime!: Runtime;
-    public ports: Array<IOPort<T>>
-    
-    constructor(container: Reactor, width: number, portType: PortType) {
-        super(container)
-        switch (portType) {
-            case PortType.INPUT:
-                this.ports = new Array<InPort<T>>(width)
-                for (let i = 0; i < width; i++) {
-                    this.ports[i] = new InPort<T>(container)
-                }
-                break
-            case PortType.OUTPUT:
-                this.ports = new Array<OutPort<T>>(width)
-                for (let i = 0; i < width; i++) {
-                    this.ports[i] = new OutPort<T>(container)
-                }
-                break
-        }
-    }
-
-    public width(): number {
-        return this.ports.length
-    }
-
-    public _receiveRuntimeObject(runtime: Runtime) {
-        if (!this.runtime) {
-            this.runtime = runtime
-        } else {
-            throw new Error("Can only establish link to runtime once. Name: " + this._getFullyQualifiedName())
-        }
-    }
-}
 
 /**
  * Abstract class for a writable port. It is intended as a wrapper for a
@@ -215,30 +182,75 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         }
     }(this)
 
-    toString(): string {
+    toString(): string {InMultiPort
         return this._getFullyQualifiedName();
     }
 }
 
-export class InMultiPort<T extends Present> extends MultiPort<T> {
-    constructor(container: Reactor, width: number) {
-        super(container, width, PortType.INPUT)
+
+export abstract class MultiPort<T extends Present> extends Component {
+    protected runtime!: Runtime;
+
+    constructor(container: Reactor, readonly width: number) {
+        super(container)
     }
-    public getValueArray() : Array<T | undefined> {
-        let valueArray = new Array<T | undefined>(this.width());
-        for (let i = 0; i < valueArray.length; i++) {
-            valueArray[i] = this.ports[i].get();
+    public abstract channels(): Array<IOPort<T>>
+
+    public _receiveRuntimeObject(runtime: Runtime) {
+        if (!this.runtime) {
+            this.runtime = runtime
+        } else {
+            throw new Error("Can only establish link to runtime once. Name: " + this._getFullyQualifiedName())
         }
-        return valueArray
+    }
+
+    public static values<T extends Present>(ports: Array<Port<T>>): Array<T | Absent> {
+        let values = new Array<T | Absent>(ports.length);
+        for (let i = 0; i < values.length; i++) {
+            values[i] = ports[i].get();
+        }
+        return values
+    }
+
+    public abstract values(): Array<T | Absent>
+}
+
+export class InMultiPort<T extends Present> extends MultiPort<T> {
+
+    private _channels: Array<InPort<T>>
+
+    public channels() {
+        return this._channels
+    }
+
+    constructor(container: Reactor, width: number) {
+        super(container, width)
+        this._channels = new Array<InPort<T>>(width)
+        for (let i = 0; i < width; i++) {
+            this._channels[i] = new InPort<T>(container)
+        }
+    }
+
+    public values(): Array<T | Absent> {
+        return MultiPort.values(this._channels)
     }
 }
 export class OutMultiPort<T extends Present> extends MultiPort<T> {
-    public writablePorts: Array<ReadWrite<T>>
+    private _channels: Array<OutPort<T>>
+
     constructor(container: Reactor, width: number) {
-        super(container, width, PortType.OUTPUT)
-        this.writablePorts = new Array<ReadWrite<T>>(width)
+        super(container, width)
+        this._channels = new Array<InPort<T>>(width)
         for (let i = 0; i < width; i++) {
-            this.writablePorts[i] = container.writable(this.ports[i])
+            this._channels[i] = new InPort<T>(container)
         }
+    }
+
+    public values(): Array<T | Absent> {
+        return MultiPort.values(this._channels)
+    }
+    
+    public channels() {
+        return this._channels
     }
 }

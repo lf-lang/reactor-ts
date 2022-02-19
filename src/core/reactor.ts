@@ -18,6 +18,15 @@ import { TaggedEvent } from './event';
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
 
+// FIXME(marten): moving these two to port.ts results in a circular import problem with many test files:
+export class OutPort<T extends Present> extends IOPort<T> {
+
+}
+
+export class InPort<T extends Present> extends IOPort<T> {
+
+}
+
 //--------------------------------------------------------------------------//
 // Types                                                                    //
 //--------------------------------------------------------------------------//
@@ -1114,7 +1123,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         // TODO(hokeun): Check if the multiport's container is Bank when Bank is implemented.
         src.forEach(port => {
             if (port instanceof MultiPort) {
-                port.ports.forEach(singlePort => {
+                port.channels().forEach(singlePort => {
                     leftPorts.push(singlePort)
                 })
             } else if (port instanceof IOPort) {
@@ -1124,7 +1133,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
         dest.forEach(port => {
             if (port instanceof MultiPort) {
-                port.ports.forEach(singlePort => {
+                port.channels().forEach(singlePort => {
                     rightPorts.push(singlePort)
                 })
             } else if (port instanceof IOPort) {
@@ -1373,13 +1382,6 @@ interface ComponentManager {
 
 
 
-export class OutPort<T extends Present> extends IOPort<T> {
-
-}
-
-export class InPort<T extends Present> extends IOPort<T> {
-
-}
 
 /**
  * A caller port sends arguments of type T and receives a response of type R.

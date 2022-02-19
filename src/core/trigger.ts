@@ -1,7 +1,7 @@
+import { Absent, Present, Reactor, Runtime } from "./reactor";
 import { Component } from "./component";
 import { TaggedEvent } from "./event";
 import { Reaction } from "./reaction";
-import { Absent, Present, Reactor, Runtime } from "./reactor";
 import { Tag } from "./time";
 
 export interface TriggerManager {

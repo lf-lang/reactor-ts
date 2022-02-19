@@ -1,4 +1,4 @@
-import {Reactor, App, Triggers, InPort, Args, CalleePort, CallerPort, Present} from '../src/core/reactor';
+import {Reactor, App, Triggers, Args, CalleePort, CallerPort, Present, InPort} from '../src/core/reactor';
 import {TimeUnit, TimeValue} from '../src/core/time';
 import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { writer } from 'repl';

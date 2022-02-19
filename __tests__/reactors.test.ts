@@ -1,4 +1,4 @@
-import {Reactor, App, Triggers, InPort, Args, OutPort, Timer} from '../src/core/reactor';
+import {Reactor, App, Triggers, Args, Timer, OutPort, InPort} from '../src/core/reactor';
 import {TimeUnit, TimeValue, Origin } from '../src/core/time';
 import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { doesNotMatch } from 'assert';
