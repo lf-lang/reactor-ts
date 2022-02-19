@@ -1,7 +1,8 @@
-import {Reactor, App, Triggers, InPort, Args, ArgList, Startup, Shutdown, CalleePort, CallerPort, Port, Present, OutPort, Action, Timer} from '../src/core/reactor';
+import {Reactor, App, Triggers, InPort, Args, OutPort, Timer} from '../src/core/reactor';
 import {TimeUnit, TimeValue, Origin } from '../src/core/time';
 import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
 import { doesNotMatch } from 'assert';
+import { Action } from '../src/core/action';
 
 /* Set a port in startup to get thing going */
 class Starter extends Reactor {

@@ -1,6 +1,7 @@
 'use strict';
 
-import {Timer, Action,  App, Sched, Triggers, Args} from '../src/core/reactor';
+import { Action } from '../src/core/action';
+import {Timer, App, Sched, Triggers, Args} from '../src/core/reactor';
 import {TimeValue, TimeUnit, Origin} from "../src/core/time"
 
 /**

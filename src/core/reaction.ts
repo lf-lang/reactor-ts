@@ -1,6 +1,7 @@
 import {Sortable, PrioritySetElement, Log} from "./util"
-import {Reactor, ReactionSandbox, Triggers, Args, ArgList, Startup, Timer, MutationSandbox} from "./reactor"
+import {Reactor, ReactionSandbox, Triggers, Args, ArgList, Timer, MutationSandbox} from "./reactor"
 import {TimeValue, Tag} from "./time";
+import { Startup } from "./action";
 
 /**
  * A number that indicates a reaction's position with respect to other

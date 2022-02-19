@@ -1,5 +1,6 @@
 
-import {App, IOPort, Reactor, InPort, OutPort, Present, Args, Triggers} from '../src/core/reactor';
+import { IOPort } from '../src/core/port';
+import {App, Reactor, InPort, OutPort, Present, Args, Triggers} from '../src/core/reactor';
 
 export class Adder extends Reactor {    
     

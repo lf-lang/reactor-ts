@@ -1,6 +1,7 @@
 import {App, Triggers, Args} from '../src/core/reactor';
 import {Origin, TimeValue} from '../src/core/time';
-import {Reactor, Timer, Action, Sched} from '../src/core/reactor';
+import {Reactor, Timer, Sched} from '../src/core/reactor';
+import { Action } from '../src/core/action';
 
 //Upon initialization, this reactor should produce an
 //output event
