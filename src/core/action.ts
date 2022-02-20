@@ -132,7 +132,7 @@ export class Shutdown extends Action<Present> {
     }
 }
 
-class FederatePortAction extends Action<Buffer> {
+export class FederatePortAction extends Action<Buffer> {
     constructor(__parent__: Reactor) {
         super(__parent__, Origin.logical)
     }

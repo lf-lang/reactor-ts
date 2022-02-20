@@ -6,8 +6,8 @@
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
 
-import {PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
-import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, Alarm} from './time';
+import {PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
+import {TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm} from './time';
 import {Component} from "./component"
 import {Reaction, Priority, Mutation, Procedure} from "./reaction"
 import { IOPort, MultiPort, Port, WritablePort } from './port';
