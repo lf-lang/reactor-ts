@@ -1083,6 +1083,27 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     }
 
     /**
+     * Connect a source port to a downstream destination port without canConnect() check.
+     * This must be used with caution after checking canConnect for the given ports.
+     * @param src The source port to connect.
+     * @param dst The destination port to connect.
+     */
+    private _uncheckedConnect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
+        Log.debug(this, () => "connecting " + src + " and " + dst);
+        // Add dependency implied by connection to local graph.
+        this._dependencyGraph.addEdge(dst, src);
+        // Register receiver for value propagation.
+        let writer = dst.asWritable(this._getKey(dst));
+        src.getManager(this._getKey(src)).addReceiver
+            (writer as WritablePort<S>);
+        let val = src.get()
+        if (this._runtime.isRunning() && val !== undefined) {
+            //console.log(">>>>>>>>>>>>>>>>>>>>>>>>><<<<<>>>>>>>>>>>>>>>>>>>>>")
+            writer.set(val)
+        }
+    }
+
+    /**
      * Connect a source port to a downstream destination port. If a source is a
      * regular port, then the type variable of the source has to be a subtype of
      * the type variable of the destination. If the source is a caller port,
@@ -1096,18 +1117,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      */
     protected _connect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
         if (this.canConnect(src, dst)) {
-            Log.debug(this, () => "connecting " + src + " and " + dst);
-            // Add dependency implied by connection to local graph.
-            this._dependencyGraph.addEdge(dst, src);
-            // Register receiver for value propagation.
-            let writer = dst.asWritable(this._getKey(dst));
-            src.getManager(this._getKey(src)).addReceiver
-                (writer as WritablePort<S>);
-            let val = src.get()
-            if (this._runtime.isRunning() && val !== undefined) {
-                //console.log(">>>>>>>>>>>>>>>>>>>>>>>>><<<<<>>>>>>>>>>>>>>>>>>>>>")
-                writer.set(val)
-            }
+            this._uncheckedConnect(src, dst);
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
         }
