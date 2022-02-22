@@ -1166,8 +1166,15 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                 "Not all ports will be connected!")
         }
 
+
         for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
-            this._connect(leftPorts[i], rightPorts[i])
+            if (!this.canConnect(leftPorts[i], rightPorts[i])) {
+                throw new Error("ERROR connecting " + leftPorts[i] + " to " + rightPorts[i]
+                    + "in multiple connections from " + src + " to " + dest)
+            }
+        }
+        for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
+            this._uncheckedConnect(leftPorts[i], rightPorts[i])
         }
     }
 
