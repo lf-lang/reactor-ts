@@ -1,6 +1,4 @@
-import { Reactor, App, Triggers, Args, Timer, OutPort, InPort } from '../src/core/reactor';
-import { State } from '../src/core/state';
-import { TimeUnit, TimeValue } from '../src/core/time';
+import { Reactor, App, Triggers, Args, State, OutPort, InPort, TimeUnit, TimeValue } from '../src/core/internal';
 
 describe('Check canConnect', () => {
     class Source extends Reactor {

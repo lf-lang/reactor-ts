@@ -1,8 +1,7 @@
-import {Reactor, App, Triggers, Args, CalleePort, CallerPort, Present, InPort} from '../src/core/reactor';
-import {TimeUnit, TimeValue} from '../src/core/time';
-import { Log, LogLevel, SortableDependencyGraph, Sortable } from '../src/core/util';
-import { writer } from 'repl';
-import { doesNotMatch } from 'assert';
+import {
+    Reactor, App, Triggers, Args, CalleePort, CallerPort, Present, InPort,
+    TimeUnit, TimeValue, Log, LogLevel
+} from '../src/core/internal';
 
 class R extends Reactor {
 
