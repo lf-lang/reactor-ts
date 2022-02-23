@@ -1,10 +1,6 @@
-import { Component } from "./component";
-import type { TaggedEvent } from "./event";
-import { Reaction } from "./reaction";
-import { Origin, Tag } from "./time";
+import { Component, TaggedEvent, Reaction, Tag } from "./internal";
 
-import type { Absent, Present } from "./types";
-import type { Reactor, Runtime } from "./reactor";
+import type { Reactor, Runtime, Absent, Present } from "./internal";
 
 export interface TriggerManager {
     getContainer(): Reactor;
