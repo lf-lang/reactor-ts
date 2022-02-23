@@ -312,7 +312,7 @@ class RTIClient extends EventEmitter {
                 this.socket?.write(buffer);
                 this.socket?.write(this.federationID);
             } catch (e) {
-                Log.error(this, () => {return e.toString()});
+                Log.error(this, () => {return `${e}`});
             }
 
             // Finally, emit a connected event.
