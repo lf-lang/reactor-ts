@@ -12,7 +12,7 @@ import {Component} from "./component"
 import {Reaction, Priority, Mutation, Procedure} from "./reaction"
 import { IOPort, MultiPort, Port, WritablePort } from './port';
 import { Action, Shutdown, Startup } from './action';
-import { ScheduledTrigger, Trigger, TriggerManager } from './trigger';
+import { NonComposite, ScheduledTrigger, Trigger, TriggerManager } from './trigger';
 import { TaggedEvent } from './event';
 
 // Set the default log level.
@@ -57,6 +57,8 @@ export type Present = (number | bigint | string | boolean | symbol | object | nu
  */
 export type ReadWrite<T> = Read<T> & Write<T>;
 
+export type MultiReadWrite<T> = MultiRead<T> & MultiWrite<T>;
+
 /**
  * A variable can be read, written to, or scheduled. Variables may be passed to
  * reactions in an argument list.
@@ -64,7 +66,7 @@ export type ReadWrite<T> = Read<T> & Write<T>;
  * @see Write
  * @see Sched
  */
-export type Variable = Read<unknown> | Array<Read<unknown>> | MultiPort<Present>
+export type Variable = Read<unknown> | Array<Read<unknown>> | MultiPort<Present> // FIXME(marten): this looks suspicious
 
 
 //--------------------------------------------------------------------------//
@@ -83,6 +85,14 @@ export interface Call<A, R> extends Write<A>, Read<R> {
  */
 export interface Read<T> {
     get(): T | Absent;
+}
+
+export interface MultiRead<T> {
+    get(index: number): T | Absent
+}
+
+export interface MultiWrite<T> {
+    set: (index: number, value: T) => void;
 }
 
 /**
@@ -417,7 +427,7 @@ export abstract class Reactor extends Component {
      * @param key The key that verifies the containment relation between this
      * reactor and the component, with at most one level of indirection.
      */
-    protected _getKey(component: Trigger, key?: Symbol): Symbol | undefined {
+    protected _getKey(component: NonComposite, key?: Symbol): Symbol | undefined {
         if (component._isContainedBy(this) || this._key === key) {
             return this._keyChain.get(component)
         } else if (!(component instanceof Action) && 
@@ -560,7 +570,13 @@ export abstract class Reactor extends Component {
     //     return this._active
     // }
 
-    public writable<T extends Present>(port: IOPort<T>): ReadWrite<T> {
+    //
+   
+    public allWritable<T extends Present>(port: MultiPort<T>): MultiReadWrite<T> {
+        return port.asWritable(this._getKey(port));
+    }
+
+    public writable<T extends Present>(port: IOPort<T>): WritablePort<T>  {
         return port.asWritable(this._getKey(port));
     }
 

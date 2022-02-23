@@ -1,7 +1,7 @@
-import { Absent, Present, Reactor, Runtime } from "./reactor";
 import { Component } from "./component";
 import { TaggedEvent } from "./event";
 import { Reaction } from "./reaction";
+import { Absent, Present, Reactor, Runtime } from "./reactor";
 import { Tag } from "./time";
 
 export interface TriggerManager {
@@ -12,11 +12,21 @@ export interface TriggerManager {
 
 
 
+export abstract class Atom extends Component {
+
+    /**
+ * Return the owner of this trigger.
+ */
+     public getContainer(): Reactor | null {
+        return this._getContainer()
+    }
+
+}
 
 /**
  * Abstract class for a trigger. A trigger may be an action, port, or timer.
  */
- export abstract class Trigger extends Component {
+ export abstract class Trigger extends Atom {
 
     /**
      * Reactions to trigger.
@@ -32,12 +42,6 @@ export interface TriggerManager {
      */
     abstract getManager(key: Symbol | undefined): TriggerManager;
 
-    /**
-     * Return the owner of this trigger.
-     */
-    public getContainer(): Reactor | null {
-        return this._getContainer()
-    }
 
     /**
      * Return whether or not this trigger is present.
@@ -45,6 +49,8 @@ export interface TriggerManager {
     abstract isPresent(): boolean;
 
 }
+
+
 
 /**
  * 
