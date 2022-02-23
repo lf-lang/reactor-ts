@@ -1,6 +1,4 @@
-import { Bank } from "../src/core/bank";
-import { Reactor, App, Timer, Triggers, Args, Present, OutPort, InPort} from "../src/core/reactor";
-import { TimeValue } from "../src/core/time";
+import { Bank , Reactor, App, Timer, Triggers, Args, Present, OutPort, InPort, TimeValue } from "../src/core/internal";
 
 class Periodic extends Reactor {
     

@@ -297,11 +297,13 @@ export class OutMultiPort<T extends Present> extends MultiPort<T> {
     }
     
     public channel(index: number): IOPort<T> {
-        throw new Error("Method not implemented.");
+        return this._channels[index]
     }
+
     public _receiveRuntimeObject(runtime: Runtime): void {
         throw new Error("Method not implemented.");
     }
+    
     private _channels: Array<OutPort<T>>
 
     constructor(container: Reactor, width: number) {

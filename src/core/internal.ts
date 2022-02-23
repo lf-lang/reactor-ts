@@ -10,3 +10,4 @@ export * from "./reactor"
 export * from "./event";
 export * from "./federation"
 export * from "./cli"
+export * from "./bank"
