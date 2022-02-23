@@ -1,4 +1,4 @@
-import { Read, Write } from "./reactor";
+import { Read, Write } from "./internal";
 
 /**
  * A state variable. This class refines the Read interface by letting `get`

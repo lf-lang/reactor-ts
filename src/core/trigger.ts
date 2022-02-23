@@ -1,8 +1,10 @@
 import { Component } from "./component";
-import { TaggedEvent } from "./event";
+import type { TaggedEvent } from "./event";
 import { Reaction } from "./reaction";
-import { Absent, Present, Reactor, Runtime } from "./reactor";
-import { Tag } from "./time";
+import { Origin, Tag } from "./time";
+
+import type { Absent, Present } from "./types";
+import type { Reactor, Runtime } from "./reactor";
 
 export interface TriggerManager {
     getContainer(): Reactor;
@@ -12,7 +14,7 @@ export interface TriggerManager {
 
 
 
-export abstract class Atom extends Component {
+export abstract class NonComposite extends Component {
 
     /**
  * Return the owner of this trigger.
@@ -26,7 +28,7 @@ export abstract class Atom extends Component {
 /**
  * Abstract class for a trigger. A trigger may be an action, port, or timer.
  */
- export abstract class Trigger extends Atom {
+ export abstract class Trigger extends NonComposite {
 
     /**
      * Reactions to trigger.
@@ -133,4 +135,8 @@ export abstract class Atom extends Component {
     }
 
 }
+
+// FIXME(marten): move these to trigger.ts and let them extend trigger
+
+
 

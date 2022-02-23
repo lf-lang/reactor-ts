@@ -1,5 +1,4 @@
-import { Port } from './port';
-import { Present, Reactor } from './reactor'
+import { Port, Present, Reactor } from './internal';
 
 /**
  * Type that describes a class with a constructor of which the arguments 

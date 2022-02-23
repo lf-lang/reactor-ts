@@ -1,4 +1,4 @@
-import {Reactor, App, Runtime} from "./reactor";
+import {Reactor, App, Runtime} from "./internal"
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each

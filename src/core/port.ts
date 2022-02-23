@@ -1,10 +1,10 @@
-import { Component } from "./component";
-import { Reaction } from "./reaction";
-import { Absent, InPort, MultiReadWrite, OutPort, Present, Reactor, Read, ReadWrite, Runtime } from "./reactor";
-import { Tag } from "./time";
-import { NonComposite, Trigger, TriggerManager } from "./trigger";
-import { Log } from "./util";
+import {
+    Reaction, Reactor, Runtime, Tag, NonComposite, Trigger, TriggerManager,
+    Absent, MultiRead, MultiReadWrite, Present, ReadWrite, Log
+} from "./internal"
 
+
+// FIXME(marten): moving these two to port.ts results in a circular import problem with many test files:
 
 export abstract class Port<T extends Present> extends Trigger {
     
@@ -187,11 +187,21 @@ export abstract class IOPort<T extends Present> extends Port<T> {
 }
 
 
-export abstract class MultiPort<T extends Present> extends NonComposite {
+export class OutPort<T extends Present> extends IOPort<T> {
+
+}
+
+export class InPort<T extends Present> extends IOPort<T> {
+
+}
+
+export abstract class MultiPort<T extends Present> extends NonComposite implements MultiRead<T> {
     
     constructor(container: Reactor, readonly width: number) {
         super(container)
     }
+    
+    abstract get(index: number): T | Absent;
     
     public static values<T extends Present>(ports: Array<IOPort<T>>): Array<T | Absent> {
         let values = new Array<T | Absent>(ports.length);
@@ -211,15 +221,14 @@ export abstract class MultiPort<T extends Present> extends NonComposite {
     
     private readonly bla: Array<WritablePort<T>> = new Array();
 
-    constructor(private port:MultiPort<T>, private container: Reactor | null) {
-        if (container !== null) {
-            port.channels().forEach(channel => {
-                this.bla.push(container.writable(channel))
-            });
-        }
-    }
+     constructor(private port: MultiPort<T>) {
+         port.channels().forEach(channel => {
+             let writer = port.getContainer()?.writable(channel)
+             if (writer) this.bla.push(writer)
+         });
+     }
 
-    get(index: number): T | undefined {
+    public get(index: number): T | undefined {
         return this.port.channel(index).get()
     }
 
@@ -227,7 +236,7 @@ export abstract class MultiPort<T extends Present> extends NonComposite {
         this.bla[index].set(value)
     }
     
-}(this, this.getContainer())
+}(this)
 
     public abstract channels(): Array<IOPort<T>>
 
@@ -253,6 +262,10 @@ public _receiveRuntimeObject(runtime: Runtime): void {
 
 export class InMultiPort<T extends Present> extends MultiPort<T> {
     
+    public get(index: number): T | undefined {
+        return this._channels[index].get()
+    }
+    
     public channel(index: number): IOPort<T> {
         return this._channels[index]
     }
@@ -276,6 +289,11 @@ export class InMultiPort<T extends Present> extends MultiPort<T> {
     }
 }
 export class OutMultiPort<T extends Present> extends MultiPort<T> {
+
+    public get(index: number): T | undefined {
+        return this._channels[index].get()
+    }
+    
     public channel(index: number): IOPort<T> {
         throw new Error("Method not implemented.");
     }

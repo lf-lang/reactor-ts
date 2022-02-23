@@ -1,10 +1,9 @@
-import {Log} from './util';
-import {Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm} from './time';
+import {
+    Log, Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm,
+    Present, App, Action, FederatePortAction, TaggedEvent
+} from './internal';
 import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter} from 'events';
-import {Present, App} from './reactor';
-import {Action, FederatePortAction} from './action';
-import {TaggedEvent} from './event';
 
 //---------------------------------------------------------------------//
 // Federated Execution Constants and Enums                             //

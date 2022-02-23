@@ -6,68 +6,17 @@
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
 
-import {PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
-import {TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm} from './time';
-import {Component} from "./component"
-import {Reaction, Priority, Mutation, Procedure} from "./reaction"
-import { IOPort, MultiPort, Port, WritablePort } from './port';
-import { Action, Shutdown, Startup } from './action';
-import { NonComposite, ScheduledTrigger, Trigger, TriggerManager } from './trigger';
-import { TaggedEvent } from './event';
+import {
+    TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm, PrioritySet,
+    SortableDependencyGraph, Log, DependencyGraph, Reaction, Priority, 
+    Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
+    Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
+    Component, NonComposite, ScheduledTrigger, Trigger, TriggerManager,
+    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown
+} from "./internal"
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
-
-// FIXME(marten): moving these two to port.ts results in a circular import problem with many test files:
-export class OutPort<T extends Present> extends IOPort<T> {
-
-}
-
-export class InPort<T extends Present> extends IOPort<T> {
-
-}
-
-//--------------------------------------------------------------------------//
-// Types                                                                    //
-//--------------------------------------------------------------------------//
-
-/**
- * Type that denotes the absence of a value.
- * @see Variable
- */
-export type Absent = undefined;
-
-/**
- * Conditional type for argument lists of reactions. If the type variable
- * `T` is inferred to be a subtype of `Variable[]` it will yield `T`; it  
- * will yield `never` if `T` is not a subtype of `Variable[]`.
- * @see Reaction
- */
-export type ArgList<T> = T extends Variable[] ? T : never;
-
-export type ParmList<T> = T extends any[] ? T : never;
-
-/**
- * Type for data exchanged between ports.
- */
-export type Present = (number | bigint | string | boolean | symbol | object | null);
-
-/**
- * Type for simple variables that are both readable and writable.
- */
-export type ReadWrite<T> = Read<T> & Write<T>;
-
-export type MultiReadWrite<T> = MultiRead<T> & MultiWrite<T>;
-
-/**
- * A variable can be read, written to, or scheduled. Variables may be passed to
- * reactions in an argument list.
- * @see Read
- * @see Write
- * @see Sched
- */
-export type Variable = Read<unknown> | Array<Read<unknown>> | MultiPort<Present> // FIXME(marten): this looks suspicious
-
 
 //--------------------------------------------------------------------------//
 // Interfaces                                                               //
@@ -80,36 +29,6 @@ export interface Call<A, R> extends Write<A>, Read<R> {
     invoke(args: A): R | undefined;
 }
 
-/**
- * Interface for readable variables.
- */
-export interface Read<T> {
-    get(): T | Absent;
-}
-
-export interface MultiRead<T> {
-    get(index: number): T | Absent
-}
-
-export interface MultiWrite<T> {
-    set: (index: number, value: T) => void;
-}
-
-/**
- * Interface for schedulable actions.
- */
-export interface Sched<T> extends Read<T> {
-    schedule: (extraDelay: TimeValue | 0, value: T, intendedTag?: Tag) => void;
-    // FIXME: it makes sense to be able to check the presence of a (re)schedulable action.
-}
-
-/**
- * Interface for writable ports.
- */
-export interface Write<T> {
-    set: (value: T) => void;
-}
-
 
 
 /**
@@ -117,10 +36,7 @@ export interface Write<T> {
  * regular action. In addition to a get method, it also has a schedule method
  * that allows for the action to be scheduled.
  */
-export abstract class SchedulableAction<T extends Present> implements Sched<T> {
-    abstract get(): T | undefined;
-    abstract schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void;
-}
+
 
 //--------------------------------------------------------------------------//
 // Core Reactor Classes                                                     //
@@ -191,21 +107,6 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
     }
 
 }
-
-export class Args<T extends Variable[]> {
-    tuple: T;
-    constructor(...args: T) {
-        this.tuple = args;
-    }
-}
-
-export class Triggers {
-    list: Variable[];
-    constructor(trigger: Variable, ...triggers: Variable[]) {
-        this.list = triggers.concat(trigger)
-    }
-}
-
 
 
 /**

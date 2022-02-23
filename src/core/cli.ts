@@ -1,7 +1,6 @@
 import commandLineArgs from 'command-line-args';
 import commandLineUsage from 'command-line-usage';
-import {TimeUnit, TimeValue} from './time';
-import { LogLevel } from './util';
+import {TimeUnit, TimeValue, LogLevel} from './internal';
 
 //---------------------------------------------------------------------//
 // Command Line Arguments Helper Functions                             //
