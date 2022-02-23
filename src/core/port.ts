@@ -222,10 +222,11 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
     private readonly bla: Array<WritablePort<T>> = new Array();
 
      constructor(private port: MultiPort<T>) {
-         port.channels().forEach(channel => {
-             let writer = port.getContainer()?.writable(channel)
-             if (writer) this.bla.push(writer)
-         });
+        // FIXME: won't work because channels have not been created yet
+        //  port.channels().forEach(channel => {
+        //      let writer = port.getContainer()?.writable(channel)
+        //      if (writer) this.bla.push(writer)
+        //  });
      }
 
     public get(index: number): T | undefined {
@@ -233,7 +234,8 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
     }
 
     public set(index: number, value: T): void {
-        this.bla[index].set(value)
+        this.port.getContainer()?.writable(this.port.channel(index)).set(value)
+        //this.bla[index].set(value)
     }
     
 }(this)
