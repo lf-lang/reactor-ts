@@ -1,5 +1,5 @@
 
-import { Tag, TimeValue } from "./time";
+import { Tag, TimeValue } from "./internal";
 
 /**
  * A variable can be read, written to, or scheduled. Variables may be passed to
