@@ -1,9 +1,10 @@
+
+import {Socket, createConnection, SocketConnectOpts} from 'net'
+import {EventEmitter} from 'events';
 import {
     Log, Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm,
     Present, App, Action, FederatePortAction, TaggedEvent
 } from './internal';
-import {Socket, createConnection, SocketConnectOpts} from 'net'
-import {EventEmitter} from 'events';
 
 //---------------------------------------------------------------------//
 // Federated Execution Constants and Enums                             //
