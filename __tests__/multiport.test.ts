@@ -29,7 +29,7 @@ import { Args, Triggers, Reactor, App, InMultiPort, InPort, OutMultiPort } from 
                         expect(true).toBe(true);
                     });
                     out.set(0, 42)
-                    out.set(0, 69)
+                    out.set(1, 69)
                 }
             );
         }
