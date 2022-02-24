@@ -9,7 +9,7 @@ import { Args, Triggers, Reactor, App, InMultiPort, InPort, OutMultiPort } from 
         constructor(parent: Reactor) {
             super(parent)
             this.addReaction(
-                new Triggers(this.inp.channel(0), this.inp.channel(1)), 
+                new Triggers(this.inp), 
                 new Args(this.inp),
                 function (this, inp) {
                     console.log("Getting triggered")
@@ -43,9 +43,9 @@ import { Args, Triggers, Reactor, App, InMultiPort, InPort, OutMultiPort } from 
 
         constructor() {
             super();
-            //this._connectMulti([this.x.out], [this.y.inp], false)
-            this._connect(this.x.out.channel(0), this.y.inp.channel(0))
-            this._connect(this.x.out.channel(1), this.y.inp.channel(1))
+            this._connectMulti([this.x.out], [this.y.inp], false)
+            //this._connect(this.x.out.channel(0), this.y.inp.channel(0))
+            //this._connect(this.x.out.channel(1), this.y.inp.channel(1))
         }
 
     }

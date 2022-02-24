@@ -527,9 +527,8 @@ export abstract class Reactor extends Component {
             }
             if (t instanceof MultiPort) {
                 console.log("Encountered multiport!! >>>>>>>>>-----")
-                let key = this._getKey(t)
                 if (t instanceof InMultiPort || t instanceof OutMultiPort) {
-                    t.channels().forEach(channel => channel.getManager(key).addReaction(reaction))
+                    t.channels().forEach(channel => channel.getManager(this._getKey(channel)).addReaction(reaction))
                 }
             }
 
