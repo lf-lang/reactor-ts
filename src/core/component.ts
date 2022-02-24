@@ -11,10 +11,7 @@ import {Reactor, App, Runtime, MultiPort, IOPort} from "./internal"
  */
 export abstract class Component {
 
-    /**
-     * An optional alias for this component.
-     */
-    protected _alias: string | undefined;
+    public static pathSeparator = '.'
 
     /**
      * A symbol that identifies this component, and it also used to selectively
@@ -40,8 +37,7 @@ export abstract class Component {
      * constructor in order to establish a link with the runtime object.
      * @param alias An optional alias for the component.
      */
-    constructor(container: Reactor | null, alias?:string) {
-        this._alias = alias
+    constructor(container: Reactor | null) {
 
         if (container !== null) {
             // Register.
@@ -75,7 +71,7 @@ export abstract class Component {
     }
 
     /**
-     * Report whether this component has been registed with its container or not.
+     * Report whether this component has been registered with its container or not.
      * In principle, all components should have a container, but at the time of
      * their construction there is a brief period where they are not. This is the
      * only moment that a component is allowed register with its container.
@@ -110,72 +106,77 @@ export abstract class Component {
     }
 
     /**
-     * Return the alias of this component, or an empty string if none was set.
-     */
-    public _getAlias(): string {
-        if (this._alias) return this._alias
-        else return ""
-    }
-
-    /**
      * Return a string that identifies this component.
      * The name is a path constructed as `[App]/[..]/[Container]/[This]`.
      */
-    _getFullyQualifiedName(): string {
-        var path = "";
+    _getFullyQualifiedName(): string {        
         if (!(this instanceof App)) {
-            path = this._container._getFullyQualifiedName();
-        }
-        if (path != "") {
-            path += "/" + this._getName();
+            return this._container._getFullyQualifiedName() + Component.pathSeparator + this._getName();
         } else {
-            path = this._getName();
+            return this._getName()
         }
-        return path;
     }
 
     /**
-     * Return a string that identifies this component within its container.
+     * Given a component and its container (the global object if the component
+     * is an `App`), return the key of the entry that matches the component.
+     * @param component a component of which the object is assumed to be its
+     * container
+     * @param object the assumed container of the component
+     * @returns the key of the entry that matches the component
      */
-    public _getName(): string {
-
-        var name = ""
-        if (!(this instanceof App)) {
-            for (const [key, value] of Object.entries(this._container)) {
-                if (value === this) {
-                    name = `${key}`
-                    break
-                }
+    private static keyOfMatchingEntry(component: Component, object: Object) {
+        for (const [key, value] of Object.entries(object)) {
+            if (value === component) {
+                return `${key}`
             }
         }
-        // Handle multiports
-        if (this instanceof IOPort) {
-            for (const [key, value] of Object.entries(this._container)) {
-                if (value instanceof MultiPort) {
-                    let channels = value.channels()
-                    for (let i=0; i < channels.length; i++) {
-                        if (channels[i] === this) {
-                            name = `${key}[${i}]`
-                        }
+    }
+
+    /**
+     * Given a port and its containing reactor, return the key of the entry that matches
+     * a multiport found in the reactor that matches the port.
+     * @param port a port that is assumed to be a constituent of a multiport declared on
+     * the given reactor
+     * @param reactor a reactor that is assumed to have a multiport of which one of the 
+     * constituents is the given port
+     * @returns an identifier for the port based on its location in a matching multiport
+     */
+    public static keyOfMatchingMultiport(port: Component, reactor: Reactor) {
+        for (const [key, value] of Object.entries(reactor)) {
+            if (value instanceof MultiPort) {
+                let channels = value.channels()
+                for (let i=0; i < channels.length; i++) {
+                    if (channels[i] === port) {
+                        return `${key}[${i}]`
                     }
                 }
             }
         }
+    }
 
-        if (this._alias) {
-            if (name == "") {
-                name = this._alias
-            } else {
-                name += ` (${this._alias})`
-            }
+    /**
+     * Return a string that identifies this component within its container.
+     * If no such string was found, return the name of the constructor.
+     */
+    public _getName(): string {
+        var name
+
+        if (this instanceof App) {
+            name = Component.keyOfMatchingEntry(this, global)
+        } else {
+            name = Component.keyOfMatchingEntry(this, this._container)
         }
-        // Return the constructor name in case the component wasn't found in
-        // its container and doesn't have an alias.
-        if (name == "") {
-            name = this.constructor.name
+
+        if (!name && this instanceof IOPort) {
+            name = Component.keyOfMatchingMultiport(this, this._container)
         }
-        
-        return name
+
+        if (name) {
+            return name
+        } else {
+            return this.constructor.name
+        }
     }
 
     /**
@@ -183,14 +184,5 @@ export abstract class Component {
      */
     protected _getContainer(): Reactor {
         return this._container
-    }
-
-    /**
-     * Set an alias to override the name assigned to this component by its
-     * container.
-     * @param alias An alternative name.
-     */
-    protected _setAlias(alias: string) {
-        this._alias = alias
     }
 }

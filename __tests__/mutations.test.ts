@@ -109,7 +109,7 @@ class ScatterGather extends App {
 class ZenoClock extends Reactor {
     tick:Timer;
     constructor(owner: Reactor, iteration: number) {
-        super(owner, "ZenoClock(" + iteration + ")")
+        super(owner)
         console.log("Creating ZenoClock " + iteration)
         this.tick = new Timer(this, 0, 0)
         this.addReaction(new Triggers(this.tick), new Args(this.tick), function(this, tick) {

@@ -18,8 +18,8 @@ class TwoInTwoOut extends Reactor {
                     expect(inp._getName()).toBe("inp");
                     expect(inp.channel(0)._getName()).toBe("inp[0]");
                     expect(inp.channel(1)._getName()).toBe("inp[1]");
-                    expect(inp.channel(0)._getFullyQualifiedName()).toBe("myApp/y/inp[0]");
-                    expect(inp.channel(1)._getFullyQualifiedName()).toBe("myApp/y/inp[1]");
+                    expect(inp.channel(0)._getFullyQualifiedName()).toBe("myApp.y.inp[0]");
+                    expect(inp.channel(1)._getFullyQualifiedName()).toBe("myApp.y.inp[1]");
                 });
             }
         );

@@ -12,8 +12,7 @@ import {
     Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
     Component, NonComposite, ScheduledTrigger, Trigger, TriggerManager,
-    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown,
-    InMultiPort, OutMultiPort
+    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown
 } from "./internal"
 
 // Set the default log level.
@@ -422,8 +421,8 @@ export abstract class Reactor extends Component {
      * @param container The container of this reactor.
      */
 
-    constructor(container: Reactor | null, alias?:string) {
-        super(container, alias);
+    constructor(container: Reactor | null) {
+        super(container);
         
         this._linkToRuntimeObject()
         this.shutdown = new Shutdown(this);
@@ -1517,6 +1516,7 @@ export interface Runtime {
     delete(r: Reactor): void;
     isRunning(): boolean;
 }
+
 
 // interface CoreFunctions {
 //     stage(reaction: Reaction<unknown>): void;

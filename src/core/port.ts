@@ -12,8 +12,8 @@ export abstract class Port<T extends Present> extends Trigger {
 
     protected runtime!: Runtime;
 
-    constructor(container: Reactor, alias?: string) {
-        super(container, alias)
+    constructor(container: Reactor) {
+        super(container)
         this._linkToRuntimeObject()
     }
 

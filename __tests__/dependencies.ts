@@ -1,5 +1,5 @@
 import {Reactor, App, Triggers, Args, InPort, Reaction, Priority,
-    SortableDependencyGraph, Sortable, PrioritySet, Log} from '../src/core/internal';
+    SortableDependencyGraph, Sortable, PrioritySet, Log, StringUtil} from '../src/core/internal';
 
 //Log.setGlobalLevel(Log.levels.DEBUG);
 
@@ -102,11 +102,13 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.size()[0]).toEqual(6); // V
         expect(graph.size()[1]).toEqual(7); // E
         expect(graph.toString()).toBe(
-`digraph G {
-"App/R[R0]"->"App/R[R1]"->"App/R[R4]"->"App/R[R3]"->"App/R[R5]";
-"App/R[R0]"->"App/R[R4]";
-"App/R[R1]"->"App/R[R2]"->"App/R[R3]";
-}`);
+            StringUtil.dontIndent
+            `digraph G {
+            "App.R[R0]"->"App.R[R1]"->"App.R[R4]"->"App.R[R3]"->"App.R[R5]";
+            "App.R[R0]"->"App.R[R4]";
+            "App.R[R1]"->"App.R[R2]"->"App.R[R3]";
+            }`
+        );
     });
 
     it('initial priorities', () => {
@@ -125,9 +127,9 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.size()[1]).toEqual(6); // E
         expect(graph.toString()).toBe(
 `digraph G {
-"App/R[R0]"->"App/R[R1]"->"App/R[R2]"->"App/R[R3]"->"App/R[R5]";
-"App/R[R1]"->"App/R[R4]";
-"App/R[R0]"->"App/R[R4]";
+"App.R[R0]"->"App.R[R1]"->"App.R[R2]"->"App.R[R3]"->"App.R[R5]";
+"App.R[R1]"->"App.R[R4]";
+"App.R[R0]"->"App.R[R4]";
 }`);
     });
 
@@ -137,10 +139,12 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.size()[1]).toEqual(3); // E
         Log.global.debug(graph.toString());
         expect(graph.toString()).toBe(
-`digraph G {
-"App/R[R2]"->"App/R[R3]"->"App/R[R5]";
-"App/R[R0]"->"App/R[R4]";
-}`);
+            StringUtil.dontIndent
+            `digraph G {
+            "App.R[R2]"->"App.R[R3]"->"App.R[R5]";
+            "App.R[R0]"->"App.R[R4]";
+            }`
+        );
     });
 
     it('add node 7, make 3 dependent on it', () => {
@@ -150,11 +154,13 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.size()[1]).toEqual(4); // E
         Log.global.debug(graph.toString());
         expect(graph.toString()).toBe(
-`digraph G {
-"App/R[R2]"->"App/R[R3]"->"App/R[R5]";
-"App/R[R0]"->"App/R[R4]";
-"App/R[R2]"->"App/R[R6]";
-}`);
+            StringUtil.dontIndent
+            `digraph G {
+            "App.R[R2]"->"App.R[R3]"->"App.R[R5]";
+            "App.R[R0]"->"App.R[R4]";
+            "App.R[R2]"->"App.R[R6]";
+            }`
+        );
     });
 
     it('reassign priorities', () => {

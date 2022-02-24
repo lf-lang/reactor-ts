@@ -59,8 +59,8 @@ export abstract class NonComposite extends Component {
     
     protected runtime!: Runtime;
 
-    constructor(container: Reactor, alias?: string) { // FIXME: do we really want the alias here? Probably not.
-        super(container, alias)
+    constructor(container: Reactor) {
+        super(container)
         this._linkToRuntimeObject()
     }
 

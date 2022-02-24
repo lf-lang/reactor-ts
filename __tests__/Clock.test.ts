@@ -22,9 +22,8 @@ export class Clock extends App {
     a2 = new Action<number>(this, Origin.logical);
     a3 = new Action<number>(this, Origin.logical);
 
-    constructor(name: string, timeout: TimeValue,  success: () => void, fail: () => void) {
+    constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
         super(timeout, false, false, success, fail);
-        this._alias = name;
         this.addReaction(
             new Triggers(this.t1),
             new Args(this.schedulable(this.a1)),
@@ -101,7 +100,7 @@ describe('clock', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 6 seconds.
-        var clock = new Clock("Clock", TimeValue.secs(6), done, fail);
+        var clock = new Clock(TimeValue.secs(6), done, fail);
 
         //Don't give the runtime the done callback because we don't care if it terminates
         clock._start();
