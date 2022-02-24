@@ -1,11 +1,16 @@
-import { TaggedEvent } from "./event";
-import { Absent, Present, Reactor, Read, Sched, SchedulableAction } from "./reactor";
-import { getCurrentPhysicalTime, Origin, Tag, TimeUnit, TimeValue } from "./time";
-import { ScheduledTrigger, TriggerManager } from "./trigger";
-import { Log } from "./util";
+import type {Absent, Present, Read, Sched} from "./internal" 
+import { 
+    Reactor, Log, TaggedEvent, 
+    getCurrentPhysicalTime, Origin, Tag, TimeUnit, TimeValue,
+    ScheduledTrigger, TriggerManager
+} from "./internal";
 
 const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
 
+export abstract class SchedulableAction<T extends Present> implements Sched<T> {
+    abstract get(): T | undefined;
+    abstract schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void;
+}
 
 /**
  * An action denotes a self-scheduled event.
@@ -117,8 +122,6 @@ const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
         return this._getFullyQualifiedName();
     }
 }
-
-// FIXME(marten): move these to trigger.ts and let them extend trigger
 
 export class Startup extends Action<Present> { // FIXME: this should not be a schedulable trigger, just a trigger
     constructor(__parent__: Reactor) {

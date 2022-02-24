@@ -1,6 +1,5 @@
 import {Logger} from '../src/share/Logger'
-import {Reactor, App} from '../src/core/reactor';
-import { Log, LogLevel } from '../src/core/util'
+import {Reactor, App, Log, LogLevel} from '../src/core/internal';
 
 const _reactor:Reactor = new App()
 const lg:Logger = new Logger(_reactor , 10)

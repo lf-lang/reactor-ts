@@ -1,7 +1,4 @@
-import { Present } from "./reactor";
-import { Tag } from "./time";
-import { ScheduledTrigger } from "./trigger";
-import { PrioritySetElement } from "./util";
+import type { Tag, ScheduledTrigger, Present, PrioritySetElement } from "./internal";
 
 /**
  * An event is caused by a timer or a scheduled action. Each event is tagged

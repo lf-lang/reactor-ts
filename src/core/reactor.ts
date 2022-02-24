@@ -6,66 +6,18 @@
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
 
-import {PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
-import {TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm} from './time';
-import {Component} from "./component"
-import {Reaction, Priority, Mutation, Procedure} from "./reaction"
-import { IOPort, MultiPort, Port, WritablePort } from './port';
-import { Action, Shutdown, Startup } from './action';
-import { ScheduledTrigger, Trigger, TriggerManager } from './trigger';
-import { TaggedEvent } from './event';
+import {
+    TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm, PrioritySet,
+    SortableDependencyGraph, Log, DependencyGraph, Reaction, Priority, 
+    Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
+    Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
+    Component, NonComposite, ScheduledTrigger, Trigger, TriggerManager,
+    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown,
+    InMultiPort, OutMultiPort
+} from "./internal"
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
-
-// FIXME(marten): moving these two to port.ts results in a circular import problem with many test files:
-export class OutPort<T extends Present> extends IOPort<T> {
-
-}
-
-export class InPort<T extends Present> extends IOPort<T> {
-
-}
-
-//--------------------------------------------------------------------------//
-// Types                                                                    //
-//--------------------------------------------------------------------------//
-
-/**
- * Type that denotes the absence of a value.
- * @see Variable
- */
-export type Absent = undefined;
-
-/**
- * Conditional type for argument lists of reactions. If the type variable
- * `T` is inferred to be a subtype of `Variable[]` it will yield `T`; it  
- * will yield `never` if `T` is not a subtype of `Variable[]`.
- * @see Reaction
- */
-export type ArgList<T> = T extends Variable[] ? T : never;
-
-export type ParmList<T> = T extends any[] ? T : never;
-
-/**
- * Type for data exchanged between ports.
- */
-export type Present = (number | bigint | string | boolean | symbol | object | null);
-
-/**
- * Type for simple variables that are both readable and writable.
- */
-export type ReadWrite<T> = Read<T> & Write<T>;
-
-/**
- * A variable can be read, written to, or scheduled. Variables may be passed to
- * reactions in an argument list.
- * @see Read
- * @see Write
- * @see Sched
- */
-export type Variable = Read<unknown> | Array<Read<unknown>> | MultiPort<Present>
-
 
 //--------------------------------------------------------------------------//
 // Interfaces                                                               //
@@ -78,28 +30,6 @@ export interface Call<A, R> extends Write<A>, Read<R> {
     invoke(args: A): R | undefined;
 }
 
-/**
- * Interface for readable variables.
- */
-export interface Read<T> {
-    get(): T | Absent;
-}
-
-/**
- * Interface for schedulable actions.
- */
-export interface Sched<T> extends Read<T> {
-    schedule: (extraDelay: TimeValue | 0, value: T, intendedTag?: Tag) => void;
-    // FIXME: it makes sense to be able to check the presence of a (re)schedulable action.
-}
-
-/**
- * Interface for writable ports.
- */
-export interface Write<T> {
-    set: (value: T) => void;
-}
-
 
 
 /**
@@ -107,10 +37,7 @@ export interface Write<T> {
  * regular action. In addition to a get method, it also has a schedule method
  * that allows for the action to be scheduled.
  */
-export abstract class SchedulableAction<T extends Present> implements Sched<T> {
-    abstract get(): T | undefined;
-    abstract schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void;
-}
+
 
 //--------------------------------------------------------------------------//
 // Core Reactor Classes                                                     //
@@ -181,21 +108,6 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
     }
 
 }
-
-export class Args<T extends Variable[]> {
-    tuple: T;
-    constructor(...args: T) {
-        this.tuple = args;
-    }
-}
-
-export class Triggers {
-    list: Variable[];
-    constructor(trigger: Variable, ...triggers: Variable[]) {
-        this.list = triggers.concat(trigger)
-    }
-}
-
 
 
 /**
@@ -417,7 +329,7 @@ export abstract class Reactor extends Component {
      * @param key The key that verifies the containment relation between this
      * reactor and the component, with at most one level of indirection.
      */
-    protected _getKey(component: Trigger, key?: Symbol): Symbol | undefined {
+    protected _getKey(component: NonComposite, key?: Symbol): Symbol | undefined {
         if (component._isContainedBy(this) || this._key === key) {
             return this._keyChain.get(component)
         } else if (!(component instanceof Action) && 
@@ -560,7 +472,13 @@ export abstract class Reactor extends Component {
     //     return this._active
     // }
 
-    public writable<T extends Present>(port: IOPort<T>): ReadWrite<T> {
+    //
+   
+    public allWritable<T extends Present>(port: MultiPort<T>): MultiReadWrite<T> {
+        return port.asWritable(this._getKey(port));
+    }
+
+    public writable<T extends Present>(port: IOPort<T>): WritablePort<T>  {
         return port.asWritable(this._getKey(port));
     }
 
@@ -607,11 +525,19 @@ export abstract class Reactor extends Component {
             if (t instanceof Trigger) {
                 t.getManager(this._getKey(t)).addReaction(reaction)
             }
+            if (t instanceof MultiPort) {
+                console.log("Encountered multiport!! >>>>>>>>>-----")
+                if (t instanceof MultiPort) {
+                    t.channels().forEach(channel => channel.getManager(this._getKey(channel)).addReaction(reaction))
+                }
+            }
 
             // Also record this trigger as a dependency.
             if (t instanceof IOPort) {
                 this._dependencyGraph.addEdge(reaction, t)
                 //this._addDependency(t, reaction);
+            } else if (t instanceof MultiPort) {
+                // FIXME(marten)
             } else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
@@ -1008,7 +934,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             if (deps != undefined && deps.size > 0) {
                 return false;
             }
-
+            
             return this._isInScope(src, dst)
 
         } else {
@@ -1116,6 +1042,12 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      * @param dst The destination port to connect.
      */
     protected _connect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
+        if (src === undefined || src === null) {
+            throw new Error("Cannot connect unspecified source");
+        }
+        if (dst === undefined || dst === null) {
+            throw new Error("Cannot connect unspecified destination");
+        } 
         if (this.canConnect(src, dst)) {
             this._uncheckedConnect(src, dst);
         } else {

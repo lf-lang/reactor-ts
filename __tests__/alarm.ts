@@ -1,4 +1,4 @@
-import { TimeValue, TimeUnit, Alarm } from '../src/core/time';
+import { TimeValue, TimeUnit, Alarm } from '../src/core/internal';
 import NanoTimer from 'nanotimer';
 
 var timerA = new NanoTimer();

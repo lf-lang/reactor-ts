@@ -1,4 +1,4 @@
-import {Reactor, App, Runtime} from "./reactor";
+import {Reactor, App, Runtime, MultiPort, IOPort} from "./internal"
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -145,6 +145,19 @@ export abstract class Component {
                 if (value === this) {
                     name = `${key}`
                     break
+                }
+            }
+        }
+        // Handle multiports
+        if (this instanceof IOPort) {
+            for (const [key, value] of Object.entries(this._container)) {
+                if (value instanceof MultiPort) {
+                    let channels = value.channels()
+                    for (let i=0; i < channels.length; i++) {
+                        if (channels[i] === this) {
+                            name = `${key}[${i}]`
+                        }
+                    }
                 }
             }
         }

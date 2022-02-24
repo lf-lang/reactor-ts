@@ -1,13 +1,15 @@
-import { Component } from "./component";
-import { Reaction } from "./reaction";
-import { Absent, InPort, OutPort, Present, Reactor, Read, ReadWrite, Runtime } from "./reactor";
-import { Tag } from "./time";
-import { Trigger, TriggerManager } from "./trigger";
-import { Log } from "./util";
+import {
+    Reaction, Reactor, Runtime, Tag, NonComposite, Trigger, TriggerManager,
+    Absent, MultiRead, MultiReadWrite, Present, ReadWrite, Log
+} from "./internal"
 
 
-export abstract class Port<T extends Present> extends Trigger implements Read<T> {
+// FIXME(marten): moving these two to port.ts results in a circular import problem with many test files:
+
+export abstract class Port<T extends Present> extends Trigger {
     
+    protected receivers: Set<WritablePort<T>> = new Set();
+
     protected runtime!: Runtime;
 
     constructor(container: Reactor, alias?: string) {
@@ -15,13 +17,13 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
         this._linkToRuntimeObject()
     }
 
-    /** The time stamp associated with this port's value. */
+    /** The tag associated with this port's value, or undefined is there is none. */
     protected tag: Tag | undefined;
 
-    /** The value associated with this port. */
+    /** The current value associated with this port. */
     protected value: T | Absent;
 
-    abstract get(): T | undefined;
+    // abstract get(): T | undefined;
 
     public _receiveRuntimeObject(runtime: Runtime) {
         if (!this.runtime) {
@@ -51,12 +53,6 @@ export abstract class Port<T extends Present> extends Trigger implements Read<T>
     }
 }
 
-enum PortType {
-    INPUT = 0,
-    OUTPUT = 1
-}
-
-
 /**
  * Abstract class for a writable port. It is intended as a wrapper for a
  * regular port. In addition to a get method, it also has a set method and
@@ -65,7 +61,12 @@ enum PortType {
  export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
     abstract get(): T | undefined;
     abstract set(value: T): void;
-    abstract getPort(): IOPort<T>
+    abstract getPort(): IOPort<T> // FIXME: just extend interface instead.
+}
+
+export interface WritableMultiPort<T extends Present> extends MultiReadWrite<T> {
+    getWriters(): Array<WritablePort<T>>
+    getPorts(): Array<IOPort<T>>
 }
 
 
@@ -75,8 +76,6 @@ interface IOPortManager<T extends Present> extends TriggerManager {
 }
 
 export abstract class IOPort<T extends Present> extends Port<T> {
-
-    protected receivers: Set<WritablePort<T>> = new Set();
 
     /**
      * Return the value set to this port. Return `Absent` if the connected
@@ -118,7 +117,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      * Inner class instance to gain access to Write<T> interface.
      */
     protected writer = new class extends WritablePort<T> {
-        constructor(private port:IOPort<T>) {
+        constructor(private port: IOPort<T>) {
             super()
         }
 
@@ -139,18 +138,18 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         public getPort(): IOPort<T> {
             return this.port
         }
-        
+
         public toString(): string {
             return this.port.toString()
         }
-        
+
     }(this)
 
     /**
      * Inner class instance to let the container configure this port.
      */
-    protected manager:IOPortManager<T> = new class implements IOPortManager<T> {
-        constructor(private port:IOPort<T>) {}
+    protected manager: IOPortManager<T> = new class implements IOPortManager<T> {
+        constructor(private port: IOPort<T>) { }
         getContainer(): Reactor {
             return this.port._getContainer()
         }
@@ -182,75 +181,16 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         }
     }(this)
 
-    toString(): string {InMultiPort
+    toString(): string {
         return this._getFullyQualifiedName();
     }
 }
 
 
-export abstract class MultiPort<T extends Present> extends Component {
-    protected runtime!: Runtime;
+export class OutPort<T extends Present> extends IOPort<T> {
 
-    constructor(container: Reactor, readonly width: number) {
-        super(container)
-    }
-    public abstract channels(): Array<IOPort<T>>
-
-    public _receiveRuntimeObject(runtime: Runtime) {
-        if (!this.runtime) {
-            this.runtime = runtime
-        } else {
-            throw new Error("Can only establish link to runtime once. Name: " + this._getFullyQualifiedName())
-        }
-    }
-
-    public static values<T extends Present>(ports: Array<Port<T>>): Array<T | Absent> {
-        let values = new Array<T | Absent>(ports.length);
-        for (let i = 0; i < values.length; i++) {
-            values[i] = ports[i].get();
-        }
-        return values
-    }
-
-    public abstract values(): Array<T | Absent>
 }
 
-export class InMultiPort<T extends Present> extends MultiPort<T> {
+export class InPort<T extends Present> extends IOPort<T> {
 
-    private _channels: Array<InPort<T>>
-
-    public channels() {
-        return this._channels
-    }
-
-    constructor(container: Reactor, width: number) {
-        super(container, width)
-        this._channels = new Array<InPort<T>>(width)
-        for (let i = 0; i < width; i++) {
-            this._channels[i] = new InPort<T>(container)
-        }
-    }
-
-    public values(): Array<T | Absent> {
-        return MultiPort.values(this._channels)
-    }
-}
-export class OutMultiPort<T extends Present> extends MultiPort<T> {
-    private _channels: Array<OutPort<T>>
-
-    constructor(container: Reactor, width: number) {
-        super(container, width)
-        this._channels = new Array<InPort<T>>(width)
-        for (let i = 0; i < width; i++) {
-            this._channels[i] = new InPort<T>(container)
-        }
-    }
-
-    public values(): Array<T | Absent> {
-        return MultiPort.values(this._channels)
-    }
-    
-    public channels() {
-        return this._channels
-    }
 }
