@@ -3,12 +3,12 @@ export * from "./time"
 export * from "./util"
 export * from "./reaction"
 export * from "./component"
-export * from "./trigger";
+export * from "./trigger"
 export * from "./action"
 export * from "./state"
-export * from "./port";
+export * from "./port"
 export * from "./reactor"
 export * from "./bank"
-export * from "./event";
+export * from "./event"
 export * from "./federation"
 export * from "./cli"

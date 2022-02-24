@@ -14,6 +14,7 @@ import {
     Component, NonComposite, ScheduledTrigger, Trigger, TriggerManager,
     Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown
 } from "./internal"
+import { InMultiPort, OutMultiPort } from "./port";
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -524,6 +525,13 @@ export abstract class Reactor extends Component {
             if (t instanceof Trigger) {
                 t.getManager(this._getKey(t)).addReaction(reaction)
             }
+            if (t instanceof MultiPort) {
+                console.log("Encountered multiport!! >>>>>>>>>-----")
+                let key = this._getKey(t)
+                if (t instanceof InMultiPort || t instanceof OutMultiPort) {
+                    t.channels().forEach(channel => channel.getManager(key).addReaction(reaction))
+                }
+            }
 
             // Also record this trigger as a dependency.
             if (t instanceof IOPort) {
@@ -925,7 +933,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             if (deps != undefined && deps.size > 0) {
                 return false;
             }
-
+            
             return this._isInScope(src, dst)
 
         } else {
@@ -1033,6 +1041,12 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      * @param dst The destination port to connect.
      */
     protected _connect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
+        if (src === undefined || src === null) {
+            throw new Error("Cannot connect unspecified source");
+        }
+        if (dst === undefined || dst === null) {
+            throw new Error("Cannot connect unspecified destination");
+        } 
         if (this.canConnect(src, dst)) {
             this._uncheckedConnect(src, dst);
         } else {
@@ -1049,7 +1063,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
         // TODO(hokeun): Check if the multiport's container is Bank when Bank is implemented.
         src.forEach(port => {
-            if (port instanceof MultiPort) {
+            if (port instanceof InMultiPort || port instanceof OutMultiPort) {
                 port.channels().forEach(singlePort => {
                     leftPorts.push(singlePort)
                 })
@@ -1059,7 +1073,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         })
 
         dest.forEach(port => {
-            if (port instanceof MultiPort) {
+            if (port instanceof InMultiPort || port instanceof OutMultiPort) {
                 port.channels().forEach(singlePort => {
                     rightPorts.push(singlePort)
                 })

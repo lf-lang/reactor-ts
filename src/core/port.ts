@@ -117,7 +117,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
      * Inner class instance to gain access to Write<T> interface.
      */
     protected writer = new class extends WritablePort<T> {
-        constructor(private port:IOPort<T>) {
+        constructor(private port: IOPort<T>) {
             super()
         }
 
@@ -138,18 +138,18 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         public getPort(): IOPort<T> {
             return this.port
         }
-        
+
         public toString(): string {
             return this.port.toString()
         }
-        
+
     }(this)
 
     /**
      * Inner class instance to let the container configure this port.
      */
-    protected manager:IOPortManager<T> = new class implements IOPortManager<T> {
-        constructor(private port:IOPort<T>) {}
+    protected manager: IOPortManager<T> = new class implements IOPortManager<T> {
+        constructor(private port: IOPort<T>) { }
         getContainer(): Reactor {
             return this.port._getContainer()
         }
@@ -196,13 +196,13 @@ export class InPort<T extends Present> extends IOPort<T> {
 }
 
 export abstract class MultiPort<T extends Present> extends NonComposite implements MultiRead<T> {
-    
+
     constructor(container: Reactor, readonly width: number) {
         super(container)
     }
-    
+
     abstract get(index: number): T | Absent;
-    
+
     public static values<T extends Present>(ports: Array<IOPort<T>>): Array<T | Absent> {
         let values = new Array<T | Absent>(ports.length);
         for (let i = 0; i < values.length; i++) {
@@ -213,65 +213,28 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
 
     public abstract values(): Array<T | Absent>
 
-
-    /**
-     * Inner class instance to gain access to Write<T> interface.
-     */
- protected writers = new class implements MultiReadWrite<T> {
-    
-    private readonly bla: Array<WritablePort<T>> = new Array();
-
-     constructor(private port: MultiPort<T>) {
-        // FIXME: won't work because channels have not been created yet
-        //  port.channels().forEach(channel => {
-        //      let writer = port.getContainer()?.writable(channel)
-        //      if (writer) this.bla.push(writer)
-        //  });
-     }
-
-    public get(index: number): T | undefined {
-        return this.port.channel(index).get()
-    }
-
-    public set(index: number, value: T): void {
-        this.port.getContainer()?.writable(this.port.channel(index)).set(value)
-        //this.bla[index].set(value)
-    }
-    
-}(this)
-
-    public abstract channels(): Array<IOPort<T>>
-
-    public abstract channel(index: number): IOPort<T>
-
-
     /**
      * Only the holder of the key may obtain a writable port.
      * @param key
      */
-    public asWritable(key: Symbol | undefined): MultiReadWrite<T> {
-        if (this._key === key) {
-            return this.writers
-        }
-    throw Error("Referenced port is out of scope: " + this._getFullyQualifiedName())
-}
+    public abstract asWritable(key: Symbol | undefined): MultiReadWrite<T>;
 
-public _receiveRuntimeObject(runtime: Runtime): void {
-    throw new Error("Method not implemented.");
-}
+    public _receiveRuntimeObject(runtime: Runtime): void {
+        throw new Error("Method not implemented.");
+    }
 
 }
 
 export class InMultiPort<T extends Present> extends MultiPort<T> {
-    
+
     public get(index: number): T | undefined {
         return this._channels[index].get()
     }
-    
-    public channel(index: number): IOPort<T> {
+
+    public channel(index: number): InPort<T> {
         return this._channels[index]
     }
-    
+
     private _channels: Array<InPort<T>>
 
     public channels() {
@@ -282,12 +245,53 @@ export class InMultiPort<T extends Present> extends MultiPort<T> {
         super(container, width)
         this._channels = new Array<InPort<T>>(width)
         for (let i = 0; i < width; i++) {
-            let port = new InPort<T>(container, this._getName())
+            this._channels[i] = new InPort<T>(container, this._getName() + "[" + i + "]")
         }
     }
 
     public values(): Array<T | Absent> {
         return MultiPort.values(this._channels)
+    }
+
+    /**
+ * Inner class instance to gain access to Write<T> interface.
+ */
+    protected writers = new class implements MultiReadWrite<T> {
+
+        private readonly bla: Array<WritablePort<T>> = new Array();
+
+        constructor(private port: InMultiPort<T>) {
+            // FIXME: won't work because channels have not been created yet
+            //  port.channels().forEach(channel => {
+            //      let writer = port.getContainer()?.writable(channel)
+            //      if (writer) this.bla.push(writer)
+            //  });
+        }
+
+        public get(index: number): T | undefined {
+            return this.port.channel(index).get()
+        }
+
+        public set(index: number, value: T): void {
+            console.log("Container: " + this.port.getContainer())
+            this.port.getContainer()?.writable(this.port.channel(index)).set(value)
+            //this.bla[index].set(value)
+        }
+
+
+
+    }(this)
+
+
+    /**
+     * Only the holder of the key may obtain a writable port.
+     * @param key
+     */
+    public asWritable(key: Symbol | undefined): MultiReadWrite<T> {
+        if (this._key === key) {
+            return this.writers
+        }
+        throw Error("Referenced port is out of scope: " + this._getFullyQualifiedName())
     }
 }
 export class OutMultiPort<T extends Present> extends MultiPort<T> {
@@ -295,30 +299,68 @@ export class OutMultiPort<T extends Present> extends MultiPort<T> {
     public get(index: number): T | undefined {
         return this._channels[index].get()
     }
-    
-    public channel(index: number): IOPort<T> {
+
+    public channel(index: number): OutPort<T> {
         return this._channels[index]
     }
 
     public _receiveRuntimeObject(runtime: Runtime): void {
         throw new Error("Method not implemented.");
     }
-    
+
     private _channels: Array<OutPort<T>>
 
     constructor(container: Reactor, width: number) {
         super(container, width)
-        this._channels = new Array<InPort<T>>(width)
+        this._channels = new Array<OutPort<T>>(width)
         for (let i = 0; i < width; i++) {
-            this._channels[i] = new InPort<T>(container)
+            this._channels[i] = new OutPort<T>(container, this._getName() + "[" + i + "]")
         }
     }
 
     public values(): Array<T | Absent> {
         return MultiPort.values(this._channels)
     }
-    
+
     public channels() {
         return this._channels
+    }
+
+    /**
+* Inner class instance to gain access to Write<T> interface.
+*/
+    protected writers = new class implements MultiReadWrite<T> {
+
+        private readonly bla: Array<WritablePort<T>> = new Array();
+
+        constructor(private port: OutMultiPort<T>) {
+            // FIXME: won't work because channels have not been created yet
+            //  port.channels().forEach(channel => {
+            //      let writer = port.getContainer()?.writable(channel)
+            //      if (writer) this.bla.push(writer)
+            //  });
+        }
+
+        public get(index: number): T | undefined {
+            return this.port.channel(index).get()
+        }
+
+        public set(index: number, value: T): void {
+            console.log("Container: " + this.port.getContainer())
+            this.port.getContainer()?.writable(this.port.channel(index)).set(value)
+            //this.bla[index].set(value)
+        }
+
+    }(this)
+
+    /**
+     * Only the holder of the key may obtain a writable port.
+     * @param key
+     */
+    public asWritable(key: Symbol | undefined): MultiReadWrite<T> {
+        if (this._key === key) {
+            return this.writers
+        }
+        throw Error("Referenced port is out of scope: " + this._getFullyQualifiedName())
     }
 }

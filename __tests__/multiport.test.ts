@@ -9,9 +9,10 @@ import { Args, Triggers, Reactor, App, InMultiPort, InPort, OutMultiPort } from 
         constructor(parent: Reactor) {
             super(parent)
             this.addReaction(
-                new Triggers(this.inp), 
-                new Args(this.inp, this.allWritable(this.out)),
+                new Triggers(this.inp.channel(0), this.inp.channel(1)), 
+                new Args(this.inp),
                 function (this, inp) {
+                    console.log("Getting triggered")
                     test('check values', () => {
                         expect(inp.channel(0).get()).toBe(42);
                         expect(inp.channel(1).get()).toBe(69);
@@ -36,14 +37,15 @@ import { Args, Triggers, Reactor, App, InMultiPort, InPort, OutMultiPort } from 
 
 
     class myApp extends App {
-        port: InPort<any> = new InPort<any>(this);
-
+        
         x = new TwoInTwoOut(this);
         y = new TwoInTwoOut(this);
 
         constructor() {
             super();
-            this._connectMulti([this.x.out], [this.y.inp], false)
+            //this._connectMulti([this.x.out], [this.y.inp], false)
+            this._connect(this.x.out.channel(0), this.y.inp.channel(0))
+            this._connect(this.x.out.channel(1), this.y.inp.channel(1))
         }
 
     }
