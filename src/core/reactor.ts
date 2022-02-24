@@ -12,9 +12,9 @@ import {
     Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
     Component, NonComposite, ScheduledTrigger, Trigger, TriggerManager,
-    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown
+    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown,
+    InMultiPort, OutMultiPort
 } from "./internal"
-import { InMultiPort, OutMultiPort } from "./port";
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -527,7 +527,7 @@ export abstract class Reactor extends Component {
             }
             if (t instanceof MultiPort) {
                 console.log("Encountered multiport!! >>>>>>>>>-----")
-                if (t instanceof InMultiPort || t instanceof OutMultiPort) {
+                if (t instanceof MultiPort) {
                     t.channels().forEach(channel => channel.getManager(this._getKey(channel)).addReaction(reaction))
                 }
             }
@@ -536,6 +536,8 @@ export abstract class Reactor extends Component {
             if (t instanceof IOPort) {
                 this._dependencyGraph.addEdge(reaction, t)
                 //this._addDependency(t, reaction);
+            } else if (t instanceof MultiPort) {
+                // FIXME(marten)
             } else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
@@ -1062,7 +1064,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
         // TODO(hokeun): Check if the multiport's container is Bank when Bank is implemented.
         src.forEach(port => {
-            if (port instanceof InMultiPort || port instanceof OutMultiPort) {
+            if (port instanceof MultiPort) {
                 port.channels().forEach(singlePort => {
                     leftPorts.push(singlePort)
                 })
@@ -1072,7 +1074,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         })
 
         dest.forEach(port => {
-            if (port instanceof InMultiPort || port instanceof OutMultiPort) {
+            if (port instanceof MultiPort) {
                 port.channels().forEach(singlePort => {
                     rightPorts.push(singlePort)
                 })
