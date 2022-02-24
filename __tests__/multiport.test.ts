@@ -13,12 +13,10 @@ import { Args, Triggers, Reactor, App, InMultiPort, InPort, OutMultiPort } from 
                 new Args(this.inp),
                 function (this, inp) {
                     console.log("Getting triggered")
-                    test('check values', () => {
+                    test('check read values', () => {
                         expect(inp.channel(0).get()).toBe(42);
                         expect(inp.channel(1).get()).toBe(69);
                     });
-                    console.log("Channel 0:" +  inp.channel(0).get())
-                    console.log("Channel 1:" +  inp.channel(1).get())
                 }
             );
             this.addReaction(
@@ -30,6 +28,10 @@ import { Args, Triggers, Reactor, App, InMultiPort, InPort, OutMultiPort } from 
                     });
                     out.set(0, 42)
                     out.set(1, 69)
+                    test('check written values', () => {
+                        expect(out.get(0)).toBe(42);
+                        expect(out.get(1)).toBe(69);
+                    });
                 }
             );
         }
