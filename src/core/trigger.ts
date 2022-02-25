@@ -15,7 +15,7 @@ export abstract class NonComposite extends Component {
     /**
  * Return the owner of this trigger.
  */
-     public getContainer(): Reactor | null {
+     public getContainer(): Reactor {
         return this._getContainer()
     }
 

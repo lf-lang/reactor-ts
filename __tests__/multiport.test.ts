@@ -3,6 +3,27 @@ class TwoInTwoOut extends Reactor {
     inp = new InMultiPort<number>(this, 2);
     out = new OutMultiPort<number>(this, 2);
 
+    foo = new class extends InMultiPort<number> {
+        constructor(container: Reactor) {
+
+            test('create multiport with no container', () => {
+                expect(
+                    () => {
+                        // @ts-ignore
+                        super(null, 4)
+                    }
+                ).toThrowError("Cannot instantiate component without a parent.")
+            })
+            super(container, 4)
+            test('create multiport with no container', () => {
+                expect(
+                    () => {
+                        this.asWritable(Symbol())
+                    }
+                ).toThrowError(`Referenced port is out of scope: myApp.${container._getName()}.foo`)
+            })
+        }
+    }(this)
     constructor(parent: Reactor) {
         super(parent)
         this.addReaction(
@@ -12,7 +33,10 @@ class TwoInTwoOut extends Reactor {
                 console.log("Getting triggered")
                 test('check read values', () => {
                     expect(inp.channel(0).get()).toBe(42);
+                    expect(inp.get(0)).toBe(42);
                     expect(inp.channel(1).get()).toBe(69);
+                    expect(inp.get(1)).toBe(69);
+                    expect(inp.values()).toEqual([42, 69])
                 });
                 test('print input port names', () => {
                     expect(inp._getName()).toBe("inp");

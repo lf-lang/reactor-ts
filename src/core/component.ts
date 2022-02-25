@@ -49,7 +49,7 @@ export abstract class Component {
                 // Apps are self-contained.
                 this._container = this
             } else {
-                throw Error("Cannot instantiate component without a parent.")
+                throw new Error("Cannot instantiate component without a parent.")
             }
         }
     }

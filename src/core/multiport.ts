@@ -32,13 +32,9 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
         public set(index: number, value: T): void {
             let writableChannel = this.cache[index]
             if (writableChannel === undefined) {
-                let container = this.port.getContainer()
-                if (container) {
-                    writableChannel = container.writable(this.port._channels[index])
-                    this.cache[index] = writableChannel
-                } else {
-                    throw new Error("Attempt to set channel of multiport that has no container")
-                }
+                writableChannel = this.port.getContainer()
+                        .writable(this.port._channels[index])
+                this.cache[index] = writableChannel
             }
             writableChannel.set(value)
         }
@@ -70,7 +66,7 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
     }
 
     public _receiveRuntimeObject(runtime: Runtime): void {
-        throw new Error("Method not implemented.");
+        throw new Error("Method not implemented."); // FIXME(marten): extend Trigger instead?
     }
 }
 
