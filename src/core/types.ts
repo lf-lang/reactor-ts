@@ -27,16 +27,17 @@ import { Tag, TimeValue } from "./internal";
  /**
   * Interface for readable variables.
   */
-  export interface Read<T> {
-     get(): T | Absent;
+export interface Read<T> {
+    get(): T | Absent;
  }
  
  export interface MultiRead<T> {
-     get(index: number): T | Absent
+    get(index: number): T | Absent
  }
  
  export interface MultiWrite<T> {
-     set: (index: number, value: T) => void;
+    set: (index: number, value: T) => void;
+    width(): number
  }
 
  //--------------------------------------------------------------------------//

@@ -38,6 +38,10 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
             }
             writableChannel.set(value)
         }
+
+        public width(): number {
+            return this.port.width
+        }
     }(this)
 
     public get(index: number): T | undefined {
