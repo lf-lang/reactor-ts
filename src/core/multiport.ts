@@ -42,6 +42,10 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
         public width(): number {
             return this.port.width
         }
+
+        public values(): Array<T | Absent> {
+            return this.port.values()
+        }
     }(this)
 
     public get(index: number): T | undefined {

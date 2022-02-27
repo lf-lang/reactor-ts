@@ -38,6 +38,7 @@ export interface Read<T> {
  export interface MultiWrite<T> {
     set: (index: number, value: T) => void;
     width(): number
+    values(): Array<T | Absent>
  }
 
  //--------------------------------------------------------------------------//
