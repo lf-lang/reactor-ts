@@ -15,7 +15,7 @@ class TwoInTwoOut extends Reactor {
                 ).toThrowError("Cannot instantiate component without a parent.")
             })
             super(container, 4)
-            test('create multiport with no container', () => {
+            test('make port writable with invalid key', () => {
                 expect(
                     () => {
                         this.asWritable(Symbol())
@@ -30,7 +30,6 @@ class TwoInTwoOut extends Reactor {
             new Triggers(this.inp),
             new Args(this.inp),
             function (this, inp) {
-                console.log("Getting triggered")
                 test('check read values', () => {
                     expect(inp.channel(0).get()).toBe(42);
                     expect(inp.get(0)).toBe(42);

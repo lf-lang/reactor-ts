@@ -1,5 +1,5 @@
 
-import { Tag, TimeValue } from "./internal";
+import { Tag, TimeValue, Trigger } from "./internal";
 
 /**
  * A variable can be read, written to, or scheduled. Variables may be passed to
@@ -75,8 +75,8 @@ export class Args<T extends Variable[]> {
 }
 
 export class Triggers {
-    list: Variable[];
-    constructor(trigger: Variable, ...triggers: Variable[]) {
+    list: Trigger[];
+    constructor(trigger: Trigger, ...triggers: Trigger[]) {
         this.list = triggers.concat(trigger)
     }
 }

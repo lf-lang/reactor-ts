@@ -1,6 +1,6 @@
 import {
-    Reaction, Reactor, Runtime, Tag, NonComposite, Trigger, TriggerManager,
-    Absent, MultiRead, MultiReadWrite, Present, ReadWrite, Log
+    Reaction, Reactor, Runtime, Tag, Trigger, TriggerManager,
+    Absent, MultiReadWrite, Present, ReadWrite, Log
 } from "./internal"
 
 

@@ -8,23 +8,10 @@ export interface TriggerManager {
     delReaction(reaction: Reaction<unknown>): void;    
 }
 
-
-
-export abstract class NonComposite extends Component {
-
-    /**
- * Return the owner of this trigger.
- */
-     public getContainer(): Reactor {
-        return this._getContainer()
-    }
-
-}
-
 /**
  * Abstract class for a trigger. A trigger may be an action, port, or timer.
  */
- export abstract class Trigger extends NonComposite {
+ export abstract class Trigger extends Component {
 
     /**
      * Reactions to trigger.
@@ -46,8 +33,10 @@ export abstract class NonComposite extends Component {
      */
     abstract isPresent(): boolean;
 
-}
-
+    public getContainer() {
+        return this._getContainer()
+    }
+ }
 
 
 /**

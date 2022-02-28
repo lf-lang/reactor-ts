@@ -1,7 +1,6 @@
-import { Absent, InPort, IOPort, MultiRead, MultiReadWrite, NonComposite, OutPort, Present, Reactor, Runtime, WritablePort } from "./internal";
+import { Absent, InPort, IOPort, MultiRead, MultiReadWrite, OutPort, Present, Reactor, Runtime, WritablePort, Trigger, TriggerManager, Reaction } from "./internal";
 
-
-export abstract class MultiPort<T extends Present> extends NonComposite implements MultiRead<T> {
+export abstract class MultiPort<T extends Present> extends Trigger implements MultiRead<T> {
 
     protected _channels: Array<IOPort<T>>
 
@@ -33,7 +32,7 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
             let writableChannel = this.cache[index]
             if (writableChannel === undefined) {
                 writableChannel = this.port.getContainer()
-                        .writable(this.port._channels[index])
+                    .writable(this.port._channels[index])
                 this.cache[index] = writableChannel
             }
             writableChannel.set(value)
@@ -60,7 +59,9 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
         return values
     }
 
-    public abstract values(): Array<T | Absent>
+    public values(): Array<T | Absent> {
+        return MultiPort.values(this._channels)
+    }
 
     /**
      * Only the holder of the key may obtain a writable port.
@@ -73,9 +74,42 @@ export abstract class MultiPort<T extends Present> extends NonComposite implemen
         throw Error("Referenced port is out of scope: " + this._getFullyQualifiedName())
     }
 
-    public _receiveRuntimeObject(runtime: Runtime): void {
-        throw new Error("Method not implemented."); // FIXME(marten): extend Trigger instead?
+
+    /**
+     * Inner class instance to let the container configure this port.
+     */
+    protected manager = new class implements TriggerManager {
+        constructor(private port: MultiPort<T>) { }
+
+        getContainer(): Reactor {
+            return this.port.getContainer()
+        }
+
+        addReaction(reaction: Reaction<unknown>): void {
+            this.port.channels().forEach(channel => channel.getManager(this.getContainer()._getKey(channel)).addReaction(reaction))
+        }
+
+        delReaction(reaction: Reaction<unknown>): void {
+            this.port.channels().forEach(channel => channel.getManager(this.port._key).delReaction(reaction))
+        }
+    }(this)
+
+    getManager(key: Symbol | undefined): TriggerManager {
+        if (this._key == key) {
+            return this.manager
+        }
+        throw Error("Unable to grant access to manager.")
     }
+
+    isPresent(): boolean {
+        return this.channels().some(channel => channel.isPresent())
+    }
+
+    public _receiveRuntimeObject(runtime: Runtime): void {
+        throw new Error("Multiports do not request to be linked to the runtime object, hence this method shall not be invoked.");
+    }
+
+
 }
 
 export class InMultiPort<T extends Present> extends MultiPort<T> {
@@ -96,18 +130,12 @@ export class InMultiPort<T extends Present> extends MultiPort<T> {
         }
     }
 
-    public values(): Array<T | Absent> {
-        return MultiPort.values(this._channels)
-    }
+
 }
 export class OutMultiPort<T extends Present> extends MultiPort<T> {
 
     public channel(index: number): OutPort<T> {
         return this._channels[index]
-    }
-
-    public _receiveRuntimeObject(runtime: Runtime): void {
-        throw new Error("Method not implemented.");
     }
 
     constructor(container: Reactor, width: number) {

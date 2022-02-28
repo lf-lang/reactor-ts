@@ -11,7 +11,7 @@ import {
     SortableDependencyGraph, Log, DependencyGraph, Reaction, Priority, 
     Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
-    Component, NonComposite, ScheduledTrigger, Trigger, TriggerManager,
+    Component, ScheduledTrigger, Trigger, TriggerManager,
     Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown
 } from "./internal"
 
@@ -328,7 +328,7 @@ export abstract class Reactor extends Component {
      * @param key The key that verifies the containment relation between this
      * reactor and the component, with at most one level of indirection.
      */
-    protected _getKey(component: NonComposite, key?: Symbol): Symbol | undefined {
+    public _getKey(component: Trigger, key?: Symbol): Symbol | undefined {
         if (component._isContainedBy(this) || this._key === key) {
             return this._keyChain.get(component)
         } else if (!(component instanceof Action) && 
@@ -524,19 +524,12 @@ export abstract class Reactor extends Component {
             if (t instanceof Trigger) {
                 t.getManager(this._getKey(t)).addReaction(reaction)
             }
-            if (t instanceof MultiPort) {
-                console.log("Encountered multiport!! >>>>>>>>>-----")
-                if (t instanceof MultiPort) {
-                    t.channels().forEach(channel => channel.getManager(this._getKey(channel)).addReaction(reaction))
-                }
-            }
-
+            
             // Also record this trigger as a dependency.
             if (t instanceof IOPort) {
                 this._dependencyGraph.addEdge(reaction, t)
-                //this._addDependency(t, reaction);
             } else if (t instanceof MultiPort) {
-                // FIXME(marten)
+                t.channels().forEach(channel => this._dependencyGraph.addEdge(reaction, channel))
             } else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
