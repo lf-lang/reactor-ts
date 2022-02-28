@@ -104,9 +104,9 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.toString()).toBe(
             StringUtil.dontIndent
             `digraph G {
-            "App.R[R0]"->"App.R[R1]"->"App.R[R4]"->"App.R[R3]"->"App.R[R5]";
-            "App.R[R0]"->"App.R[R4]";
-            "App.R[R1]"->"App.R[R2]"->"App.R[R3]";
+            "app.R[R0]"->"app.R[R1]"->"app.R[R4]"->"app.R[R3]"->"app.R[R5]";
+            "app.R[R0]"->"app.R[R4]";
+            "app.R[R1]"->"app.R[R2]"->"app.R[R3]";
             }`
         );
     });
@@ -127,9 +127,9 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.size()[1]).toEqual(6); // E
         expect(graph.toString()).toBe(
 `digraph G {
-"App.R[R0]"->"App.R[R1]"->"App.R[R2]"->"App.R[R3]"->"App.R[R5]";
-"App.R[R1]"->"App.R[R4]";
-"App.R[R0]"->"App.R[R4]";
+"app.R[R0]"->"app.R[R1]"->"app.R[R2]"->"app.R[R3]"->"app.R[R5]";
+"app.R[R1]"->"app.R[R4]";
+"app.R[R0]"->"app.R[R4]";
 }`);
     });
 
@@ -141,8 +141,8 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.toString()).toBe(
             StringUtil.dontIndent
             `digraph G {
-            "App.R[R2]"->"App.R[R3]"->"App.R[R5]";
-            "App.R[R0]"->"App.R[R4]";
+            "app.R[R2]"->"app.R[R3]"->"app.R[R5]";
+            "app.R[R0]"->"app.R[R4]";
             }`
         );
     });
@@ -156,9 +156,9 @@ describe('Manually constructed precedence graphs', () => {
         expect(graph.toString()).toBe(
             StringUtil.dontIndent
             `digraph G {
-            "App.R[R2]"->"App.R[R3]"->"App.R[R5]";
-            "App.R[R0]"->"App.R[R4]";
-            "App.R[R2]"->"App.R[R6]";
+            "app.R[R2]"->"app.R[R3]"->"app.R[R5]";
+            "app.R[R0]"->"app.R[R4]";
+            "app.R[R2]"->"app.R[R6]";
             }`
         );
     });

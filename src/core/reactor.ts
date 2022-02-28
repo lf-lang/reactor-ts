@@ -14,6 +14,7 @@ import {
     Component, ScheduledTrigger, Trigger, TriggerManager,
     Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown
 } from "./internal"
+import { v4 as uuidv4 } from 'uuid';
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -1556,12 +1557,14 @@ export interface ReactionSandbox {
     getBankIndex: () => number
 }
 
+
 export class App extends Reactor {
 
     readonly _alarm = new Alarm();
 
     private _errored = false
     private _errorMessage?: string
+    readonly _uuid = uuidv4()
 
     /**
      * Set of reactions to stage when this app starts executing.
@@ -1820,6 +1823,8 @@ export class App extends Reactor {
 
     private snooze: Action<Tag>;
 
+    readonly _name:string
+
     /**
      * Create a new top-level reactor.
      * @param executionTimeout Optional parameter to let the execution of the app time out.
@@ -1834,7 +1839,15 @@ export class App extends Reactor {
                 public success: () => void = () => {}, 
                 public failure: () => void = () => {}) {
         super(null);
-        
+
+        let name = this.constructor.name
+        if (name == "") {
+            name = "app"
+        } else {
+            name = name.charAt(0).toLowerCase() + name.slice(1)
+        }
+        this._name = name
+
         // Update pointer to runtime object for this reactor and
         // its startup and shutdown action since the inner class
         // instance this.__runtime isn't initialized up until here.

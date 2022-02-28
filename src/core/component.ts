@@ -163,7 +163,7 @@ export abstract class Component {
         var name
 
         if (this instanceof App) {
-            name = Component.keyOfMatchingEntry(this, global)
+            name = this._name
         } else {
             name = Component.keyOfMatchingEntry(this, this._container)
         }

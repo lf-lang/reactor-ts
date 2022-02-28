@@ -21,15 +21,15 @@ var app = new class extends App {
 describe('Container to Contained', () => {
     
     it('app name', () => {
-        expect(app.toString()).toBe("");
+        expect(app.toString()).toBe("app");
     });
 
     it('contained reactor name', () => {
-        expect(app.container.contained.toString()).toBe(".container.contained");
+        expect(app.container.contained.toString()).toBe("app.container.contained");
     });
 
     it('container reactor name', () =>{
-        expect(app.container.toString()).toBe(".container");
+        expect(app.container.toString()).toBe("app.container");
 
     })
 

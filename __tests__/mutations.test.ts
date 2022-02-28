@@ -129,9 +129,10 @@ class ZenoClock extends Reactor {
 }
 
 class Zeno extends App {
+    readonly zeno = new ZenoClock(this, 1)
     constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
         super(timeout, false, false, success, fail);
-        new ZenoClock(this, 1)
+        
         var self = this;
     
         this.addReaction(new Triggers(this.shutdown), new Args(), function(this) {
