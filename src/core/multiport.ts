@@ -29,7 +29,7 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
     protected _channels: Array<IOPort<T>>
 
     /** @inheritdoc */
-    private readonly _width
+    private readonly _width: number
 
     /**
      * Given an array of ports (channels), return an array holding the ports'
