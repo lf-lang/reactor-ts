@@ -704,7 +704,6 @@ export abstract class Reactor extends Component {
             let lastCaller = p.getManager(this._getKey(p)).getLastCaller()
             if (procedure && lastCaller) {
                 let effects = this._dependencyGraph.getBackEdges(procedure)
-                //console.log(">>>>>>>>>>>> last caller:" + lastCaller)
                 for (let e of effects) {
                     if (!(e instanceof CalleePort)) {
                         // Also add edge to the local graph.
@@ -1017,7 +1016,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             (writer as WritablePort<S>);
         let val = src.get()
         if (this._runtime.isRunning() && val !== undefined) {
-            //console.log(">>>>>>>>>>>>>>>>>>>>>>>>><<<<<>>>>>>>>>>>>>>>>>>>>>")
             writer.set(val)
         }
     }
@@ -1503,24 +1501,13 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 export interface Runtime {
     util:UtilityFunctions;
-    //core: CoreFunctions;
     stage(reaction: Reaction<unknown>): void;
     initialize(timer: Timer): void;
     schedule(e: TaggedEvent<any>): void;
     delete(r: Reactor): void;
     isRunning(): boolean;
 }
-
-
-// interface CoreFunctions {
-//     stage(reaction: Reaction<unknown>): void;
-//     initialize(timer: Timer): void;
-//     schedule(e: TaggedEvent<any>): void;
-//     mark(r: Reactor): void;
-//     isRunning(): boolean;
-// }
-
-interface UtilityFunctions { //
+interface UtilityFunctions {
     requestStop(): void;
     reportError(message?: string): void;
     requestErrorStop(message?: string): void;
@@ -1636,9 +1623,8 @@ export class App extends Reactor {
 
     }(this);
 
-
     /**
-     * 
+     * Inner class that provides access to the Runtime object.
      */
     private __runtime: Runtime = new class implements Runtime {
         util: UtilityFunctions        
@@ -1704,6 +1690,7 @@ export class App extends Reactor {
                 this.app._timersToSchedule.add(timer) 
             }
         }
+
         /**
          * Push an event onto the event queue. 
          * @param e Tagged event to push onto the event queue.
@@ -1731,7 +1718,7 @@ export class App extends Reactor {
          * Mark a reactor for deletion. At the end of logical time at which
          * this method was invoked the reactor will be removed from its
          * container.
-         * @param r 
+         * @param r The reactor to be deleted.
          */
         public delete(r: Reactor): void {
             this.app._reactorsToRemove.push(r)

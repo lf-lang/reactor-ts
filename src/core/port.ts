@@ -3,9 +3,6 @@ import {
     Absent, MultiReadWrite, Present, ReadWrite, Log
 } from "./internal"
 
-
-// FIXME(marten): moving these two to port.ts results in a circular import problem with many test files:
-
 export abstract class Port<T extends Present> extends Trigger {
     
     protected receivers: Set<WritablePort<T>> = new Set();
@@ -22,8 +19,6 @@ export abstract class Port<T extends Present> extends Trigger {
 
     /** The current value associated with this port. */
     protected value: T | Absent;
-
-    // abstract get(): T | undefined;
 
     public _receiveRuntimeObject(runtime: Runtime) {
         if (!this.runtime) {
@@ -64,6 +59,9 @@ export abstract class Port<T extends Present> extends Trigger {
     abstract getPort(): IOPort<T> // FIXME: just extend interface instead.
 }
 
+/**
+ * Interface for a writable multi port, intended as a wrapper for a multi port.
+ */
 export interface WritableMultiPort<T extends Present> extends MultiReadWrite<T> {
     getWriters(): Array<WritablePort<T>>
     getPorts(): Array<IOPort<T>>
@@ -126,7 +124,6 @@ export abstract class IOPort<T extends Present> extends Port<T> {
             this.port.tag = this.port.runtime.util.getCurrentTag();
             // Set values in downstream receivers.
             this.port.receivers.forEach(p => p.set(value))
-            //console.log("Set called. The number of reactions is: " + this.port.reactions.size)
             // Stage triggered reactions for execution.
             this.port.reactions.forEach(r => this.port.runtime.stage(r))
         }
@@ -174,7 +171,6 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         }
         addReaction(reaction: Reaction<unknown>): void {
             this.port.reactions.add(reaction)
-            //console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         }
         delReaction(reaction: Reaction<unknown>): void {
             this.port.reactions.delete(reaction)

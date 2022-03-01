@@ -162,7 +162,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
     }
 
     /**
-     * 
+     * Return string representation of the reaction.
      */
     public toString(): string {
         return this.reactor._getFullyQualifiedName() + "[R" + this.reactor._getReactionIndex(this) + "]";
