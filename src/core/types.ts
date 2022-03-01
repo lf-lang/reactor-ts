@@ -32,12 +32,13 @@ export interface Read<T> {
  }
  
  export interface MultiRead<T> {
+    width(): number
     get(index: number): T | Absent
  }
  
  export interface MultiWrite<T> {
-    set: (index: number, value: T) => void;
     width(): number
+    set: (index: number, value: T) => void;
     values(): Array<T | Absent>
  }
 

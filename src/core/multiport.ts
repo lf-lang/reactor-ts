@@ -7,10 +7,17 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
     abstract channels(): Array<IOPort<T>>
 
     abstract channel(index: number): IOPort<T>
+    
+    private readonly _width
 
-    constructor(container: Reactor, readonly width: number) {
+    public width(): number {
+        return this._width
+    }
+
+    constructor(container: Reactor, width: number) {
         super(container)
         this._channels = new Array(width)
+        this._width = width
     }
 
     /**
@@ -39,7 +46,7 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
         }
 
         public width(): number {
-            return this.port.width
+            return this.port.width()
         }
 
         public values(): Array<T | Absent> {

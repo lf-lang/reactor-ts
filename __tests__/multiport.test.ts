@@ -24,8 +24,17 @@ class TwoInTwoOut extends Reactor {
             })
         }
     }(this)
+
     constructor(parent: Reactor) {
         super(parent)
+        let writer = this.allWritable(this.inp)
+        test('check inactive during construction', () => {
+            expect(this._active).toBe(false)
+        })
+        test('check multiport width', () => {
+            expect(this.inp.width()).toBe(2)
+            expect(writer.width()).toBe(2)
+        })
         this.addReaction(
             new Triggers(this.inp),
             new Args(this.inp),
@@ -52,13 +61,15 @@ class TwoInTwoOut extends Reactor {
             function (out) {
                 test('start up reaction triggered', () => {
                     expect(true).toBe(true);
-                });
-                out.set(0, 42)
-                out.set(1, 69)
-                test('check written values', () => {
+                })
+                test('check multiport values before and after writing', () => {
+                    expect(out.values()).toEqual([undefined, undefined])
+                    out.set(0, 42)
+                    out.set(1, 69)
                     expect(out.get(0)).toBe(42);
                     expect(out.get(1)).toBe(69);
-                });
+                    expect(out.values()).toEqual([42, 69])
+                })
             }
         );
     }
