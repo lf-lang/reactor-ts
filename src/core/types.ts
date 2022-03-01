@@ -32,13 +32,29 @@ export interface Read<T> {
  }
  
  export interface MultiRead<T> {
+    
+    /**
+     * Return the number of channels.
+     */
     width(): number
+
+    /**
+     * Given an index that identifies a particular channel, return the current
+     * value of the identified channel.
+     * @param index the index that identifies the channel to return the value of
+     * @returns the value that corresponds to the identified channel
+     */
     get(index: number): T | Absent
  }
  
  export interface MultiWrite<T> {
+    /**
+     * Return the number of channels.
+     */
     width(): number
+    
     set: (index: number, value: T) => void;
+    
     values(): Array<T | Absent>
  }
 
