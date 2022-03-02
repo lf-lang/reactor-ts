@@ -15,6 +15,7 @@ import {
     Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
+import { Bank } from "./bank";
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -237,6 +238,30 @@ export abstract class Reactor extends Component {
         if (component !== this && !this._keyChain.has(component)) {
             this._keyChain.set(component, key)
         }
+        // See if the newly registered component is a bank member
+        // and set its index if so.
+        if (component instanceof Reactor) {
+            component.setBankIndex(this.findBankIndex(component))
+        }
+    }
+
+    /**
+     * Return the bank index of a newly registered reactor if it happens
+     * to be a bank member. If it is not, return -1.
+     * @param component a reactor that is in the process of being initialized
+     * @returns an index representing the reactor's position in a bank, is it
+     * is a member of one.
+     */
+    private findBankIndex(component: Reactor) {
+        for (const [key, value] of Object.entries(this)) {
+            if (value instanceof Bank) {
+                let index = value.initializingMember()
+                if (index >= 0) {
+                    return index
+                }
+            }
+        }
+        return -1
     }
 
     public _requestRuntimeObject(component: Component): void {
@@ -421,7 +446,6 @@ export abstract class Reactor extends Component {
      * Create a new reactor.
      * @param container The container of this reactor.
      */
-
     constructor(container: Reactor | null) {
         super(container);
         

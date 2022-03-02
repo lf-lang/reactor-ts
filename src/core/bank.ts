@@ -25,6 +25,12 @@ export class Bank<T extends Reactor, S> {
     private readonly members: Array<T> = new Array();
 
     /**
+     * Index of the bank member that is currently being initialized,
+     * or -1 if there is not initialization happening.
+     */
+    private initializing = -1
+
+    /**
      * Construct a new bank of given width on the basis of a given reactor class and a list of arguments.
      * @param width the width of the bank
      * @param cls the class to construct reactor instances of that will populate the bank
@@ -33,8 +39,17 @@ export class Bank<T extends Reactor, S> {
     constructor(width: number, cls: ReactorClass<T, S>, ...args: ReactorArgs<S>) {
         for (let i = 0; i < width; i++) {
             this.members.push(Reflect.construct(cls, args, cls));
-            this.members[i].setBankIndex(i)
+            this.initializing = i
         }
+        this.initializing = -1
+    }
+
+    /**
+     * Return the index of the member that is currently being initialized.
+     * @returns the index of the currently initializing member
+     */
+    public initializingMember() {
+        return this.initializing
     }
 
     /**
