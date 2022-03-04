@@ -28,7 +28,7 @@ export class Bank<T extends Reactor, S> {
      * Index of the bank member that is currently being initialized,
      * or -1 if there is not initialization happening.
      */
-    private initializing = -1
+    public static readonly initializationMap: Map<Reactor, number> = new Map()
 
     /**
      * Construct a new bank of given width on the basis of a given reactor class and a list of arguments.
@@ -36,20 +36,13 @@ export class Bank<T extends Reactor, S> {
      * @param cls the class to construct reactor instances of that will populate the bank
      * @param args the arguments to pass into the constructor of the given reactor class
      */
-    constructor(width: number, cls: ReactorClass<T, S>, ...args: ReactorArgs<S>) {
+    constructor(container: Reactor, width: number, cls: ReactorClass<T, S>, ...args: ReactorArgs<S>) {
         for (let i = 0; i < width; i++) {
+            Bank.initializationMap.set(container, i)
+            console.log("Setting initializing to " + i)
             this.members.push(Reflect.construct(cls, args, cls));
-            this.initializing = i
         }
-        this.initializing = -1
-    }
-
-    /**
-     * Return the index of the member that is currently being initialized.
-     * @returns the index of the currently initializing member
-     */
-    public initializingMember() {
-        return this.initializing
+        Bank.initializationMap.delete(container)
     }
 
     /**

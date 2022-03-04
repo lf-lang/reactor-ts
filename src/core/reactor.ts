@@ -241,27 +241,12 @@ export abstract class Reactor extends Component {
         // See if the newly registered component is a bank member
         // and set its index if so.
         if (component instanceof Reactor) {
-            component.setBankIndex(this.findBankIndex(component))
-        }
-    }
-
-    /**
-     * Return the bank index of a newly registered reactor if it happens
-     * to be a bank member. If it is not, return -1.
-     * @param component a reactor that is in the process of being initialized
-     * @returns an index representing the reactor's position in a bank, is it
-     * is a member of one.
-     */
-    private findBankIndex(component: Reactor) {
-        for (const [key, value] of Object.entries(this)) {
-            if (value instanceof Bank) {
-                let index = value.initializingMember()
-                if (index >= 0) {
-                    return index
-                }
+            let index = Bank.initializationMap.get(this)
+            if (index) {
+                component.setBankIndex(index)
             }
+            // Not in a bank.
         }
-        return -1
     }
 
     public _requestRuntimeObject(component: Component): void {
