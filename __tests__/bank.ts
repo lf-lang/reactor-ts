@@ -6,6 +6,7 @@ class Periodic extends Reactor {
     o: OutPort<number> = new OutPort(this)
     constructor(parent: Reactor) {
         super(parent)
+        console.log("Bank index inside of constructor: " + this.getBankIndex())
         this.addReaction(
             new Triggers(this.t),
             new Args(this.t),
@@ -27,11 +28,16 @@ describe('Check bank index', () => {
         c = new Bank<Generic<number>, [Reactor]>(this, 2, Generic, this);
         constructor() {
             super();
-            it('contained member bank index', () => {
-                        expect(this.b.get(0).getBankIndex()).toBe(0);
-                        expect(this.b.get(1).getBankIndex()).toBe(1);
-                        expect(this.b.get(2).getBankIndex()).toBe(2);
-                    });
+            test('contained bank member name', () => {
+                expect(this.b.get(0)._getFullyQualifiedName()).toBe("myApp.b[0]")
+                expect(this.b.get(1)._getFullyQualifiedName()).toBe("myApp.b[1]")
+                expect(this.b.get(2)._getFullyQualifiedName()).toBe("myApp.b[2]")
+            })
+            it('contained bank member index', () => {
+                expect(this.b.get(0).getBankIndex()).toBe(0);
+                expect(this.b.get(1).getBankIndex()).toBe(1);
+                expect(this.b.get(2).getBankIndex()).toBe(2);
+            });
             
             it('generic bank', () => {
                 this.c.all().forEach(r => expect(typeof r.input == "number"))

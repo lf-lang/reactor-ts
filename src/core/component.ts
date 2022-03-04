@@ -1,4 +1,4 @@
-import {Reactor, App, Runtime, MultiPort, IOPort} from "./internal"
+import {Reactor, App, Runtime, MultiPort, IOPort, Bank} from "./internal"
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -155,6 +155,19 @@ export abstract class Component {
         }
     }
 
+    public static keyOfMatchingBank(member: Component, reactor: Reactor) {
+        for (const [key, value] of Object.entries(reactor)) {
+            if (value instanceof Bank) {
+                let members = value.all()
+                for (let i=0; i < members.length; i++) {
+                    if (members[i] === member) {
+                        return `${key}[${i}]`
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Return a string that identifies this component within its container.
      * If no such string was found, return the name of the constructor.
@@ -170,6 +183,10 @@ export abstract class Component {
 
         if (!name && this instanceof IOPort) {
             name = Component.keyOfMatchingMultiport(this, this._container)
+        }
+
+        if (!name && this instanceof Reactor) {
+            name = Component.keyOfMatchingBank(this, this._container)
         }
 
         if (name) {
