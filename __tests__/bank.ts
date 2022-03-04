@@ -23,11 +23,11 @@ class Generic<T extends Present> extends Reactor {
 describe('Check bank index', () => {
     
     class myApp extends App {
-        b = new Bank(3, Periodic, this)
-        c = new Bank<Generic<number>, [Reactor]>(2, Generic, this);
+        b = new Bank(this, 3, Periodic, this)
+        c = new Bank<Generic<number>, [Reactor]>(this, 2, Generic, this);
         constructor() {
             super();
-            it('contained actor name', () => {
+            it('contained member bank index', () => {
                         expect(this.b.get(0).getBankIndex()).toBe(0);
                         expect(this.b.get(1).getBankIndex()).toBe(1);
                         expect(this.b.get(2).getBankIndex()).toBe(2);

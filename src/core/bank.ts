@@ -25,8 +25,8 @@ export class Bank<T extends Reactor, S> {
     private readonly members: Array<T> = new Array();
 
     /**
-     * Index of the bank member that is currently being initialized,
-     * or -1 if there is not initialization happening.
+     * A mapping from containing reactors to indices corresponding to the member
+     * of a contained bank that is currently being initialized (if there is one).
      */
     public static readonly initializationMap: Map<Reactor, number> = new Map()
 

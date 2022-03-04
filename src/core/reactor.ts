@@ -139,15 +139,21 @@ export abstract class Reactor extends Component {
      */
     private _runtime!: Runtime;
 
-    private _bankIndex: number = -1;
+    private _bankIndex: number | undefined;
 
     public getBankIndex(): number {
+        if (this._bankIndex === undefined) {
+            return -1
+        }
         return this._bankIndex
     }
 
     public setBankIndex(index: number): void {
-        if (this._bankIndex == -1) {
+        console.log("Setting the bank index >>>>>>>>>>>>>>>>>>>")
+        if (this._bankIndex === undefined) {
             this._bankIndex = index
+        } else {
+            throw new Error("Attempt to set bank index twice")
         }
     }
 
@@ -242,9 +248,12 @@ export abstract class Reactor extends Component {
         // and set its index if so.
         if (component instanceof Reactor) {
             let index = Bank.initializationMap.get(this)
-            if (index) {
+            if (index !== undefined) {
+                console.log("Found bank index: " + index)
                 component.setBankIndex(index)
+                console.log("Reading index again: " + component.getBankIndex())
             }
+            console.log("Unable to find bank index for component that is contained by " + this._getName())
             // Not in a bank.
         }
     }
@@ -422,7 +431,7 @@ export abstract class Reactor extends Component {
         public getBankIndex: () => number;
         constructor(public reactor: Reactor) {
             this.util = reactor.util
-            this.getBankIndex = () => reactor._bankIndex
+            this.getBankIndex = () => reactor.getBankIndex()
         }
         
     }
