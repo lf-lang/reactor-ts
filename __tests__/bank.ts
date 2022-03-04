@@ -6,7 +6,6 @@ class Periodic extends Reactor {
     o: OutPort<number> = new OutPort(this)
     constructor(parent: Reactor) {
         super(parent)
-        console.log("Bank index inside of constructor: " + this.getBankIndex())
         this.addReaction(
             new Triggers(this.t),
             new Args(this.t),

@@ -139,22 +139,21 @@ export abstract class Reactor extends Component {
      */
     private _runtime!: Runtime;
 
-    private _bankIndex: number | undefined;
+    /**
+     * Index that specifies the location of the reactor instance in a bank, 
+     * if it is a member of one.
+     */
+    private _bankIndex: number;
 
+    /**
+     * Return the location of the reactor instance in a bank, 
+     * if it is a member of one; return -1 otherwise.
+     */
     public getBankIndex(): number {
         if (this._bankIndex === undefined) {
             return -1
         }
         return this._bankIndex
-    }
-
-    public setBankIndex(index: number): void {
-        console.log("Setting the bank index >>>>>>>>>>>>>>>>>>>")
-        if (this._bankIndex === undefined) {
-            this._bankIndex = index
-        } else {
-            throw new Error("Attempt to set bank index twice")
-        }
     }
 
     /**
@@ -243,18 +242,6 @@ export abstract class Reactor extends Component {
         // and isn't already registered.
         if (component !== this && !this._keyChain.has(component)) {
             this._keyChain.set(component, key)
-        }
-        // See if the newly registered component is a bank member
-        // and set its index if so.
-        if (component instanceof Reactor) {
-            let index = Bank.initializationMap.get(this)
-            if (index !== undefined) {
-                console.log("Found bank index: " + index)
-                component.setBankIndex(index)
-                console.log("Reading index again: " + component.getBankIndex())
-            }
-            console.log("Unable to find bank index for component that is contained by " + this._getName())
-            // Not in a bank.
         }
     }
 
@@ -442,6 +429,13 @@ export abstract class Reactor extends Component {
      */
     constructor(container: Reactor | null) {
         super(container);
+        this._bankIndex = -1
+        if (container !== null) {
+            let index = Bank.initializationMap.get(container)
+            if (index !== undefined) {
+                this._bankIndex = index
+            }
+        }
         
         this._linkToRuntimeObject()
         this.shutdown = new Shutdown(this);
