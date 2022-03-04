@@ -52,11 +52,16 @@ export abstract class Port<T extends Present> extends Trigger {
  * Abstract class for a writable port. It is intended as a wrapper for a
  * regular port. In addition to a get method, it also has a set method and
  * a method for retrieving the port that it wraps.
+ * We have this abstract class so that we can do `instanceof` checks.
  */
- export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
+export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
     abstract get(): T | undefined;
     abstract set(value: T): void;
-    abstract getPort(): IOPort<T> // FIXME: just extend interface instead.
+    abstract getPort(): IOPort<T> // FIXME: why not call this channel?
+}
+
+export abstract class WritableMultiPort<T extends Present> implements MultiReadWrite<T> {
+    
 }
 
 /**
@@ -64,7 +69,7 @@ export abstract class Port<T extends Present> extends Trigger {
  */
 export interface WritableMultiPort<T extends Present> extends MultiReadWrite<T> {
     getWriters(): Array<WritablePort<T>>
-    getPorts(): Array<IOPort<T>>
+    getPorts(): Array<IOPort<T>> // FIXME: why not call this channels()?
 }
 
 

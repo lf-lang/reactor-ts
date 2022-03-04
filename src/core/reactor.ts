@@ -12,7 +12,7 @@ import {
     Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
     Component, ScheduledTrigger, Trigger, TriggerManager,
-    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown
+    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown, WritableMultiPort
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
 import { Bank } from "./bank";
@@ -555,23 +555,31 @@ export abstract class Reactor extends Component {
             if (a instanceof IOPort) {
                 this._dependencyGraph.addEdge(reaction, a)
                 sources.add(a)
-            }
-            if (a instanceof CalleePort) {
+            } else if (a instanceof MultiPort) {
+                a.channels().forEach(channel => {
+                    this._dependencyGraph.addEdge(reaction, a)
+                    sources.add(channel)
+                })
+            } else if (a instanceof CalleePort) {
                 this._dependencyGraph.addEdge(a, reaction)
-            }
-            if (a instanceof CallerPort) {
+            } else if (a instanceof CallerPort) {
                 this._dependencyGraph.addEdge(reaction, a)
             }
             // Only necessary if we want to add actions to the dependency graph.
-            if (a instanceof Action) {
+            else if (a instanceof Action) {
                 // dep
             }
-            if (a instanceof SchedulableAction) {
+            else if (a instanceof SchedulableAction) {
                 // antidep
-            }
-            if (a instanceof WritablePort) {
+            } else if (a instanceof WritablePort) {
                 this._dependencyGraph.addEdge(a.getPort(), reaction)
                 effects.add(a.getPort())
+            } else if (a instanceof WritableMultiPort) {
+                a.getPorts().forEach(channel => {
+                    this._dependencyGraph.addEdge(reaction, a)
+                    effects.add(channel)
+                })
+
             }
         }
         // Make effects dependent on sources.
