@@ -1,4 +1,4 @@
-import {Reactor, OutPort, InPort, App} from "../src/core/reactor";
+import {Reactor, App, InPort, OutPort, StringUtil} from "../src/core/internal";
 
     class MyActor extends Reactor {
      
@@ -13,8 +13,8 @@ import {Reactor, OutPort, InPort, App} from "../src/core/reactor";
         a: InPort<{t: number}> = new InPort(this);
         b: OutPort<{t: number, y: string}> = new OutPort(this);
         
-        constructor(parent:Reactor, alias: string) {
-            super(parent, alias)
+        constructor(parent:Reactor) {
+            super(parent)
         }
     }
 
@@ -25,45 +25,36 @@ describe('Test names for contained reactors', () => {
         port: InPort<any> = new InPort<any>(this);
 
         x = new MyActor(this);
-        y = new MyActor2(this, "Foo");
+        y = new MyActor2(this);
 
-        constructor(name: string, someParam: string) {
+        constructor() {
             super(undefined);
-            this._setAlias(name);
 
             it('contained actor name', () => {
                 expect(this.x._getName()).toBe("x");
             });
 
-            it('contained actor Alias', () => {
-                expect(this.x._getAlias()).toBe("");
-            });
-
             it('contained actor FQN', () => {
-                expect(this.x._getFullyQualifiedName()).toBe("Hello World/x");
+                expect(this.x._getFullyQualifiedName()).toBe("myApp.x");
             });
 
             it('contained actor toString', () => {
-                expect(this.x.toString()).toBe("Hello World/x");
+                expect(this.x.toString()).toBe("myApp.x");
             });
 
             it('contained actor FQN', () => {
-                expect(this.x.toString()).toBe("Hello World/x");
+                expect(this.x.toString()).toBe("myApp.x");
             });
 
             it('contained actor with alias FQN', () => {
-                expect(this.y.toString()).toBe("Hello World/y (Foo)");
+                expect(this.y.toString()).toBe("myApp.y");
             });
 
             it('uncontained actor name', () => {
-                expect(this.toString()).toBe("Hello World");
+                expect(this.toString()).toBe("myApp");
             });
 
-            it('uncontained actor Alias', () => {
-                expect(this._getAlias()).toBe(name);
-            });
-
-            it('check whehter App is not contained by itself', () => {
+            it('check whether App is not contained by itself', () => {
                 expect(this._isContainedBy(this)).toBeFalsy();
             });
 
@@ -81,8 +72,8 @@ describe('Test names for contained reactors', () => {
             it('graph before connect', () => {
                 expect(this._getPrecedenceGraph().toString()).toBe(
                     "digraph G {" + "\n" +
-                    "\"Hello World/x[M0]\"->\"Hello World[M0]\";" + "\n" +
-                    "\"Hello World/y (Foo)[M0]\"->\"Hello World[M0]\";" + "\n" +
+                    "\"myApp.x[M0]\"->\"myApp[M0]\";" + "\n" +
+                    "\"myApp.y[M0]\"->\"myApp[M0]\";" + "\n" +
                     "}");
              });
 
@@ -100,11 +91,12 @@ describe('Test names for contained reactors', () => {
 
             it('graph after connect and before disconnect', () => {
                 expect(this._getPrecedenceGraph().toString()).toBe(
-                     "digraph G {" + "\n" +
-                     "\"Hello World/x/a\"->\"Hello World/y (Foo)/b\";" + "\n" +
-                     "\"Hello World/x[M0]\"->\"Hello World[M0]\";" + "\n" +
-                     "\"Hello World/y (Foo)[M0]\"->\"Hello World[M0]\";" + "\n" +
-                     "}");
+                StringUtil.dontIndent
+                `digraph G {
+                "myApp.x.a"->"myApp.y.b";
+                "myApp.x[M0]"->"myApp[M0]";
+                "myApp.y[M0]"->"myApp[M0]";
+                }`);
              });
  
  
@@ -115,7 +107,6 @@ describe('Test names for contained reactors', () => {
         }
     }
 
-    var app = new myApp("Hello World", "!");
-
+    var app = new myApp();
 
 });

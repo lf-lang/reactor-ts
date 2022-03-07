@@ -1,6 +1,5 @@
-import {OutPort, App, Timer, Write, Triggers, Args} from '../src/core/reactor';
-import {TimeValue} from "../src/core/time";
-import { Log } from '../src/core/util';
+
+import {App, Timer, Write, Triggers, Args, OutPort, TimeValue, Log} from '../src/core/internal';
 
 class OutputGetTest extends App {
 
@@ -10,7 +9,6 @@ class OutputGetTest extends App {
     constructor(timeout: TimeValue, name:string, success: ()=> void, failure: ()=>void){
         super(timeout, true, false, success, failure);
         Log.global.debug(">>>>>>>>----" + this.util)
-        this._setAlias(name);
         this.addReaction(
             new Triggers(this.t), 
             new Args(this.writable(this.o)),

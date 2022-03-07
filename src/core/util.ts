@@ -328,6 +328,9 @@ export class DependencyGraph<T> {
         function printChain(node: T, chain: Array<T>) {
             dot += "\n";
             dot += '"' + node + '"'
+            if ((node as Object).toString() == "[object Object]") {
+                console.error("Encountered node with no toString() implementation: " + (node as Object).constructor)
+            }
             while (chain.length > 0) {
                 dot += "->" + '"' + chain.pop() + '"';
             }

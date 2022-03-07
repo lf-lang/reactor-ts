@@ -2,59 +2,23 @@
  * Core of the reactor runtime.
  * 
  * @author Marten Lohstroh (marten@berkeley.edu),
- * @author Matt Weber (matt.weber@berkeley.edu)
+ * @author Matt Weber (matt.weber@berkeley.edu),
+ * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
 
-import {PrioritySetElement, PrioritySet, SortableDependencyGraph, Log, DependencyGraph} from './util';
-import {TimeValue, TimeUnit, Tag, Origin, getCurrentPhysicalTime, Alarm} from './time';
-import {Component} from "./component"
-import {Reaction, Priority, Mutation, Procedure} from "./reaction"
+import {
+    TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm, PrioritySet,
+    SortableDependencyGraph, Log, DependencyGraph, Reaction, Priority, 
+    Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
+    Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
+    Component, ScheduledTrigger, Trigger, TriggerManager,
+    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown, WritableMultiPort
+} from "./internal"
+import { v4 as uuidv4 } from 'uuid';
+import { Bank } from "./bank";
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
-
-//--------------------------------------------------------------------------//
-// Types                                                                    //
-//--------------------------------------------------------------------------//
-
-/**
- * Type that denotes the absence of a value.
- * @see Variable
- */
-export type Absent = undefined;
-
-/**
- * Conditional type for argument lists of reactions. If the type variable
- * `T` is inferred to be a subtype of `Variable[]` it will yield `T`; it  
- * will yield `never` if `T` is not a subtype of `Variable[]`.
- * @see Reaction
- */
-export type ArgList<T> = T extends Variable[] ? T : never;
-
-/**
- * Type for data exchanged between ports.
- */
-export type Present = (number | bigint | string | boolean | symbol | object | null);
-
-/**
- * Type for simple variables that are both readable and writable.
- */
-export type ReadWrite<T> = Read<T> & Write<T>;
-
-/**
- * A variable can be read, written to, or scheduled. Variables may be passed to
- * reactions in an argument list.
- * @see Read
- * @see Write
- * @see Sched
- */
-export type Variable = Read<unknown>
-
-//--------------------------------------------------------------------------//
-// Constants                                                                //
-//--------------------------------------------------------------------------//
-
-const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
 
 //--------------------------------------------------------------------------//
 // Interfaces                                                               //
@@ -67,355 +31,19 @@ export interface Call<A, R> extends Write<A>, Read<R> {
     invoke(args: A): R | undefined;
 }
 
-/**
- * Interface for readable variables.
- */
-export interface Read<T> {
-    get(): T | Absent;
-}
 
-/**
- * Interface for schedulable actions.
- */
-export interface Sched<T> extends Read<T> {
-    schedule: (extraDelay: TimeValue | 0, value: T, intendedTag?: Tag) => void;
-    // FIXME: it makes sense to be able to check the presence of a (re)schedulable action.
-}
-
-/**
- * Interface for writable ports.
- */
-export interface Write<T> {
-    set: (value: T) => void;
-}
-
-/**
- * Abstract class for a writable port. It is intended as a wrapper for a
- * regular port. In addition to a get method, it also has a set method and
- * a method for retrieving the port that it wraps.
- */
-export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
-    abstract get(): T | undefined;
-    abstract set(value: T): void;
-    abstract getPort(): IOPort<T>
-}
 
 /**
  * Abstract class for a schedulable action. It is intended as a wrapper for a
  * regular action. In addition to a get method, it also has a schedule method
  * that allows for the action to be scheduled.
  */
-export abstract class SchedulableAction<T extends Present> implements Sched<T> {
-    abstract get(): T | undefined;
-    abstract schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void;
-}
+
 
 //--------------------------------------------------------------------------//
 // Core Reactor Classes                                                     //
 //--------------------------------------------------------------------------//
 
-/**
- * An event is caused by a timer or a scheduled action. Each event is tagged
- * with a time instant and may carry a value of arbitrary type. The tag will
- * determine the event's position with respect to other events in the event
- * queue.
- */
-export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
-
-    /**
-     * Pointer to the next element of the priority set that this event might
-     * be hooked into.
-     */
-    public next: PrioritySetElement<Tag> | undefined;
-
-    /**
-     * Construct a new tagged event.
-     * @param trigger The trigger of this event.
-     * @param tag The tag at which this event occurs.
-     * @param value The value associated with this event. 
-     * 
-     */
-    constructor(public trigger: ScheduledTrigger<T>, public tag: Tag, public value: T) {
-    }
-
-    /**
-     * Return true if this event has a smaller tag than the given event, false
-     * otherwise.
-     * @param node The event to compare this event's tag against.
-     */
-    hasPriorityOver(node: PrioritySetElement<Tag> | undefined) {
-        if (node) {
-            return this.getPriority().isSmallerThan(node.getPriority());
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Determine whether the given event is a duplicate of this one. If so, assign the
-     * value this event to the given one. Otherwise, return false.
-     * @param node The event adopt the value from if it is a duplicate of this one.
-     */
-    updateIfDuplicateOf(node: PrioritySetElement<Tag> | undefined) {
-        if (node && node instanceof TaggedEvent) {
-            if (this.trigger === node.trigger && this.tag.isSimultaneousWith(node.tag)) {
-                node.value = this.value; // update the value
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Return the tag associated with this event.
-     */
-    getPriority(): Tag {
-        return this.tag;
-    }
-}
-/**
- * Abstract class for a trigger. A trigger may be an action, port, or timer.
- */
-abstract class Trigger extends Component {
-
-    /**
-     * Reactions to trigger.
-     */
-    protected reactions: Set<Reaction<unknown>> = new Set();
-    
-    /**
-     * Request the manager of this trigger. The request will only be honored
-     * if the correct key is given. Each component has a unique symbol (a key)
-     * that is handed to the owner upon instantiation of the component. If the
-     * wrong key is supplied, return undefined.
-     * @param key The private key embedded in this trigger.
-     */
-    abstract getManager(key: Symbol | undefined): TriggerManager;
-
-    /**
-     * Return the owner of this trigger.
-     */
-    public getContainer(): Reactor | null {
-        return this._getContainer()
-    }
-
-    /**
-     * Return whether or not this trigger is present.
-     */
-    abstract isPresent(): boolean;
-
-}
-
-/**
- * 
- */
-abstract class ScheduledTrigger<T extends Present> extends Trigger {
-    protected value: T | Absent = undefined;
-    protected tag: Tag | undefined;
-    
-    protected runtime!: Runtime;
-
-    constructor(container: Reactor, alias?: string) { // FIXME: do we really want the alias here? Probably not.
-        super(container, alias)
-        this._linkToRuntimeObject()
-    }
-
-    /**
-     * Update the current value of this timer in accordance with the given
-     * event, and trigger any reactions that list this timer as their trigger.
-     * @param e Timestamped event.
-     */
-    public update(e: TaggedEvent<T>):void {
-
-        if (!e.tag.isSimultaneousWith(this.runtime.util.getCurrentTag())) {
-            throw new Error("Time of event does not match current logical time.");
-        }
-        if (e.trigger === this) {
-            this.value = e.value
-            this.tag = e.tag;
-            for (let r of this.reactions) {
-                this.runtime.stage(r)
-            }
-        } else {
-            throw new Error("Attempt to update action using incompatible event.");
-        }
-    }
-
-    public getManager(key: Symbol | undefined): TriggerManager {
-        if (this._key == key) {
-            return this.manager
-        }
-        throw Error("Unable to grant access to manager.")
-    }
-
-    /**
-     * Returns true if this action was scheduled for the current
-     * logical time. This result is not affected by whether it
-     * has a value.
-     */
-    public isPresent() {
-        if (this.tag === undefined) {
-            // This action has never been scheduled before.
-            return false;
-        }
-        if (this.tag.isSimultaneousWith(this.runtime.util.getCurrentTag())) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    protected manager = new class implements TriggerManager {
-        constructor(private trigger: ScheduledTrigger<T>) { }
-        getContainer(): Reactor {
-            return this.trigger._getContainer()
-        }
-        addReaction(reaction: Reaction<unknown>): void {
-            this.trigger.reactions.add(reaction)
-        }
-        delReaction(reaction: Reaction<unknown>): void {
-            this.trigger.reactions.delete(reaction)
-        }
-    }(this)
-
-    public _receiveRuntimeObject(runtime: Runtime) {
-        if (!this.runtime) {
-            this.runtime = runtime
-        } else {
-            throw new Error("Can only establish link to runtime once.")
-        }
-    }
-
-}
-
-/**
- * An action denotes a self-scheduled event.
- * An action, like an input, can cause reactions to be invoked.
- * Whereas inputs are provided by other reactors, actions are scheduled
- * by this reactor itself, either in response to some observed external
- * event or as a delayed response to some input event. The action can be
- * scheduled by a reactor by invoking the schedule function in a reaction
- * or in an asynchronous callback that has been set up in a reaction.
- */
-export class Action<T extends Present> extends ScheduledTrigger<T> implements Read<T> {
-
-    readonly origin: Origin;
-    readonly minDelay: TimeValue;
-    readonly minInterArrival: TimeValue = defaultMIT;
-    
-    public get(): T | Absent {
-        if (this.isPresent()) {
-            return this.value;
-        } else {
-            return undefined;
-        }
-    }
-
-    public asSchedulable(key: Symbol | undefined): Sched<T> {
-        if (this._key === key) {
-            return this.scheduler
-        }
-        throw Error("Invalid reference to container.")
-    }
-
-    public getManager(key: Symbol | undefined): TriggerManager {
-        if (this._key == key) {
-            return this.manager
-        }
-        throw Error("Unable to grant access to manager.")
-    }
-
-    protected scheduler = new class<T extends Present> extends SchedulableAction<T> {
-        get(): T | undefined {
-            return this.action.get()
-        }
-        constructor(private action: Action<T>) {
-            super()
-        }
-        schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
-            if (!(extraDelay instanceof TimeValue)) {
-                extraDelay = TimeValue.secs(0);
-            }
-            
-            var tag = this.action.runtime.util.getCurrentTag();
-            var delay = this.action.minDelay.add(extraDelay);
-
-            tag = tag.getLaterTag(delay);
-
-            if (this.action.origin == Origin.physical) {
-                // If the resulting timestamp from delay is less than the current physical time
-                // on the platform, then the timestamp becomes the current physical time.
-                // Otherwise the tag is computed like a logical action's tag.
-
-                let physicalTime = getCurrentPhysicalTime();
-                if (tag.time.isEarlierThan(physicalTime)) {
-                    tag = new Tag(getCurrentPhysicalTime(), 0);
-                } else {
-                    tag = tag.getMicroStepLater();
-                }
-            }
-
-            if (this.action instanceof FederatePortAction) {
-                if (intendedTag === undefined) {
-                    throw new Error("FederatedPortAction must have an intended tag from RTI.");
-                }
-                if (intendedTag <= this.action.runtime.util.getCurrentTag()) {
-                    throw new Error("Intended tag must be greater than current tag. Intended tag" +
-                    intendedTag + " Current tag: " + this.action.runtime.util.getCurrentTag());
-                }
-                Log.debug(this, () => "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
-                intendedTag);
-                tag = intendedTag;
-            } else if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
-                tag = tag.getMicroStepLater();
-            }
-            
-            Log.debug(this, () => "Scheduling " + this.action.origin +
-                " action " + this.action._getFullyQualifiedName() + " with tag: " + tag);
-    
-            this.action.runtime.schedule(new TaggedEvent(this.action, tag, value));
-        }
-    }(this)
-
-    /** 
-     * Construct a new action.
-     * @param __container__ The reactor containing this action.
-     * @param origin Optional. If physical, then the hardware clock on the local 
-     * platform is used to determine the tag of the resulting event. If logical, 
-     * the current logical time (plus one microstep) is used as the offset.
-     * @param minDelay Optional. Defaults to 0. Specifies the intrinsic delay of
-     * any events resulting from scheduling this action.
-     * @param minInterArrival Optional. Defaults to 1 nsec. Specifies the minimum
-     * intrinsic delay between to occurrences of this action.
-     */
-    constructor(__container__: Reactor, origin: Origin, minDelay: TimeValue = TimeValue.secs(0), minInterArrival: TimeValue = defaultMIT) {
-        super(__container__);
-        this.origin = origin;
-        this.minDelay = minDelay;
-    }
-
-    public toString() {
-        return this._getFullyQualifiedName();
-    }
-}
-
-export class Startup extends Action<Present> { // FIXME: this should not be a schedulable trigger, just a trigger
-    constructor(__parent__: Reactor) {
-        super(__parent__, Origin.logical)
-    }
-}
-
-export class Shutdown extends Action<Present> {
-    constructor(__parent__: Reactor) {
-        super(__parent__, Origin.logical)
-    }
-}
-
-export class FederatePortAction extends Action<Buffer> {
-    constructor(__parent__: Reactor) {
-        super(__parent__, Origin.logical)
-    }
-}
 
 export class Parameter<T> implements Read<T> {
     constructor(private value: T) {
@@ -425,37 +53,7 @@ export class Parameter<T> implements Read<T> {
     }
 }
 
-/**
- * A state variable. This class refines the Read interface by letting `get`
- * return T rather than T | Absent. If the state should be nullable or
- * uninitialized, this has to be reflected explicitly in T.
- */
-export class State<T> implements Read<T>, Write<T> {
-    
-    /**
-     * Create a new state variable and assign it an initial value.
-     * @param value The initial value to assign to this state variable.
-     */
-    constructor(private value: T) {
-    
-    }
 
-    /**
-     * Return the current value of this state variable.
-     */
-    get(): T {
-        return this.value;
-    };
-
-    /**
-     * Set the current value of this state variable.
-     * @param value 
-     */
-    set(value: T) {
-        this.value = value;
-    };
-
-}
 
 /**
  * A timer is an attribute of a reactor which periodically (or just once)
@@ -512,19 +110,6 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
 }
 
-export class Args<T extends Variable[]> {
-    tuple: T;
-    constructor(...args: T) {
-        this.tuple = args;
-    }
-}
-
-export class Triggers {
-    list: Variable[];
-    constructor(trigger: Variable, ...triggers: Variable[]) {
-        this.list = triggers.concat(trigger)
-    }
-}
 
 /**
  * A reactor is a software component that reacts to input events, timer events,
@@ -536,26 +121,43 @@ export class Triggers {
 export abstract class Reactor extends Component {
 
     /**
-     * Data structure to keep track of register components.
+     * Data structure to keep track of registered components.
      * Note: declare this class member before any other ones as they may
      * attempt to access it.
      */
     private _keyChain: Map<Component, Symbol> = new Map()
 
     /**
-     * Collection of priviledged functions that are passed down from the
+     * This graph has in it all the dependencies implied by this container's
+     * ports, reactions, and connections.
+     */
+    protected _dependencyGraph: DependencyGraph<Port<Present> | Reaction<any>> = new DependencyGraph()
+
+    /**
+     * The runtime object, which has a collection of privileged functions that are passed down from the
      * container.
      */
     private _runtime!: Runtime;
 
     /**
-     * This graph has in it all the dependencies implied by this reactor's
-     * ports, reactions, and connections.
+     * Index that specifies the location of the reactor instance in a bank, 
+     * if it is a member of one.
      */
-    private _dependencyGraph: DependencyGraph<Port<Present> | Reaction<any>> = new DependencyGraph()
+    private _bankIndex: number;
 
     /**
-     * This graph has some overlap with the reactors dependency, but is 
+     * Return the location of the reactor instance in a bank, 
+     * if it is a member of one; return -1 otherwise.
+     */
+    public getBankIndex(): number {
+        if (this._bankIndex === undefined) {
+            return -1
+        }
+        return this._bankIndex
+    }
+
+    /**
+     * This graph has some overlap with the reactors dependency graph, but is 
      * different in two respects:
      * - transitive dependencies between ports have been collapsed; and
      * - it incorporates the causality interfaces of all contained reactors.
@@ -628,6 +230,9 @@ export abstract class Reactor extends Component {
      * @param key The component's key.
      */
     public _register(component: Component, key: Symbol) {
+        if (component === undefined || component === null) {
+            throw new Error("Unable to register undefined or null component")
+        }
         if (component._isRegistered()) {
             throw new Error("Unable to register " 
             + component._getFullyQualifiedName() 
@@ -730,7 +335,7 @@ export abstract class Reactor extends Component {
      * @param key The key that verifies the containment relation between this
      * reactor and the component, with at most one level of indirection.
      */
-    protected _getKey(component: Trigger, key?: Symbol): Symbol | undefined {
+    public _getKey(component: Trigger, key?: Symbol): Symbol | undefined {
         if (component._isContainedBy(this) || this._key === key) {
             return this._keyChain.get(component)
         } else if (!(component instanceof Action) && 
@@ -768,7 +373,9 @@ export abstract class Reactor extends Component {
         constructor(private reactor: Reactor) {
             this.reactor = reactor
             this.util = reactor.util
+            this.getBankIndex = () => reactor.getBankIndex()
         }
+        getBankIndex: () => number;
         
         /**
          * 
@@ -776,8 +383,14 @@ export abstract class Reactor extends Component {
          * @param dst 
          */
         public connect<A extends T, R extends Present, T extends Present, S extends R>
-                (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
-            return this.reactor._connect(src, dst);
+            (src: CallerPort<A, R> | IOPort<S>, dst: CalleePort<T, S> | IOPort<R>) {
+            if (src instanceof CallerPort && dst instanceof CalleePort) {
+                return this.reactor._connectCall(src, dst);
+            } else if (src instanceof IOPort && dst instanceof IOPort) {
+                return this.reactor._connect(src, dst);
+            } else {
+                // ERROR
+            }
         }
 
         /**
@@ -802,18 +415,27 @@ export abstract class Reactor extends Component {
      */
     private _ReactionSandbox = class implements ReactionSandbox {
         public util: UtilityFunctions;
+        public getBankIndex: () => number;
         constructor(public reactor: Reactor) {
             this.util = reactor.util
+            this.getBankIndex = () => reactor.getBankIndex()
         }
+        
     }
 
     /**
      * Create a new reactor.
      * @param container The container of this reactor.
      */
-
-    constructor(container: Reactor | null, alias?:string) {
-        super(container, alias);
+    constructor(container: Reactor | null) {
+        super(container);
+        this._bankIndex = -1
+        if (container !== null) {
+            let index = Bank.initializationMap.get(container)
+            if (index !== undefined) {
+                this._bankIndex = index
+            }
+        }
         
         this._linkToRuntimeObject()
         this.shutdown = new Shutdown(this);
@@ -862,7 +484,13 @@ export abstract class Reactor extends Component {
     //     return this._active
     // }
 
-    protected writable<T extends Present>(port: IOPort<T>): ReadWrite<T> {
+    //
+   
+    public allWritable<T extends Present>(port: MultiPort<T>): WritableMultiPort<T> {
+        return port.asWritable(this._getKey(port));
+    }
+
+    public writable<T extends Present>(port: IOPort<T>): WritablePort<T>  {
         return port.asWritable(this._getKey(port));
     }
 
@@ -909,11 +537,12 @@ export abstract class Reactor extends Component {
             if (t instanceof Trigger) {
                 t.getManager(this._getKey(t)).addReaction(reaction)
             }
-
+            
             // Also record this trigger as a dependency.
             if (t instanceof IOPort) {
                 this._dependencyGraph.addEdge(reaction, t)
-                //this._addDependency(t, reaction);
+            } else if (t instanceof MultiPort) {
+                t.channels().forEach(channel => this._dependencyGraph.addEdge(reaction, channel))
             } else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
@@ -926,23 +555,31 @@ export abstract class Reactor extends Component {
             if (a instanceof IOPort) {
                 this._dependencyGraph.addEdge(reaction, a)
                 sources.add(a)
-            }
-            if (a instanceof CalleePort) {
+            } else if (a instanceof MultiPort) {
+                a.channels().forEach(channel => {
+                    this._dependencyGraph.addEdge(reaction, channel)
+                    sources.add(channel)
+                })
+            } else if (a instanceof CalleePort) {
                 this._dependencyGraph.addEdge(a, reaction)
-            }
-            if (a instanceof CallerPort) {
+            } else if (a instanceof CallerPort) {
                 this._dependencyGraph.addEdge(reaction, a)
             }
             // Only necessary if we want to add actions to the dependency graph.
-            if (a instanceof Action) {
+            else if (a instanceof Action) {
                 // dep
             }
-            if (a instanceof SchedulableAction) {
+            else if (a instanceof SchedulableAction) {
                 // antidep
-            }
-            if (a instanceof WritablePort) {
+            } else if (a instanceof WritablePort) {
                 this._dependencyGraph.addEdge(a.getPort(), reaction)
                 effects.add(a.getPort())
+            } else if (a instanceof WritableMultiPort) {
+                a.getPorts().forEach(channel => {
+                    this._dependencyGraph.addEdge(channel, reaction)
+                    effects.add(channel)
+                })
+
             }
         }
         // Make effects dependent on sources.
@@ -1087,7 +724,6 @@ export abstract class Reactor extends Component {
             let lastCaller = p.getManager(this._getKey(p)).getLastCaller()
             if (procedure && lastCaller) {
                 let effects = this._dependencyGraph.getBackEdges(procedure)
-                //console.log(">>>>>>>>>>>> last caller:" + lastCaller)
                 for (let e of effects) {
                     if (!(e instanceof CalleePort)) {
                         // Also add edge to the local graph.
@@ -1250,6 +886,25 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         return false;
     }
 
+    public canConnectCall<A extends T, R extends Present, T extends Present, S extends R>
+        (src: CallerPort<A, R>, dst: CalleePort<T, S>) { 
+            // FIXME: can we change the inheritance relationship so that we can overload?
+
+        if (this._runtime.isRunning() == false) {
+            // console.log("Connecting before running")
+            // Validate connections between callers and callees.
+
+            if (src._isContainedByContainerOf(this) && dst._isContainedByContainerOf(this)) {
+                return true
+            }
+            return false
+
+        } else {
+            // FIXME
+        }
+    }
+
+
     /**
      * Returns true if a given source port can be connected to the
      * given destination port, false otherwise. Valid connections
@@ -1266,8 +921,8 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      * @param src The start point of a new connection.
      * @param dst The end point of a new connection.
      */
-    public canConnect<A extends T, R extends Present, T extends Present, S extends R>
-            (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
+    public canConnect<R extends Present, S extends R>
+        (src: IOPort<S>, dst: IOPort<R>) {
         // Immediate rule out trivial self loops. 
         if (src === dst) {
             return false
@@ -1276,35 +931,24 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         if (this._runtime.isRunning() == false) {
             // console.log("Connecting before running")
             // Validate connections between callers and callees.
-            if (src instanceof CalleePort) {
-                return false
-            }
-            if (src instanceof CallerPort) {
-                if (dst instanceof CalleePort && 
-                    src._isContainedByContainerOf(this) && dst._isContainedByContainerOf(this)) {
-                    return true
-                }
-                return false
-            }
             // Additional checks for regular ports.
-            if (dst instanceof IOPort) {
-                console.log("IOPort")
-                // Rule out write conflicts.
-                //   - (between reactors)
-                if (!(dst instanceof CalleePort) &&
-                    this._dependencyGraph.getBackEdges(dst).size > 0) {
-                    return false;
-                }
 
-                //   - between reactors and reactions (NOTE: check also needs to happen
-                //     in addReaction)
-                var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
-                if (deps != undefined && deps.size > 0) {
-                    return false;
-                }
-
-                return this._isInScope(src, dst)
+            console.log("IOPort")
+            // Rule out write conflicts.
+            //   - (between reactors)
+            if (this._dependencyGraph.getBackEdges(dst).size > 0) {
+                return false;
             }
+
+            //   - between reactors and reactions (NOTE: check also needs to happen
+            //     in addReaction)
+            var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
+            if (deps != undefined && deps.size > 0) {
+                return false;
+            }
+            
+            return this._isInScope(src, dst)
+
         } else {
             // Attempt to make a connection while executing.
             // Check the local dependency graph to figure out whether this change
@@ -1318,7 +962,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             for (let r of this._getOwnReactors()) {
                 graph.merge(r._getCausalityInterface())
             }
-            
+
             // Add the new edge.
             graph.addEdge(dst, src)
 
@@ -1377,6 +1021,26 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     }
 
     /**
+     * Connect a source port to a downstream destination port without canConnect() check.
+     * This must be used with caution after checking canConnect for the given ports.
+     * @param src The source port to connect.
+     * @param dst The destination port to connect.
+     */
+    private _uncheckedConnect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
+        Log.debug(this, () => "connecting " + src + " and " + dst);
+        // Add dependency implied by connection to local graph.
+        this._dependencyGraph.addEdge(dst, src);
+        // Register receiver for value propagation.
+        let writer = dst.asWritable(this._getKey(dst));
+        src.getManager(this._getKey(src)).addReceiver
+            (writer as WritablePort<S>);
+        let val = src.get()
+        if (this._runtime.isRunning() && val !== undefined) {
+            writer.set(val)
+        }
+    }
+
+    /**
      * Connect a source port to a downstream destination port. If a source is a
      * regular port, then the type variable of the source has to be a subtype of
      * the type variable of the destination. If the source is a caller port,
@@ -1388,60 +1052,112 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      * @param src The source port to connect.
      * @param dst The destination port to connect.
      */
-    protected _connect<A extends T, R extends Present, T extends Present, S extends R>
-            (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>) {
+    protected _connect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
+        if (src === undefined || src === null) {
+            throw new Error("Cannot connect unspecified source");
+        }
+        if (dst === undefined || dst === null) {
+            throw new Error("Cannot connect unspecified destination");
+        } 
         if (this.canConnect(src, dst)) {
-            Log.debug(this, () => "connecting " + src + " and " + dst);
-            if (src instanceof CallerPort && dst instanceof CalleePort) {
-                // Treat connections between callers and callees separately.
-                // Note that because A extends T and S extends R, we can safely
-                // cast CalleePort<T,S> to CalleePort<A,R>.
-                src.remotePort = ((dst as unknown) as CalleePort<A,R>);
-                // Register the caller in the callee reactor so that it can
-                // establish dependencies on the callers.
-                let calleeManager = dst.getManager(this._getKey(dst))
-                let callerManager = src.getManager(this._getKey(src))
-                let container = callerManager.getContainer()
-                let callers = new Set<Reaction<any>>()
-                container._dependencyGraph.getBackEdges(src).forEach((dep) => {
-                    if (dep instanceof Reaction) {
-                        callers.add(dep)
-                    }
-                })
-                let first = container._getFirst(callers)
-                let last = container._getLast(callers)
-                let lastCaller = calleeManager.getLastCaller()
-                if (lastCaller !== undefined) {
-                    // This means the callee port is bound to a reaction and
-                    // there may be zero or more callers. We now continue
-                    // building a chain of callers.
-                    if (first) {
-                        this._dependencyGraph.addEdge(first, lastCaller)
-                    } else {
-                        this._dependencyGraph.addEdge(src, dst)
-                    }
-                    if (last)
-                        calleeManager.setLastCaller(last)
-                } else {
-                    throw new Error("No procedure linked to callee"
-                    + " port `${procedure}`.")
-                }
-                
-            } else if (src instanceof IOPort && dst instanceof IOPort) {
-                Log.debug(this, () => "connecting " + src + " and " + dst);
-                // Add dependency implied by connection to local graph.
-                this._dependencyGraph.addEdge(dst, src);
-                // Register receiver for value propagation.
-                let writer = dst.asWritable(this._getKey(dst));
-                src.getManager(this._getKey(src)).addReceiver
-                    (writer as WritablePort<S>);
-                let val = src.get()
-                if (this._runtime.isRunning() && val !== undefined) {
-                    //console.log(">>>>>>>>>>>>>>>>>>>>>>>>><<<<<>>>>>>>>>>>>>>>>>>>>>")
-                    writer.set(val)
-                }
-            }
+            this._uncheckedConnect(src, dst);
+        } else {
+            throw new Error("ERROR connecting " + src + " to " + dst);
+        }
+    }
 
+    protected _connectMulti<R extends Present, S extends R>(
+            src: Array<MultiPort<S> | IOPort<S>>,
+            dest: Array<MultiPort<R> | IOPort<R>>,
+            repeatLeft: boolean) {
+        let leftPorts = new Array<IOPort<S>>(0)
+        let rightPorts = new Array<IOPort<R>>(0)
+
+        // TODO(hokeun): Check if the multiport's container is Bank when Bank is implemented.
+        src.forEach(port => {
+            if (port instanceof MultiPort) {
+                port.channels().forEach(singlePort => {
+                    leftPorts.push(singlePort)
+                })
+            } else if (port instanceof IOPort) {
+                leftPorts.push(port)
+            }
+        })
+
+        dest.forEach(port => {
+            if (port instanceof MultiPort) {
+                port.channels().forEach(singlePort => {
+                    rightPorts.push(singlePort)
+                })
+            } else if (port instanceof IOPort) {
+                rightPorts.push(port)
+            }
+        })
+
+        if (repeatLeft) {
+            const leftPortsSize = leftPorts.length
+            for (let i = 0; leftPorts.length < rightPorts.length; i++) {
+                leftPorts.push(leftPorts[i % leftPortsSize])
+            }
+        }
+
+        if (leftPorts.length < rightPorts.length) {
+            Log.warn(null, () => "There are more right ports than left ports. ",
+                "Not all ports will be connected!")
+        } else if (leftPorts.length > rightPorts.length) {
+            Log.warn(null, () => "There are more left ports than right ports. ",
+                "Not all ports will be connected!")
+        }
+
+
+        for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
+            if (!this.canConnect(leftPorts[i], rightPorts[i])) {
+                throw new Error("ERROR connecting " + leftPorts[i] + " to " + rightPorts[i]
+                    + "in multiple connections from " + src + " to " + dest)
+            }
+        }
+        for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
+            this._uncheckedConnect(leftPorts[i], rightPorts[i])
+        }
+    }
+
+    protected _connectCall<A extends T, R extends Present, T extends Present, S extends R>
+    (src: CallerPort<A,R>, dst: CalleePort<T,S>) {
+        if (this.canConnectCall(src, dst)) {
+            Log.debug(this, () => "connecting " + src + " and " + dst);
+            // Treat connections between callers and callees separately.
+            // Note that because A extends T and S extends R, we can safely
+            // cast CalleePort<T,S> to CalleePort<A,R>.
+            src.remotePort = ((dst as unknown) as CalleePort<A, R>);
+            // Register the caller in the callee reactor so that it can
+            // establish dependencies on the callers.
+            let calleeManager = dst.getManager(this._getKey(dst))
+            let callerManager = src.getManager(this._getKey(src))
+            let container = callerManager.getContainer()
+            let callers = new Set<Reaction<any>>()
+            container._dependencyGraph.getBackEdges(src).forEach((dep) => {
+                if (dep instanceof Reaction) {
+                    callers.add(dep)
+                }
+            })
+            let first = container._getFirst(callers)
+            let last = container._getLast(callers)
+            let lastCaller = calleeManager.getLastCaller()
+            if (lastCaller !== undefined) {
+                // This means the callee port is bound to a reaction and
+                // there may be zero or more callers. We now continue
+                // building a chain of callers.
+                if (first) {
+                    this._dependencyGraph.addEdge(first, lastCaller)
+                } else {
+                    this._dependencyGraph.addEdge(src, dst)
+                }
+                if (last)
+                    calleeManager.setLastCaller(last)
+            } else {
+                throw new Error("No procedure linked to callee"
+                    + " port `${procedure}`.")
+            }
         } else {
             throw new Error("ERROR connecting " + src + " to " + dst);
         }
@@ -1613,187 +1329,19 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     }
 }
 
-export abstract class Port<T extends Present> extends Trigger implements Read<T> {
-    
-    protected runtime!: Runtime;
 
-    constructor(container: Reactor, alias?: string) {
-        super(container, alias)
-        this._linkToRuntimeObject()
-    }
 
-    /** The time stamp associated with this port's value. */
-    protected tag: Tag | undefined;
 
-    /** The value associated with this port. */
-    protected value: T | Absent;
 
-    abstract get(): T | undefined;
-
-    public _receiveRuntimeObject(runtime: Runtime) {
-        if (!this.runtime) {
-            this.runtime = runtime
-        } else {
-            throw new Error("Can only establish link to runtime once. Name: " + this._getFullyQualifiedName())
-        }
-    }
-
-    /**
-     * Returns true if the connected port's value has been set; false otherwise
-     */
-    public isPresent() {
-
-        Log.debug(this, () => "In isPresent()...")
-        Log.debug(this, () => "value: " + this.value);
-        Log.debug(this, () => "tag: " + this.tag);
-        Log.debug(this, () => "time: " + this.runtime.util.getCurrentLogicalTime())
-
-        if (this.value !== undefined
-            && this.tag !== undefined
-            && this.tag.isSimultaneousWith(this.runtime.util.getCurrentTag())) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-}
-
-export abstract class IOPort<T extends Present> extends Port<T> {
-
-    protected receivers: Set<WritablePort<T>> = new Set();
-
-    /**
-     * Return the value set to this port. Return `Absent` if the connected
-     * output did not have its value set at the current logical time.
-     */
-    public get(): T | Absent {
-        if (this.isPresent()) {
-            return this.value;
-        } else {
-            return undefined;
-        }
-    }
-
-    /**
-     * Only the holder of the key may obtain a writable port.
-     * @param key
-     */
-    public asWritable(key: Symbol | undefined): WritablePort<T> {
-        if (this._key === key) {
-            return this.writer
-        }
-        throw Error("Referenced port is out of scope: " + this._getFullyQualifiedName()) // FIXME: adjust messages for other methods as well
-        // FIXME: we could potentially do this for reads/triggers as well just for scope rule enforcement
-    }
-
-    /**
-     * 
-     * @param container Reference to the container of this port 
-     * (or the container thereof).
-     */
-    public getManager(key: Symbol | undefined): IOPortManager<T> {
-        if (this._key == key) {
-            return this.manager
-        }
-        throw Error("Unable to grant access to manager.")
-    }
-
-    /**
-     * Inner class instance to gain access to Write<T> interface.
-     */
-    protected writer = new class extends WritablePort<T> {
-        constructor(private port:IOPort<T>) {
-            super()
-        }
-
-        public set(value: T): void {
-            this.port.value = value;
-            this.port.tag = this.port.runtime.util.getCurrentTag();
-            // Set values in downstream receivers.
-            this.port.receivers.forEach(p => p.set(value))
-            //console.log("Set called. The number of reactions is: " + this.port.reactions.size)
-            // Stage triggered reactions for execution.
-            this.port.reactions.forEach(r => this.port.runtime.stage(r))
-        }
-
-        public get(): T | Absent {
-            return this.port.get()
-        }
-
-        public getPort(): IOPort<T> {
-            return this.port
-        }
-        
-        public toString(): string {
-            return this.port.toString()
-        }
-        
-    }(this)
-
-    /**
-     * Inner class instance to let the container configure this port.
-     */
-    protected manager:IOPortManager<T> = new class implements IOPortManager<T> {
-        constructor(private port:IOPort<T>) {}
-        getContainer(): Reactor {
-            return this.port._getContainer()
-        }
-
-        /**
-         * Add the given port to the list of receivers. If the connection was
-         * established at runtime and the upstream port already has a value,
-         * immediately propagate the value to the newly connected receiver.
-         * @param port A newly connected downstream port.
-         */
-        addReceiver(port: WritablePort<T>): void {
-            this.port.receivers.add(port)
-            if (this.port.runtime.isRunning()) {
-                let val = this.port.get()
-                if (val !== undefined) {
-                    port.set(val)
-                }
-            }
-        }
-        delReceiver(port: WritablePort<T>): void {
-            this.port.receivers.delete(port)
-        }
-        addReaction(reaction: Reaction<unknown>): void {
-            this.port.reactions.add(reaction)
-            //console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        }
-        delReaction(reaction: Reaction<unknown>): void {
-            this.port.reactions.delete(reaction)
-        }
-    }(this)
-
-    toString(): string {
-        return this._getFullyQualifiedName();
-    }
-}
 
 interface ComponentManager {
     getOwner(): Reactor;
 
 }
 
-interface TriggerManager {
-    getContainer():Reactor;
-    addReaction(reaction: Reaction<unknown>): void;
-    delReaction(reaction: Reaction<unknown>): void;    
-}
 
-interface IOPortManager<T extends Present> extends TriggerManager {
-    addReceiver(port: WritablePort<T>): void;
-    delReceiver(port: WritablePort<T>): void;
-}
 
-export class OutPort<T extends Present> extends IOPort<T> {
 
-}
-
-export class InPort<T extends Present> extends IOPort<T> {
-
-}
 
 /**
  * A caller port sends arguments of type T and receives a response of type R.
@@ -1973,23 +1521,13 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 export interface Runtime {
     util:UtilityFunctions;
-    //core: CoreFunctions;
     stage(reaction: Reaction<unknown>): void;
     initialize(timer: Timer): void;
     schedule(e: TaggedEvent<any>): void;
     delete(r: Reactor): void;
     isRunning(): boolean;
 }
-
-// interface CoreFunctions {
-//     stage(reaction: Reaction<unknown>): void;
-//     initialize(timer: Timer): void;
-//     schedule(e: TaggedEvent<any>): void;
-//     mark(r: Reactor): void;
-//     isRunning(): boolean;
-// }
-
-interface UtilityFunctions { //
+interface UtilityFunctions {
     requestStop(): void;
     reportError(message?: string): void;
     requestErrorStop(message?: string): void;
@@ -2003,6 +1541,7 @@ interface UtilityFunctions { //
 }
 
 export interface MutationSandbox extends ReactionSandbox {
+    
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
@@ -2022,8 +1561,9 @@ export interface ReactionSandbox {
      * Collection of utility functions accessible from within a `react` function.
      */
     util: UtilityFunctions
-
+    getBankIndex: () => number
 }
+
 
 export class App extends Reactor {
 
@@ -2031,6 +1571,7 @@ export class App extends Reactor {
 
     private _errored = false
     private _errorMessage?: string
+    readonly _uuid = uuidv4()
 
     /**
      * Set of reactions to stage when this app starts executing.
@@ -2102,9 +1643,8 @@ export class App extends Reactor {
 
     }(this);
 
-
     /**
-     * 
+     * Inner class that provides access to the Runtime object.
      */
     private __runtime: Runtime = new class implements Runtime {
         util: UtilityFunctions        
@@ -2170,6 +1710,7 @@ export class App extends Reactor {
                 this.app._timersToSchedule.add(timer) 
             }
         }
+
         /**
          * Push an event onto the event queue. 
          * @param e Tagged event to push onto the event queue.
@@ -2197,7 +1738,7 @@ export class App extends Reactor {
          * Mark a reactor for deletion. At the end of logical time at which
          * this method was invoked the reactor will be removed from its
          * container.
-         * @param r 
+         * @param r The reactor to be deleted.
          */
         public delete(r: Reactor): void {
             this.app._reactorsToRemove.push(r)
@@ -2289,6 +1830,8 @@ export class App extends Reactor {
 
     private snooze: Action<Tag>;
 
+    readonly _name:string
+
     /**
      * Create a new top-level reactor.
      * @param executionTimeout Optional parameter to let the execution of the app time out.
@@ -2303,7 +1846,15 @@ export class App extends Reactor {
                 public success: () => void = () => {}, 
                 public failure: () => void = () => {}) {
         super(null);
-        
+
+        let name = this.constructor.name
+        if (name == "") {
+            name = "app"
+        } else {
+            name = name.charAt(0).toLowerCase() + name.slice(1)
+        }
+        this._name = name
+
         // Update pointer to runtime object for this reactor and
         // its startup and shutdown action since the inner class
         // instance this.__runtime isn't initialized up until here.

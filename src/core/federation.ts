@@ -1,8 +1,10 @@
-import {Log} from './util';
-import {Tag, TimeValue, TimeUnit, Origin, getCurrentPhysicalTime, Alarm} from './time';
+
 import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter} from 'events';
-import {Action, Present, TaggedEvent, App, FederatePortAction} from './reactor'
+import {
+    Log, Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm,
+    Present, App, Action, FederatePortAction, TaggedEvent
+} from './internal';
 
 //---------------------------------------------------------------------//
 // Federated Execution Constants and Enums                             //
@@ -311,7 +313,7 @@ class RTIClient extends EventEmitter {
                 this.socket?.write(buffer);
                 this.socket?.write(this.federationID);
             } catch (e) {
-                Log.error(this, () => {return e.toString()});
+                Log.error(this, () => {return `${e}`});
             }
 
             // Finally, emit a connected event.
@@ -371,7 +373,7 @@ class RTIClient extends EventEmitter {
         try {
             this.socket?.write(msg);
         } catch (e) {
-            Log.error(this, () => {return e});
+            Log.error(this, () => {return `${e}`});
         }
     }
 
@@ -382,7 +384,7 @@ class RTIClient extends EventEmitter {
         try {
             this.socket?.write(msg);
         } catch (e) {
-            Log.error(this, () => {return e});
+            Log.error(this, () => {return `${e}`});
         }
     }
 
@@ -405,7 +407,7 @@ class RTIClient extends EventEmitter {
             Log.debug(this, () => {return `Sending RTI start time: ${myPhysicalTime}`});
             this.socket?.write(msg);
         } catch (e) {
-            Log.error(this, () => {return e});
+            Log.error(this, () => {return `${e}`});
         }
     }
 
@@ -430,7 +432,7 @@ class RTIClient extends EventEmitter {
                 + `federate ID: ${destFederateID} and port ID: ${destPortID}.`});
             this.socket?.write(msg);
         } catch (e) {
-            Log.error(this, () => {return e});
+            Log.error(this, () => {return `${e}`});
         }
     }
 
@@ -460,7 +462,7 @@ class RTIClient extends EventEmitter {
                 + `, time: ${time.toString('hex')}.`});
             this.socket?.write(msg);
         } catch (e) {
-            Log.error(this, () => {return e});
+            Log.error(this, () => {return `${e}`});
         }
     }
 
@@ -481,7 +483,7 @@ class RTIClient extends EventEmitter {
             Log.debug(this, () => {return "Sending RTI logical time complete: " + completeTime.toString('hex');});
             this.socket?.write(msg);
         } catch (e) {
-            Log.error(this, () => {return e});
+            Log.error(this, () => {return `${e}`});
         }
     }
 
@@ -496,7 +498,7 @@ class RTIClient extends EventEmitter {
             Log.debug(this, () => {return "Sending RTI resign.";});
             this.socket?.write(msg);
         } catch (e) {
-            Log.error(this, () => {return e});
+            Log.error(this, () => {return `${e}`});
         }
     }
 
@@ -516,7 +518,7 @@ class RTIClient extends EventEmitter {
             Log.debug(this, () => {return "Sending RTI Next Event Time.";});
             this.socket?.write(msg);
         } catch (e) {
-            Log.error(this, () => {return e});
+            Log.error(this, () => {return `${e}`});
         }
     }
 

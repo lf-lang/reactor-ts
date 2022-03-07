@@ -1,6 +1,10 @@
-import {Sortable, PrioritySetElement, Log} from "./util"
-import {Reactor, ReactionSandbox, Triggers, Args, ArgList, Startup, Timer, MutationSandbox} from "./reactor"
-import {TimeValue, Tag} from "./time";
+import {
+    Sortable, PrioritySetElement, Log,
+    ReactionSandbox, Timer, MutationSandbox,
+    Reactor, TimeValue, Tag,
+    ArgList, Args, Triggers,
+    Startup
+} from "./internal"
 
 /**
  * A number that indicates a reaction's position with respect to other
@@ -158,7 +162,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
     }
 
     /**
-     * 
+     * Return string representation of the reaction.
      */
     public toString(): string {
         return this.reactor._getFullyQualifiedName() + "[R" + this.reactor._getReactionIndex(this) + "]";

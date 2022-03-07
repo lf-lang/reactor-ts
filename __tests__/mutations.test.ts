@@ -1,7 +1,4 @@
-import {Reactor, App, Triggers, InPort, Args, OutPort, Timer, State} from '../src/core/reactor';
-import {TimeValue} from '../src/core/time';
-import {Log, LogLevel} from '../src/core/util';
-
+import {Reactor, App, Triggers, Args, Timer, OutPort, InPort, TimeValue} from '../src/core/internal';
 
 class Source extends Reactor {
 
@@ -112,7 +109,7 @@ class ScatterGather extends App {
 class ZenoClock extends Reactor {
     tick:Timer;
     constructor(owner: Reactor, iteration: number) {
-        super(owner, "ZenoClock(" + iteration + ")")
+        super(owner)
         console.log("Creating ZenoClock " + iteration)
         this.tick = new Timer(this, 0, 0)
         this.addReaction(new Triggers(this.tick), new Args(this.tick), function(this, tick) {
@@ -132,9 +129,10 @@ class ZenoClock extends Reactor {
 }
 
 class Zeno extends App {
+    readonly zeno = new ZenoClock(this, 1)
     constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
         super(timeout, false, false, success, fail);
-        new ZenoClock(this, 1)
+        
         var self = this;
     
         this.addReaction(new Triggers(this.shutdown), new Args(), function(this) {

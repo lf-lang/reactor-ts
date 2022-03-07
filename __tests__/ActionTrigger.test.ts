@@ -1,6 +1,4 @@
-import {App, Triggers, Args} from '../src/core/reactor';
-import {Origin, TimeValue} from '../src/core/time';
-import {Reactor, Timer, Action, Sched} from '../src/core/reactor';
+import {App, Triggers, Args, Origin, TimeValue, Reactor, Timer, Sched, Action} from '../src/core/internal';
 
 //Upon initialization, this reactor should produce an
 //output event
@@ -67,9 +65,8 @@ export class ActionTrigger extends Reactor {
 class ActionTriggerTest extends App {
     aTrigger: ActionTrigger;
 
-    constructor(name: string, timeout: TimeValue, success?: ()=> void, fail?: ()=>void){
+    constructor(timeout: TimeValue, success?: ()=> void, fail?: ()=>void){
         super(timeout, false, false, success, fail);
-        this._setAlias(name);
         this.aTrigger = new ActionTrigger(this);
     }
 }
@@ -86,7 +83,7 @@ describe('ActionTrigger', function () {
         };
 
         //Tell the reactor runtime to successfully terminate after 3 seconds.
-        var aTriggerTest = new ActionTriggerTest("ActionTriggerTest", TimeValue.secs(3), done, failure);
+        var aTriggerTest = new ActionTriggerTest(TimeValue.secs(3), done, failure);
         //Don't give the runtime the done callback because we don't care if it terminates
         aTriggerTest._start();
 
