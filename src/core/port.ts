@@ -55,24 +55,22 @@ export abstract class Port<T extends Present> extends Trigger {
  * We have this abstract class so that we can do `instanceof` checks.
  */
 export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
-    abstract get(): T | undefined;
-    abstract set(value: T): void;
-    abstract getPort(): IOPort<T> // FIXME: why not call this channel?
+    abstract get(): T | undefined
+    abstract set(value: T): void
+    abstract getPort(): IOPort<T>
 }
 
 export abstract class WritableMultiPort<T extends Present> implements MultiReadWrite<T> {
-    
+    abstract get(index: number): T | undefined
+    abstract set(index: number, value: T): void
+    abstract width(): number
+    abstract values(): Array<T | Absent>
+    abstract getPorts(): Array<IOPort<T>>
 }
 
 /**
  * Interface for a writable multi port, intended as a wrapper for a multi port.
  */
-export interface WritableMultiPort<T extends Present> extends MultiReadWrite<T> {
-    getWriters(): Array<WritablePort<T>>
-    getPorts(): Array<IOPort<T>> // FIXME: why not call this channels()?
-}
-
-
 interface IOPortManager<T extends Present> extends TriggerManager {
     addReceiver(port: WritablePort<T>): void;
     delReceiver(port: WritablePort<T>): void;

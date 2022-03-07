@@ -1,7 +1,8 @@
 import {
     Absent, InPort, IOPort, MultiRead, MultiReadWrite, OutPort, Present, 
-    Reactor, Runtime, WritablePort, Trigger, TriggerManager, Reaction
+    Reactor, Runtime, WritablePort, Trigger, TriggerManager, Reaction, Component
 } from "./internal";
+import { WritableMultiPort } from "./port";
 
 /**
  * A trigger that represents a multiport. All of channels of a multiport can be read.
@@ -50,7 +51,7 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
      * @param container the reactor that will contain the new instance
      * @param width the number of channels of newly created instance
      */
-    constructor(container: Reactor, width: number) {
+    constructor(private container: Reactor, width: number) {
         super(container)
         this._channels = new Array(width)
         this._width = width
@@ -60,7 +61,7 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
      * Obtain a writable version of this port, provided that the caller holds the required key.
      * @param key
      */
-     public asWritable(key: Symbol | undefined): MultiReadWrite<T> {
+     public asWritable(key: Symbol | undefined): WritableMultiPort<T> {
         if (this._key === key) {
             return this.writer
         }
@@ -146,7 +147,11 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
     /**
     * Inner class instance to gain access to MultiWrite<T> interface.
     */
-    protected writer = new class implements MultiReadWrite<T> {
+    protected writer = new class extends WritableMultiPort<T> {
+        
+        getPorts(): IOPort<T>[] {
+            return this.port._channels
+        }
 
         /**
          * Storage for obtained writers.
@@ -155,6 +160,7 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
         
         /** @inheritdoc */
         constructor(private port: MultiPort<T>) {
+            super()
             this.cache = new Array();
         }
 
@@ -184,6 +190,10 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
             return this.port.values()
         }
     }(this)
+
+    public toString() {
+        return this.container.toString() + "." + Component.keyOfMatchingEntry(this, this.container)
+    }
 
 }
 

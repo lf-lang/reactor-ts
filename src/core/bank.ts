@@ -70,4 +70,8 @@ export class Bank<T extends Reactor, S> {
     public port<P extends Port<Present>>(selector: (reactor: T) => P): Array<P> {
         return this.all().reduce((acc, val) => acc.concat(selector(val)), new Array<P>(0))
     }
+
+    public toString() {
+        return "bank(" + this.members.length + ")"
+    }
 }

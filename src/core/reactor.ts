@@ -486,7 +486,7 @@ export abstract class Reactor extends Component {
 
     //
    
-    public allWritable<T extends Present>(port: MultiPort<T>): MultiReadWrite<T> {
+    public allWritable<T extends Present>(port: MultiPort<T>): WritableMultiPort<T> {
         return port.asWritable(this._getKey(port));
     }
 
@@ -557,7 +557,7 @@ export abstract class Reactor extends Component {
                 sources.add(a)
             } else if (a instanceof MultiPort) {
                 a.channels().forEach(channel => {
-                    this._dependencyGraph.addEdge(reaction, a)
+                    this._dependencyGraph.addEdge(reaction, channel)
                     sources.add(channel)
                 })
             } else if (a instanceof CalleePort) {
@@ -576,7 +576,7 @@ export abstract class Reactor extends Component {
                 effects.add(a.getPort())
             } else if (a instanceof WritableMultiPort) {
                 a.getPorts().forEach(channel => {
-                    this._dependencyGraph.addEdge(reaction, a)
+                    this._dependencyGraph.addEdge(channel, reaction)
                     effects.add(channel)
                 })
 

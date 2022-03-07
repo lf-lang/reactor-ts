@@ -125,7 +125,7 @@ export abstract class Component {
      * @param object the assumed container of the component
      * @returns the key of the entry that matches the component
      */
-    private static keyOfMatchingEntry(component: Component, object: Object) {
+    public static keyOfMatchingEntry(component: Component, object: Object) {
         for (const [key, value] of Object.entries(object)) {
             if (value === component) {
                 return `${key}`
