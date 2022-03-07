@@ -4,9 +4,7 @@
  * 
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
-import {Args, Parameter, OutPort, InPort, State, Triggers, Action, Timer, Reactor, App, WritablePort} from "../core/reactor";
-import {TimeValue, Origin} from "../core/time"
-import {Log} from "../core/util"
+import {Log, TimeValue, Origin, Args, Parameter, OutPort, InPort, State, Triggers, Action, Reactor, App, WritablePort} from "../core/internal";
 
 Log.global.level = Log.levels.INFO;
 

@@ -1,6 +1,4 @@
-import {Args, Parameter, CalleePort, CallerPort, Triggers, Timer, Reactor, App } from "../core/reactor";
-import {TimeValue} from "../core/time"
-import {Log} from "../core/util"
+import {TimeValue, Log, Args, Parameter, CalleePort, CallerPort, Triggers, Timer, Reactor, App } from "../core/internal";
 
 Log.global.level = Log.levels.ERROR;
 

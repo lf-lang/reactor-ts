@@ -1,6 +1,4 @@
-import {Args, Parameter, InPort, OutPort, State, Triggers, Action, Reactor, App, Present, WritablePort} from "../core/reactor";
-import {TimeValue, Origin} from "../core/time"
-import {Log} from "../core/util"
+import {Args, Parameter, InPort, OutPort, State, Triggers, Action, Reactor, App, TimeValue, Origin, Log, WritablePort} from "../core/internal";
 
 Log.global.level = Log.levels.INFO;
 class Ramp extends Reactor {

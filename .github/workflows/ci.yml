@@ -28,9 +28,10 @@ jobs:
           cache-dependency-path: package-lock.json
       
       # Runs a single command using the runners shell
-      - name: Run the tests
+      - name: Run the type checker and then run the tests
         run: |
           npm install
+          npm run check-types
           npm run test
 
   fetch-lf:

@@ -1,7 +1,0 @@
-/* file: __tests__/types/tslint.json */
-{
-    "extends": "dtslint/dtslint.json",
-    "rules": {
-        "no-useless-files": false
-    }
-  }
