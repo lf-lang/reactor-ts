@@ -96,6 +96,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-interface tsd-has-type-parameter"><a href="reactor.MutationSandbox.html#connect" class="tsd-kind-icon">connect</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="reactor.MutationSandbox.html#delete" class="tsd-kind-icon">delete</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-inherited"><a href="reactor.MutationSandbox.html#getBankIndex" class="tsd-kind-icon">get<wbr>Bank<wbr>Index</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="reactor.MutationSandbox.html#getReactor" class="tsd-kind-icon">get<wbr>Reactor</a></li>
 							</ul>
 						</section>
@@ -111,7 +112,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="reactor.ReactionSandbox.html">ReactionSandbox</a>.<a href="reactor.ReactionSandbox.html#util">util</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/9ae63fd/src/core/reactor.ts#L2024">src/core/reactor.ts:2024</a></li>
+							<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/0a0940f/src/core/reactor.ts#L1563">src/core/reactor.ts:1563</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -127,37 +128,37 @@
 					<a name="connect" class="tsd-anchor"></a>
 					<h3>connect</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">connect&lt;A, R, T, S&gt;<span class="tsd-signature-symbol">(</span>src<span class="tsd-signature-symbol">: </span><a href="../classes/reactor.CallerPort.html" class="tsd-signature-type" data-tsd-kind="Class">CallerPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/reactor.IOPort.html" class="tsd-signature-type" data-tsd-kind="Class">IOPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span>, dst<span class="tsd-signature-symbol">: </span><a href="../classes/reactor.CalleePort.html" class="tsd-signature-type" data-tsd-kind="Class">CalleePort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/reactor.IOPort.html" class="tsd-signature-type" data-tsd-kind="Class">IOPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">connect&lt;A, R, T, S&gt;<span class="tsd-signature-symbol">(</span>src<span class="tsd-signature-symbol">: </span><a href="../classes/reactor.CallerPort.html" class="tsd-signature-type" data-tsd-kind="Class">CallerPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/port.IOPort.html" class="tsd-signature-type" data-tsd-kind="Class">IOPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span>, dst<span class="tsd-signature-symbol">: </span><a href="../classes/reactor.CalleePort.html" class="tsd-signature-type" data-tsd-kind="Class">CalleePort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/port.IOPort.html" class="tsd-signature-type" data-tsd-kind="Class">IOPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/9ae63fd/src/core/reactor.ts#L2006">src/core/reactor.ts:2006</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/0a0940f/src/core/reactor.ts#L1545">src/core/reactor.ts:1545</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>A<span class="tsd-signature-symbol">: </span><a href="../modules/reactor.html#Present" class="tsd-signature-type" data-tsd-kind="Type alias">Present</a></h4>
+									<h4>A<span class="tsd-signature-symbol">: </span><a href="../modules/types.html#Present" class="tsd-signature-type" data-tsd-kind="Type alias">Present</a></h4>
 								</li>
 								<li>
-									<h4>R<span class="tsd-signature-symbol">: </span><a href="../modules/reactor.html#Present" class="tsd-signature-type" data-tsd-kind="Type alias">Present</a></h4>
+									<h4>R<span class="tsd-signature-symbol">: </span><a href="../modules/types.html#Present" class="tsd-signature-type" data-tsd-kind="Type alias">Present</a></h4>
 								</li>
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="../modules/reactor.html#Present" class="tsd-signature-type" data-tsd-kind="Type alias">Present</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><a href="../modules/types.html#Present" class="tsd-signature-type" data-tsd-kind="Type alias">Present</a></h4>
 								</li>
 								<li>
-									<h4>S<span class="tsd-signature-symbol">: </span><a href="../modules/reactor.html#Present" class="tsd-signature-type" data-tsd-kind="Type alias">Present</a></h4>
+									<h4>S<span class="tsd-signature-symbol">: </span><a href="../modules/types.html#Present" class="tsd-signature-type" data-tsd-kind="Type alias">Present</a></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>src: <a href="../classes/reactor.CallerPort.html" class="tsd-signature-type" data-tsd-kind="Class">CallerPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/reactor.IOPort.html" class="tsd-signature-type" data-tsd-kind="Class">IOPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>src: <a href="../classes/reactor.CallerPort.html" class="tsd-signature-type" data-tsd-kind="Class">CallerPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">A</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/port.IOPort.html" class="tsd-signature-type" data-tsd-kind="Class">IOPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 								<li>
-									<h5>dst: <a href="../classes/reactor.CalleePort.html" class="tsd-signature-type" data-tsd-kind="Class">CalleePort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/reactor.IOPort.html" class="tsd-signature-type" data-tsd-kind="Class">IOPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>dst: <a href="../classes/reactor.CalleePort.html" class="tsd-signature-type" data-tsd-kind="Class">CalleePort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">S</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/port.IOPort.html" class="tsd-signature-type" data-tsd-kind="Class">IOPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">R</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -174,7 +175,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/9ae63fd/src/core/reactor.ts#L2011">src/core/reactor.ts:2011</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/0a0940f/src/core/reactor.ts#L1550">src/core/reactor.ts:1550</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -184,6 +185,24 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-inherited">
+					<a name="getBankIndex" class="tsd-anchor"></a>
+					<h3>get<wbr>Bank<wbr>Index</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Bank<wbr>Index<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from <a href="reactor.ReactionSandbox.html">ReactionSandbox</a>.<a href="reactor.ReactionSandbox.html#getBankIndex">getBankIndex</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/0a0940f/src/core/reactor.ts#L1564">src/core/reactor.ts:1564</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -197,7 +216,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/9ae63fd/src/core/reactor.ts#L2013">src/core/reactor.ts:2013</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/0a0940f/src/core/reactor.ts#L1552">src/core/reactor.ts:1552</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/reactor.Reactor.html" class="tsd-signature-type" data-tsd-kind="Class">Reactor</a></h4>
@@ -213,6 +232,12 @@
 						<a href="../modules.html">Modules</a>
 					</li>
 					<li class=" tsd-kind-module">
+						<a href="../modules/action.html">action</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/bank.html">bank</a>
+					</li>
+					<li class=" tsd-kind-module">
 						<a href="../modules/cli.html">cli</a>
 					</li>
 					<li class=" tsd-kind-module">
@@ -225,13 +250,25 @@
 						<a href="../modules/component.html">component</a>
 					</li>
 					<li class=" tsd-kind-module">
+						<a href="../modules/event.html">event</a>
+					</li>
+					<li class=" tsd-kind-module">
 						<a href="../modules/federation.html">federation</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/internal.html">internal</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/microtime.html">microtime</a>
 					</li>
 					<li class=" tsd-kind-module">
+						<a href="../modules/multiport.html">multiport</a>
+					</li>
+					<li class=" tsd-kind-module">
 						<a href="../modules/nanotimer.html">nanotimer</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/port.html">port</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/reaction.html">reaction</a>
@@ -240,7 +277,19 @@
 						<a href="../modules/reactor.html">reactor</a>
 					</li>
 					<li class=" tsd-kind-module">
+						<a href="../modules/state.html">state</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/strings.html">strings</a>
+					</li>
+					<li class=" tsd-kind-module">
 						<a href="../modules/time.html">time</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/trigger.html">trigger</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/types.html">types</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/ulog.html">ulog</a>
@@ -252,14 +301,8 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.Action.html" class="tsd-kind-icon">Action</a>
-					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="../classes/reactor.App.html" class="tsd-kind-icon">App</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.Args.html" class="tsd-kind-icon">Args</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="../classes/reactor.CalleePort.html" class="tsd-kind-icon">Callee<wbr>Port</a>
@@ -267,50 +310,14 @@
 					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="../classes/reactor.CallerPort.html" class="tsd-kind-icon">Caller<wbr>Port</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.FederatePortAction.html" class="tsd-kind-icon">Federate<wbr>Port<wbr>Action</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.IOPort.html" class="tsd-kind-icon">IOPort</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.InPort.html" class="tsd-kind-icon">In<wbr>Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.OutPort.html" class="tsd-kind-icon">Out<wbr>Port</a>
-					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="../classes/reactor.Parameter.html" class="tsd-kind-icon">Parameter</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.Port.html" class="tsd-kind-icon">Port</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="../classes/reactor.Reactor.html" class="tsd-kind-icon">Reactor</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.SchedulableAction.html" class="tsd-kind-icon">Schedulable<wbr>Action</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.Shutdown.html" class="tsd-kind-icon">Shutdown</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.Startup.html" class="tsd-kind-icon">Startup</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.State.html" class="tsd-kind-icon">State</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.TaggedEvent.html" class="tsd-kind-icon">Tagged<wbr>Event</a>
-					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="../classes/reactor.Timer.html" class="tsd-kind-icon">Timer</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.Triggers.html" class="tsd-kind-icon">Triggers</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.WritablePort.html" class="tsd-kind-icon">Writable<wbr>Port</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="reactor.Call.html" class="tsd-kind-icon">Call</a>
@@ -329,6 +336,9 @@
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="reactor.MutationSandbox.html#delete" class="tsd-kind-icon">delete</a>
 							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-inherited">
+								<a href="reactor.MutationSandbox.html#getBankIndex" class="tsd-kind-icon">get<wbr>Bank<wbr>Index</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="reactor.MutationSandbox.html#getReactor" class="tsd-kind-icon">get<wbr>Reactor</a>
 							</li>
@@ -339,32 +349,8 @@
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="reactor.ReactionSandbox.html" class="tsd-kind-icon">Reaction<wbr>Sandbox</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="reactor.Read.html" class="tsd-kind-icon">Read</a>
-					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="reactor.Runtime.html" class="tsd-kind-icon">Runtime</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="reactor.Sched.html" class="tsd-kind-icon">Sched</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="reactor.Write.html" class="tsd-kind-icon">Write</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/reactor.html#Absent" class="tsd-kind-icon">Absent</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../modules/reactor.html#ArgList" class="tsd-kind-icon">Arg<wbr>List</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/reactor.html#Present" class="tsd-kind-icon">Present</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../modules/reactor.html#ReadWrite" class="tsd-kind-icon">Read<wbr>Write</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/reactor.html#Variable" class="tsd-kind-icon">Variable</a>
 					</li>
 				</ul>
 			</nav>

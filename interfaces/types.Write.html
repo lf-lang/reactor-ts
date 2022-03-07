@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Read | reactor-ts</title>
+	<title>Write | reactor-ts</title>
 	<meta name="description" content="Documentation for reactor-ts">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,13 +55,13 @@
 					<a href="../modules.html">reactor-ts</a>
 				</li>
 				<li>
-					<a href="../modules/reactor.html">reactor</a>
+					<a href="../modules/types.html">types</a>
 				</li>
 				<li>
-					<a href="reactor.Read.html">Read</a>
+					<a href="types.Write.html">Write</a>
 				</li>
 			</ul>
-			<h1>Interface Read&lt;T&gt;</h1>
+			<h1>Interface Write&lt;T&gt;</h1>
 		</div>
 	</div>
 </header>
@@ -71,7 +71,7 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Interface for readable variables.</p>
+						<p>Interface for writable ports.</p>
 					</div>
 				</div>
 			</section>
@@ -87,13 +87,10 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Read</span>
+						<span class="target">Write</span>
 						<ul class="tsd-hierarchy">
 							<li>
 								<a href="reactor.Call.html" class="tsd-signature-type" data-tsd-kind="Interface">Call</a>
-							</li>
-							<li>
-								<a href="reactor.Sched.html" class="tsd-signature-type" data-tsd-kind="Interface">Sched</a>
 							</li>
 						</ul>
 					</li>
@@ -102,13 +99,9 @@
 			<section class="tsd-panel">
 				<h3>Implemented by</h3>
 				<ul class="tsd-hierarchy">
-					<li><a href="../classes/reactor.Action.html" class="tsd-signature-type" data-tsd-kind="Class">Action</a></li>
 					<li><a href="../classes/reactor.CalleePort.html" class="tsd-signature-type" data-tsd-kind="Class">CalleePort</a></li>
 					<li><a href="../classes/reactor.CallerPort.html" class="tsd-signature-type" data-tsd-kind="Class">CallerPort</a></li>
-					<li><a href="../classes/reactor.Parameter.html" class="tsd-signature-type" data-tsd-kind="Class">Parameter</a></li>
-					<li><a href="../classes/reactor.Port.html" class="tsd-signature-type" data-tsd-kind="Class">Port</a></li>
-					<li><a href="../classes/reactor.State.html" class="tsd-signature-type" data-tsd-kind="Class">State</a></li>
-					<li><a href="../classes/reactor.Timer.html" class="tsd-signature-type" data-tsd-kind="Class">Timer</a></li>
+					<li><a href="../classes/state.State.html" class="tsd-signature-type" data-tsd-kind="Class">State</a></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -118,7 +111,7 @@
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="reactor.Read.html#get" class="tsd-kind-icon">get</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="types.Write.html#set" class="tsd-kind-icon">set</a></li>
 							</ul>
 						</section>
 					</div>
@@ -127,19 +120,25 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="get" class="tsd-anchor"></a>
-					<h3>get</h3>
+					<a name="set" class="tsd-anchor"></a>
+					<h3>set</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">T</span></li>
+						<li class="tsd-signature tsd-kind-icon">set<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/9ae63fd/src/core/reactor.ts#L74">src/core/reactor.ts:74</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/0a0940f/src/core/types.ts#L17">src/core/types.ts:17</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">T</span></h4>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>value: <span class="tsd-signature-type">T</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -150,6 +149,12 @@
 				<ul>
 					<li class=" ">
 						<a href="../modules.html">Modules</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/action.html">action</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/bank.html">bank</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/cli.html">cli</a>
@@ -164,22 +169,46 @@
 						<a href="../modules/component.html">component</a>
 					</li>
 					<li class=" tsd-kind-module">
+						<a href="../modules/event.html">event</a>
+					</li>
+					<li class=" tsd-kind-module">
 						<a href="../modules/federation.html">federation</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/internal.html">internal</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/microtime.html">microtime</a>
 					</li>
 					<li class=" tsd-kind-module">
+						<a href="../modules/multiport.html">multiport</a>
+					</li>
+					<li class=" tsd-kind-module">
 						<a href="../modules/nanotimer.html">nanotimer</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/port.html">port</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/reaction.html">reaction</a>
 					</li>
-					<li class="current tsd-kind-module">
+					<li class=" tsd-kind-module">
 						<a href="../modules/reactor.html">reactor</a>
 					</li>
 					<li class=" tsd-kind-module">
+						<a href="../modules/state.html">state</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/strings.html">strings</a>
+					</li>
+					<li class=" tsd-kind-module">
 						<a href="../modules/time.html">time</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../modules/trigger.html">trigger</a>
+					</li>
+					<li class="current tsd-kind-module">
+						<a href="../modules/types.html">types</a>
 					</li>
 					<li class=" tsd-kind-module">
 						<a href="../modules/ulog.html">ulog</a>
@@ -192,109 +221,55 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.Action.html" class="tsd-kind-icon">Action</a>
+						<a href="../classes/types.Args.html" class="tsd-kind-icon">Args</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.App.html" class="tsd-kind-icon">App</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.Args.html" class="tsd-kind-icon">Args</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.CalleePort.html" class="tsd-kind-icon">Callee<wbr>Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.CallerPort.html" class="tsd-kind-icon">Caller<wbr>Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.FederatePortAction.html" class="tsd-kind-icon">Federate<wbr>Port<wbr>Action</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.IOPort.html" class="tsd-kind-icon">IOPort</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.InPort.html" class="tsd-kind-icon">In<wbr>Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.OutPort.html" class="tsd-kind-icon">Out<wbr>Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.Parameter.html" class="tsd-kind-icon">Parameter</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.Port.html" class="tsd-kind-icon">Port</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.Reactor.html" class="tsd-kind-icon">Reactor</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.SchedulableAction.html" class="tsd-kind-icon">Schedulable<wbr>Action</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.Shutdown.html" class="tsd-kind-icon">Shutdown</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.Startup.html" class="tsd-kind-icon">Startup</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.State.html" class="tsd-kind-icon">State</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.TaggedEvent.html" class="tsd-kind-icon">Tagged<wbr>Event</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.Timer.html" class="tsd-kind-icon">Timer</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/reactor.Triggers.html" class="tsd-kind-icon">Triggers</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../classes/reactor.WritablePort.html" class="tsd-kind-icon">Writable<wbr>Port</a>
+						<a href="../classes/types.Triggers.html" class="tsd-kind-icon">Triggers</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="reactor.Call.html" class="tsd-kind-icon">Call</a>
+						<a href="types.MultiRead.html" class="tsd-kind-icon">Multi<wbr>Read</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="reactor.MutationSandbox.html" class="tsd-kind-icon">Mutation<wbr>Sandbox</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="types.MultiWrite.html" class="tsd-kind-icon">Multi<wbr>Write</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="reactor.ReactionSandbox.html" class="tsd-kind-icon">Reaction<wbr>Sandbox</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="types.Read.html" class="tsd-kind-icon">Read</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="types.Sched.html" class="tsd-kind-icon">Sched</a>
 					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="reactor.Read.html" class="tsd-kind-icon">Read</a>
+						<a href="types.Write.html" class="tsd-kind-icon">Write</a>
 						<ul>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="reactor.Read.html#get" class="tsd-kind-icon">get</a>
+								<a href="types.Write.html#set" class="tsd-kind-icon">set</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="reactor.Runtime.html" class="tsd-kind-icon">Runtime</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="reactor.Sched.html" class="tsd-kind-icon">Sched</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="reactor.Write.html" class="tsd-kind-icon">Write</a>
-					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/reactor.html#Absent" class="tsd-kind-icon">Absent</a>
+						<a href="../modules/types.html#Absent" class="tsd-kind-icon">Absent</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../modules/reactor.html#ArgList" class="tsd-kind-icon">Arg<wbr>List</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/reactor.html#Present" class="tsd-kind-icon">Present</a>
+						<a href="../modules/types.html#ArgList" class="tsd-kind-icon">Arg<wbr>List</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../modules/reactor.html#ReadWrite" class="tsd-kind-icon">Read<wbr>Write</a>
+						<a href="../modules/types.html#MultiReadWrite" class="tsd-kind-icon">Multi<wbr>Read<wbr>Write</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/types.html#ParmList" class="tsd-kind-icon">Parm<wbr>List</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/reactor.html#Variable" class="tsd-kind-icon">Variable</a>
+						<a href="../modules/types.html#Present" class="tsd-kind-icon">Present</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/types.html#ReadWrite" class="tsd-kind-icon">Read<wbr>Write</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="../modules/types.html#Variable" class="tsd-kind-icon">Variable</a>
 					</li>
 				</ul>
 			</nav>
