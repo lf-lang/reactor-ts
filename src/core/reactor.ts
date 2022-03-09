@@ -536,6 +536,12 @@ export abstract class Reactor extends Component {
             // Link the trigger to the reaction.
             if (t instanceof Trigger) {
                 t.getManager(this._getKey(t)).addReaction(reaction)
+            } else if (t instanceof Array) {
+                t.forEach(trigger =>{
+                    if (trigger instanceof Trigger) {
+                        trigger.getManager(this._getKey(trigger)).addReaction(reaction)
+                    }
+                })
             }
             
             // Also record this trigger as a dependency.
@@ -543,6 +549,14 @@ export abstract class Reactor extends Component {
                 this._dependencyGraph.addEdge(reaction, t)
             } else if (t instanceof MultiPort) {
                 t.channels().forEach(channel => this._dependencyGraph.addEdge(reaction, channel))
+            } else if (t instanceof Array) {
+                t.forEach(trigger => {
+                    if (trigger instanceof IOPort) {
+                        this._dependencyGraph.addEdge(reaction, trigger)
+                    } else if (trigger instanceof MultiPort) {
+                        trigger.channels().forEach(channel => this._dependencyGraph.addEdge(reaction, channel))
+                    }
+                })
             } else {
                 Log.debug(this, () => ">>>>>>>> not a dependency: " + t);
             }
