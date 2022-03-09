@@ -8,7 +8,7 @@ import { Tag, TimeValue, Trigger } from "./internal";
  * @see Write
  * @see Sched
  */
- export type Variable = Read<unknown> | MultiRead<unknown>
+ export type Variable = Read<unknown> | MultiRead<unknown> | Array<Read<unknown> | MultiRead<unknown>>
 
 /**
  * Interface for writable ports.
@@ -92,8 +92,8 @@ export class Args<T extends Variable[]> {
 }
 
 export class Triggers {
-    list: Trigger[];
-    constructor(trigger: Trigger, ...triggers: Trigger[]) {
+    list: Array<Trigger | Array<Trigger>>;
+    constructor(trigger: Trigger | Array<Trigger>, ...triggers: Array<Trigger | Array<Trigger>>) {
         this.list = triggers.concat(trigger)
     }
 }
