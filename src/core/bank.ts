@@ -1,4 +1,4 @@
-import { Port, Present, Reactor } from './internal';
+import { MultiPort, Port, Present, Reactor } from './internal';
 
 /**
  * Type that describes a class with a constructor of which the arguments 
@@ -67,7 +67,7 @@ export class Bank<T extends Reactor, S> {
      * @param selector lambda function that takes a reactor of type T and return a port of type P
      * @returns a list of ports selected across all bank members by the given lambda
      */
-    public port<P extends Port<Present>>(selector: (reactor: T) => P): Array<P> {
+    public port<P extends Port<Present> | MultiPort<Present>>(selector: (reactor: T) => P): Array<P> {
         return this.all().reduce((acc, val) => acc.concat(selector(val)), new Array<P>(0))
     }
 
