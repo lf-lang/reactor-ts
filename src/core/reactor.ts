@@ -540,6 +540,8 @@ export abstract class Reactor extends Component {
                 t.forEach(trigger =>{
                     if (trigger instanceof Trigger) {
                         trigger.getManager(this._getKey(trigger)).addReaction(reaction)
+                    } else {
+                        throw new Error("Non-Trigger included in Triggers list.")
                     }
                 })
             }
@@ -555,6 +557,8 @@ export abstract class Reactor extends Component {
                         this._dependencyGraph.addEdge(reaction, trigger)
                     } else if (trigger instanceof MultiPort) {
                         trigger.channels().forEach(channel => this._dependencyGraph.addEdge(reaction, channel))
+                    } else {
+                        throw new Error("Non-Port included in Triggers list.")
                     }
                 })
             } else {
