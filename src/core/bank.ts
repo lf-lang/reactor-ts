@@ -1,4 +1,4 @@
-import { MultiPort, Port, Present, Reactor } from './internal';
+import { IOPort, MultiPort, Port, Present, Reactor, WritableMultiPort, WritablePort } from './internal';
 
 /**
  * Type that describes a class with a constructor of which the arguments 
@@ -73,5 +73,27 @@ export class Bank<T extends Reactor, S> {
 
     public toString() {
         return "bank(" + this.members.length + ")"
+    }
+   
+    public allWritable<T extends Present>(ports: Array<MultiPort<T>>): Array<WritableMultiPort<T>> {
+        if (ports.length != this.members.length) {
+            throw new Error("Length of ports does not match length of reactors.")
+        }
+        let result = new Array<WritableMultiPort<T>>(ports.length)
+        for (let i = 0; i < ports.length; i++) {
+            result[i] = this.members[i].allWritable(ports[i])
+        }
+        return result
+    }
+
+    public writable<T extends Present>(ports: Array<IOPort<T>>): Array<WritablePort<T>>  {
+        if (ports.length != this.members.length) {
+            throw new Error("Length of ports does not match length of reactors.")
+        }
+        let result = new Array<WritablePort<T>>(ports.length)
+        for (let i = 0; i < ports.length; i++) {
+            result[i] = this.members[i].writable(ports[i])
+        }
+        return result
     }
 }
