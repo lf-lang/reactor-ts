@@ -386,14 +386,16 @@ export abstract class Reactor extends Component {
         public connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A, R> | IOPort<S>, dst: CalleePort<T, S> | IOPort<R>) {
             if (src instanceof CallerPort && dst instanceof CalleePort) {
-                return this.reactor._connectCall(src, dst);
+                this.reactor._connectCall(src, dst);
+                this.sendGraphInfo();
+                return;
             } else if (src instanceof IOPort && dst instanceof IOPort) {
-                return this.reactor._connect(src, dst);
+                this.reactor._connect(src, dst);
+                this.sendGraphInfo();
+                return                 
             } else {
                 // ERROR
             }
-
-            this.sendGraphInfo()
         }
 
         /**
