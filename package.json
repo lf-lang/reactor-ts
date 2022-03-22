@@ -8,6 +8,7 @@
         "@definitelytyped/typescript-versions": "0.0.29",
         "@types/microtime": "^2.1.0",
         "@types/parsimmon": "^1.10.1",
+        "axios": "^0.26.1",
         "command-line-args": "^5.1.1",
         "got": "^9.6.0",
         "heap": "^0.2.6",

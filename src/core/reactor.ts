@@ -16,6 +16,7 @@ import {
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
 import { Bank } from "./bank";
+import axios from "axios";
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -391,6 +392,8 @@ export abstract class Reactor extends Component {
             } else {
                 // ERROR
             }
+
+            this.sendGraphInfo()
         }
 
         /**
@@ -407,7 +410,32 @@ export abstract class Reactor extends Component {
          */
         public delete(reactor: Reactor) {
             reactor._delete()
+            this.sendGraphInfo()
         }
+
+        sendGraphInfo() {
+            let topReactor = this.reactor
+            while(topReactor !== topReactor._getContainer()){
+                topReactor = topReactor._getContainer();
+            }
+
+
+            console.log(topReactor._getPrecedenceGraph().toString());
+            
+            try{
+                axios.post('http://localhost:8080/api/add', {
+                
+                    logicalTime: this.util.getCurrentLogicalTime(),
+                    dot: topReactor._getPrecedenceGraph().toString(),
+    
+                });
+            }
+            catch (error) {
+                console.error(error);
+            }
+
+        }
+
     };
     
     /**
