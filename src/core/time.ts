@@ -431,7 +431,7 @@ export class Tag {
         let timeBuffer = this.time.toBinary();
         let buf = Buffer.alloc(12);
         timeBuffer.copy(buf, 0, 0);
-        buf.writeInt32LE(this.microstep);
+        buf.writeInt32LE(this.microstep, 8);
         return buf;
     }
 

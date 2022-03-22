@@ -312,16 +312,15 @@ describe('time helper functions', function () {
 
         expect(Tag.fromBinary(straightZeroTag.toBinary())).toEqual(straightZeroTag);
         expect(Tag.fromBinary(zeroSecondsTag.toBinary())).toEqual(zeroSecondsTag);
-        //FIXME Matt: converting Tag to and from Binary doesn't return original tag
-        //expect(Tag.fromBinary(zeroNSTag.toBinary())).toEqual(zeroNSTag);
-        //expect(Tag.fromBinary(zeroWeeksTag.toBinary())).toEqual(zeroWeeksTag);
-        //expect(Tag.fromBinary(fiveSecondsTag.toBinary())).toEqual(fiveSecondsTag);
-        //expect(Tag.fromBinary(fortyTwoDaysTag.toBinary())).toEqual(fortyTwoDaysTag);
-        //expect(Tag.fromBinary(threeHundredUSTag.toBinary())).toEqual(threeHundredUSTag);
-        //expect(Tag.fromBinary(sevenPointFiveBillNSTag.toBinary())).toEqual(sevenPointFiveBillNSTag);
-        //expect(Tag.fromBinary(twoHundredFiftyMillMSTag.toBinary())).toEqual(twoHundredFiftyMillMSTag);
-        //expect(Tag.fromBinary(fiveSFiveUSTag.toBinary())).toEqual(fiveSFiveUSTag);
-        //expect(Tag.fromBinary(oneThousandMSTag.toBinary())).toEqual(oneThousandMSTag);
+        expect(Tag.fromBinary(zeroNSTag.toBinary())).toEqual(zeroNSTag);
+        expect(Tag.fromBinary(zeroWeeksTag.toBinary())).toEqual(zeroWeeksTag);
+        expect(Tag.fromBinary(fiveSecondsTag.toBinary())).toEqual(fiveSecondsTag);
+        expect(Tag.fromBinary(fortyTwoDaysTag.toBinary())).toEqual(fortyTwoDaysTag);
+        expect(Tag.fromBinary(threeHundredUSTag.toBinary())).toEqual(threeHundredUSTag);
+        expect(Tag.fromBinary(sevenPointFiveBillNSTag.toBinary())).toEqual(sevenPointFiveBillNSTag);
+        expect(Tag.fromBinary(twoHundredFiftyMillMSTag.toBinary())).toEqual(twoHundredFiftyMillMSTag);
+        expect(Tag.fromBinary(fiveSFiveUSTag.toBinary())).toEqual(fiveSFiveUSTag);
+        expect(Tag.fromBinary(oneThousandMSTag.toBinary())).toEqual(oneThousandMSTag);
 
     });
 
