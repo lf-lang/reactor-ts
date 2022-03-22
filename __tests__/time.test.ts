@@ -294,5 +294,35 @@ describe('time helper functions', function () {
 
     });
 
+    it('convert to/from binary with Tag methods', function() {
+
+        // some example tags with various microsteps
+        const straightZeroTag = new Tag(straightZero, 0)
+        const zeroSecondsTag = new Tag(zeroSeconds, 0)
+        const zeroNSTag = new Tag(zeroNS, 0)
+        const zeroWeeksTag = new Tag(zeroWeeks, 0)
+        const fiveSecondsTag = new Tag(fiveSeconds, 0)
+        const fiveSFiveUSTag = new Tag(fiveSFiveUS, 0)
+        const fortyTwoDaysTag = new Tag(fortyTwoDays, 0)
+        const threeHundredUSTag = new Tag(threeHundredUS, 0)
+        const sevenPointFiveBillNSTag = new Tag(sevenPointFiveBillNS, 0)
+        const twoHundredFiftyMillMSTag = new Tag(twoHundredFiftyMillMS, 0)
+        const oneThousandMSTag = new Tag(oneThousandMS, 0)
+
+
+        expect(Tag.fromBinary(straightZeroTag.toBinary())).toEqual(straightZeroTag);
+        expect(Tag.fromBinary(zeroSecondsTag.toBinary())).toEqual(zeroSecondsTag);
+        expect(Tag.fromBinary(zeroNSTag.toBinary())).toEqual(zeroNSTag);
+        expect(Tag.fromBinary(zeroWeeksTag.toBinary())).toEqual(zeroWeeksTag);
+        expect(Tag.fromBinary(fiveSecondsTag.toBinary())).toEqual(fiveSecondsTag);
+        expect(Tag.fromBinary(fortyTwoDaysTag.toBinary())).toEqual(fortyTwoDaysTag);
+        expect(Tag.fromBinary(threeHundredUSTag.toBinary())).toEqual(threeHundredUSTag);
+        expect(Tag.fromBinary(sevenPointFiveBillNSTag.toBinary())).toEqual(sevenPointFiveBillNSTag);
+        expect(Tag.fromBinary(twoHundredFiftyMillMSTag.toBinary())).toEqual(twoHundredFiftyMillMSTag);
+        expect(Tag.fromBinary(fiveSFiveUSTag.toBinary())).toEqual(fiveSFiveUSTag);
+        expect(Tag.fromBinary(oneThousandMSTag.toBinary())).toEqual(oneThousandMSTag);
+
+    });
+
 
 });

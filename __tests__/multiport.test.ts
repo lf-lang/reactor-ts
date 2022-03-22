@@ -1,4 +1,4 @@
-import { Args, Triggers, Reactor, App, InMultiPort, OutMultiPort } from "../src/core/internal";
+import {Args, Triggers, Reactor, App, InMultiPort, OutMultiPort, IOPort, OutPort, InPort} from "../src/core/internal";
 class TwoInTwoOut extends Reactor {
     inp = new InMultiPort<number>(this, 2);
     out = new OutMultiPort<number>(this, 2);
@@ -72,6 +72,13 @@ class TwoInTwoOut extends Reactor {
                 })
             }
         );
+        test('throw error on invalid access to manager', () => {
+            expect(() => {this.inp.getManager(Symbol())}).toThrowError('Unable to grant access to manager.')
+        })
+        test('test for present channels prior to running', () => {
+            expect(this.inp.isPresent()).toBe(false)
+        })
+
     }
 }
 
@@ -85,8 +92,17 @@ class myApp extends App {
         super();
         this._connectMulti([this.x.out], [this.y.inp], false)
     }
-
 }
 
 var app = new myApp();
 app._start()
+test('test for present port after startup', () => {
+    expect(app.x.out.isPresent()).toBe(true)
+})
+test('get channel on multiport', () => {
+    expect(app.x.out.channel(0)instanceof OutPort)
+    expect(app.x.out.channel(1)instanceof OutPort)
+    expect(app.x.out.channel(0).isPresent()).toBe(true)
+    expect(app.x.out.channel(0).isPresent()).toBe(true)
+    expect(app.y.inp.channel(0)instanceof InPort)
+})
