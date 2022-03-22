@@ -48,6 +48,9 @@ describe('Check bank index', () => {
                     expect(foo[i]).toBe(bar[i]);
                 }
             });
+            it('to string', () => {
+                expect(this.b.toString()).toBe("bank(3)")
+            })
         }
     }
 
