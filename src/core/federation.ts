@@ -788,6 +788,7 @@ export class FederatedApp extends App {
     public addUpstreamFederate(fedID: number, fedDelay: bigint) {
         this.upstreamFedIDs.push(fedID);
         this.upstreamFedDelays.push(fedDelay);
+        this._isLastTagProvisional = true;
     }
 
     public addDownstreamFederate(fedID: number) {
@@ -1066,6 +1067,7 @@ export class FederatedApp extends App {
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
+                this._isLastTagProvisional = false;
                 this._requestImmediateInvocationOfNext();
             }
         });
@@ -1076,6 +1078,7 @@ export class FederatedApp extends App {
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
+                this._isLastTagProvisional = true;
                 this._requestImmediateInvocationOfNext();
                 // FIXME: Add input control reaction handling.
             }

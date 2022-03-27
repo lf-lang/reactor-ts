@@ -1549,6 +1549,7 @@ interface UtilityFunctions {
     requestStop(): void;
     reportError(message?: string): void;
     requestErrorStop(message?: string): void;
+    isLastTagProvisional(): boolean;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
@@ -1609,6 +1610,13 @@ export class App extends Reactor {
     private _reactorsToRemove = new Array<Reactor>();
 
     /**
+     * Stores whether the last received Tag was provisional.
+     * Every federate starts out assuming that it has been granted a PTAG
+     * at the start time, or if it has no upstream federates, a TAG.
+     */
+    protected _isLastTagProvisional: boolean = false;
+
+    /**
      * Inner class that provides access to utilities that are safe to expose to
      * reaction code.
      */
@@ -1629,6 +1637,10 @@ export class App extends Reactor {
         public reportError(message?: string) {
             this.app._errored = true
             this.app._errorMessage = message
+        }
+
+        public isLastTagProvisional(): boolean {
+            return this.app._isLastTagProvisional;
         }
 
         public getCurrentTag(): Tag {
