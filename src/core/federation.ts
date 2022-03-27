@@ -840,7 +840,7 @@ export class FederatedApp extends App {
         let currentTime = this.util.getCurrentLogicalTime()
         if (currentTime.isEarlierThan(nextTag.time)) {
             // Tell the RTI logical time is being advanced to a greater value.
-            this.sendRTILogicalTimeComplete(currentTime);
+            this.sendRTILogicalTimeComplete(nextTag.time);
         }
         super._advanceTime(nextTag)
     }
@@ -963,8 +963,8 @@ export class FederatedApp extends App {
      * advance logical time.
      */
     public sendRTINextEventTime(nextTag: Tag) {
+        Log.debug(this, () => {return `Sending RTI next event time with time: ${nextTag}`});
         let tag = nextTag.toBinary();
-        Log.debug(this, () => {return `Sending RTI next event time with time: ${tag}`});
         this.rtiClient.sendRTINextEventTime(tag);
     }
 
