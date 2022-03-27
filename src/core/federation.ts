@@ -845,12 +845,11 @@ export class FederatedApp extends App {
         super._advanceTime(nextTag)
     }
 
-    protected _shutdown() {
+    protected _finish() {
         this.sendRTILogicalTimeComplete(this.util.getCurrentLogicalTime());
         this.sendRTIResign();
         this.shutdownRTIClient();
-        // FIXME: Fix errors when calling App._shutdown() from this FederatedApp.
-        //super._shutdown()
+        super._finish();
     }
 
     // FIXME: Some of the App settings (like fast) are probably incompatible

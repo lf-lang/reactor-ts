@@ -1851,6 +1851,13 @@ export class App extends Reactor {
      */
     private _startOfExecution!: TimeValue;
 
+
+    /**
+     * Indicates if _finish() was already called.
+     * This prevents _finish() from being called recursively.
+     */
+    private _done: boolean = false;
+
     /**
      * Unset all the timers of this reactor.
      */
@@ -2044,7 +2051,7 @@ export class App extends Reactor {
             // An end of execution has been specified; a shutdown event must
             // have been scheduled, and all shutdown events must have been
             // consumed because the next tag is 
-            this._done();
+            this._finish();
         } else {
             if (nextEvent) {
                 Log.global.debug("Event queue not empty.")
@@ -2127,7 +2134,6 @@ export class App extends Reactor {
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
 
             this.schedulable(this.shutdown).schedule(0, null);
-
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
         }
@@ -2136,7 +2142,11 @@ export class App extends Reactor {
     /**
      * Wrap up execution by logging information and reporting errors if applicable.
      */
-    private _done(): void {
+     protected _finish(): void {
+         if (this._done) {
+             return;
+         }
+         this._done = true;
         this._cancelNext();
         Log.info(this, () => Log.hr);
         Log.info(this, () => ">>> End of execution at (logical) time: " + this.util.getCurrentLogicalTime());
