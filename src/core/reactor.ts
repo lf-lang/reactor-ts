@@ -1610,11 +1610,11 @@ export class App extends Reactor {
     private _reactorsToRemove = new Array<Reactor>();
 
     /**
-     * Stores whether the last received Tag was provisional.
+     * Stores whether the last received TAG (Tag Advance Grant) was provisional.
      * Every federate starts out assuming that it has been granted a PTAG
      * at the start time, or if it has no upstream federates, a TAG.
      */
-    protected _isLastTagProvisional: boolean = false;
+    protected _isLastTAGProvisional: boolean = false;
 
     /**
      * Inner class that provides access to utilities that are safe to expose to
@@ -1640,7 +1640,7 @@ export class App extends Reactor {
         }
 
         public isLastTagProvisional(): boolean {
-            return this.app._isLastTagProvisional;
+            return this.app._isLastTAGProvisional;
         }
 
         public getCurrentTag(): Tag {
