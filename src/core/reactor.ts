@@ -1549,7 +1549,7 @@ interface UtilityFunctions {
     requestStop(): void;
     reportError(message?: string): void;
     requestErrorStop(message?: string): void;
-    isLastTagProvisional(): boolean;
+    isLastTAGProvisional(): boolean;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
@@ -1639,7 +1639,7 @@ export class App extends Reactor {
             this.app._errorMessage = message
         }
 
-        public isLastTagProvisional(): boolean {
+        public isLastTAGProvisional(): boolean {
             return this.app._isLastTAGProvisional;
         }
 
