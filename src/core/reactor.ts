@@ -1935,7 +1935,7 @@ export class App extends Reactor {
         this._currentTag = nextTag;
     }
 
-    protected _iterationComplete(nextEvent?: TaggedEvent<Present>): void {}
+    protected _iterationComplete(): void {}
 
     /**
      * Iterate over all reactions in the reaction queue and execute them.
@@ -2047,7 +2047,7 @@ export class App extends Reactor {
             // Done handling events.
         }
 
-        this._iterationComplete(nextEvent);
+        this._iterationComplete();
 
         // Once we've reached here, either we're done processing events and the
         // next event is at a future time, or there are no more events in the

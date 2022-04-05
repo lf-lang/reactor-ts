@@ -836,12 +836,9 @@ export class FederatedApp extends App {
         return true
     }
 
-    protected _iterationComplete(nextEvent?: TaggedEvent<Present>): void {
+    protected _iterationComplete(): void {
         let currentTime = this.util.getCurrentLogicalTime()
-        if (nextEvent === undefined || currentTime.isEarlierThan(nextEvent.tag.time)) {
-            // Tell the RTI logical time is being advanced to a greater value.
-            this.sendRTILogicalTimeComplete(currentTime);
-        }
+        this.sendRTILogicalTimeComplete(currentTime);
     }
 
     protected _finish() {
