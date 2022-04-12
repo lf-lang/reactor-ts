@@ -788,6 +788,7 @@ export class FederatedApp extends App {
     public addUpstreamFederate(fedID: number, fedDelay: bigint) {
         this.upstreamFedIDs.push(fedID);
         this.upstreamFedDelays.push(fedDelay);
+        this._isLastTAGProvisional = true;
     }
 
     public addDownstreamFederate(fedID: number) {
@@ -835,21 +836,16 @@ export class FederatedApp extends App {
         return true
     }
 
-    protected _advanceTime(nextTag: Tag) {
+    protected _iterationComplete(): void {
         let currentTime = this.util.getCurrentLogicalTime()
-        if (currentTime.isEarlierThan(nextTag.time)) {
-            // Tell the RTI logical time is being advanced to a greater value.
-            this.sendRTILogicalTimeComplete(currentTime);
-        }
-        super._advanceTime(nextTag)
+        this.sendRTILogicalTimeComplete(currentTime);
     }
 
-    protected _shutdown() {
+    protected _finish() {
         this.sendRTILogicalTimeComplete(this.util.getCurrentLogicalTime());
         this.sendRTIResign();
         this.shutdownRTIClient();
-        // FIXME: Fix errors when calling App._shutdown() from this FederatedApp.
-        //super._shutdown()
+        super._finish();
     }
 
     // FIXME: Some of the App settings (like fast) are probably incompatible
@@ -962,8 +958,8 @@ export class FederatedApp extends App {
      * advance logical time.
      */
     public sendRTINextEventTime(nextTag: Tag) {
+        Log.debug(this, () => {return `Sending RTI next event time with time: ${nextTag}`});
         let tag = nextTag.toBinary();
-        Log.debug(this, () => {return `Sending RTI next event time with time: ${tag}`});
         this.rtiClient.sendRTINextEventTime(tag);
     }
 
@@ -1066,6 +1062,7 @@ export class FederatedApp extends App {
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
+                this._isLastTAGProvisional = false;
                 this._requestImmediateInvocationOfNext();
             }
         });
@@ -1076,6 +1073,7 @@ export class FederatedApp extends App {
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
+                this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
                 // FIXME: Add input control reaction handling.
             }

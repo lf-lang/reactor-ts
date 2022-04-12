@@ -1549,6 +1549,7 @@ interface UtilityFunctions {
     requestStop(): void;
     reportError(message?: string): void;
     requestErrorStop(message?: string): void;
+    isLastTAGProvisional(): boolean;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
@@ -1609,6 +1610,13 @@ export class App extends Reactor {
     private _reactorsToRemove = new Array<Reactor>();
 
     /**
+     * Stores whether the last received TAG (Tag Advance Grant) was provisional.
+     * Every federate starts out assuming that it has been granted a PTAG
+     * at the start time, or if it has no upstream federates, a TAG.
+     */
+    protected _isLastTAGProvisional: boolean = false;
+
+    /**
      * Inner class that provides access to utilities that are safe to expose to
      * reaction code.
      */
@@ -1629,6 +1637,10 @@ export class App extends Reactor {
         public reportError(message?: string) {
             this.app._errored = true
             this.app._errorMessage = message
+        }
+
+        public isLastTAGProvisional(): boolean {
+            return this.app._isLastTAGProvisional;
         }
 
         public getCurrentTag(): Tag {
@@ -1839,6 +1851,13 @@ export class App extends Reactor {
      */
     private _startOfExecution!: TimeValue;
 
+
+    /**
+     * Indicates if _finish() was already called.
+     * This prevents _finish() from being called recursively.
+     */
+    private _done: boolean = false;
+
     /**
      * Unset all the timers of this reactor.
      */
@@ -1915,6 +1934,8 @@ export class App extends Reactor {
     protected _advanceTime(nextTag: Tag) {
         this._currentTag = nextTag;
     }
+
+    protected _iterationComplete(): void {}
 
     /**
      * Iterate over all reactions in the reaction queue and execute them.
@@ -2023,7 +2044,10 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.time.isEqualTo(nextEvent.tag.time));
+            // Done handling events.
         }
+
+        this._iterationComplete();
 
         // Once we've reached here, either we're done processing events and the
         // next event is at a future time, or there are no more events in the
@@ -2032,7 +2056,7 @@ export class App extends Reactor {
             // An end of execution has been specified; a shutdown event must
             // have been scheduled, and all shutdown events must have been
             // consumed because the next tag is 
-            this._done();
+            this._finish();
         } else {
             if (nextEvent) {
                 Log.global.debug("Event queue not empty.")
@@ -2115,7 +2139,6 @@ export class App extends Reactor {
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
 
             this.schedulable(this.shutdown).schedule(0, null);
-
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
         }
@@ -2124,7 +2147,11 @@ export class App extends Reactor {
     /**
      * Wrap up execution by logging information and reporting errors if applicable.
      */
-    private _done(): void {
+     protected _finish(): void {
+         if (this._done) {
+             return;
+         }
+         this._done = true;
         this._cancelNext();
         Log.info(this, () => Log.hr);
         Log.info(this, () => ">>> End of execution at (logical) time: " + this.util.getCurrentLogicalTime());
