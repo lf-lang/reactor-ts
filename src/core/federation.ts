@@ -652,6 +652,7 @@ class RTIClient extends EventEmitter {
                         let tagBuffer = Buffer.alloc(12);
                         assembledData.copy(tagBuffer, 0, bufferIndex + 9, bufferIndex + 21);
                         let tag = Tag.fromBinary(tagBuffer);
+                        Log.debug(thiz, () => {return `Received an RTI MSG_TYPE_TAGGED_MESSAGE: Tag Buffer: ${tag}`});
                         // FIXME: Process microstep properly.
 
                         let isChunked = messageLength > (assembledData.length - (bufferIndex + 21));
@@ -837,12 +838,12 @@ export class FederatedApp extends App {
     }
 
     protected _iterationComplete(): void {
-        let currentTime = this.util.getCurrentLogicalTime()
+        let currentTime = this.util.getCurrentTag()
         this.sendRTILogicalTimeComplete(currentTime);
     }
 
     protected _finish() {
-        this.sendRTILogicalTimeComplete(this.util.getCurrentLogicalTime());
+        this.sendRTILogicalTimeComplete(this.util.getCurrentTag());
         this.sendRTIResign();
         this.shutdownRTIClient();
         super._finish();
@@ -925,7 +926,7 @@ export class FederatedApp extends App {
      * @param destPortID The ID of the FederateInPort intended to receive the message.
      */
     public sendRTITimedMessage(msg: Buffer, destFederateID: number, destPortID: number ) {
-        let time = this.util.getCurrentLogicalTime().toBinary();
+        let time = this.util.getCurrentTag().toBinary();
         Log.debug(this, () => {return `Sending RTI timed message to federate ID: ${destFederateID}`
             + ` port ID: ${destPortID} and time: ${time.toString('hex')}`});
         this.rtiClient.sendRTITimedMessage(msg, destFederateID, destPortID, time);
@@ -936,10 +937,10 @@ export class FederatedApp extends App {
      * this federate is ready to advance beyond the given logical time.
      * @param completeTimeValue The TimeValue that is now complete.
      */
-    public sendRTILogicalTimeComplete(completeTimeValue: TimeValue) {
-        let time = completeTimeValue.toBinary();
-        Log.debug(this, () => {return `Sending RTI logical time complete with time: ${completeTimeValue}`});
-        this.rtiClient.sendRTILogicalTimeComplete(time)
+    public sendRTILogicalTimeComplete(completeTag: Tag) {
+        let binaryTag = completeTag.toBinary();
+        Log.debug(this, () => {return `Sending RTI logical time complete with time: ${completeTag}`});
+        this.rtiClient.sendRTILogicalTimeComplete(binaryTag)
     }
 
     /**
