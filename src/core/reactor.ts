@@ -149,6 +149,21 @@ export abstract class Reactor extends Component {
      * Return the location of the reactor instance in a bank, 
      * if it is a member of one; return -1 otherwise.
      */
+
+    /**
+     * Return the location of the reactor instance in a bank, 
+     * if it is a member of one; return -1 otherwise. 
+     * The optional depth parameter (0 by default) can be used to look 
+     * further up the hierarchy. To get the bank index of the bank 
+     * containing the bank this reactor is contained in, use depth 1;
+     * to get the bank index of the bank that contains that bank, use
+     * depth 2, etc.
+     * 
+     * @param depth number of containers to traverse before reporting
+     * the bank index.
+     * @returns the bank index of this reactor instance at a given depth
+     * of containment.
+     */
     public getBankIndex(depth=0): number {
         if (depth == 0) {
             if (this._bankIndex === undefined) {
@@ -1738,7 +1753,6 @@ export class App extends Reactor {
                 }
     
             } else {
-                //console.log(">>>>>>>>>Postponed Scheduling of timer " + timer._getFullyQualifiedName())
                 // If execution hasn't started yet, collect the timers.
                 // They will be initialized once it is known what the start time is.
                 this.app._timersToSchedule.add(timer) 
