@@ -149,11 +149,15 @@ export abstract class Reactor extends Component {
      * Return the location of the reactor instance in a bank, 
      * if it is a member of one; return -1 otherwise.
      */
-    public getBankIndex(): number {
-        if (this._bankIndex === undefined) {
-            return -1
+    public getBankIndex(depth=0): number {
+        if (depth == 0) {
+            if (this._bankIndex === undefined) {
+                return -1
+            }
+            return this._bankIndex
+        } else {
+            return this._getContainer().getBankIndex(--depth)
         }
-        return this._bankIndex
     }
 
     /**
@@ -373,9 +377,9 @@ export abstract class Reactor extends Component {
         constructor(private reactor: Reactor) {
             this.reactor = reactor
             this.util = reactor.util
-            this.getBankIndex = () => reactor.getBankIndex()
+            this.getBankIndex = (depth?:number) => reactor.getBankIndex()
         }
-        getBankIndex: () => number;
+        getBankIndex: (depth?:number) => number;
         
         /**
          * 
@@ -415,10 +419,10 @@ export abstract class Reactor extends Component {
      */
     private _ReactionSandbox = class implements ReactionSandbox {
         public util: UtilityFunctions;
-        public getBankIndex: () => number;
+        public getBankIndex: (depth?:number) => number;
         constructor(public reactor: Reactor) {
             this.util = reactor.util
-            this.getBankIndex = () => reactor.getBankIndex()
+            this.getBankIndex = (depth?:number) => reactor.getBankIndex()
         }
         
     }
@@ -1580,7 +1584,7 @@ export interface ReactionSandbox {
      * Collection of utility functions accessible from within a `react` function.
      */
     util: UtilityFunctions
-    getBankIndex: () => number
+    getBankIndex: (depth?:number) => number
 }
 
 
@@ -1734,7 +1738,7 @@ export class App extends Reactor {
                 }
     
             } else {
-                console.log(">>>>>>>>>Postponed Scheduling of timer " + timer._getFullyQualifiedName())
+                //console.log(">>>>>>>>>Postponed Scheduling of timer " + timer._getFullyQualifiedName())
                 // If execution hasn't started yet, collect the timers.
                 // They will be initialized once it is known what the start time is.
                 this.app._timersToSchedule.add(timer) 
