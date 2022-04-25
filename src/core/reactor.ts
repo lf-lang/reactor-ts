@@ -166,13 +166,13 @@ export abstract class Reactor extends Component {
      */
     public getBankIndex(depth=0): number {
         if (depth == 0) {
-            if (this._bankIndex === undefined) {
-                return -1
+            if (this._bankIndex !== undefined) {
+                return this._bankIndex
             }
-            return this._bankIndex
-        } else {
+        } else if (this._getContainer() !== null) {
             return this._getContainer().getBankIndex(--depth)
         }
+        return -1
     }
 
     /**
