@@ -79,7 +79,9 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
                 }
             }
 
-            if (this.action instanceof FederatePortAction) {
+            if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
+                tag = tag.getMicroStepLater();
+            } else {
                 if (intendedTag === undefined) {
                     throw new Error("FederatedPortAction must have an intended tag from RTI.");
                 }
@@ -95,8 +97,6 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
                 Log.debug(this, () => "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
                 intendedTag);
                 tag = intendedTag;
-            } else if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
-                tag = tag.getMicroStepLater();
             }
             
             Log.debug(this, () => "Scheduling " + this.action.origin +
@@ -140,8 +140,3 @@ export class Shutdown extends Action<Present> {
     }
 }
 
-export class FederatePortAction extends Action<Buffer> {
-    constructor(__parent__: Reactor) {
-        super(__parent__, Origin.logical)
-    }
-}

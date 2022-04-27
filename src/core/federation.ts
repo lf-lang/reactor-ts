@@ -3,7 +3,7 @@ import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter} from 'events';
 import {
     Log, Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm,
-    Present, App, Action, FederatePortAction, TaggedEvent
+    Present, App, Action, TaggedEvent
 } from './internal';
 
 //---------------------------------------------------------------------//
@@ -241,15 +241,19 @@ class RTIClient extends EventEmitter {
 
     // The mapping between a federate port ID and the federate port action
     // scheduled upon reception of a message designated for that federate port.
-    private federatePortActionByID: Map<number, FederatePortAction> = new Map<number, FederatePortAction>();
+    
+    /**
+     * TODO: Specify Type in Action
+     */
+    private federatePortActionByID: Map<number, Action<any>> = new Map<number, Action<any>>();
 
     /**
      * Establish the mapping between a federate port's action and its ID.
      * @param federatePortID The federate port's ID.
      * @param federatePort The federate port's action.
      */
-    public registerFederatePortAction<T extends Present>(federatePortID: number, federatePortAction: Action<Buffer>) {
-        Object.setPrototypeOf(federatePortAction, FederatePortAction.prototype);
+    public registerFederatePortAction<T extends Present>(federatePortID: number, federatePortAction: Action<T>) {
+        //Object.setPrototypeOf(federatePortAction, Action<T>.prototype);
         this.federatePortActionByID.set(federatePortID, federatePortAction);
     }
 
@@ -897,7 +901,7 @@ export class FederatedApp extends App {
      * unique among all port IDs on this federate and be a number between 0 and NUMBER_OF_PORTS - 1
      * @param federatePort The federate port's action for registration.
      */
-    public registerFederatePortAction(federatePortID: number, federatePortAction: Action<Buffer>) {
+    public registerFederatePortAction<T extends Present>(federatePortID: number, federatePortAction: Action<T>) {
         if (federatePortAction.origin === Origin.logical) {
             this.rtiSynchronized = true;
         }
@@ -1015,14 +1019,16 @@ export class FederatedApp extends App {
             }
         });
 
-        this.rtiClient.on('message', (destPortAction: FederatePortAction, messageBuffer: Buffer) => {
+        this.rtiClient.on('message', <T extends Present>(destPortAction: Action<T>, messageBuffer: Buffer) => {
             // Schedule this federate port's action.
             // This message is untimed, so schedule it immediately.
             Log.debug(this, () => {return `(Untimed) Message received from RTI.`})
-            destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, messageBuffer);
+            const value: T = JSON.parse(messageBuffer.toString());
+
+            destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value);
         });
 
-        this.rtiClient.on('timedMessage', (destPortAction: FederatePortAction, messageBuffer: Buffer,
+        this.rtiClient.on('timedMessage', <T extends Present>(destPortAction: Action<T>, messageBuffer: Buffer,
             tag: Tag) => {
             // Schedule this federate port's action.
 
@@ -1047,13 +1053,15 @@ export class FederatedApp extends App {
             // FIXME: implement decentralized control.
 
             Log.debug(this, () => {return `Timed Message received from RTI with tag ${tag}.`})
+            const value: T = JSON.parse(messageBuffer.toString());
+            
             if (destPortAction.origin == Origin.logical) {
-                destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, messageBuffer, tag);
+                destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value, tag);
 
             } else {
                 // The schedule function for physical actions implements
                 // Tr = max(r, R + A)
-                destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, messageBuffer);
+                destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value);
             }
         });
 
