@@ -424,13 +424,15 @@ class RTIClient extends EventEmitter {
      * @param destPortID The port ID for the port on the destination
      * federate to which this message should be sent.
      */
-    public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
-        let msg = Buffer.alloc(data.length + 9);
+    public sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
+        const value = Buffer.from(JSON.stringify(data), "utf-8");
+        
+        let msg = Buffer.alloc(value.length + 9);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
         msg.writeUInt16LE(destFederateID, 3);
-        msg.writeUInt32LE(data.length, 5);
-        data.copy(msg, 9); // Copy data into the message
+        msg.writeUInt32LE(value.length, 5);
+        value.copy(msg, 9); // Copy data into the message
         try {
             Log.debug(this, () => {return `Sending RTI (untimed) message to `
                 + `federate ID: ${destFederateID} and port ID: ${destPortID}.`});
@@ -451,15 +453,18 @@ class RTIClient extends EventEmitter {
      * @param time The time of the message encoded as a 64 bit little endian
      * unsigned integer in a Buffer.
      */
-    public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number, time: Buffer) {
-        let msg = Buffer.alloc(data.length + 21);
+    public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, time: Buffer) {
+        const value = Buffer.from(JSON.stringify(data), "utf-8");
+        
+        
+        let msg = Buffer.alloc(value.length + 21);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TAGGED_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
         msg.writeUInt16LE(destFederateID, 3);
-        msg.writeUInt32LE(data.length, 5);
+        msg.writeUInt32LE(value.length, 5);
         time.copy(msg, 9); // Copy the current time into the message
         // FIXME: Add microstep properly.
-        data.copy(msg, 21); // Copy data into the message
+        value.copy(msg, 21); // Copy data into the message
         try {
             Log.debug(this, () => {return `Sending RTI (timed) message to `
                 + `federate ID: ${destFederateID}, port ID: ${destPortID} `
@@ -915,7 +920,7 @@ export class FederatedApp extends App {
      * @param destFederateID The ID of the federate intended to receive the message.
      * @param destPortID The ID of the federate's port intended to receive the message.
      */
-    public sendRTIMessage(msg: Buffer, destFederateID: number, destPortID: number ) {
+    public sendRTIMessage<T extends Present>(msg: T, destFederateID: number, destPortID: number ) {
         Log.debug(this, () => {return `Sending RTI message to federate ID: ${destFederateID}`
             + ` port ID: ${destPortID}`});
         this.rtiClient.sendRTIMessage(msg, destFederateID, destPortID);
@@ -929,7 +934,7 @@ export class FederatedApp extends App {
      * @param destFederateID The ID of the Federate intended to receive the message.
      * @param destPortID The ID of the FederateInPort intended to receive the message.
      */
-    public sendRTITimedMessage(msg: Buffer, destFederateID: number, destPortID: number ) {
+    public sendRTITimedMessage<T extends Present>(msg: T, destFederateID: number, destPortID: number ) {
         let time = this.util.getCurrentTag().toBinary();
         Log.debug(this, () => {return `Sending RTI timed message to federate ID: ${destFederateID}`
             + ` port ID: ${destPortID} and time: ${time.toString('hex')}`});
