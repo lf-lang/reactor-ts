@@ -149,30 +149,11 @@ export abstract class Reactor extends Component {
      * Return the location of the reactor instance in a bank, 
      * if it is a member of one; return -1 otherwise.
      */
-
-    /**
-     * Return the location of the reactor instance in a bank, 
-     * if it is a member of one; return -1 otherwise. 
-     * The optional depth parameter (0 by default) can be used to look 
-     * further up the hierarchy. To get the bank index of the bank 
-     * containing the bank this reactor is contained in, use depth 1;
-     * to get the bank index of the bank that contains that bank, use
-     * depth 2, etc.
-     * 
-     * @param depth number of containers to traverse before reporting
-     * the bank index.
-     * @returns the bank index of this reactor instance at a given depth
-     * of containment.
-     */
-    public getBankIndex(depth=0): number {
-        if (depth == 0) {
-            if (this._bankIndex === undefined) {
-                return -1
-            }
-            return this._bankIndex
-        } else {
-            return this._getContainer().getBankIndex(--depth)
+    public getBankIndex(): number {
+        if (this._bankIndex === undefined) {
+            return -1
         }
+        return this._bankIndex
     }
 
     /**
@@ -392,9 +373,9 @@ export abstract class Reactor extends Component {
         constructor(private reactor: Reactor) {
             this.reactor = reactor
             this.util = reactor.util
-            this.getBankIndex = (depth?:number) => reactor.getBankIndex()
+            this.getBankIndex = () => reactor.getBankIndex()
         }
-        getBankIndex: (depth?:number) => number;
+        getBankIndex: () => number;
         
         /**
          * 
@@ -434,10 +415,10 @@ export abstract class Reactor extends Component {
      */
     private _ReactionSandbox = class implements ReactionSandbox {
         public util: UtilityFunctions;
-        public getBankIndex: (depth?:number) => number;
+        public getBankIndex: () => number;
         constructor(public reactor: Reactor) {
             this.util = reactor.util
-            this.getBankIndex = (depth?:number) => reactor.getBankIndex()
+            this.getBankIndex = () => reactor.getBankIndex()
         }
         
     }
@@ -1599,7 +1580,7 @@ export interface ReactionSandbox {
      * Collection of utility functions accessible from within a `react` function.
      */
     util: UtilityFunctions
-    getBankIndex: (depth?:number) => number
+    getBankIndex: () => number
 }
 
 
@@ -1753,6 +1734,7 @@ export class App extends Reactor {
                 }
     
             } else {
+                console.log(">>>>>>>>>Postponed Scheduling of timer " + timer._getFullyQualifiedName())
                 // If execution hasn't started yet, collect the timers.
                 // They will be initialized once it is known what the start time is.
                 this.app._timersToSchedule.add(timer) 

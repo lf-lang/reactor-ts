@@ -39,6 +39,7 @@ export class Bank<T extends Reactor, S> {
     constructor(container: Reactor, width: number, cls: ReactorClass<T, S>, ...args: ReactorArgs<S>) {
         for (let i = 0; i < width; i++) {
             Bank.initializationMap.set(container, i)
+            console.log("Setting initializing to " + i)
             this.members.push(Reflect.construct(cls, args, cls));
         }
         Bank.initializationMap.delete(container)
