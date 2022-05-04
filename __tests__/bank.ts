@@ -16,28 +16,6 @@ class Periodic extends Reactor {
     }
 }
 
-class Child extends Reactor {
-    
-    constructor(parent: Reactor) {
-        super(parent)
-        this.addReaction(
-            new Triggers(this.startup),
-            new Args(this.startup),
-            function (this) {
-                console.log(`My bank index: ${this.getBankIndex()} My parent's bank index: ${this.getBankIndex(1)}`)
-            }
-        );
-    }
-}
-
-class Parent extends Reactor {
-    c = new Bank(this, 2, Child, this)
-}
-
-class Hierarchy extends App {
-    p = new Bank(this, 2, Parent, this)
-}
-
 class Generic<T extends Present> extends Reactor {
     input: InPort<T> = new InPort(this);
 }
@@ -78,10 +56,4 @@ describe('Check bank index', () => {
 
     new myApp();
 
-});
-
-describe('Check bank index in hierarchy', () => {
-    it('smoke test for looking up ids in hierarchy', () => {
-        new Hierarchy()._start()
-    });
 });
