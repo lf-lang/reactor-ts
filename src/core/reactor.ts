@@ -1780,7 +1780,7 @@ export class App extends Reactor {
     /**
      * Send an (untimed) message to the designated federate port through the RTI.
      * This function throws an error if it isn't called on a FederatedApp.
-     * @param data A Buffer containing the body of the message.
+     * @param data The data that contain the body of the message.
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
@@ -1791,7 +1791,7 @@ export class App extends Reactor {
     /**
      * Send a (timed) message to the designated federate port through the RTI.
      * This function throws an error if it isn't called on a FederatedApp.
-     * @param data A Buffer containing the body of the message.
+     * @param data The data that contain the body of the message.
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
