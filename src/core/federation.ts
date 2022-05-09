@@ -455,7 +455,6 @@ class RTIClient extends EventEmitter {
     public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, time: Buffer) {
         const value = Buffer.from(JSON.stringify(data), "utf-8");
         
-        
         let msg = Buffer.alloc(value.length + 21);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TAGGED_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
