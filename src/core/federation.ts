@@ -253,7 +253,6 @@ class RTIClient extends EventEmitter {
      * @param federatePort The federate port's action.
      */
     public registerFederatePortAction<T extends Present>(federatePortID: number, federatePortAction: Action<T>) {
-        //Object.setPrototypeOf(federatePortAction, Action<T>.prototype);
         this.federatePortActionByID.set(federatePortID, federatePortAction);
     }
 
