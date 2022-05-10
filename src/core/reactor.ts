@@ -7,7 +7,7 @@
  */
 
 import {
-    TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm, PrioritySet,
+    TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm,
     SortableDependencyGraph, Log, DependencyGraph, Reaction, Priority, 
     Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
@@ -16,6 +16,7 @@ import {
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
 import { Bank } from "./bank";
+import {PrioritySet} from "./graph"
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
