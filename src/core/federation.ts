@@ -243,7 +243,9 @@ class RTIClient extends EventEmitter {
     // scheduled upon reception of a message designated for that federate port.
     
     /**
-     * TODO: Specify Type in Action
+     * A mapping from port IDs to FederatePortAction instances. Unfortunately, the data type of the action has to be `any`,
+     * meaning that the type checker cannot check whether uses of the action are type safe. 
+     * In an alternative design, type information might be preserved. TODO(marten): Look into this.
      */
     private federatePortActionByID: Map<number, Action<any>> = new Map<number, Action<any>>();
 
