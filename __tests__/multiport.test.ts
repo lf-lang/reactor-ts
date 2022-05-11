@@ -22,10 +22,6 @@ class TwoInTwoOut extends Reactor {
                     }
                 ).toThrowError(`Referenced port is out of scope: myApp.${container._getName()}.foo`)
             })
-            test('receive runtime object', () => {
-                expect(this._receiveRuntimeObject).toThrowError("Multiports do not request to be linked to the" +
-                " runtime object, hence this method shall not be invoked.")
-            })
         }
     }(this)
 
@@ -75,22 +71,14 @@ class TwoInTwoOut extends Reactor {
                     expect(out.values()).toEqual([42, 69])
                 })
             }
-        );        
+        );
         test('throw error on invalid access to manager', () => {
             expect(() => {this.inp.getManager(Symbol())}).toThrowError('Unable to grant access to manager.')
         })
         test('test for present channels prior to running', () => {
             expect(this.inp.isPresent()).toBe(false)
         })
-        test ('to string', () => {
-            expect(this.inp.toString()).toMatch(new RegExp('myApp.*inp'))
-        })
-        test('get', () => {
-            expect(this.inp.get(0)).toBeUndefined()
-        })
-        test('values', () => {
-            expect(this.inp.values()).toEqual([undefined, undefined])
-        })        
+
     }
 }
 
@@ -116,5 +104,5 @@ test('get channel on multiport', () => {
     expect(app.x.out.channel(1)instanceof OutPort)
     expect(app.x.out.channel(0).isPresent()).toBe(true)
     expect(app.x.out.channel(0).isPresent()).toBe(true)
-    expect(app.y.inp.channel(0)instanceof InPort)  
+    expect(app.y.inp.channel(0)instanceof InPort)
 })
