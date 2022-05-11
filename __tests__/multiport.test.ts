@@ -75,7 +75,7 @@ class TwoInTwoOut extends Reactor {
                     expect(out.values()).toEqual([42, 69])
                 })
             }
-        );        
+        );
         test('throw error on invalid access to manager', () => {
             expect(() => {this.inp.getManager(Symbol())}).toThrowError('Unable to grant access to manager.')
         })
@@ -116,5 +116,5 @@ test('get channel on multiport', () => {
     expect(app.x.out.channel(1)instanceof OutPort)
     expect(app.x.out.channel(0).isPresent()).toBe(true)
     expect(app.x.out.channel(0).isPresent()).toBe(true)
-    expect(app.y.inp.channel(0)instanceof InPort)  
+    expect(app.y.inp.channel(0)instanceof InPort)
 })

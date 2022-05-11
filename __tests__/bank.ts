@@ -1,5 +1,3 @@
-import { Writable } from "stream";
-import { Z_ASCII } from "zlib";
 import { Bank , Reactor, App, Timer, Triggers, Args, Present, OutPort, InPort, TimeValue, OutMultiPort, Port } from "../src/core/internal";
 
 class Periodic extends Reactor {
