@@ -1555,8 +1555,8 @@ interface UtilityFunctions {
     getCurrentPhysicalTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
-    sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
-    sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
+    sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number): void;
+    sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number): void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -1663,11 +1663,11 @@ export class App extends Reactor {
             return getCurrentPhysicalTime().subtract(this.app._startOfExecution);
         }
         
-        public sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
+        public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
             return this.app.sendRTIMessage(data, destFederateID, destPortID);
         };
 
-        public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
+        public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         };
 
@@ -1780,22 +1780,22 @@ export class App extends Reactor {
     /**
      * Send an (untimed) message to the designated federate port through the RTI.
      * This function throws an error if it isn't called on a FederatedApp.
-     * @param data The data that contain the body of the message.
+     * @param data A Buffer containing the body of the message.
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
-    protected sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
+    protected sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
     }
 
     /**
      * Send a (timed) message to the designated federate port through the RTI.
      * This function throws an error if it isn't called on a FederatedApp.
-     * @param data The data that contain the body of the message.
+     * @param data A Buffer containing the body of the message.
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
-    protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
+    protected sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
     }
 
