@@ -46,8 +46,15 @@ describe('Check bank index', () => {
         d = new Bank(this, 3, MultiPeriodic, this)
         constructor() {
             super();
+            let ports = new Array<OutPort<number>>()
+            let multiPorts = new Array<OutMultiPort<number>>()
+            test('throw error on mismatch in lenght of ports', () => {
+                expect(() => this.b.writable(ports)).toThrowError('Length of ports does not match length of reactors.')
+                expect(() => this.b.allWritable(multiPorts)).toThrowError('Length of ports does not match length of reactors.')
+            })
+
             let allWriter = this.d.allWritable(this.d.port((member) => (member.o)));            
-            let writer = this.b.writable(this.b.port((member) => (member.o)));            
+            let writer = this.b.writable(this.b.port((member) => (member.o)));
             test('check multiport width', () => {
                 expect(allWriter[0].width()).toBe(2);
             }) 
