@@ -1,4 +1,4 @@
-import { Bank , Reactor, App, Timer, Triggers, Args, Present, OutPort, InPort, TimeValue } from "../src/core/internal";
+import { Bank , Reactor, App, Timer, Triggers, Args, Present, OutPort, InPort, TimeValue, OutMultiPort, Port } from "../src/core/internal";
 
 class Periodic extends Reactor {
     
@@ -6,6 +6,24 @@ class Periodic extends Reactor {
     o: OutPort<number> = new OutPort(this)
     constructor(parent: Reactor) {
         super(parent)
+        let writer = this.writable(this.o);
+        this.addReaction(
+            new Triggers(this.t),
+            new Args(this.t),
+            function (this) {
+                console.log(this.getBankIndex());
+            }
+        );
+    }
+}
+
+class MultiPeriodic extends Reactor {
+    
+    t: Timer = new Timer(this, 0, TimeValue.sec(1));
+    o: OutMultiPort<number> = new OutMultiPort(this, 2)
+    constructor(parent: Reactor) {
+        super(parent)
+        let allWriter = this.allWritable(this.o);
         this.addReaction(
             new Triggers(this.t),
             new Args(this.t),
@@ -25,8 +43,24 @@ describe('Check bank index', () => {
     class myApp extends App {
         b = new Bank(this, 3, Periodic, this)
         c = new Bank<Generic<number>, [Reactor]>(this, 2, Generic, this);
+        d = new Bank(this, 3, MultiPeriodic, this)
         constructor() {
             super();
+            let ports = new Array<OutPort<number>>()
+            let multiPorts = new Array<OutMultiPort<number>>()
+            test('throw error on mismatch in lenght of ports', () => {
+                expect(() => this.b.writable(ports)).toThrowError('Length of ports does not match length of reactors.')
+                expect(() => this.b.allWritable(multiPorts)).toThrowError('Length of ports does not match length of reactors.')
+            })
+
+            let allWriter = this.d.allWritable(this.d.port((member) => (member.o)));            
+            let writer = this.b.writable(this.b.port((member) => (member.o)));
+            test('check multiport width', () => {
+                expect(allWriter[0].width()).toBe(2);
+            }) 
+            test('check ioport width', () => {
+                expect(writer[0].getPort.length).toBe(0);
+            })
             test('contained bank member name', () => {
                 expect(this.b.get(0)._getFullyQualifiedName()).toBe("myApp.b[0]")
                 expect(this.b.get(1)._getFullyQualifiedName()).toBe("myApp.b[1]")
