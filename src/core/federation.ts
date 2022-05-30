@@ -179,6 +179,17 @@ enum RTIMessageTypes {
     MSG_TYPE_NEIGHBOR_STRUCTURE = 24,
 
     /**
+     * Byte identifying a time advance notice (TAN) message sent from
+     * a federate in centralized coordination.  This message is used by
+     * a federate that has outputs that are directly or indirectly
+     * triggered by a physical action to notify the RTI that its physical
+     * time has advanced and that it will produce no outputs with
+     * timestamps less than the specified timestamp.
+     * The next eight bytes will be the timestamp.
+     */
+    MSG_TYPE_TIME_ADVANCE_NOTICE = 253,
+
+    /**
      * Byte identifying an acknowledgment of the previously received MSG_TYPE_FED_IDS message
      * sent by the RTI to the federate
      * with a payload indicating the UDP port to use for clock synchronization.
@@ -795,6 +806,11 @@ export class FederatedApp extends App {
     private upstreamFedDelays: bigint[] = [];
     private downstreamFedIDs: number[] = [];
 
+    /**
+     * The default value, null, indicates there is no output depending on a physical action. 
+     */ 
+    private minDelayFromPhysicalActionToFederateOutput: TimeValue | null = null;
+
     public addUpstreamFederate(fedID: number, fedDelay: bigint) {
         this.upstreamFedIDs.push(fedID);
         this.upstreamFedDelays.push(fedDelay);
@@ -803,6 +819,10 @@ export class FederatedApp extends App {
 
     public addDownstreamFederate(fedID: number) {
         this.downstreamFedIDs.push(fedID);
+    }
+
+    public setMinDelayFromPhysicalActionToFederateOutput(minDelay: TimeValue) {
+        this.minDelayFromPhysicalActionToFederateOutput = minDelay;
     }
 
     /**
