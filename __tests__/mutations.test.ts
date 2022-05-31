@@ -143,7 +143,7 @@ class Zeno extends App {
 
 describe("Creating reactors at runtime", function () {
 
-    jest.setTimeout(5000);
+    jest.setTimeout(5100);
 
     it("Reactor with periodic timer", done => {
         //Log.global.level = LogLevel.DEBUG
