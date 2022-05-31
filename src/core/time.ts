@@ -134,6 +134,19 @@ export class TimeValue {
         return TimeValue.secsAndNs(s, ns);
     }
 
+    multiply(factor: number): TimeValue {
+        let seconds = this.seconds * factor;
+        let nanoseconds = this.nanoseconds * factor;
+
+        if (nanoseconds >= TimeUnit.sec) {
+            // Carry seconds.
+            let carry = Math.floor(nanoseconds / TimeUnit.sec)
+            seconds += carry;
+            nanoseconds -= carry * TimeUnit.sec;
+        }
+        return TimeValue.secsAndNs(seconds, nanoseconds);
+    }
+
     difference(other: TimeValue): TimeValue {
         if (this.isEarlierThan(other)) {
             return other.subtract(this);
