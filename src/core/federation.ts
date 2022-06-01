@@ -523,19 +523,30 @@ class RTIClient extends EventEmitter {
     }
 
     /**
-     * Send the RTI a next event time message. This should be called when
+     * Send the RTI a next event tag message. This should be called when
      * the federate would like to advance logical time, but has not yet
      * received a sufficiently large time advance grant.
-     * @param nextTime The time of the message encoded as a 64 bit unsigned
+     * @param nextTag The time of the message encoded as a 64 bit unsigned
      * integer in a Buffer.
      */
-    public sendRTINextEventTime(nextTime: Buffer) {
+    public sendRTINextEventTag(nextTag: Buffer) {
         let msg = Buffer.alloc(13);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEXT_EVENT_TAG, 0);
-        nextTime.copy(msg,1);
-        // FIXME: Add microstep properly.
+        nextTag.copy(msg,1);
         try {
             Log.debug(this, () => {return "Sending RTI Next Event Time.";});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return `${e}`});
+        }
+    }
+
+    public sendRTITimeAdvanceNotice(tanTime: Buffer) {
+        let msg = Buffer.alloc(9);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TIME_ADVANCE_NOTICE, 0);
+        tanTime.copy(msg,1);
+        try {
+            Log.debug(this, () => {return "Sending RTI Time Advance Notice.";});
             this.socket?.write(msg);
         } catch (e) {
             Log.error(this, () => {return `${e}`});
@@ -855,7 +866,17 @@ export class FederatedApp extends App {
             let greatestTAG = this._getGreatestTimeAdvanceGrant();
             let nextTag = event.tag;
             if (greatestTAG === null || greatestTAG.isSmallerThan(nextTag)) {
-                this.sendRTINextEventTime(nextTag);
+                if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
+                    this.downstreamFedIDs.length > 0) {
+                        let physicalTime = getCurrentPhysicalTime()
+                        if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(event.tag.time)) {
+                            let tanTime = physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput)
+                            let tanTimeBuffer = tanTime.toBinary()
+                            this.rtiClient.sendRTITimeAdvanceNotice(tanTimeBuffer)
+                            return false;
+                        }
+                }
+                this.sendRTINextEventTag(nextTag);
                 Log.debug(this, () => "The greatest time advance grant \
                 received from the RTI is less than the timestamp of the \
                 next event on the event queue");
@@ -987,10 +1008,10 @@ export class FederatedApp extends App {
      * @param nextTag The time to which this federate would like to
      * advance logical time.
      */
-    public sendRTINextEventTime(nextTag: Tag) {
+    public sendRTINextEventTag(nextTag: Tag) {
         Log.debug(this, () => {return `Sending RTI next event time with time: ${nextTag}`});
         let tag = nextTag.toBinary();
-        this.rtiClient.sendRTINextEventTime(tag);
+        this.rtiClient.sendRTINextEventTag(tag);
     }
 
     /**
