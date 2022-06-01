@@ -208,16 +208,17 @@ export class DependencyGraph<T> {
         return reachable
     } 
 
-
     hasCycle(): boolean {
-        let visited = new Set<T>()
+        let toVisit = new Set(this.nodes());
         let inPath = new Set<T>()
         let self = this
 
         function cycleFound(current: T): boolean {
-            if (!visited.has(current)) {
+            if (toVisit.has(current)) {
+                toVisit.delete(current)
+                inPath.add(current)
                 for (let node of self.getEdges(current)) {
-                    if (!visited.has(node) && cycleFound(node)) {
+                    if (toVisit.has(node) && cycleFound(node)) {
                         return true
                     } else if (inPath.has(node)) {
                         return true
@@ -228,7 +229,8 @@ export class DependencyGraph<T> {
             return false
         }
         
-        for (let node of this.leafNodes()) {
+        while (toVisit.size > 0) {
+            const [node] = toVisit;
             if (cycleFound(node)) {
                 return true
             }
@@ -408,6 +410,12 @@ export class DependencyGraph<T> {
         return roots
     }
 
+    // Leaf nodes are nodes that do not depend on any other nodes.
+    // 
+    // In the context of cyclic graphs it is therefore possible to
+    // have a graph without any leaf nodes.
+    // As a result, starting a graph search only from leaf nodes in a 
+    // cyclic graph, will not necessarily traverse the entire graph.
     public leafNodes(): Set<T> {
         var leafs: Set<T> = new Set(this.nodes());
         for (let node of this.nodes()) {
