@@ -944,7 +944,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         (src: IOPort<S>, dst: IOPort<R>) {
         // Immediate rule out trivial self loops. 
         if (src === dst) {
-            return false
+            throw Error("Source port and destination port are the same.")
         }
 
         if (this._runtime.isRunning() == false) {
@@ -956,15 +956,15 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             // Rule out write conflicts.
             //   - (between reactors)
             if (this._dependencyGraph.getBackEdges(dst).size > 0) {
-                return false;
+                throw Error("Destination port is already occupied.")
             }
 
-            //   - between reactors and reactions (NOTE: check also needs to happen
-            //     in addReaction)
-            var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
-            if (deps != undefined && deps.size > 0) {
-                return false;
-            }
+            // //   - between reactors and reactions (NOTE: check also needs to happen
+            // //     in addReaction)
+            // var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
+            // if (deps != undefined && deps.size > 0) {
+            //     return false;
+            // }
             
             return this._isInScope(src, dst)
 
@@ -987,7 +987,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
             // 1) check for loops
             if (graph.hasCycle()) {
-                return false
+                throw Error("New connection introduces cycle.")
             }
 
             // 2) check for direct feed through.
@@ -998,7 +998,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
                 for (let origin of newReachable) {
                     if (origin instanceof Port && !oldReachable.has(origin)) {
-                        return false
+                        throw Error("New connection introduces direct feed through.")
                     }
                 }
             }
@@ -1078,11 +1078,9 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         if (dst === undefined || dst === null) {
             throw new Error("Cannot connect unspecified destination");
         } 
-        if (this.canConnect(src, dst)) {
-            this._uncheckedConnect(src, dst);
-        } else {
-            throw new Error("ERROR connecting " + src + " to " + dst);
-        }
+        this.canConnect(src, dst);
+        console.log("Performing connect.")
+        this._uncheckedConnect(src, dst);
     }
 
     protected _connectMulti<R extends Present, S extends R>(
