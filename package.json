@@ -9,7 +9,7 @@
         "@types/microtime": "^2.1.0",
         "@types/parsimmon": "^1.10.1",
         "command-line-args": "^5.1.1",
-        "got": "^9.6.0",
+        "got": "^11.8.5",
         "heap": "^0.2.6",
         "microtime": "^3.0.0",
         "nanotimer": "^0.3.15",
