@@ -1938,6 +1938,17 @@ export class App extends Reactor {
     protected _iterationComplete(): void {}
 
     /**
+     * Add a dummy event to the event queue.
+     * Currently, the sole usage of this is to ensure LET to be sent to the RTI
+     * when there is any physical action triggering output port(s) in federated execution.
+     * 
+     * @param tag The tag at which this dummy event occurs.
+     */
+    protected _addDummyEvent(tag: Tag): void {
+        this._eventQ.push(new TaggedEvent(new Action<number>(this, Origin.logical), tag, 0));
+    }
+
+    /**
      * Iterate over all reactions in the reaction queue and execute them.
      */
     private _react() {
