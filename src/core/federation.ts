@@ -1127,9 +1127,15 @@ export class FederatedApp extends App {
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
+
+                // FIXME: Temporarily disabling PTAG handling until the 
+                // input control reaction is implemented.
+                /*
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
+                */
+
                 // FIXME: Add input control reaction handling.
             }
         });
