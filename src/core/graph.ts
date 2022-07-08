@@ -186,7 +186,6 @@ export class DependencyGraph<T> {
         function search(current: T) {
             visited.add(current)
             if (origins.has(current))   reachable.add(current)
-            // if (reachable.size == origins.size) return
             for (let next of self.getEdges(current)) {
                 if (!visited.has(next)) search(next)
             }
