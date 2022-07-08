@@ -983,25 +983,57 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             }
 
             // Add the new edge.
+            // Add edge when we are able to add graph
+            // if(isAbleToAdd(dst, src)) graph.addEdge(dst, src)
             graph.addEdge(dst, src)
 
             // 1) check for loops
+            let hasCycle = false
             if (graph.hasCycle()) {
-                throw Error("New connection introduces cycle.")
+                hasCycle = true
+                // throw Error("New connection introduces cycle.")
             }
 
             // 2) check for direct feed through.
+            let hasDirectFeedThrough = false
             let inputs = this._findOwnInputs()
-            for (let output of this._findOwnOutputs()) {
+            let outputs = this._findOwnOutputs()
+
+
+            for (let output of outputs) {
                 let newReachable = graph.reachableOrigins(output, inputs)
                 let oldReachable = this._causalityGraph.reachableOrigins(output, inputs)
 
+                // Print newReachable and oldReachable origin
+                for (let new_ori of newReachable) {
+                    if (new_ori instanceof Port) {
+                        console.log("New Origin: ", new_ori._getFullyQualifiedName())
+                    }              
+                }
+                for (let old_ori of oldReachable) {
+                    if (old_ori instanceof Port) {
+                        console.log("Old Origin: ", old_ori._getFullyQualifiedName())
+                    }              
+                }
+                console.log("!!!")    
+
                 for (let origin of newReachable) {
                     if (origin instanceof Port && !oldReachable.has(origin)) {
-                        throw Error("New connection introduces direct feed through.")
+                        hasDirectFeedThrough = true
+                        // throw Error("New connection introduces direct feed through.")
                     }
                 }
             }
+
+            // Throw error three cases: 1. cycle / 2. direct feed through / 3. both
+            if (hasDirectFeedThrough && hasCycle) {
+                throw Error("New connection introduces direct feed through and cycle.")
+            } else if (hasCycle) {
+                throw Error("New connection introduces cycle.")
+            }  else if (hasDirectFeedThrough) {
+                throw Error("New connection introduces direct feed through.")
+            }
+
             return true
         }
     }
@@ -1249,7 +1281,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     private _findOwnOutputs() {
         let outputs = new Set<OutPort<Present>>()
         for (let component of this._keyChain.keys()) {
-            if (component instanceof InPort) {
+            if (component instanceof OutPort) {
                 outputs.add(component)
             }
         }
