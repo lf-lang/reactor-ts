@@ -160,3 +160,16 @@ test('test add/remove Edges', () => {
 
 })
 
+let d11 = new DependencyGraph<number>()
+test('test the DOT representation of the dependency graph', () => {
+    expect(d11.toString()).toBe('digraph G {'+'\n}')
+
+    d11.addNode(node1)          // { node1 }
+    expect(d11.toString()).toBe('digraph G {\n"1";\n}')
+
+    d11.addEdge(node1, node2)   // { (node1 -> node2) }
+    expect(d11.toString()).toBe('digraph G {\n"1"->"2";\n}')
+
+    // d11.addEdge(node2, node1)   // { (node1 -> node2), (node2 -> node1) }
+    // expect(d11.toString()).toBe('digraph G {\n}')
+})
