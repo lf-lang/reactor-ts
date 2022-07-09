@@ -189,5 +189,14 @@ test("test sortable dependency graph", () =>  {
     sd0.addEdge(new SortVariable(1), new SortVariable(1))
     sd0.updatePriorities(true, 100)
     sd1.updatePriorities(false, 100)
+})
 
+let d12 = new DependencyGraph<number>()
+test('test for reachableOrigins function of the dependency graph', () => {
+    d12.addEdges(node1, new Set<number>([node2, node3]))    // { (node1 -> node2), (node1 -> node3) }
+    d12.addEdge(node2, node4)       // { (node1 -> node2), (node1 -> node3), (node2 -> node4) }
+    expect(d12.reachableOrigins(node1, new Set<number>(d12.nodes()))).toBe(4)
+    expect(d12.reachableOrigins(node2, new Set<number>(d12.nodes())).size).toBe(2)
+    expect(d12.reachableOrigins(node3, new Set<number>(d12.nodes())).size).toBe(1)
+    expect(d12.reachableOrigins(node4, new Set<number>(d12.nodes())).size).toBe(1)
 })
