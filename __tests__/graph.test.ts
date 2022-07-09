@@ -10,6 +10,7 @@ let node1:number = 1
 let node2:number = 2
 let node3:number = 3
 let node4:number = 4
+let node5:number = 5
 
 let d0 = new DependencyGraph<number>()
 d0.addNode(node1)
@@ -135,6 +136,25 @@ test('test dependency graph', () => {
     d8.merge(d9)
     expect(d8.size()).toStrictEqual(d9.size())
     expect(d9.getBackEdges(node2).size).toBe(1)
-    d9.removeNode(node2)
-    expect(d9.size()).toStrictEqual([node1,0])
 })
+
+
+let d10 = new DependencyGraph<number>()
+test('test add/remove Edges', () => {
+    d10.addEdge(node1, node2)                   // {(node1 -> node2)}
+    expect(d10.size()).toStrictEqual([2, 1])
+
+    d10.addBackEdges(node2, new Set<number>().add(node1).add(node3))  // {(node1 -> node2), (node3 -> node2)}
+    expect(d10.size()).toStrictEqual([3, 2])
+
+    d10.addEdges(node1, new Set<number>().add(node2).add(node3).add(node4))      // {(node1 -> node2), (node1 -> node3), (node1 -> node4), (node3 -> node2)}
+    expect(d10.size()).toStrictEqual([4, 4])
+
+    d10.addEdges(node5, new Set<number>().add(node1))   // {(node1 -> node2), (node1 -> node3), (node1 -> node4), (node3 -> node2), {node5 -> node1}}
+    expect(d10.size()).toStrictEqual([5, 5])    
+
+    d10.removeEdge(node1, node2)        // {(node1 -> node3), (node1 -> node4), (node3 -> node2), {node5 -> node1}}
+    expect(d10.size()).toStrictEqual([5, 4])
+
+})
+
