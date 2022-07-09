@@ -1,4 +1,4 @@
-import {DependencyGraph, PrioritySet, PrioritySetElement} from "../src/core/graph";
+import {DependencyGraph, PrioritySet, PrioritySetElement, SortableDependencyGraph, Sortable} from "../src/core/graph";
 /** 
  * The tests below test the functionality of the hasCycle() utility function on various
  * dependency graphs, in combination with various graph manipulation utilities
@@ -172,4 +172,22 @@ test('test the DOT representation of the dependency graph', () => {
 
     // d11.addEdge(node2, node1)   // { (node1 -> node2), (node2 -> node1) }
     // expect(d11.toString()).toBe('digraph G {\n}')
+})
+
+let sd0 = new SortableDependencyGraph<Sortable<number>>()
+let sd1 = new SortableDependencyGraph<Sortable<number>>()
+
+class SortVariable implements Sortable<number> {
+    next: PrioritySetElement<number> | undefined;
+    constructor(private priority: number) {}
+    setPriority(priority: number): void {
+        priority = this.priority
+    }
+}
+
+test("test sortable dependency graph", () =>  {
+    sd0.addEdge(new SortVariable(1), new SortVariable(1))
+    sd0.updatePriorities(true, 100)
+    sd1.updatePriorities(false, 100)
+
 })
