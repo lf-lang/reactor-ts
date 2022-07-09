@@ -1,3 +1,4 @@
+import exp from "constants";
 import {DependencyGraph, PrioritySet, PrioritySetElement, SortableDependencyGraph, Sortable} from "../src/core/graph";
 /** 
  * The tests below test the functionality of the hasCycle() utility function on various
@@ -176,6 +177,8 @@ test('test the DOT representation of the dependency graph', () => {
 
 let sd0 = new SortableDependencyGraph<Sortable<number>>()
 let sd1 = new SortableDependencyGraph<Sortable<number>>()
+let sd2 = new SortableDependencyGraph<Sortable<number>>()
+
 
 class SortVariable implements Sortable<number> {
     next: PrioritySetElement<number> | undefined;
@@ -186,9 +189,16 @@ class SortVariable implements Sortable<number> {
 }
 
 test("test sortable dependency graph", () =>  {
-    sd0.addEdge(new SortVariable(1), new SortVariable(1))
-    sd0.updatePriorities(true, 100)
-    sd1.updatePriorities(false, 100)
+    let s0 = new SortVariable(0)
+    let s1 = new SortVariable(1)
+    
+    sd0.addEdge(s0, s1)
+    expect(sd0.updatePriorities(false,100)).toBe(true)
+
+    expect(sd1.updatePriorities(true, 0)).toBe(true)
+
+    sd0.addEdge(s1, s0)
+    expect(sd0.updatePriorities(true, 0)).toBe(false)
 })
 
 let d12 = new DependencyGraph<number>()
