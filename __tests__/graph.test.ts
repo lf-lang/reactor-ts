@@ -136,6 +136,8 @@ test('test dependency graph', () => {
     d8.merge(d9)
     expect(d8.size()).toStrictEqual(d9.size())
     expect(d9.getBackEdges(node2).size).toBe(1)
+    d8.removeNode(node2)
+    expect(d8.size()).toStrictEqual([1,0])
 })
 
 
