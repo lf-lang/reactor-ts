@@ -22,7 +22,7 @@ import { Log } from "./util";
      * Determine whether this node has priority over the given node or not.
      * @param node A node to compare the priority of this node to.
      */
-    hasPriorityOver: (node: PrioritySetElement<P> | undefined) => boolean;
+    hasPriorityOver: (node: PrioritySetElement<P>) => boolean;
 
     /**
      * If the given node is considered a duplicate of this node, then
