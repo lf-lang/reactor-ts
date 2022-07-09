@@ -109,8 +109,8 @@ class SimpleElement implements PrioritySetElement<number> {
         return false
     }
 }
+let ps0 = new PrioritySet<number>()
 test('test priority set', () => {
-    let ps0 = new PrioritySet<number>()
     ps0.push(new SimpleElement(3))
     ps0.push(new SimpleElement(5))
     ps0.push(new SimpleElement(5))
@@ -132,6 +132,7 @@ test('test dependency graph', () => {
     expect(d7.getEdges(node1).size).toBe(0)
     d7.merge(d5)
     expect(d7.size()).toStrictEqual(d5.size())
+
     d8.addNode(node1)
     d9.addEdge(node1, node2)
     d8.merge(d9)
@@ -162,6 +163,7 @@ test('test add/remove Edges', () => {
 })
 
 let d11 = new DependencyGraph<number>()
+let d12 = new DependencyGraph<Object>()
 test('test the DOT representation of the dependency graph', () => {
     expect(d11.toString()).toBe('digraph G {'+'\n}')
 
@@ -171,14 +173,20 @@ test('test the DOT representation of the dependency graph', () => {
     d11.addEdge(node1, node2)   // { (node1 -> node2) }
     expect(d11.toString()).toBe('digraph G {\n"1"->"2";\n}')
 
-    // d11.addEdge(node2, node1)   // { (node1 -> node2), (node2 -> node1) }
-    // expect(d11.toString()).toBe('digraph G {\n}')
+    let obj = {0:1}
+    d12.addNode(obj)
+    expect(d12.toString()).toBe('digraph G {\n"[object Object]";\n}')
+
+    // TODO: Some issues are that it cannot detect cycles and overlap
+    d11.addEdge(node2, node1)   // { (node1 -> node2), (node2 -> node1) }
+    expect(d11.toString()).toBe('digraph G {\n}')
+
+    d11.addEdge(node1, node2)
+    expect(d11.toString()).toBe('digraph G {\n}')
 })
 
 let sd0 = new SortableDependencyGraph<Sortable<number>>()
 let sd1 = new SortableDependencyGraph<Sortable<number>>()
-let sd2 = new SortableDependencyGraph<Sortable<number>>()
-
 
 class SortVariable implements Sortable<number> {
     next: PrioritySetElement<number> | undefined;
@@ -188,25 +196,23 @@ class SortVariable implements Sortable<number> {
     }
 }
 
-test("test sortable dependency graph", () =>  {
-    let s0 = new SortVariable(0)
-    let s1 = new SortVariable(1)
-    
+let s0 = new SortVariable(0)
+let s1 = new SortVariable(1)
+test('test sortable dependency graph', () =>  {
     sd0.addEdge(s0, s1)
     expect(sd0.updatePriorities(false,100)).toBe(true)
-
-    expect(sd1.updatePriorities(true, 0)).toBe(true)
-
     sd0.addEdge(s1, s0)
     expect(sd0.updatePriorities(true, 0)).toBe(false)
+
+    expect(sd1.updatePriorities(true, 0)).toBe(true)
 })
 
-let d12 = new DependencyGraph<number>()
+let d13 = new DependencyGraph<number>()
 test('test for reachableOrigins function of the dependency graph', () => {
-    d12.addEdges(node1, new Set<number>([node2, node3]))    // { (node1 -> node2), (node1 -> node3) }
-    d12.addEdge(node2, node4)       // { (node1 -> node2), (node1 -> node3), (node2 -> node4) }
-    expect(d12.reachableOrigins(node1, new Set<number>(d12.nodes()))).toBe(4)
-    expect(d12.reachableOrigins(node2, new Set<number>(d12.nodes())).size).toBe(2)
-    expect(d12.reachableOrigins(node3, new Set<number>(d12.nodes())).size).toBe(1)
-    expect(d12.reachableOrigins(node4, new Set<number>(d12.nodes())).size).toBe(1)
+    d13.addEdges(node1, new Set<number>([node2, node3]))    // { (node1 -> node2), (node1 -> node3) }
+    d13.addEdge(node2, node4)       // { (node1 -> node2), (node1 -> node3), (node2 -> node4) }
+    expect(d13.reachableOrigins(node1, new Set<number>(d13.nodes()))).toBe(4)
+    expect(d13.reachableOrigins(node2, new Set<number>(d13.nodes())).size).toBe(2)
+    expect(d13.reachableOrigins(node3, new Set<number>(d13.nodes())).size).toBe(1)
+    expect(d13.reachableOrigins(node4, new Set<number>(d13.nodes())).size).toBe(1)
 })
