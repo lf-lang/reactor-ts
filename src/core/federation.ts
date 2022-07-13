@@ -848,7 +848,7 @@ export class FederatedApp extends App {
                         let physicalTime = getCurrentPhysicalTime()
                         if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(event.tag.time)) {
                             Log.debug(this, () => "Adding dummy event for tag: " + event.tag);
-                            this._addDummyEvent(event.tag);
+                            this._addDummyEvent(new Tag(physicalTime));
                             return false;
                         }
                 }
