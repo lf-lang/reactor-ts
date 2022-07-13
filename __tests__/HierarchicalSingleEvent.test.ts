@@ -61,7 +61,7 @@ describe('HierarchicalSingleEvent', function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        let seTest = new SETest(TimeValue.secs(3), false, false, TimeValue.secs(1), done, failReactor);
+        let seTest = new SETest(TimeValue.secs(3), false, false, undefined, done, failReactor);
 
         // Normally _setAllParents would be called as part of the initialization
         // process for starting an app, but we call it directly here to set
