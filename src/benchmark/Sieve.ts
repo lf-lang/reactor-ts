@@ -91,7 +91,7 @@ class Sieve extends App {
     source: Ramp
     filter: Filter
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false,
-            advanceMessageInterval: TimeValue = TimeValue.secs(1), success?: () => void, fail?: () => void) {
+            advanceMessageInterval: TimeValue | undefined = undefined, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, advanceMessageInterval, success, fail);
         this.source = new Ramp(this, 100000, TimeValue.nsec(1))
         this.filter = new Filter(this, 2, 1000)

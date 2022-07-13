@@ -1886,7 +1886,7 @@ export class App extends Reactor {
     constructor(executionTimeout: TimeValue | undefined = undefined, 
                 keepAlive: boolean = false, 
                 fast: boolean = false,
-                advanceMessageInterval: TimeValue = TimeValue.secs(1),
+                advanceMessageInterval: TimeValue | undefined = undefined,
                 public success: () => void = () => {}, 
                 public failure: () => void = () => {}) {
         super(null);
@@ -1906,7 +1906,7 @@ export class App extends Reactor {
         this.startup._receiveRuntimeObject(this.__runtime)
         this.shutdown._receiveRuntimeObject(this.__runtime)
         this.__dummy._receiveRuntimeObject(this.__runtime)
-        this.snooze = new Action(this, Origin.logical, advanceMessageInterval)
+        this.snooze = new Action(this, Origin.logical, advanceMessageInterval ? advanceMessageInterval : TimeValue.secs(1))
 
         // Initialize the scope in which reactions and mutations of this
         // reactor will execute. This is already done in the super constructor,

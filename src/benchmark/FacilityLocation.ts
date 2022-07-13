@@ -560,7 +560,7 @@ export class FacilityLocation extends App {
     rootQuadrant: Quadrant
     summary: Summary
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false,
-            advanceMessageInterval: TimeValue = TimeValue.secs(1), success?: () => void, fail?: () => void) {
+            advanceMessageInterval: TimeValue | undefined = undefined, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, advanceMessageInterval, success, fail);
         // TODO(hokeun): Change default for numPoints to 100000.
         let NUM_POINTS = 100000

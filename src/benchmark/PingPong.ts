@@ -74,7 +74,7 @@ export class PingPong extends App {
     ping: Ping
     pong: Pong
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false,
-            advanceMessageInterval: TimeValue = TimeValue.secs(1),  success?: () => void, fail?: () => void) {
+            advanceMessageInterval: TimeValue | undefined = undefined,  success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, advanceMessageInterval, success, fail);
         this.ping = new Ping(this, 1000000) //1000000
         this.pong = new Pong(this)

@@ -896,9 +896,9 @@ export class FederatedApp extends App {
      */
     constructor (federationID: string, federateID: number, private rtiPort: number, private rtiHost: string,
         executionTimeout?: TimeValue | undefined, keepAlive?: boolean,
-        fast?: boolean, success?: () => void, failure?: () => void) {
+        fast?: boolean, advanceMessageInterval?: TimeValue | undefined, success?: () => void, failure?: () => void) {
 
-        super(executionTimeout, keepAlive, fast,
+        super(executionTimeout, keepAlive, fast, advanceMessageInterval,
             // Let super class (App) call FederateApp's _shutdown in success and failure.
             () => {
                 success? success(): () => {};
