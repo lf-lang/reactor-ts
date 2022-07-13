@@ -853,9 +853,9 @@ export class FederatedApp extends App {
                         }
                 }
                 this.sendRTINextEventTag(nextTag);
-                Log.debug(this, () => "The greatest time advance grant \
-                received from the RTI is less than the timestamp of the \
-                next event on the event queue");
+                Log.debug(this, () => "The greatest time advance grant " +
+                    "received from the RTI is less than the timestamp of the " +
+                    "next event on the event queue");
                 Log.global.debug("Exiting _next.");
                 return false;
             }
