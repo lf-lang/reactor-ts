@@ -512,17 +512,16 @@ class RTIClient extends EventEmitter {
     }
 
     /**
-     * Send the RTI a next event time message. This should be called when
+     * Send the RTI a next event tag message. This should be called when
      * the federate would like to advance logical time, but has not yet
      * received a sufficiently large time advance grant.
-     * @param nextTime The time of the message encoded as a 64 bit unsigned
+     * @param nextTag The time of the message encoded as a 64 bit unsigned
      * integer in a Buffer.
      */
-    public sendRTINextEventTime(nextTime: Buffer) {
+    public sendRTINextEventTag(nextTag: Buffer) {
         let msg = Buffer.alloc(13);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEXT_EVENT_TAG, 0);
-        nextTime.copy(msg,1);
-        // FIXME: Add microstep properly.
+        nextTag.copy(msg,1);
         try {
             Log.debug(this, () => {return "Sending RTI Next Event Time.";});
             this.socket?.write(msg);
@@ -795,6 +794,11 @@ export class FederatedApp extends App {
     private upstreamFedDelays: bigint[] = [];
     private downstreamFedIDs: number[] = [];
 
+    /**
+     * The default value, null, indicates there is no output depending on a physical action. 
+     */ 
+    private minDelayFromPhysicalActionToFederateOutput: TimeValue | null = null;
+
     public addUpstreamFederate(fedID: number, fedDelay: bigint) {
         this.upstreamFedIDs.push(fedID);
         this.upstreamFedDelays.push(fedDelay);
@@ -803,6 +807,10 @@ export class FederatedApp extends App {
 
     public addDownstreamFederate(fedID: number) {
         this.downstreamFedIDs.push(fedID);
+    }
+
+    public setMinDelayFromPhysicalActionToFederateOutput(minDelay: TimeValue) {
+        this.minDelayFromPhysicalActionToFederateOutput = minDelay;
     }
 
     /**
@@ -835,7 +843,16 @@ export class FederatedApp extends App {
             let greatestTAG = this._getGreatestTimeAdvanceGrant();
             let nextTag = event.tag;
             if (greatestTAG === null || greatestTAG.isSmallerThan(nextTag)) {
-                this.sendRTINextEventTime(nextTag);
+                if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
+                    this.downstreamFedIDs.length > 0) {
+                        let physicalTime = getCurrentPhysicalTime()
+                        if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(event.tag.time)) {
+                            Log.debug(this, () => "Adding dummy event for tag: " + event.tag);
+                            this._addDummyEvent(event.tag);
+                            return false;
+                        }
+                }
+                this.sendRTINextEventTag(nextTag);
                 Log.debug(this, () => "The greatest time advance grant \
                 received from the RTI is less than the timestamp of the \
                 next event on the event queue");
@@ -967,10 +984,10 @@ export class FederatedApp extends App {
      * @param nextTag The time to which this federate would like to
      * advance logical time.
      */
-    public sendRTINextEventTime(nextTag: Tag) {
+    public sendRTINextEventTag(nextTag: Tag) {
         Log.debug(this, () => {return `Sending RTI next event time with time: ${nextTag}`});
         let tag = nextTag.toBinary();
-        this.rtiClient.sendRTINextEventTime(tag);
+        this.rtiClient.sendRTINextEventTag(tag);
     }
 
     /**
@@ -1086,9 +1103,15 @@ export class FederatedApp extends App {
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
+
+                // FIXME: Temporarily disabling PTAG handling until the 
+                // input control reaction is implemented.
+                /*
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
+                */
+
                 // FIXME: Add input control reaction handling.
             }
         });

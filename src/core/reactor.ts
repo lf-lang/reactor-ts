@@ -12,7 +12,7 @@ import {
     Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
     Component, ScheduledTrigger, Trigger, TriggerManager,
-    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown, WritableMultiPort
+    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown, WritableMultiPort, Dummy
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
 import { Bank } from "./bank";
@@ -183,6 +183,11 @@ export abstract class Reactor extends Component {
      * This reactor's startup action.
      */
     readonly startup: Startup;
+
+    /**
+     * This reactor's dummy action.
+     */
+    readonly __dummy: Dummy;
 
     /**
      * The list of reactions this reactor has.
@@ -440,6 +445,7 @@ export abstract class Reactor extends Component {
         this._linkToRuntimeObject()
         this.shutdown = new Shutdown(this);
         this.startup = new Startup(this);
+        this.__dummy = new Dummy(this);
 
         // Utils get passed down the hierarchy. If this is an App,
         // the container refers to this object, making the following
@@ -1898,6 +1904,7 @@ export class App extends Reactor {
         this._receiveRuntimeObject(this.__runtime)
         this.startup._receiveRuntimeObject(this.__runtime)
         this.shutdown._receiveRuntimeObject(this.__runtime)
+        this.__dummy._receiveRuntimeObject(this.__runtime)
         this.snooze = new Action(this, Origin.logical, TimeValue.secs(1))
 
         // Initialize the scope in which reactions and mutations of this
@@ -1936,6 +1943,17 @@ export class App extends Reactor {
     }
 
     protected _iterationComplete(): void {}
+
+    /**
+     * Add a dummy event to the event queue.
+     * Currently, the sole usage of this is to ensure LET to be sent to the RTI
+     * when there is any physical action triggering output port(s) in federated execution.
+     * 
+     * @param tag The tag at which this dummy event occurs.
+     */
+    protected _addDummyEvent(tag: Tag): void {
+        this._eventQ.push(new TaggedEvent(this.__dummy, tag, 0));
+    }
 
     /**
      * Iterate over all reactions in the reaction queue and execute them.
@@ -2132,7 +2150,7 @@ export class App extends Reactor {
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
     protected _shutdown(): void {
-        if (this.__runtime.isRunning()) {
+        if (this.__runtime.isRunning() && !this._endOfExecution) {
             this._endOfExecution = this._currentTag.getMicroStepLater() // FIXME: this could be a longer delay in distributed execution
 
             Log.debug(this, () => "Stop requested.");
