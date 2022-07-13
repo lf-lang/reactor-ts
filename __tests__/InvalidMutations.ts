@@ -61,20 +61,6 @@ class R1 extends Reactor {
                     // }).toThrowError("New connection introduces cycle.")
                 })
                 // console.log("TEST START!")
-                // test('expect error on mutation creating race condition', () => {
-                //     expect(() => {
-                //         //this.canConnect(__in1)
-                //         // console.log("Can Connect: ", this.getReactor().canConnect(__in1, __out2))
-                        
-                //         this.connect(__in1, __out2)
-                //     }).toThrowError("New connection introduces direct feed through.")
-                // })
-                // let R2 = new R1(this.getReactor())
-                // test('expect error on spawning and creating loop within a reactor', () => {
-                //     expect(() => {
-                //         this.connect(__out2, __in1)
-                //     }).toThrowError("New connection introduces cycle.")
-                // })
                 test('expect error on mutation creating race condition', () => {
                     expect(() => {
                         this.connect(__in1, __out2)

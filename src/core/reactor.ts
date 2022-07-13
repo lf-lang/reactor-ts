@@ -958,13 +958,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             if (this._dependencyGraph.getBackEdges(dst).size > 0) {
                 throw Error("Destination port is already occupied.")
             }
-
-            // //   - between reactors and reactions (NOTE: check also needs to happen
-            // //     in addReaction)
-            // var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
-            // if (deps != undefined && deps.size > 0) {
-            //     return false;
-            // }
             
             return this._isInScope(src, dst)
 
@@ -999,7 +992,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             let inputs = this._findOwnInputs()
             let outputs = this._findOwnOutputs()
 
-
             for (let output of outputs) {
                 let newReachable = graph.reachableOrigins(output, inputs)
                 let oldReachable = this._causalityGraph.reachableOrigins(output, inputs)
@@ -1015,7 +1007,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                         console.log("Old Origin: ", old_ori._getFullyQualifiedName())
                     }              
                 }
-                console.log("!!!")    
 
                 for (let origin of newReachable) {
                     if (origin instanceof Port && !oldReachable.has(origin)) {
