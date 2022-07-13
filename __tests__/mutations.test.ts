@@ -96,7 +96,7 @@ class ScatterGather extends App {
     print = new Print(this)
 
     constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
-        super(timeout, false, false, success, fail);
+        super(timeout, false, false, TimeValue.secs(1), success, fail);
         this._connect(this.source.output, this.compute.in)
         this._connect(this.compute.out, this.print.input)
         var self = this
@@ -131,7 +131,7 @@ class ZenoClock extends Reactor {
 class Zeno extends App {
     readonly zeno = new ZenoClock(this, 1)
     constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
-        super(timeout, false, false, success, fail);
+        super(timeout, false, false, TimeValue.secs(1), success, fail);
         
         var self = this;
     

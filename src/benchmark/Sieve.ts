@@ -90,8 +90,9 @@ class Filter extends Reactor {
 class Sieve extends App {
     source: Ramp
     filter: Filter
-    constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
-        super(timeout, keepAlive, fast, success, fail);
+    constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false,
+            advanceMessageInterval: TimeValue = TimeValue.secs(1), success?: () => void, fail?: () => void) {
+        super(timeout, keepAlive, fast, advanceMessageInterval, success, fail);
         this.source = new Ramp(this, 100000, TimeValue.nsec(1))
         this.filter = new Filter(this, 2, 1000)
         this._connect(this.source.value, this.filter.inp)
