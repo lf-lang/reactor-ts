@@ -80,7 +80,7 @@ describe('Check _connect', () => {
         destination: Destination
     
         constructor(timeout: TimeValue, success?: () => void, fail?: () => void) {
-            super(timeout, false, false, TimeValue.secs(1), success, fail)
+            super(timeout, false, false, undefined, success, fail)
             this.source = new Source(this)
             this.destination = new Destination(this)
             this._connect(this.source.out, this.destination.in)
