@@ -1559,6 +1559,7 @@ interface UtilityFunctions {
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
+    getStartTag(): Tag;
     getStartTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
@@ -1660,6 +1661,10 @@ export class App extends Reactor {
 
         public getCurrentPhysicalTime(): TimeValue {
             return getCurrentPhysicalTime();
+        }
+
+        public getStartTag(): Tag {
+            return new Tag(this.app._startOfExecution, 0);
         }
 
         public getStartTime(): TimeValue {
@@ -2156,7 +2161,7 @@ export class App extends Reactor {
      */
     protected _shutdown(): void {
         if (this.__runtime.isRunning() && !this._endOfExecution) {
-            this._endOfExecution = this._currentTag.getMicroStepLater() // FIXME: this could be a longer delay in distributed execution
+            this._endOfExecution = this._currentTag.getMicroStepLater(1) // FIXME: this could be a longer delay in distributed execution
 
             Log.debug(this, () => "Stop requested.");
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
