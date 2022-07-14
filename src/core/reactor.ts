@@ -984,7 +984,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             let hasCycle = false
             if (graph.hasCycle()) {
                 hasCycle = true
-                // throw Error("New connection introduces cycle.")
             }
 
             // 2) check for direct feed through.
@@ -1011,7 +1010,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                 for (let origin of newReachable) {
                     if (origin instanceof Port && !oldReachable.has(origin)) {
                         hasDirectFeedThrough = true
-                        // throw Error("New connection introduces direct feed through.")
                     }
                 }
             }
