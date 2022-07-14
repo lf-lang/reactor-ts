@@ -23,7 +23,6 @@ class MultiPeriodic extends Reactor {
     o: OutMultiPort<number> = new OutMultiPort(this, 2)
     constructor(parent: Reactor) {
         super(parent)
-        let allWriter = this.allWritable(this.o);
         this.addReaction(
             new Triggers(this.t),
             new Args(this.t),
