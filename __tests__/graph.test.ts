@@ -1,4 +1,3 @@
-import exp from "constants";
 import {DependencyGraph, PrioritySet, PrioritySetElement, SortableDependencyGraph, Sortable} from "../src/core/graph";
 /** 
  * The tests below test the functionality of the hasCycle() utility function on various
