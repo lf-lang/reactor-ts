@@ -1553,6 +1553,7 @@ interface UtilityFunctions {
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
+    getStartTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
@@ -1653,6 +1654,10 @@ export class App extends Reactor {
 
         public getCurrentPhysicalTime(): TimeValue {
             return getCurrentPhysicalTime();
+        }
+
+        public getStartTime(): TimeValue {
+            return this.app._startOfExecution;
         }
 
         public getElapsedLogicalTime(): TimeValue {
