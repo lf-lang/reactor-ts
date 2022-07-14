@@ -75,7 +75,7 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
                 if (tag.time.isEarlierThan(physicalTime)) {
                     tag = new Tag(getCurrentPhysicalTime(), 0);
                 } else {
-                    tag = tag.getMicroStepLater();
+                    tag = tag.getMicroStepLater(1);
                 }
             }
             if (this.action instanceof FederatePortAction) {
@@ -95,7 +95,7 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
                 intendedTag);
                 tag = intendedTag;
             } else {
-                tag = tag.getMicroStepLater();
+                tag = tag.getMicroStepLater(1);
             } 
               
             Log.debug(this, () => "Scheduling " + this.action.origin +
