@@ -65,6 +65,14 @@ describe('time helper functions', function () {
     });
 
     /**
+     * Test if "multiply" functionality works
+     */
+     it('multiply time value', function() {
+        expect(TimeValue.secs(1).multiply(2)).toEqual(TimeValue.secs(2));
+        expect(TimeValue.secsAndNs(1, 500000000).multiply(2)).toEqual(TimeValue.secs(3));
+    });
+
+    /**
      * Test conversion to string
      */
     it('converting to string', function() {

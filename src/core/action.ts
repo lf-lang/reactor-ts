@@ -139,6 +139,12 @@ export class Shutdown extends Action<Present> {
     }
 }
 
+export class Dummy extends Action<Present> {
+    constructor(__parent__: Reactor) {
+        super(__parent__, Origin.logical)
+    }
+}
+
 export class FederatePortAction<T extends Present> extends Action<T> {
     constructor(__parent__: Reactor, origin: Origin) {
         super(__parent__, origin)
