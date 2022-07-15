@@ -976,8 +976,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             }
 
             // Add the new edge.
-            // Add edge when we are able to add graph
-            // if(isAbleToAdd(dst, src)) graph.addEdge(dst, src)
             graph.addEdge(dst, src)
 
             // 1) check for loops
