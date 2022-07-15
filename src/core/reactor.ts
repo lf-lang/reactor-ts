@@ -995,18 +995,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                 let newReachable = graph.reachableOrigins(output, inputs)
                 let oldReachable = this._causalityGraph.reachableOrigins(output, inputs)
 
-                // Print newReachable and oldReachable origin
-                for (let new_ori of newReachable) {
-                    if (new_ori instanceof Port) {
-                        console.log("New Origin: ", new_ori._getFullyQualifiedName())
-                    }
-                }
-                for (let old_ori of oldReachable) {
-                    if (old_ori instanceof Port) {
-                        console.log("Old Origin: ", old_ori._getFullyQualifiedName())
-                    }
-                }
-
                 for (let origin of newReachable) {
                     if (origin instanceof Port && !oldReachable.has(origin)) {
                         hasDirectFeedThrough = true
