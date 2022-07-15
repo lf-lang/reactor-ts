@@ -1312,7 +1312,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     //     if (timer.offset.isZero()) {
     //         // getLaterTime always returns a microstep of zero, so handle the
     //         // zero offset case explicitly.
-    //         startTime = this.util.getCurrentTag().getMicroStepLater();
+    //         startTime = this.util.getCurrentTag().getMicroStepsLater();
     //     } else {
     //         startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
     //     }// FIXME: startup and a timer with offset zero should be simultaneous and not retrigger events
@@ -2161,7 +2161,7 @@ export class App extends Reactor {
      */
     protected _shutdown(): void {
         if (this.__runtime.isRunning() && !this._endOfExecution) {
-            this._endOfExecution = this._currentTag.getMicroStepLater(1) // FIXME: this could be a longer delay in distributed execution
+            this._endOfExecution = this._currentTag.getMicroStepsLater(1) // FIXME: this could be a longer delay in distributed execution
 
             Log.debug(this, () => "Stop requested.");
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
