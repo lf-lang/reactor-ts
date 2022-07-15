@@ -151,6 +151,65 @@ enum RTIMessageTypes {
      */
     MSG_TYPE_LOGICAL_TAG_COMPLETE = 9,
 
+    /////////// Messages used in lf_requestStop() ///////////////
+    //// Overview of the algorithm:
+    ////  When any federate calls lf_requestStop(), it will
+    ////  send a MSG_TYPE_STOP_REQUEST message to the RTI, which will then
+    ////  forward a MSG_TYPE_STOP_REQUEST message
+    ////  to any federate that has not yet provided a stop time to the RTI. The federates will reply
+    ////  with a MSG_TYPE_STOP_REQUEST_REPLY and a stop tag (which shall be the
+    ////  maximum of their current logical tag
+    ////  at the time they receive the MSG_TYPE_STOP_REQUEST and the tag of the stop
+    ////  request). When the RTI has gathered all the stop tags
+    ////  from federates (that are still connected), it will decide on a common stop tag
+    ////  which is the maximum of the seen stop tag and answer with a MSG_TYPE_STOP_GRANTED. The federate
+    ////  sending the MSG_TYPE_STOP_REQUEST and federates sending the MSG_TYPE_STOP_REQUEST_REPLY will freeze
+    ////  the advancement of tag until they receive the MSG_TYPE_STOP_GRANTED message, in which
+    ////  case they might continue their execution until the stop tag has been reached.
+
+    /**
+     * Byte identifying a stop request. This message is first sent to the RTI by a federate
+     * that would like to stop execution at the specified tag. The RTI will forward
+     * the MSG_TYPE_STOP_REQUEST to all other federates. Those federates will either agree to
+     * the requested tag or propose a larger tag. The RTI will collect all proposed
+     * tags and broadcast the largest of those to all federates. All federates
+     * will then be expected to stop at the granted tag.
+     *
+     * The next 8 bytes will be the timestamp.
+     * The next 4 bytes will be the microstep.
+     *
+     * NOTE: The RTI may reply with a larger tag than the one specified in this message.
+     * It has to be that way because if any federate can send a MSG_TYPE_STOP_REQUEST message
+     * that specifies the stop time on all other federates, then every federate
+     * depends on every other federate and time cannot be advanced.
+     * Hence, the actual stop time may be nondeterministic.
+     * 
+     * If, on the other hand, the federate requesting the stop is upstream of every
+     * other federate, then it should be possible to respect its requested stop tag.
+     */
+    MSG_TYPE_STOP_REQUEST = 10,
+
+    /**
+     * Byte indicating a federate's reply to a MSG_TYPE_STOP_REQUEST that was sent
+     * by the RTI. The payload is a proposed stop tag that is at least as large
+     * as the one sent to the federate in a MSG_TYPE_STOP_REQUEST message.
+     *
+     * The next 8 bytes will be the timestamp.
+     * The next 4 bytes will be the microstep.
+     */
+    MSG_TYPE_STOP_REQUEST_REPLY = 11,
+
+    /**
+     * Byte sent by the RTI indicating that the stop request from some federate
+     * has been granted. The payload is the tag at which all federates have
+     * agreed that they can stop.
+     * The next 8 bytes will be the time at which the federates will stop. * 
+     * The next 4 bytes will be the microstep at which the federates will stop..
+     */
+    MSG_TYPE_STOP_GRANTED = 12,
+
+    /////////// End of lf_request_stop() messages ////////////////
+
     /**
      * A message that informs the RTI about connections between this federate and
      * other federates where messages are routed through the RTI. Currently, this
@@ -529,6 +588,22 @@ class RTIClient extends EventEmitter {
             Log.error(this, () => {return `${e}`});
         }
     }
+    //FIXME:stop-request
+    /** Send the RTI a stop request message. 
+     * 
+     */
+    public sendRTIStopRequest() {
+        let msg = Buffer.alloc(13);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_STOP_REQUEST, 0);
+    }
+    //FIXME:stop-request
+    /** Send the RTI a stop request reply message.
+     * 
+     */
+    public sendRTIStopRequestReply() {
+        let msg = Buffer.alloc(13);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_STOP_REQUEST_REPLY, 0);
+    }
 
     /**
      * The handler for the socket's data event. 
@@ -730,6 +805,20 @@ class RTIClient extends EventEmitter {
                     bufferIndex += 13;
                     break;
                 }
+                //FIXME:stop-request
+                case RTIMessageTypes.MSG_TYPE_STOP_REQUEST: {
+                    // The next 8 bytes will be the timestamp.
+                    // The next 4 bytes will be the microstep.
+                    console.log(`Received and RTI MSG_TYPE_STOP_REQUEST`);
+                    break;
+                }
+                //FIXME:stop-request
+                case RTIMessageTypes.MSG_TYPE_STOP_GRANTED: {
+                    // The next 8 bytes will be the time at which the federates will stop. * 
+                    // The next 4 bytes will be the microstep at which the federates will stop..
+                    console.log(`Received an RTI MSG_TYPE_STOP_GRANTED`);
+                    break;
+                }
                 case RTIMessageTypes.MSG_TYPE_ACK: {
                     Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_ACK'});
                     bufferIndex += 1;
@@ -825,6 +914,13 @@ export class FederatedApp extends App {
      */
     public _getGreatestTimeAdvanceGrant() {
         return this.greatestTimeAdvanceGrant;
+    }
+
+    /** FIXME:stop-request
+     *  Overriding requestStop()
+     */
+    public requestStop() {
+        console.log(`federate requestStop`);
     }
 
     /**
