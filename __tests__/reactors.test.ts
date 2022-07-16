@@ -108,7 +108,7 @@ class testApp extends App {
     reactor2: R2;
 
     constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void, secondTimeout?: TimeValue) {
-        super(timeout, false, false, undefined, success, fail);
+        super(timeout, false, false, success, fail);
         this.start = new Starter(this);
         this.reactor1 = new R1(this, timeout, deadlineMiss);
         this.reactor2 = new R2(this, secondTimeout, deadlineMiss);
@@ -124,7 +124,7 @@ class ReactorWithAction extends App {
     
     
     constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void) {
-        super(timeout, false, false, undefined, success, fail);
+        super(timeout, false, false, success, fail);
         this.addReaction(
             new Triggers(this.t),
             new Args(this.schedulable(this.a)),

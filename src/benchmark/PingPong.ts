@@ -73,9 +73,8 @@ export class Pong extends Reactor {
 export class PingPong extends App {
     ping: Ping
     pong: Pong
-    constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false,
-            advanceMessageInterval: TimeValue | undefined = undefined,  success?: () => void, fail?: () => void) {
-        super(timeout, keepAlive, fast, advanceMessageInterval, success, fail);
+    constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
+        super(timeout, keepAlive, fast, success, fail);
         this.ping = new Ping(this, 1000000) //1000000
         this.pong = new Pong(this)
         this._connectCall(this.ping.client, this.pong.server)

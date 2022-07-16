@@ -1865,6 +1865,14 @@ export class App extends Reactor {
     private _done: boolean = false;
 
     /**
+     * Interval for snoozing and waking up.
+     */
+    private _advanceMessageInterval: TimeValue = TimeValue.secs(1);
+    public setAdvanceMessageInterval(advanceMessageInterval: TimeValue) {
+        this._advanceMessageInterval = advanceMessageInterval
+    }
+
+    /**
      * Unset all the timers of this reactor.
      */
     protected _unsetTimers(): void {
@@ -1886,7 +1894,6 @@ export class App extends Reactor {
     constructor(executionTimeout: TimeValue | undefined = undefined, 
                 keepAlive: boolean = false, 
                 fast: boolean = false,
-                advanceMessageInterval: TimeValue | undefined = undefined,
                 public success: () => void = () => {}, 
                 public failure: () => void = () => {}) {
         super(null);
@@ -1906,7 +1913,7 @@ export class App extends Reactor {
         this.startup._receiveRuntimeObject(this.__runtime)
         this.shutdown._receiveRuntimeObject(this.__runtime)
         this.__dummy._receiveRuntimeObject(this.__runtime)
-        this.snooze = new Action(this, Origin.logical, advanceMessageInterval ? advanceMessageInterval : TimeValue.secs(1))
+        this.snooze = new Action(this, Origin.logical)
 
         // Initialize the scope in which reactions and mutations of this
         // reactor will execute. This is already done in the super constructor,
@@ -2085,7 +2092,7 @@ export class App extends Reactor {
                 if (this._keepAlive) {
                     // Keep alive: snooze and wake up later.
                     Log.global.debug("Going to sleep.");
-                    this.snooze.asSchedulable(this._getKey(this.snooze)).schedule(0, this._currentTag);
+                    this.snooze.asSchedulable(this._getKey(this.snooze)).schedule(this._advanceMessageInterval, this._currentTag);
                 } else {
                     // Don't keep alive: initiate shutdown.
                     Log.global.debug("Initiating shutdown.")

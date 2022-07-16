@@ -23,7 +23,7 @@ export class Clock extends App {
     a3 = new Action<number>(this, Origin.logical);
 
     constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
-        super(timeout, false, false, undefined, success, fail);
+        super(timeout, false, false, success, fail);
         this.addReaction(
             new Triggers(this.t1),
             new Args(this.schedulable(this.a1)),

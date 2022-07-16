@@ -7,7 +7,7 @@ class OutputGetTest extends App {
     t: Timer = new Timer(this, 0, 0);
     
     constructor(timeout: TimeValue, name:string, success: ()=> void, failure: ()=>void){
-        super(timeout, true, false, undefined, success, failure);
+        super(timeout, true, false, success, failure);
         Log.global.debug(">>>>>>>>----" + this.util)
         this.addReaction(
             new Triggers(this.t), 
