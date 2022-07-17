@@ -592,17 +592,31 @@ class RTIClient extends EventEmitter {
     /** Send the RTI a stop request message. 
      * 
      */
-    public sendRTIStopRequest() {
+    public sendRTIStopRequest(stopTag: Buffer) {
         let msg = Buffer.alloc(13);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_STOP_REQUEST, 0);
+        stopTag.copy(msg, 1);
+        try {
+            Log.debug(this, () => {return "Sending RTI Stop Request.";});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return `${e}`});
+        }
     }
     //FIXME:stop-request
     /** Send the RTI a stop request reply message.
      * 
      */
-    public sendRTIStopRequestReply() {
+    public sendRTIStopRequestReply(stopTag: Buffer) {
         let msg = Buffer.alloc(13);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_STOP_REQUEST_REPLY, 0);
+        stopTag.copy(msg, 1);
+        try {
+            Log.debug(this, () => {return "Sending RTI Stop Request Reply.";});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return `${e}`});
+        }
     }
 
     /**
@@ -809,14 +823,29 @@ class RTIClient extends EventEmitter {
                 case RTIMessageTypes.MSG_TYPE_STOP_REQUEST: {
                     // The next 8 bytes will be the timestamp.
                     // The next 4 bytes will be the microstep.
-                    console.log(`Received and RTI MSG_TYPE_STOP_REQUEST`);
+                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_STOP_REQUEST'});
+                    let tagBuffer = Buffer.alloc(12);
+                    assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
+                    let tag = Tag.fromBinary(tagBuffer);
+                    thiz.emit(`stopRequest`, tag);
+                    bufferIndex += 13;
+                    break;
+                }
+                //FIXME:stop-request
+                case RTIMessageTypes.MSG_TYPE_STOP_REQUEST_REPLY: {
+                    // The next 8 bytes will be the timestamp.
+                    // The next 4 bytes will be the microstep.
+                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_STOP_REQUEST_REPLY.  This message type '
+                        + 'should not be received by a federate'});
+                    bufferIndex += 13;
                     break;
                 }
                 //FIXME:stop-request
                 case RTIMessageTypes.MSG_TYPE_STOP_GRANTED: {
                     // The next 8 bytes will be the time at which the federates will stop. * 
                     // The next 4 bytes will be the microstep at which the federates will stop..
-                    console.log(`Received an RTI MSG_TYPE_STOP_GRANTED`);
+                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_STOP_REQUEST'});
+                    bufferIndex += 13;
                     break;
                 }
                 case RTIMessageTypes.MSG_TYPE_ACK: {
@@ -917,10 +946,13 @@ export class FederatedApp extends App {
     }
 
     /** FIXME:stop-request
-     *  Overriding requestStop()
+     *  @override
+     *  call supre class(App)'s _shutdown and send RTI the MSG_STOP_REQUEST
      */
-    public requestStop() {
-        console.log(`federate requestStop`);
+    protected _shutdown(): void {
+        console.log(`federated app's _shutdown`);
+        super._shutdown();
+        this.sendRTIStopRequest(this.util.getCurrentTag().getMicroStepsLater(1));
     }
 
     /**
@@ -1086,6 +1118,26 @@ export class FederatedApp extends App {
         this.rtiClient.sendRTINextEventTag(tag);
     }
 
+
+    //FIXME:stop-request
+    /** Send the RTI a stop request message. 
+     * 
+     */
+    public sendRTIStopRequest(stopTag: Tag) {
+        Log.debug(this, () => {return `Sending RTI stop request with time: ${stopTag}`});
+        let tag = stopTag.toBinary();
+        this.rtiClient.sendRTIStopRequest(tag);
+    }
+    //FIXME:stop-request
+    /** Send the RTI a stop request reply message.
+     * 
+     */
+    public sendRTIStopRequestReply(stopTag: Tag) {
+        Log.debug(this, () => {return `Sending RTI stop request reply with time: ${stopTag}`});
+        let tag = stopTag.toBinary();
+        this.rtiClient.sendRTIStopRequestReply(tag);
+    }
+
     /**
      * Shutdown the RTI Client by closing its socket connection to
      * the RTI.
@@ -1210,6 +1262,16 @@ export class FederatedApp extends App {
 
                 // FIXME: Add input control reaction handling.
             }
+        });
+
+        this.rtiClient.on('stopRequest', (tag: Tag) => {
+            Log.debug(this, () => {return `Stop Request received from RTI for ${tag}.`});
+            //FIXME: stop-request
+            //add logic to process stopRequest
+            if(tag.isSmallerThan(this.util.getCurrentTag().getMicroStepsLater(1)))
+                this.sendRTIStopRequestReply(tag);
+            else
+                this.sendRTIStopRequestReply(this.util.getCurrentTag().getMicroStepsLater(1));
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
