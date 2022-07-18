@@ -1647,10 +1647,6 @@ export class App extends Reactor {
             this.app._errorMessage = message
         }
 
-        public setEndOfExecution(endTag: Tag) {
-            //FIXME
-        }
-
         public isLastTAGProvisional(): boolean {
             return this.app._isLastTAGProvisional;
         }
@@ -2174,6 +2170,14 @@ export class App extends Reactor {
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
         }
+    }
+
+    /**
+     * Set _endOfExecution to specified tag.
+     */
+    protected _setEndOfExecution(stopTag: Tag): void {
+        this._endOfExecution = stopTag;
+        this.__runtime.schedule(new TaggedEvent(this.shutdown, this._endOfExecution, null));
     }
 
     /**

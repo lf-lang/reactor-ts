@@ -951,12 +951,11 @@ export class FederatedApp extends App {
 
     /** FIXME:stop-request
      *  @override
-     *  call supre class(App)'s _shutdown and send RTI the MSG_STOP_REQUEST
+     *  Send RTI the MSG_STOP_REQUEST
      */
     protected _shutdown(): void {
-        console.log(`federated app's _shutdown`);
-        super._shutdown();
         this.sendRTIStopRequest(this.util.getCurrentTag().getMicroStepsLater(1));
+        //should add the process to freeze a federate which send stopReuqest message
     }
 
     /**
@@ -1271,26 +1270,28 @@ export class FederatedApp extends App {
         this.rtiClient.on('stopRequest', (tag: Tag) => {
             Log.debug(this, () => {return `Stop Request received from RTI for ${tag}.`});
             //FIXME: stop-request
-            //add logic to process stopRequest
             if(tag.isSmallerThan(this.util.getCurrentTag().getMicroStepsLater(1)))
                 this.sendRTIStopRequestReply(tag);
             else
                 this.sendRTIStopRequestReply(this.util.getCurrentTag().getMicroStepsLater(1));
+            //should add freeze logic for a federate which send StopRequestReply
         });
 
         this.rtiClient.on('stopRequestGranted', (tag: Tag) => {
             Log.debug(this, () => {return `Stop Request Granted received from RTI for ${tag}.`});
             //FIXME: stop-request
             //add logic to process stopRequest
-            if(tag.isSmallerThan(this.util.getCurrentTag()))
-                this.util.requestErrorStop(`RTI granted a MSG_TYPE_STOP_GRANTED tag that is equal to or less than this federate's current tag `
+            if(tag.isSmallerThan(this.util.getCurrentTag())) {
+                //should observe whether this errortop calls super._shutdown or overriding _shutdown
+                this.util.reportError(`ERROR: RTI granted a MSG_TYPE_STOP_GRANTED tag that is equal to or less than this federate's current tag `
                 + `(${this.util.getCurrentTag().time.subtract(this.util.getStartTime())}, ${this.util.getCurrentTag().microstep}). `
                 + `Stopping at the next microstep instead.`);
-            else
-                Log.debug(this, () => {return `Call super._shutdown`});
-
-                //FIXME
+                console.log(`ERROR`);
                 super._shutdown();
+            }
+            else
+                //FIXME: make new protected function
+                this._setEndOfExecution(tag);
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
