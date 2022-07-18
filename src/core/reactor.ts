@@ -1647,6 +1647,10 @@ export class App extends Reactor {
             this.app._errorMessage = message
         }
 
+        public setEndOfExecution(endTag: Tag) {
+            //FIXME
+        }
+
         public isLastTAGProvisional(): boolean {
             return this.app._isLastTAGProvisional;
         }

@@ -844,7 +844,11 @@ class RTIClient extends EventEmitter {
                 case RTIMessageTypes.MSG_TYPE_STOP_GRANTED: {
                     // The next 8 bytes will be the time at which the federates will stop. * 
                     // The next 4 bytes will be the microstep at which the federates will stop..
-                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_STOP_REQUEST'});
+                    Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_STOP_GRANTED'});
+                    let tagBuffer = Buffer.alloc(12);
+                    assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
+                    let tag = Tag.fromBinary(tagBuffer);
+                    thiz.emit(`stopRequestGranted`, tag);
                     bufferIndex += 13;
                     break;
                 }
@@ -1272,6 +1276,21 @@ export class FederatedApp extends App {
                 this.sendRTIStopRequestReply(tag);
             else
                 this.sendRTIStopRequestReply(this.util.getCurrentTag().getMicroStepsLater(1));
+        });
+
+        this.rtiClient.on('stopRequestGranted', (tag: Tag) => {
+            Log.debug(this, () => {return `Stop Request Granted received from RTI for ${tag}.`});
+            //FIXME: stop-request
+            //add logic to process stopRequest
+            if(tag.isSmallerThan(this.util.getCurrentTag()))
+                this.util.requestErrorStop(`RTI granted a MSG_TYPE_STOP_GRANTED tag that is equal to or less than this federate's current tag `
+                + `(${this.util.getCurrentTag().time.subtract(this.util.getStartTime())}, ${this.util.getCurrentTag().microstep}). `
+                + `Stopping at the next microstep instead.`);
+            else
+                Log.debug(this, () => {return `Call super._shutdown`});
+
+                //FIXME
+                super._shutdown();
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
