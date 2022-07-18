@@ -954,6 +954,8 @@ export class FederatedApp extends App {
      *  Send RTI the MSG_STOP_REQUEST
      */
     protected _shutdown(): void {
+        Log.debug(this, () => `Set greatestTimeAdvanceGrant as ${this.util.getCurrentTag().getMicroStepsLater(1)}`);
+        this.greatestTimeAdvanceGrant = this.util.getCurrentTag();
         this.sendRTIStopRequest(this.util.getCurrentTag().getMicroStepsLater(1));
         //should add the process to freeze a federate which send stopReuqest message
     }
@@ -1275,14 +1277,15 @@ export class FederatedApp extends App {
             else
                 this.sendRTIStopRequestReply(this.util.getCurrentTag().getMicroStepsLater(1));
             //should add freeze logic for a federate which send StopRequestReply
+            this.greatestTimeAdvanceGrant = this.util.getCurrentTag();
         });
 
         this.rtiClient.on('stopRequestGranted', (tag: Tag) => {
+            this.greatestTimeAdvanceGrant = tag;
             Log.debug(this, () => {return `Stop Request Granted received from RTI for ${tag}.`});
             //FIXME: stop-request
             //add logic to process stopRequest
             if(tag.isSmallerThan(this.util.getCurrentTag())) {
-                //should observe whether this errortop calls super._shutdown or overriding _shutdown
                 this.util.reportError(`ERROR: RTI granted a MSG_TYPE_STOP_GRANTED tag that is equal to or less than this federate's current tag `
                 + `(${this.util.getCurrentTag().time.subtract(this.util.getStartTime())}, ${this.util.getCurrentTag().microstep}). `
                 + `Stopping at the next microstep instead.`);
@@ -1290,7 +1293,6 @@ export class FederatedApp extends App {
                 super._shutdown();
             }
             else
-                //FIXME: make new protected function
                 this._setEndOfExecution(tag);
         });
 
