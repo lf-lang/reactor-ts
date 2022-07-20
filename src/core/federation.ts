@@ -203,8 +203,8 @@ enum RTIMessageTypes {
      * Byte sent by the RTI indicating that the stop request from some federate
      * has been granted. The payload is the tag at which all federates have
      * agreed that they can stop.
-     * The next 8 bytes will be the time at which the federates will stop. * 
-     * The next 4 bytes will be the microstep at which the federates will stop..
+     * The next 8 bytes will be the time at which the federates will stop.
+     * The next 4 bytes will be the microstep at which the federates will stop.
      */
     MSG_TYPE_STOP_GRANTED = 12,
 
@@ -875,8 +875,12 @@ enum StopRequestState {
  * including the current state and the tag associated with the stop requested or stop granted.
  */
 class StopRequestInfo {
-    state: StopRequestState = StopRequestState.NOT_SENT;
-    tag: Tag | null = null;
+    constructor(state: StopRequestState, tag: Tag | null) {
+        this.state = state;
+        this.tag = tag;
+    }
+    readonly state: StopRequestState;
+    readonly tag: Tag | null;
 }
 
 /**
@@ -915,7 +919,7 @@ export class FederatedApp extends App {
      * Stop request-related information 
      * including the current state and the tag associated with the stop requested or stop granted.
      */
-    private stopRequestInfo: StopRequestInfo = new StopRequestInfo;
+    private stopRequestInfo: StopRequestInfo = new StopRequestInfo(StopRequestState.NOT_SENT, null);
 
     /**
      * The largest time advance grant received so far from the RTI,
@@ -1158,8 +1162,7 @@ export class FederatedApp extends App {
      */
     public sendRTIStopRequest(stopTag: Tag) {
         Log.debug(this, () => {return `Sending RTI stop request with time: ${stopTag}`});
-        this.stopRequestInfo.tag = stopTag;
-        this.stopRequestInfo.state = StopRequestState.SENT;
+        this.stopRequestInfo = new StopRequestInfo(StopRequestState.SENT, stopTag);
         let tag = stopTag.toBinary();
         this.rtiClient.sendRTIStopRequest(tag);
     }
@@ -1169,8 +1172,7 @@ export class FederatedApp extends App {
      */
     public sendRTIStopRequestReply(stopTag: Tag) {
         Log.debug(this, () => {return `Sending RTI stop request reply with time: ${stopTag}`});
-        this.stopRequestInfo.tag = stopTag;
-        this.stopRequestInfo.state = StopRequestState.SENT;
+        this.stopRequestInfo = new StopRequestInfo(StopRequestState.SENT, stopTag);
         let tag = stopTag.toBinary();
         this.rtiClient.sendRTIStopRequestReply(tag);
     }
@@ -1316,8 +1318,7 @@ export class FederatedApp extends App {
             // Note that this should not update the greatest TAG.
             // Instead this only updates the endOfExecution.
             Log.debug(this, () => {return `Stop Request Granted received from RTI for ${tag}.`});
-            this.stopRequestInfo.tag = tag;
-            this.stopRequestInfo.state = StopRequestState.GRANTED;
+            this.stopRequestInfo = new StopRequestInfo(StopRequestState.GRANTED, tag);
 
             if(tag.isSmallerThan(this.util.getCurrentTag())) {
                 this.util.reportError(`RTI granted a MSG_TYPE_STOP_GRANTED tag that is equal to or less than this federate's current tag `
