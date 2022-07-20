@@ -905,18 +905,19 @@ export class FederatedApp extends App {
     private rtiSynchronized: boolean = false;
 
     /**
+     * FIXME: stop-request 
+     * Used to prevent the federate from sending a REQUEST_STOP
+     * message multiple times to the RTI  
+     */
+    private sendStopRequestToRti: boolean = false;
+
+    /**
      * The largest time advance grant received so far from the RTI,
      * or null if no time advance grant has been received yet.
      * An RTI synchronized Federate cannot advance its logical time
      * beyond this value.
      */
     private greatestTimeAdvanceGrant: Tag | null = null;
-
-    /**
-     *  Used to prevent the federate from sending a REQUEST_STOP
-     *  message multiple times to the RTI. 
-     */
-    private sendStopRequestToRti: boolean = false;
 
     private upstreamFedIDs: number[] = [];
     private upstreamFedDelays: bigint[] = [];
@@ -962,11 +963,15 @@ export class FederatedApp extends App {
      */
     protected _shutdown(): void {
         //should add the process to freeze a federate which send stopReuqest message
+        if (this.sendStopRequestToRti === true) {
+            return;
+        }
         let endTag = this._getEndOfExecution();
-        if (this._isRTISynchronized() && (!endTag || this.util.getCurrentTag().isSmallerThan(endTag))) {
+        if (endTag === undefined || this.util.getCurrentTag().isSmallerThan(endTag)) {
             this.sendRTIStopRequest(this.util.getCurrentTag().getMicroStepsLater(1));
+            this.sendStopRequestToRti = true;
             this.greatestTimeAdvanceGrant = this.util.getCurrentTag();
-            Log.debug(this, () => `Set greatestTimeAdvanceGrant as ${this.util.getCurrentTag().getMicroStepsLater(1)}`);
+            Log.debug(this, () => `Set greatestTimeAdvanceGrant as ${this.util.getCurrentTag()}`);
         } else {
             Log.global.debug("Ignoring FederatedApp._shutdown() call after shutdown has already started.");
         }
@@ -998,14 +1003,26 @@ export class FederatedApp extends App {
                         }
                 }
                 this.sendRTINextEventTag(nextTag);
-                Log.debug(this, () => "The greatest time advance grant \
-                received from the RTI is less than the timestamp of the \
-                next event on the event queue");
+                Log.debug(this, () => `The greatest time advance grant `
+                + `received from the RTI is less than the timestamp of the `
+                + `next event on the event queue`);
                 Log.global.debug("Exiting _next.");
                 return false;
             }
+        } 
+        else {
+            let greatestTAG = this._getGreatestTimeAdvanceGrant();
+            console.log(`greatest: ${greatestTAG}\neventtag: ${event.tag}`);
+            if (!greatestTAG || !greatestTAG.isSmallerThan(event.tag)) {
+                return true;
+            } else {
+                console.log(`return false`);
+                Log.debug(this, () => `The greatest time advance grant is less than the `
+                + `timestamp of the next event on the event queue`);
+                return false;
+            }
         }
-        return true
+        return true;
     }
 
     protected _iterationComplete(): void {
@@ -1288,10 +1305,12 @@ export class FederatedApp extends App {
         this.rtiClient.on('stopRequest', (tag: Tag) => {
             Log.debug(this, () => {return `Stop Request received from RTI for ${tag}.`});
 
-            if(tag.isSmallerThan(this.util.getCurrentTag().getMicroStepsLater(1)))
+            if(this.util.getCurrentTag().isSmallerThan(tag)) {
                 this.sendRTIStopRequestReply(tag);
-            else
+            }
+            else {
                 this.sendRTIStopRequestReply(this.util.getCurrentTag().getMicroStepsLater(1));
+            }
             //should add freeze logic for a federate which send StopRequestReply
             this.greatestTimeAdvanceGrant = this.util.getCurrentTag();
         });
@@ -1302,6 +1321,7 @@ export class FederatedApp extends App {
          */
         this.rtiClient.on('stopRequestGranted', (tag: Tag) => {
             this.greatestTimeAdvanceGrant = tag;
+            Log.debug(this, () => `Set greatestTimeAdvanceGrant as ${tag}`);
             Log.debug(this, () => {return `Stop Request Granted received from RTI for ${tag}.`});
 
             if(tag.isSmallerThan(this.util.getCurrentTag())) {

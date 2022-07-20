@@ -2160,7 +2160,7 @@ export class App extends Reactor {
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
     protected _shutdown(): void {
-        if (this.__runtime.isRunning() && (!this._endOfExecution || this._currentTag.time.isEarlierThan(this._endOfExecution.time))) {
+        if (this.__runtime.isRunning() && (this._endOfExecution === undefined || this._currentTag.time.isEarlierThan(this._endOfExecution.time))) {
             this._endOfExecution = this._currentTag.getMicroStepsLater(1) // FIXME: this could be a longer delay in distributed execution
 
             Log.debug(this, () => "Stop requested.");
