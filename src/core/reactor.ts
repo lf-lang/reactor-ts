@@ -2172,16 +2172,16 @@ export class App extends Reactor {
         }
     }
 
-    /** FIXME: stop-request
-     * Set _endOfExecution to specified tag.
+    /**
+     * Setter for _endOfExecution to be used used by the subclass, FederatedApp.
      */
     protected _setEndOfExecution(stopTag: Tag): void {
         this._endOfExecution = stopTag;
         this.__runtime.schedule(new TaggedEvent(this.shutdown, this._endOfExecution, null));
     }
-
-    /** FIXME: stop-request
-     *  Getter for _endOfExecution
+    
+    /**
+     * Getter for _endOfExecution to be used used by the subclass, FederatedApp.
      */
     protected _getEndOfExecution(): Tag | undefined {
         return this._endOfExecution;
