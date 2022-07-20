@@ -1012,11 +1012,9 @@ export class FederatedApp extends App {
         } 
         else {
             let greatestTAG = this._getGreatestTimeAdvanceGrant();
-            console.log(`greatest: ${greatestTAG}\neventtag: ${event.tag}`);
             if (!greatestTAG || !greatestTAG.isSmallerThan(event.tag)) {
                 return true;
             } else {
-                console.log(`return false`);
                 Log.debug(this, () => `The greatest time advance grant is less than the `
                 + `timestamp of the next event on the event queue`);
                 return false;
