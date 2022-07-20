@@ -588,9 +588,9 @@ class RTIClient extends EventEmitter {
             Log.error(this, () => {return `${e}`});
         }
     }
-    //FIXME:stop-request
-    /** Send the RTI a stop request message. 
-     * 
+
+    /** 
+     * Send the RTI a stop request message. 
      */
     public sendRTIStopRequest(stopTag: Buffer) {
         let msg = Buffer.alloc(13);
@@ -603,9 +603,9 @@ class RTIClient extends EventEmitter {
             Log.error(this, () => {return `${e}`});
         }
     }
-    //FIXME:stop-request
-    /** Send the RTI a stop request reply message.
-     * 
+
+    /** 
+     * Send the RTI a stop request reply message.
      */
     public sendRTIStopRequestReply(stopTag: Buffer) {
         let msg = Buffer.alloc(13);
@@ -819,7 +819,6 @@ class RTIClient extends EventEmitter {
                     bufferIndex += 13;
                     break;
                 }
-                //FIXME:stop-request
                 case RTIMessageTypes.MSG_TYPE_STOP_REQUEST: {
                     // The next 8 bytes will be the timestamp.
                     // The next 4 bytes will be the microstep.
@@ -827,20 +826,10 @@ class RTIClient extends EventEmitter {
                     let tagBuffer = Buffer.alloc(12);
                     assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
                     let tag = Tag.fromBinary(tagBuffer);
-                    thiz.emit(`stopRequest`, tag);
+                    thiz.emit('stopRequest', tag);
                     bufferIndex += 13;
                     break;
                 }
-                //FIXME:stop-request
-                case RTIMessageTypes.MSG_TYPE_STOP_REQUEST_REPLY: {
-                    // The next 8 bytes will be the timestamp.
-                    // The next 4 bytes will be the microstep.
-                    Log.error(thiz, () => {return 'Received an RTI MSG_TYPE_STOP_REQUEST_REPLY.  This message type '
-                        + 'should not be received by a federate'});
-                    bufferIndex += 13;
-                    break;
-                }
-                //FIXME:stop-request
                 case RTIMessageTypes.MSG_TYPE_STOP_GRANTED: {
                     // The next 8 bytes will be the time at which the federates will stop. * 
                     // The next 4 bytes will be the microstep at which the federates will stop..
@@ -1007,8 +996,8 @@ export class FederatedApp extends App {
      */
     protected _canProceed(event: TaggedEvent<Present>) {
         let tagBarrier = null;
-        // Set tag barrier using the tag when stop requested or
-        // greatest TAG if is RTI synchronized.
+        // Set tag barrier using the tag when stop is requested but not granted yet.
+        // Otherwise, set the tagBarrier using the greated TAG.
         if (this.stopRequestInfo.state === StopRequestState.SENT) {
             tagBarrier = this.stopRequestInfo.tag;
         } else {
@@ -1164,10 +1153,8 @@ export class FederatedApp extends App {
         this.rtiClient.sendRTINextEventTag(tag);
     }
 
-
-    //FIXME:stop-request
-    /** Send the RTI a stop request message. 
-     * 
+    /**
+     * Send the RTI a stop request message. 
      */
     public sendRTIStopRequest(stopTag: Tag) {
         Log.debug(this, () => {return `Sending RTI stop request with time: ${stopTag}`});
@@ -1176,9 +1163,9 @@ export class FederatedApp extends App {
         let tag = stopTag.toBinary();
         this.rtiClient.sendRTIStopRequest(tag);
     }
-    //FIXME:stop-request
-    /** Send the RTI a stop request reply message.
-     * 
+
+    /**
+     * Send the RTI a stop request reply message.
      */
     public sendRTIStopRequestReply(stopTag: Tag) {
         Log.debug(this, () => {return `Sending RTI stop request reply with time: ${stopTag}`});
