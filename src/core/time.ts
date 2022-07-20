@@ -408,11 +408,10 @@ export class Tag {
     }
 
     /**
-     * Get a new time instant that has the same `time` but a `microstep` that
-     * is incremented by one relative to this time instant's `microstep`.
+     * Get a new time instant that has the same `time` but n `microsteps` later.
      */
     getMicroStepsLater(n: number) {
-        return new Tag(this.time, this.microstep+n);
+        return new Tag(this.time, this.microstep + n);
     }
 
     /**
