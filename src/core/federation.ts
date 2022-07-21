@@ -365,6 +365,7 @@ class RTIClient extends EventEmitter {
             this.socket?.on('close', () => {
                 Log.info(this, () => {return 'RTI socket has closed.'});
             });
+            Log.debug(this, () => {return `Federate ID: ${this.id} connected to RTI.`});
 
             // Immediately send a federate ID message after connecting.
             const buffer = Buffer.alloc(4);
@@ -373,7 +374,7 @@ class RTIClient extends EventEmitter {
 
             buffer.writeUInt8(this.federationID.length, 3);
             try {
-                Log.debug(this, () => {return 'Sending a FED ID message to the RTI.'});
+                Log.debug(this, () => {return `Sending a FED ID message (ID: ${this.federationID}) to the RTI.`});
                 this.socket?.write(buffer);
                 this.socket?.write(this.federationID);
             } catch (e) {
