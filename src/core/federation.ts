@@ -831,8 +831,8 @@ class RTIClient extends EventEmitter {
                     break;
                 }
                 case RTIMessageTypes.MSG_TYPE_STOP_GRANTED: {
-                    // The next 8 bytes will be the time at which the federates will stop. * 
-                    // The next 4 bytes will be the microstep at which the federates will stop..
+                    // The next 8 bytes will be the time at which the federates will stop. 
+                    // The next 4 bytes will be the microstep at which the federates will stop.
                     Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_STOP_GRANTED'});
                     let tagBuffer = Buffer.alloc(12);
                     assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
