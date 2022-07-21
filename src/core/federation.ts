@@ -1324,7 +1324,6 @@ export class FederatedApp extends App {
                 this.util.reportError(`RTI granted a MSG_TYPE_STOP_GRANTED tag that is equal to or less than this federate's current tag `
                 + `(${this.util.getCurrentTag().time.subtract(this.util.getStartTime())}, ${this.util.getCurrentTag().microstep}). `
                 + `Stopping at the next microstep instead.`);
-                console.log(`ERROR`);
                 super._shutdown();
             }
             else
