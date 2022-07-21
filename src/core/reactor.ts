@@ -2072,10 +2072,12 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.time.isEqualTo(nextEvent.tag.time));
-            // Done handling events.
-        }
 
-        this._iterationComplete();
+            // Done handling events.
+            // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
+            // Make sure that a federate sends LTC only after actually handling an event.
+            this._iterationComplete();
+        }
 
         // Once we've reached here, either we're done processing events and the
         // next event is at a future time, or there are no more events in the
