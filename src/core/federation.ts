@@ -151,21 +151,8 @@ enum RTIMessageTypes {
      */
     MSG_TYPE_LOGICAL_TAG_COMPLETE = 9,
 
-    /////////// Messages used in lf_requestStop() ///////////////
-    //// Overview of the algorithm:
-    ////  When any federate calls lf_requestStop(), it will
-    ////  send a MSG_TYPE_STOP_REQUEST message to the RTI, which will then
-    ////  forward a MSG_TYPE_STOP_REQUEST message
-    ////  to any federate that has not yet provided a stop time to the RTI. The federates will reply
-    ////  with a MSG_TYPE_STOP_REQUEST_REPLY and a stop tag (which shall be the
-    ////  maximum of their current logical tag
-    ////  at the time they receive the MSG_TYPE_STOP_REQUEST and the tag of the stop
-    ////  request). When the RTI has gathered all the stop tags
-    ////  from federates (that are still connected), it will decide on a common stop tag
-    ////  which is the maximum of the seen stop tag and answer with a MSG_TYPE_STOP_GRANTED. The federate
-    ////  sending the MSG_TYPE_STOP_REQUEST and federates sending the MSG_TYPE_STOP_REQUEST_REPLY will freeze
-    ////  the advancement of tag until they receive the MSG_TYPE_STOP_GRANTED message, in which
-    ////  case they might continue their execution until the stop tag has been reached.
+    // For more information on the algorithm for stop request protocol, please see following link:
+    // https://github.com/lf-lang/lingua-franca/wiki/Federated-Execution-Protocol#overview-of-the-algorithm
 
     /**
      * Byte identifying a stop request. This message is first sent to the RTI by a federate
@@ -207,8 +194,6 @@ enum RTIMessageTypes {
      * The next 4 bytes will be the microstep at which the federates will stop.
      */
     MSG_TYPE_STOP_GRANTED = 12,
-
-    /////////// End of lf_request_stop() messages ////////////////
 
     /**
      * A message that informs the RTI about connections between this federate and
