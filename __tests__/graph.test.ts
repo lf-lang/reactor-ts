@@ -170,18 +170,28 @@ test('test the DOT representation of the dependency graph', () => {
     expect(d11.toString()).toBe('digraph G {\n"1";\n}')
 
     d11.addEdge(node1, node2)   // { (node1 -> node2) }
-    expect(d11.toString()).toBe('digraph G {\n"1"->"2";\n}')
+    d11.addEdge(node2, node3) // { (node1 -> node2 -> node3) }
+    expect(d11.toString()).toBe('digraph G {\n"1"->"2"->"3";\n}')
 
     let obj = {0:1}
     d12.addNode(obj)
     expect(d12.toString()).toBe('digraph G {\n"[object Object]";\n}')
 
-    // TODO: Some issues are that it cannot detect cycles and overlap
-    d11.addEdge(node2, node1)   // { (node1 -> node2), (node2 -> node1) }
-    expect(d11.toString()).toBe('digraph G {\n}')
+    d11.addEdge(node2, node1)
+    expect(d11.toString()).toBe('digraph G {\n"2"->"1"->"2"->"3";\n}')
+    d11.addEdge(node1, node3)
+    expect(d11.toString()).toBe('digraph G {\n"1"->"2"->"1"->"3";\n"2"->"3";\n}')
+})
 
-    d11.addEdge(node1, node2)
-    expect(d11.toString()).toBe('digraph G {\n}')
+let d13 = new DependencyGraph<number>()
+test('test for reachableOrigins function of the dependency graph', () => {
+    d13.addEdge(node1, node2)
+    d13.addEdge(node1, node3)
+    d13.addEdge(node2, node4)       // { (node1 -> node2 -> node4), (node1 -> node3) }
+    expect(d13.reachableOrigins(node1, new Set<number>(d13.nodes())).size).toBe(3)
+    expect(d13.reachableOrigins(node2, new Set<number>(d13.nodes())).size).toBe(1)
+    expect(d13.reachableOrigins(node3, new Set<number>(d13.nodes())).size).toBe(0)
+    expect(d13.reachableOrigins(node4, new Set<number>(d13.nodes())).size).toBe(0)
 })
 
 let sd0 = new SortableDependencyGraph<Sortable<number>>()
@@ -202,16 +212,5 @@ test('test sortable dependency graph', () =>  {
     expect(sd0.updatePriorities(false,100)).toBe(true)
     sd0.addEdge(s1, s0)
     expect(sd0.updatePriorities(true, 0)).toBe(false)
-
     expect(sd1.updatePriorities(true, 0)).toBe(true)
-})
-
-let d13 = new DependencyGraph<number>()
-test('test for reachableOrigins function of the dependency graph', () => {
-    d13.addEdges(node1, new Set<number>([node2, node3]))    // { (node1 -> node2), (node1 -> node3) }
-    d13.addEdge(node2, node4)       // { (node1 -> node2), (node1 -> node3), (node2 -> node4) }
-    expect(d13.reachableOrigins(node1, new Set<number>(d13.nodes()))).toBe(4)
-    expect(d13.reachableOrigins(node2, new Set<number>(d13.nodes())).size).toBe(2)
-    expect(d13.reachableOrigins(node3, new Set<number>(d13.nodes())).size).toBe(1)
-    expect(d13.reachableOrigins(node4, new Set<number>(d13.nodes())).size).toBe(1)
 })

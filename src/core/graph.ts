@@ -190,8 +190,9 @@ export class DependencyGraph<T> {
                 if (!visited.has(next)) search(next)
             }
         }
-        
         search(effect)
+        reachable.delete(effect)
+
         return reachable
     } 
 
