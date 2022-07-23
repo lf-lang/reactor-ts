@@ -982,9 +982,9 @@ export class FederatedApp extends App {
      * (NET) message and return. _next() will be called when a new greatest TAG
      * is received. The NET message is not sent if the connection to the RTI is
      * closed. FIXME: what happens in that case? Will next be called?
-     * @param event 
+     * @param nextEvent 
      */
-    protected _canProceed(event: TaggedEvent<Present>) {
+    protected _canProceed(nextEvent: TaggedEvent<Present>) {
         let tagBarrier = null;
         // Set tag barrier using the tag when stop is requested but not granted yet.
         // Otherwise, set the tagBarrier using the greated TAG.
@@ -995,20 +995,20 @@ export class FederatedApp extends App {
         }
         
         if (this._isRTISynchronized() || tagBarrier !== null) {
-            if (tagBarrier === null || tagBarrier.isSmallerThan(event.tag)) {
+            if (tagBarrier === null || tagBarrier.isSmallerThan(nextEvent.tag)) {
                 if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
                     this.downstreamFedIDs.length > 0) {
                         let physicalTime = getCurrentPhysicalTime()
-                        if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(event.tag.time)) {
-                            Log.debug(this, () => "Adding dummy event for tag: " + event.tag);
-                            this._addDummyEvent(event.tag);
+                        if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(nextEvent.tag.time)) {
+                            Log.debug(this, () => "Adding dummy event for time: " + physicalTime);
+                            this._addDummyEvent(new Tag(physicalTime));
                             return false;
                         }
                 }
-                this.sendRTINextEventTag(event.tag);
-                Log.debug(this, () => `The greatest time advance grant `
-                + `received from the RTI is less than the timestamp of the `
-                + `next event on the event queue`);
+                this.sendRTINextEventTag(nextEvent.tag);
+                Log.debug(this, () => "The greatest time advance grant " +
+                    "received from the RTI is less than the timestamp of the " +
+                    "next event on the event queue");
                 Log.global.debug("Exiting _next.");
                 return false;
             }
