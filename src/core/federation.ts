@@ -847,15 +847,15 @@ export class FederatedApp extends App {
                     this.downstreamFedIDs.length > 0) {
                         let physicalTime = getCurrentPhysicalTime()
                         if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(event.tag.time)) {
-                            Log.debug(this, () => "Adding dummy event for tag: " + event.tag);
-                            this._addDummyEvent(event.tag);
+                            Log.debug(this, () => "Adding dummy event for time: " + physicalTime);
+                            this._addDummyEvent(new Tag(physicalTime));
                             return false;
                         }
                 }
                 this.sendRTINextEventTag(nextTag);
-                Log.debug(this, () => "The greatest time advance grant \
-                received from the RTI is less than the timestamp of the \
-                next event on the event queue");
+                Log.debug(this, () => "The greatest time advance grant " +
+                    "received from the RTI is less than the timestamp of the " +
+                    "next event on the event queue");
                 Log.global.debug("Exiting _next.");
                 return false;
             }

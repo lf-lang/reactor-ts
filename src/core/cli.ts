@@ -92,7 +92,8 @@ export function stringCLAType(arg: string): string {
  * if the CommandLineOptionDefs changes.
  */
 export type ProcessedCommandLineArgs = {fast: boolean| undefined,
-    keepalive: boolean | undefined, timeout: TimeValue | null | undefined,
+    keepalive: boolean | undefined, advanceMessageInterval: TimeValue | undefined,
+    timeout: TimeValue | null | undefined,
     logging: LogLevel | undefined, id: string | undefined, help: boolean}
 
 
