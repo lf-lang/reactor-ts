@@ -22,7 +22,7 @@ import { Log } from "./util";
      * Determine whether this node has priority over the given node or not.
      * @param node A node to compare the priority of this node to.
      */
-    hasPriorityOver: (node: PrioritySetElement<P> | undefined) => boolean;
+    hasPriorityOver: (node: PrioritySetElement<P>) => boolean;
 
     /**
      * If the given node is considered a duplicate of this node, then
@@ -184,26 +184,14 @@ export class DependencyGraph<T> {
          * @param current The current node being visited.
          */
         function search(current: T) {
+            visited.add(current)
+            if (origins.has(current))   reachable.add(current)
             for (let next of self.getEdges(current)) {
-                if (!visited.has(current)) {
-                    // Do not visit a node twice.
-                    if (origins.has(current)) {
-                        // If the current node is among the origins searched
-                        // for, add it to the reachable set.
-                        reachable.add(current)
-                    }
-                    // Continue search, depth first.
-                    if (reachable.size == origins.size) {
-                        search(next)
-                    } else {
-                        // Preempt search of all origins are reachable.
-                        return
-                    }
-                }
+                if (!visited.has(next)) search(next)
             }
         }
-        
         search(effect)
+        reachable.delete(effect)
 
         return reachable
     } 

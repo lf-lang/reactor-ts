@@ -43,23 +43,33 @@ class R1 extends Reactor {
         this.addMutation(
             new Triggers(this.in1),
             new Args(this.in1, this.out2),
-            function(this, __in, __out) {
-                // test('expect error to be thrown on mutation creating loop', () => { 
-                //     expect(() => {
-                //         this.connect(__out, __in)
-                //     }).toThrowError("ERROR connecting " + __out + " to " + __in)
-                // })
+            function(this, __in1, __out2) {
+                test('expect error to be thrown on mutation creating loop', () => { 
+                    expect(() => {
+                        this.connect(__out2, __in1)
+                    }).toThrowError("New connection introduces cycle.")
+                    
+                    expect(() => {
+                        this.connect(__in1, __out2)
+                    }).toThrowError("New connection introduces direct feed through.") // dist port already in use                
+                    
+                    let R2 = new R1(this.getReactor())     
+                    expect(() => {
+                        this.connect(R2.out1, R2.in1)
+                        this.connect(R2.in1, R2.out1)
+                    }).toThrowError("New connection introduces cycle.")
+                })
                 test('expect error on mutation creating race condition', () => {
                     expect(() => {
-                        this.connect(__in, __out)
-                    }).toThrowError("ERROR connecting " + __out + " to " + __in)
+                        this.connect(__in1, __out2)
+                    }).toThrowError("New connection introduces direct feed through.")
                 })
                 let R2 = new R1(this.getReactor())
                 test('expect error on spawning and creating loop within a reactor', () => {
                     expect(() => {
                         this.connect(R2.in1, R2.out1)
                         this.connect(R2.out1, R2.in1)
-                    }).toThrowError("ERROR connecting " + R2.out1 + " to " + R2.in1)
+                    }).toThrowError("New connection introduces cycle.")
                 })
             }   
         )
@@ -82,4 +92,3 @@ class testApp extends App {
 
 var app = new testApp()
 app._start()
-
