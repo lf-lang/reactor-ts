@@ -196,6 +196,19 @@ enum RTIMessageTypes {
     MSG_TYPE_STOP_GRANTED = 12,
 
     /**
+     * A port absent message, informing the receiver that a given port
+     * will not have event for the current logical time.
+     * 
+     * The next 2 bytes is the port id.
+     * The next 2 bytes will be the federate id of the destination federate.
+     *  This is needed for the centralized coordination so that the RTI knows where
+     *  to forward the message.
+     * The next 8 bytes are the intended time of the absent message
+     * The next 4 bytes are the intended microstep of the absent message
+     */
+    MSG_TYPE_PORT_ABSENT = 23,
+
+    /**
      * A message that informs the RTI about connections between this federate and
      * other federates where messages are routed through the RTI. Currently, this
      * only includes logical connections when the coordination is centralized. This
@@ -605,6 +618,23 @@ class RTIClient extends EventEmitter {
         }
     }
 
+    //FIXME: port-absent
+    public sendRTIPortAbsent(additionalDealy: Tag, federatePortID: number, federateID: number) {
+        let msg = Buffer.alloc(17);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
+        msg.writeUInt16LE(federatePortID, 1);
+        msg.writeUInt16LE(federateID, 3);
+        additionalDealy.toBinary().copy(msg, 5);
+        try {
+            Log.debug(this, () => {return `Sending RTI Port Absent message for `
+                + `tag (${additionalDealy}, 0) for port ${federatePortID} to `
+                + `federate ${federateID}.`});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return `${e}`});
+        }
+    }
+
     /**
      * The handler for the socket's data event. 
      * The data Buffer given to the handler may contain 0 or more complete messages.
@@ -825,6 +855,32 @@ class RTIClient extends EventEmitter {
                     let tag = Tag.fromBinary(tagBuffer);
                     thiz.emit(`stopRequestGranted`, tag);
                     bufferIndex += 13;
+                    break;
+                }
+                //FIXME: port-absent
+                case RTIMessageTypes.MSG_TYPE_PORT_ABSENT: {
+                    // The next 2 bytes is the port id.
+                    // The next 2 bytes will be the federate id of the destination federate.
+                    // The next 8 bytes are the intended time of the absent message
+                    // The next 4 bytes are the intended microstep of the absent message
+                    let incomplete = assembledData.length < 17 + bufferIndex;
+
+                    if (incomplete) {
+                        thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
+                        assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
+                    } else {
+                        let portID = assembledData.readUInt16LE(bufferIndex + 1);
+                        // The next part of the message is the federate_id, but we don't need it.
+                        // let federateID = assembledData.readUInt16LE(bufferIndex + 3);
+                        let timeBuffer = Buffer.alloc(12);
+                        assembledData.copy(timeBuffer, 0, bufferIndex + 5, bufferIndex + 13 );
+                        let intendedTag = Tag.fromBinary(timeBuffer);
+                        Log.debug(thiz, () => { return `Handling port absent for tag (${intendedTag.time}, `
+                        +`${intendedTag.microstep}) for port ${portID}`;      
+                        }) //FIXME: federate.c, 1631
+                        thiz.emit('portAbsent', intendedTag);
+                    }
+                    bufferIndex += 17;
                     break;
                 }
                 case RTIMessageTypes.MSG_TYPE_ACK: {
@@ -1314,6 +1370,12 @@ export class FederatedApp extends App {
             }
             else
                 this._setEndOfExecution(tag);
+        });
+        //FIXME: port-absent
+        this.rtiClient.on(`portAbsent`, (tag: Tag) => {
+            Log.debug(this, () => {return `Port Absent received from RTI for ${tag}.`});
+            //this function should have same logic with update_last_known_status_on_input_port() in c
+            //federate.c, 1655
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);

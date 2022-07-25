@@ -1565,6 +1565,7 @@ interface UtilityFunctions {
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
+    sendRTIPortAbsentMessage (additionalDealy: Tag, federatePortID: number, federateID: number): void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -1686,7 +1687,10 @@ export class App extends Reactor {
         public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         };
-
+//FIXEME: port-absent
+        public sendRTIPortAbsentMessage (additionalDealy: Tag, federatePortID: number, federateID: number) {
+            return this.app.sendRTIPortAbsentMessage(additionalDealy, federatePortID, federateID);
+        }
     }(this);
 
     /**
@@ -1813,6 +1817,14 @@ export class App extends Reactor {
      */
     protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
+    }
+
+    /**
+     * Send a MSG_TYPE_PORT_ABSENT
+     * please add explanation of this message.  
+     */
+    protected sendRTIPortAbsentMessage (destFederateID: number, destPortID: number) {
+        throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
     }
 
     /**
