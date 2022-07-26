@@ -1682,13 +1682,14 @@ export class App extends Reactor {
         
         public sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
             return this.app.sendRTIMessage(data, destFederateID, destPortID);
-        };
+        }
 
         public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
-        };
+        }
 //FIXEME: port-absent
         public sendRTIPortAbsent (additionalDelay: Tag, federatePortID: number, federateID: number) {
+            console.log(`PortAbsent invoked`);
             return this.app.sendRTIPortAbsent(additionalDelay, federatePortID, federateID);
         }
     }(this);

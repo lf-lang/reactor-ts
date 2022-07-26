@@ -627,7 +627,7 @@ class RTIClient extends EventEmitter {
         additionalDelay.toBinary().copy(msg, 5);
         try {
             Log.debug(this, () => {return `Sending RTI Port Absent message for `
-                + `tag (${additionalDelay}, 0) for port ${federatePortID} to `
+                + `tag ${additionalDelay} for port ${federatePortID} to `
                 + `federate ${federateID}.`});
             this.socket?.write(msg);
         } catch (e) {
@@ -1220,6 +1220,13 @@ export class FederatedApp extends App {
     }
 
     /**
+     * Send the RTI a port absent message
+     */
+    public sendRTIPortAbsent(additionalDelay: Tag, destFederateID: number, destPortID: number): void {
+        this.rtiClient.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
+    }
+
+    /**
      * Shutdown the RTI Client by closing its socket connection to
      * the RTI.
      */
@@ -1374,8 +1381,10 @@ export class FederatedApp extends App {
         //FIXME: port-absent
         this.rtiClient.on(`portAbsent`, (tag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${tag}.`});
-            //this function should have same logic with update_last_known_status_on_input_port() in c
+            //This function should have same logic with update_last_known_status_on_input_port() in c
             //federate.c, 1655
+            //This function works like when the federate receives TAG from RTI. Discussion is needed.
+            this.greatestTimeAdvanceGrant = tag;
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
