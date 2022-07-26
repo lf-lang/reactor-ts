@@ -619,15 +619,15 @@ class RTIClient extends EventEmitter {
     }
 
     //FIXME: port-absent
-    public sendRTIPortAbsent(additionalDealy: Tag, federatePortID: number, federateID: number) {
+    public sendRTIPortAbsent(additionalDelay: Tag, federatePortID: number, federateID: number) {
         let msg = Buffer.alloc(17);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
         msg.writeUInt16LE(federatePortID, 1);
         msg.writeUInt16LE(federateID, 3);
-        additionalDealy.toBinary().copy(msg, 5);
+        additionalDelay.toBinary().copy(msg, 5);
         try {
             Log.debug(this, () => {return `Sending RTI Port Absent message for `
-                + `tag (${additionalDealy}, 0) for port ${federatePortID} to `
+                + `tag (${additionalDelay}, 0) for port ${federatePortID} to `
                 + `federate ${federateID}.`});
             this.socket?.write(msg);
         } catch (e) {
