@@ -908,9 +908,9 @@ export class FederatedApp extends App {
                 failure? failure(): () => {};
                 this._shutdown();
             });
-        if (rtiPort === 0) {
+        if (this.rtiPort === 0) {
             // When given rtiPort is 0, set it to default, 15045.
-            rtiPort = 15045;
+            this.rtiPort = 15045;
         }
         this.rtiClient = new RTIClient(federationID, federateID);
     }
