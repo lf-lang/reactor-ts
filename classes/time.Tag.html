@@ -107,7 +107,7 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.Tag.html#getLaterTag" class="tsd-kind-icon">get<wbr>Later<wbr>Tag</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.Tag.html#getMicroStepLater" class="tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.Tag.html#getMicroStepsLater" class="tsd-kind-icon">get<wbr>Micro<wbr>Steps<wbr>Later</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.Tag.html#getTimeDifference" class="tsd-kind-icon">get<wbr>Time<wbr>Difference</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.Tag.html#isSimultaneousWith" class="tsd-kind-icon">is<wbr>Simultaneous<wbr>With</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.Tag.html#isSmallerThan" class="tsd-kind-icon">is<wbr>Smaller<wbr>Than</a></li>
@@ -131,7 +131,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L360">src/core/time.ts:360</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L360">src/core/time.ts:360</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -178,7 +178,7 @@
 					<div class="tsd-signature tsd-kind-icon">time<span class="tsd-signature-symbol">:</span> <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L353">src/core/time.ts:353</a></li>
+							<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L353">src/core/time.ts:353</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -200,7 +200,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L402">src/core/time.ts:402</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L402">src/core/time.ts:402</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -226,24 +226,29 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="getMicroStepLater" class="tsd-anchor"></a>
-					<h3>get<wbr>Micro<wbr>Step<wbr>Later</h3>
+					<a name="getMicroStepsLater" class="tsd-anchor"></a>
+					<h3>get<wbr>Micro<wbr>Steps<wbr>Later</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.Tag.html" class="tsd-signature-type" data-tsd-kind="Class">Tag</a></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Micro<wbr>Steps<wbr>Later<span class="tsd-signature-symbol">(</span>n<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="time.Tag.html" class="tsd-signature-type" data-tsd-kind="Class">Tag</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L414">src/core/time.ts:414</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L413">src/core/time.ts:413</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Get a new time instant that has the same <code>time</code> but a <code>microstep</code> that
-									is incremented by one relative to this time instant&#39;s <code>microstep</code>.</p>
+									<p>Get a new time instant that has the same <code>time</code> but n <code>microsteps</code> later.</p>
 								</div>
 							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>n: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="time.Tag.html" class="tsd-signature-type" data-tsd-kind="Class">Tag</a></h4>
 						</li>
 					</ul>
@@ -258,7 +263,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L424">src/core/time.ts:424</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L423">src/core/time.ts:423</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -291,7 +296,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L389">src/core/time.ts:389</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L389">src/core/time.ts:389</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -324,7 +329,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L377">src/core/time.ts:377</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L377">src/core/time.ts:377</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -358,7 +363,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L443">src/core/time.ts:443</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L442">src/core/time.ts:442</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -381,7 +386,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L435">src/core/time.ts:435</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L434">src/core/time.ts:434</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -403,7 +408,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/62a93bf/src/core/time.ts#L455">src/core/time.ts:455</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/e5c9020/src/core/time.ts#L454">src/core/time.ts:454</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -529,7 +534,7 @@
 								<a href="time.Tag.html#getLaterTag" class="tsd-kind-icon">get<wbr>Later<wbr>Tag</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="time.Tag.html#getMicroStepLater" class="tsd-kind-icon">get<wbr>Micro<wbr>Step<wbr>Later</a>
+								<a href="time.Tag.html#getMicroStepsLater" class="tsd-kind-icon">get<wbr>Micro<wbr>Steps<wbr>Later</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="time.Tag.html#getTimeDifference" class="tsd-kind-icon">get<wbr>Time<wbr>Difference</a>
