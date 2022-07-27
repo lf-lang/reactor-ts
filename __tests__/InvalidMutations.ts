@@ -48,16 +48,6 @@ class R1 extends Reactor {
                     expect(() => {
                         this.connect(__out2, __in1)
                     }).toThrowError("New connection introduces cycle.")
-                    
-                    expect(() => {
-                        this.connect(__in1, __out2)
-                    }).toThrowError("New connection introduces direct feed through.") // dist port already in use                
-                    
-                    let R2 = new R1(this.getReactor())     
-                    expect(() => {
-                        this.connect(R2.out1, R2.in1)
-                        this.connect(R2.in1, R2.out1)
-                    }).toThrowError("New connection introduces cycle.")
                 })
                 test('expect error on mutation creating race condition', () => {
                     expect(() => {
