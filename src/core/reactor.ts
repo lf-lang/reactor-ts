@@ -1312,7 +1312,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     //     if (timer.offset.isZero()) {
     //         // getLaterTime always returns a microstep of zero, so handle the
     //         // zero offset case explicitly.
-    //         startTime = this.util.getCurrentTag().getMicroStepLater();
+    //         startTime = this.util.getCurrentTag().getMicroStepsLater();
     //     } else {
     //         startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
     //     }// FIXME: startup and a timer with offset zero should be simultaneous and not retrigger events
@@ -1559,6 +1559,8 @@ interface UtilityFunctions {
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
+    getStartTag(): Tag;
+    getStartTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
@@ -1659,6 +1661,14 @@ export class App extends Reactor {
 
         public getCurrentPhysicalTime(): TimeValue {
             return getCurrentPhysicalTime();
+        }
+
+        public getStartTag(): Tag {
+            return new Tag(this.app._startOfExecution, 0);
+        }
+
+        public getStartTime(): TimeValue {
+            return this.app._startOfExecution;
         }
 
         public getElapsedLogicalTime(): TimeValue {
@@ -2070,10 +2080,12 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.time.isEqualTo(nextEvent.tag.time));
-            // Done handling events.
-        }
 
-        this._iterationComplete();
+            // Done handling events.
+            // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
+            // Make sure that a federate sends LTC only after actually handling an event.
+            this._iterationComplete();
+        }
 
         // Once we've reached here, either we're done processing events and the
         // next event is at a future time, or there are no more events in the
@@ -2158,8 +2170,8 @@ export class App extends Reactor {
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
     protected _shutdown(): void {
-        if (this.__runtime.isRunning() && !this._endOfExecution) {
-            this._endOfExecution = this._currentTag.getMicroStepLater() // FIXME: this could be a longer delay in distributed execution
+        if (this.__runtime.isRunning() && (this._endOfExecution === undefined || this._currentTag.time.isEarlierThan(this._endOfExecution.time))) {
+            this._endOfExecution = this._currentTag.getMicroStepsLater(1) // FIXME: this could be a longer delay in distributed execution
 
             Log.debug(this, () => "Stop requested.");
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
@@ -2168,6 +2180,21 @@ export class App extends Reactor {
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
         }
+    }
+
+    /**
+     * Setter for _endOfExecution to be used used by the subclass, FederatedApp.
+     */
+    protected _setEndOfExecution(stopTag: Tag): void {
+        this._endOfExecution = stopTag;
+        this.__runtime.schedule(new TaggedEvent(this.shutdown, this._endOfExecution, null));
+    }
+    
+    /**
+     * Getter for _endOfExecution to be used used by the subclass, FederatedApp.
+     */
+    protected _getEndOfExecution(): Tag | undefined {
+        return this._endOfExecution;
     }
 
     /**
