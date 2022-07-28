@@ -1077,6 +1077,43 @@ export class FederatedApp extends App {
         this.sendRTILogicalTimeComplete(currentTime);
     }
 
+    /**
+     * FIXME: port-absent
+     * Enqueue network input control reactions that determine if the trigger for a
+    *  given network input port is going to be present at the current logical time
+    *  or absent.
+     */
+    protected enqueueNetworkInputControlReactions(): void {
+        if (this.upstreamFedIDs.length === 0) {
+            return;
+            // This federate is not connected to any upstream federates via a
+            // logical connection. No need to trigger network input control
+            // reactions.
+        }
+        for (let i = 0; i < this.upstreamFedIDs.length; i++) {
+            // FIXME: iteration should refer 'number of network input control' but number of upstreamFedIDs
+            // More information: 1277th line of federate.c
+            // In this loop, we should check whether each port is unkown and the  If it is,  
+        }
+    }
+
+    /**
+     * FIXME: port-absent
+     * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
+     * message to downstream federates if a given network output port is not present.
+     */
+    protected enqueueNetworkOutputControlReactions(): void {
+    }
+    
+    /**
+     *  FIXME: port-absent
+     *  Enqueue network conrol reactions
+     */
+    protected enqueueNetworkControlReactions(): void {
+        this.enqueueNetworkOutputControlReactions();
+        this.enqueueNetworkInputControlReactions();
+    }
+
     protected _finish() {
         this.sendRTILogicalTimeComplete(this.util.getCurrentTag());
         this.sendRTIResign();

@@ -2003,6 +2003,12 @@ export class App extends Reactor {
         Log.global.debug("Finished handling all events at current time.");
     }
 
+    /** 
+     *  FIXME:port-absent 
+     *  Enqueue network control reactions
+     */
+    protected enqueueNetworkControlReactions(): void {}
+
     /**
      * Handle the next events on the event queue.
      * ----
@@ -2075,6 +2081,8 @@ export class App extends Reactor {
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
                 }
+                // FIXME: port-absent
+                // enqueue_network_control_reactions() need to be added
 
                 // React to all the events loaded onto the reaction queue.
                 this._react()
