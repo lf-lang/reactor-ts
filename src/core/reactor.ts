@@ -956,9 +956,15 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             // Rule out write conflicts.
             //   - (between reactors)
             if (this._dependencyGraph.getBackEdges(dst).size > 0) {
-                throw Error("Destination port is already occupied.")
+                return false;
             }
-            
+
+            //   - between reactors and reactions (NOTE: check also needs to happen
+            //     in addReaction)
+            var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
+            if (deps != undefined && deps.size > 0) {
+                return false;
+            }
             return this._isInScope(src, dst)
 
         } else {

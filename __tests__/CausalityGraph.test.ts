@@ -80,7 +80,7 @@ class testApp extends App {
         test('test if adding cyclic dependency is caught', () => {
             expect(() => {
                 this._connect(this.reactor2.in, this.reactor1.out)
-            }).toThrowError("ERROR connecting " + this.reactor2.in + " to " + this.reactor1.out)
+            }).toThrowError("New connection introduces cycle.")
         })
     }
 }

@@ -50,7 +50,7 @@ class R2 extends Reactor {
                 test('expect error to be thrown', () => { 
                     expect(() => {
                         this.connect(__out, __in)
-                    }).toThrowError("ERROR connecting " + __out + " to " + __in)
+                    }).toThrowError("New connection introduces direct feed through.")
                 })
             }
         )
