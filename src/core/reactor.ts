@@ -982,20 +982,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             let hasCycle = graph.hasCycle()
 
             // 2) check for direct feed through.
-            let hasDirectFeedThrough = false
-            let inputs = this._findOwnInputs()
-            let outputs = this._findOwnOutputs()
-
-            for (let output of outputs) {
-                let newReachable = graph.reachableOrigins(output, inputs)
-                let oldReachable = this._causalityGraph.reachableOrigins(output, inputs)    // FIXME: the causlityGraph always be empty object. so we have to fix it.
-
-                for (let origin of newReachable) {
-                    if (origin instanceof Port && !oldReachable.has(origin)) {
-                        hasDirectFeedThrough = true
-                    }
-                }
-            }
+            let hasDirectFeedThrough = dst.getContainer() == src.getContainer();
 
             this._dependencyGraph.removeEdge(dst, src)
 

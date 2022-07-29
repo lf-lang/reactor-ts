@@ -44,21 +44,21 @@ class R1 extends Reactor {
             new Triggers(this.in1),
             new Args(this.in1, this.out2),
             function(this, __in1, __out2) {
-                test('expect error to be thrown on mutation creating loop', () => { 
-                    expect(() => {
-                        this.connect(__out2, __in1)
-                    }).toThrowError("New connection introduces cycle.")
-                })
                 test('expect error on mutation creating race condition', () => {
                     expect(() => {
                         this.connect(__in1, __out2)
                     }).toThrowError("New connection introduces direct feed through.")
                 })
+                test('expect error to be thrown on mutation creating loop', () => { 
+                    expect(() => {
+                        this.connect(__out2, __in1)
+                    }).toThrowError("New connection introduces direct feed through and cycle.")
+                })
                 let R2 = new R1(this.getReactor())
                 test('expect error on spawning and creating loop within a reactor', () => {
                     expect(() => {
-                        this.connect(R2.in1, R2.out1)
-                        this.connect(R2.out1, R2.in1)
+                        this.connect(__in1, R2.in1)
+                        this.connect(R2.out1, __in1)
                     }).toThrowError("New connection introduces cycle.")
                 })
             }   
@@ -76,7 +76,6 @@ class testApp extends App {
         this.start = new Starter(this);
         this.reactor1 = new R1(this);
         this._connect(this.start.out, this.reactor1.in1)
-        this._connect(this.reactor1.out1, this.reactor1.in2)
     }
 }
 
