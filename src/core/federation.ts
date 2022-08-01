@@ -878,7 +878,8 @@ class RTIClient extends EventEmitter {
                         Log.debug(thiz, () => { return `Handling port absent for tag (${intendedTag.time}, `
                         +`${intendedTag.microstep}) for port ${portID}`;      
                         }) //FIXME: federate.c, 1631
-                        thiz.emit('portAbsent', intendedTag);
+                        let destPortAction = thiz.federatePortActionByID.get(portID);
+                        thiz.emit('portAbsent', destPortAction, intendedTag);
                     }
                     bufferIndex += 17;
                     break;
@@ -1093,7 +1094,8 @@ export class FederatedApp extends App {
         for (let i = 0; i < this.upstreamFedIDs.length; i++) {
             // FIXME: iteration should refer 'number of network input control' but number of upstreamFedIDs
             // More information: 1277th line of federate.c
-            // In this loop, we should check whether each port is unkown and the  If it is,  
+            // In this loop, we should check whether each port is unkown and the input_conrol_reaction is inactive
+            // If it is, the network input conrol reaction should be scheduled at current tag 
         }
     }
 
@@ -1111,6 +1113,12 @@ export class FederatedApp extends App {
      */
     protected enqueueNetworkControlReactions(): void {
         this.enqueueNetworkOutputControlReactions();
+        // If the granted tag is not provisional, there is no 
+        // need for network input conrol reactions
+        if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
+        || this._isLastTAGProvisional === false) {
+            return;
+        }
         this.enqueueNetworkInputControlReactions();
     }
 
@@ -1416,12 +1424,12 @@ export class FederatedApp extends App {
                 this._setEndOfExecution(tag);
         });
         //FIXME: port-absent
-        this.rtiClient.on(`portAbsent`, (tag: Tag) => {
-            Log.debug(this, () => {return `Port Absent received from RTI for ${tag}.`});
+        this.rtiClient.on(`portAbsent`, <T extends Present>(destPortAction: Action<T>,intendedTag: Tag) => {
+            Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
             //This function should have same logic with update_last_known_status_on_input_port() in c
             //federate.c, 1655
             //This function works like when the federate receives TAG from RTI. Discussion is needed.
-            this.greatestTimeAdvanceGrant = tag;
+            //updateLastKnownStatusOnInputPort()
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
