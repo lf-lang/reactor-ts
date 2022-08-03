@@ -59,7 +59,7 @@ describe('Intended tag tests', function () {
         intendedTagMicrostepDelay = 1
         let app = new ReactorWithFederatePortAction()
         app.setLastTagProvisional(false)
-        expect(() => app._start()).toThrowError("Intended tag must be greater than current tag. Intended tag")
+        expect(() => app._start()).toThrowError("Intended tag must be greater than current tag. Intended tag: ")
     })
     
     it('Intended tag greater than current tag', function() {
@@ -85,7 +85,7 @@ describe('Intended tag tests when TAG is provisional', function () {
         intendedTagMicrostepDelay = 0
         let app = new ReactorWithFederatePortAction()
         app.setLastTagProvisional(true)
-        expect(() => app._start()).toThrowError("Intended tag must be greater than or equal to current tag.when the last tag is provisional Intended tag")
+        expect(() => app._start()).toThrowError("Intended tag must be greater than or equal to current tag, when the last TAG is provisional. Intended tag: ")
     })
     
     it('Intended tag equal to current tag', function() {
