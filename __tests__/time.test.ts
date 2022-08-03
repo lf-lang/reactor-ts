@@ -273,7 +273,11 @@ describe('time helper functions', function () {
      * Compare two time values and find out which one is earlier.
      */
     it('compare time values', function() {
+        expect(TimeValue.secsAndNs(10, 10).isEarlierThan(TimeValue.secsAndNs(11, 1))).toEqual(true)
         expect(TimeValue.secsAndNs(0, 999999998).isEarlierThan(TimeValue.secsAndNs(0, 999999999))).toEqual(true)
+
+        expect(TimeValue.secsAndNs(0, 999999999).isLaterThan(TimeValue.secsAndNs(0, 999999998))).toEqual(true)
+        expect(TimeValue.secsAndNs(11, 1).isLaterThan(TimeValue.secsAndNs(10, 10))).toEqual(true)
     });
 
 
