@@ -82,11 +82,11 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
                 if (intendedTag === undefined) {
                     throw new Error("FederatedPortAction must have an intended tag from RTI.");
                 }
-                if (!this.action.runtime.util.isLastTAGProvisional() && intendedTag <= this.action.runtime.util.getCurrentTag()) {
+                if (!this.action.runtime.util.isLastTAGProvisional() && !intendedTag.isGreaterThan(this.action.runtime.util.getCurrentTag())) {
                     throw new Error("Intended tag must be greater than current tag. Intended tag" +
                         intendedTag + " Current tag: " + this.action.runtime.util.getCurrentTag());
                 }
-                if (this.action.runtime.util.isLastTAGProvisional() && intendedTag < this.action.runtime.util.getCurrentTag()) {
+                if (this.action.runtime.util.isLastTAGProvisional() && !intendedTag.isGreaterThanOrEqualTo(this.action.runtime.util.getCurrentTag())) {
                     throw new Error("Intended tag must be greater than or equal to current tag." +
                         "when the last tag is provisional Intended tag" + intendedTag +
                         " Current tag: " + this.action.runtime.util.getCurrentTag());
