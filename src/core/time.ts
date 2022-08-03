@@ -381,6 +381,16 @@ export class Tag {
     }
 
     /**
+     * Return `true` if the tag is greater than the tag given as a parameter.
+     * @param other The time instant to compare against this one.
+     */
+    isGreaterThan(other: Tag): boolean {
+        return other.time.isEarlierThan(this.time) 
+            || (other.time.isEqualTo(this.time) 
+                && other.microstep < this.microstep);
+    }
+
+    /**
      * Return `true` if this tag is simultaneous with the tag given as
      * a parameter, false otherwise. Both `time` and `microstep` must be equal
      * for two tags to be simultaneous.
