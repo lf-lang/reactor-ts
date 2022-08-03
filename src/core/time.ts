@@ -197,6 +197,20 @@ export class TimeValue {
         }
         return false;
     }
+    /**
+     * Return true if this time value is later than the time given as a parameter.
+     * 
+     * @param other The time value to compare to this one.
+     */
+    isLaterThan(other: TimeValue) {
+        if (this.seconds > other.seconds) {
+            return true;
+        }
+        if (this.seconds == other.seconds && this.nanoseconds > other.nanoseconds) {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Return a millisecond representation of this time value.
@@ -385,9 +399,9 @@ export class Tag {
      * @param other The time instant to compare against this one.
      */
     isGreaterThan(other: Tag): boolean {
-        return other.time.isEarlierThan(this.time) 
-            || (other.time.isEqualTo(this.time) 
-                && other.microstep < this.microstep);
+        return this.time.isLaterThan(other.time) 
+            || (this.time.isEqualTo(other.time) 
+                && this.microstep > other.microstep);
     }
 
     /**
