@@ -198,6 +198,24 @@ describe('time helper functions', function () {
         expect(tiFiveSeconds0.isSmallerThan(tiZero1)).toBeFalsy();
         expect(tiFiveSeconds1.isSmallerThan(tiZero1)).toBeFalsy();
 
+        expect(tiZero.isGreaterThan(tiZero)).toBeFalsy();
+        expect(tiZero.isGreaterThan(tiZero1)).toBeFalsy();
+        expect(tiZero1.isGreaterThan(tiZero)).toBeTruthy();
+
+        expect(tiFiveSeconds0.isGreaterThan(tiFiveSeconds0)).toBeFalsy();
+        expect(tiFiveSeconds0.isGreaterThan(tiFiveSeconds1)).toBeFalsy();
+        expect(tiFiveSeconds1.isGreaterThan(tiFiveSeconds0)).toBeTruthy();
+
+        expect(tiZero.isGreaterThan(tiFiveSeconds0)).toBeFalsy();
+        expect(tiZero.isGreaterThan(tiFiveSeconds1)).toBeFalsy();
+        expect(tiZero1.isGreaterThan(tiFiveSeconds0)).toBeFalsy();
+        expect(tiZero1.isGreaterThan(tiFiveSeconds1)).toBeFalsy();
+        
+        expect(tiFiveSeconds0.isGreaterThan(tiZero)).toBeTruthy();
+        expect(tiFiveSeconds1.isGreaterThan(tiZero)).toBeTruthy();
+        expect(tiFiveSeconds0.isGreaterThan(tiZero1)).toBeTruthy();
+        expect(tiFiveSeconds1.isGreaterThan(tiZero1)).toBeTruthy();
+
     });
 
     /**
