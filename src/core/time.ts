@@ -395,6 +395,14 @@ export class Tag {
     }
 
     /**
+     * Return `true` if the tag is smaller than or equal to the tag given as a parameter.
+     * @param other The time instant to compare against this one.
+     */
+    isSmallerThanOrEqualTo(other: Tag): boolean {
+        return !this.isGreaterThan(other)
+    }
+
+    /**
      * Return `true` if the tag is greater than the tag given as a parameter.
      * @param other The time instant to compare against this one.
      */
@@ -402,6 +410,14 @@ export class Tag {
         return this.time.isLaterThan(other.time) 
             || (this.time.isEqualTo(other.time) 
                 && this.microstep > other.microstep);
+    }
+
+    /**
+     * Return `true` if the tag is greater than or equal to the tag given as a parameter.
+     * @param other The time instant to compare against this one.
+     */
+    isGreaterThanOrEqualTo(other: Tag): boolean {
+        return !this.isSmallerThan(other)
     }
 
     /**
