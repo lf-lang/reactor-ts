@@ -1092,10 +1092,9 @@ export class FederatedApp extends App {
             // reactions.
         }
         for (let i = 0; i < this.upstreamFedIDs.length; i++) {
-            // FIXME: iteration should refer 'number of network input control' but number of upstreamFedIDs
-            // More information: 1277th line of federate.c
-            // In this loop, we should check whether each port is unkown and the input_conrol_reaction is inactive
-            // If it is, the network input conrol reaction should be scheduled at current tag 
+            // for (int i = 0; i < trigger for network input conrol; i++) {
+            //    schedule all network input control reaction that doesn't update the status of any port 
+            //}
         }
     }
 
@@ -1105,6 +1104,10 @@ export class FederatedApp extends App {
      * message to downstream federates if a given network output port is not present.
      */
     protected enqueueNetworkOutputControlReactions(): void {
+        // for (int i = 0; i < trigger for network output conrol; i++) {
+        //  schedule all the output conrol reaction
+        //  Is a variable is_a_control_reaction needed? see 1582th line of reactor_common.c 
+        // }
     }
     
     /**
@@ -1430,10 +1433,9 @@ export class FederatedApp extends App {
         //FIXME: port-absent
         this.rtiClient.on(`portAbsent`, <T extends Present>(destPortAction: Action<T>,intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
-            //This function should have same logic with update_last_known_status_on_input_port() in c
-            //federate.c, 1655
-            //This function works like when the federate receives TAG from RTI. Discussion is needed.
-            //updateLastKnownStatusOnInputPort()
+            // This function should have same logic with update_last_known_status_on_input_port() in c
+            // federate.c, 1655
+            // Should add lastKnownStatusTag for each port.
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
