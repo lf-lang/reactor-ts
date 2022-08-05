@@ -123,6 +123,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#getNanoTime" class="tsd-kind-icon">get<wbr>Nano<wbr>Time</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#isEarlierThan" class="tsd-kind-icon">is<wbr>Earlier<wbr>Than</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#isEqualTo" class="tsd-kind-icon">is<wbr>Equal<wbr>To</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#isLaterThan" class="tsd-kind-icon">is<wbr>Later<wbr>Than</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#isZero" class="tsd-kind-icon">is<wbr>Zero</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#multiply" class="tsd-kind-icon">multiply</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="time.TimeValue.html#subtract" class="tsd-kind-icon">subtract</a></li>
@@ -159,7 +160,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L47">src/core/time.ts:47</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L47">src/core/time.ts:47</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -221,7 +222,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L103">src/core/time.ts:103</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L103">src/core/time.ts:103</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -254,7 +255,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L150">src/core/time.ts:150</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L150">src/core/time.ts:150</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -277,7 +278,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L231">src/core/time.ts:231</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L245">src/core/time.ts:245</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -307,7 +308,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L191">src/core/time.ts:191</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L191">src/core/time.ts:191</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -347,13 +348,44 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L164">src/core/time.ts:164</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L164">src/core/time.ts:164</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Return true if this time value denotes a time interval of equal length as
 									the interval encoded by the time value given as a parameter.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>other: <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The time value to compare to this one.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="isLaterThan" class="tsd-anchor"></a>
+					<h3>is<wbr>Later<wbr>Than</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Later<wbr>Than<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L205">src/core/time.ts:205</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return true if this time value is later than the time given as a parameter.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -379,7 +411,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L172">src/core/time.ts:172</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L172">src/core/time.ts:172</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -401,7 +433,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L137">src/core/time.ts:137</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L137">src/core/time.ts:137</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -424,7 +456,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L121">src/core/time.ts:121</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L121">src/core/time.ts:121</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -457,7 +489,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L279">src/core/time.ts:279</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L293">src/core/time.ts:293</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -480,7 +512,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L204">src/core/time.ts:204</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L218">src/core/time.ts:218</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -502,7 +534,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L212">src/core/time.ts:212</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L226">src/core/time.ts:226</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -525,7 +557,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L220">src/core/time.ts:220</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L234">src/core/time.ts:234</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -548,7 +580,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L299">src/core/time.ts:299</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L313">src/core/time.ts:313</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -579,7 +611,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L73">src/core/time.ts:73</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L73">src/core/time.ts:73</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -602,7 +634,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L69">src/core/time.ts:69</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L69">src/core/time.ts:69</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -625,7 +657,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L89">src/core/time.ts:89</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L89">src/core/time.ts:89</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -648,7 +680,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L85">src/core/time.ts:85</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L85">src/core/time.ts:85</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -671,7 +703,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L65">src/core/time.ts:65</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L65">src/core/time.ts:65</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -694,7 +726,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L61">src/core/time.ts:61</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L61">src/core/time.ts:61</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -717,7 +749,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L57">src/core/time.ts:57</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L57">src/core/time.ts:57</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -743,7 +775,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L81">src/core/time.ts:81</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L81">src/core/time.ts:81</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -766,7 +798,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L77">src/core/time.ts:77</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L77">src/core/time.ts:77</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -789,7 +821,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L321">src/core/time.ts:321</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L335">src/core/time.ts:335</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -830,7 +862,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/3c2e887/src/core/time.ts#L53">src/core/time.ts:53</a></li>
+									<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/a71514b/src/core/time.ts#L53">src/core/time.ts:53</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="time.TimeValue.html" class="tsd-signature-type" data-tsd-kind="Class">TimeValue</a></h4>
@@ -955,6 +987,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="time.TimeValue.html#isEqualTo" class="tsd-kind-icon">is<wbr>Equal<wbr>To</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="time.TimeValue.html#isLaterThan" class="tsd-kind-icon">is<wbr>Later<wbr>Than</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="time.TimeValue.html#isZero" class="tsd-kind-icon">is<wbr>Zero</a>
