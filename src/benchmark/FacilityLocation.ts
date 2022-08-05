@@ -108,11 +108,16 @@ class RequestExitMsg extends Msg {}
 class ConfirmExitMsg extends Msg {
     facilities: number
     supportCustomers: number
+    // This 'quadrantReactors' is additional information for reactor-ts.
+    // And it is not in the Akka-version implementation.
+    quadrantReactors: number
     constructor(facilities: number,
-        supportCustomers: number) {
+        supportCustomers: number,
+        quadrantReactors: number) {
             super()
             this.facilities = facilities
             this.supportCustomers = supportCustomers
+            this.quadrantReactors = quadrantReactors
         }
 }
 
@@ -148,7 +153,7 @@ export class Producer extends Reactor {
                     nextCustomer.schedule(0, new NextCustomerMsg())
                 } else {
                     // TODO(hokeun): Replace this with sending RequestExitMsg.
-                    this.util.requestStop()
+                    toConsumer.set(new RequestExitMsg())
                 }
             }
         )
@@ -177,6 +182,102 @@ function addCustomer(point: Point,
     // console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
 }
 
+export class Summary extends Reactor {
+    fromRootQuadrant: InPort<ConfirmExitMsg> = new InPort(this)
+    constructor(parent: Reactor) {
+        super(parent)
+
+        this.addReaction(
+            new Triggers(this.fromRootQuadrant),
+            new Args(this.fromRootQuadrant),
+            function(this,
+                    fromRootQuadrant) {
+                let msgFromRootQuadrant = fromRootQuadrant.get()
+                if (msgFromRootQuadrant) {
+                    console.log(`Num Facilities: ${msgFromRootQuadrant.facilities}, ` +
+                        `Num customers: ${msgFromRootQuadrant.supportCustomers}, ` +
+                        `Num quadrant reactors: ${msgFromRootQuadrant.quadrantReactors}`)
+                } else {
+                    console.log("Summary Error: ConfirmExitMsg from root quadrant is undefined.")
+                    this.util.requestStop()
+                }
+                this.util.requestStop()
+            }
+        )
+    }
+}
+
+export class Accumulator extends Reactor {
+    // TODO(hokeun): After implementing multiports, change these into a multiport, fromQuadrants.
+    fromFirstQuadrant: InPort<ConfirmExitMsg> = new InPort(this)
+    fromSecondQuadrant: InPort<ConfirmExitMsg> = new InPort(this)
+    fromThirdQuadrant: InPort<ConfirmExitMsg> = new InPort(this)
+    fromFourthQuadrant: InPort<ConfirmExitMsg> = new InPort(this)
+    toNextAccumulator: OutPort<ConfirmExitMsg> = new OutPort(this)
+
+    constructor(parent: Reactor) {
+        super(parent)
+
+        this.addReaction(
+            new Triggers(
+                this.fromFirstQuadrant,
+                this.fromSecondQuadrant,
+                this.fromThirdQuadrant,
+                this.fromFourthQuadrant),
+            new Args(
+                this.fromFirstQuadrant,
+                this.fromSecondQuadrant,
+                this.fromThirdQuadrant,
+                this.fromFourthQuadrant,
+                this.writable(this.toNextAccumulator)),
+            function(this,
+                    fromFirstQuadrant,
+                    fromSecondQuadrant,
+                    fromThirdQuadrant,
+                    fromFourthQuadrant,
+                    toNextAccumulator) {
+                // Reaction.
+                if (!fromFirstQuadrant.isPresent() ||
+                        !fromSecondQuadrant.isPresent() ||
+                        !fromThirdQuadrant.isPresent() ||
+                        !fromFourthQuadrant.isPresent()) {
+                    console.log("Accumulator Error: some inputs are missing.")
+                    this.util.requestStop()
+                }
+                let msgFromFirstQuadrant = fromFirstQuadrant.get()
+                let msgFromSecondQuadrant = fromSecondQuadrant.get()
+                let msgFromThirdQuadrant = fromThirdQuadrant.get()
+                let msgFromFourthQuadrant = fromFourthQuadrant.get()
+
+                if (msgFromFirstQuadrant && msgFromSecondQuadrant && msgFromThirdQuadrant && msgFromFourthQuadrant) {
+                    let numFacilities = msgFromFirstQuadrant.facilities +
+                        msgFromSecondQuadrant.facilities +
+                        msgFromThirdQuadrant.facilities +
+                        msgFromFourthQuadrant.facilities
+                    let numCustomers = msgFromFirstQuadrant.supportCustomers +
+                        msgFromSecondQuadrant.supportCustomers +
+                        msgFromThirdQuadrant.supportCustomers +
+                        msgFromFourthQuadrant.supportCustomers
+                    let numQuadrantReactors = msgFromFirstQuadrant.quadrantReactors +
+                        msgFromSecondQuadrant.quadrantReactors +
+                        msgFromThirdQuadrant.quadrantReactors +
+                        msgFromFourthQuadrant.quadrantReactors
+                    toNextAccumulator.set(
+                        new ConfirmExitMsg(
+                                numFacilities + 1, // Add one for the facility itself.
+                                                   // (A quadrant with four children is considered as one facility in Akka-version implementation.)
+                                numCustomers,
+                                numQuadrantReactors + 1 // Add one for the quadrant reactor itself.
+                            ))
+                } else {
+                    console.log("Accumulator Error: some input ConfirmExitMsg's are undefined.")
+                    this.util.requestStop()
+                }
+            }
+
+        )
+    }
+}
 export class Quadrant extends Reactor {
     // Parameters.
     hasQuadrantProducer: Parameter<boolean> // Only the rootQuadrant doesn't have quadrant producer.
@@ -199,6 +300,8 @@ export class Quadrant extends Reactor {
     toSecondChild: OutPort<Msg> = new OutPort(this)
     toThirdChild: OutPort<Msg> = new OutPort(this)
     toFourthChild: OutPort<Msg> = new OutPort(this)
+    // Only the ConfirmExitMsg goes through toAccumulator port.
+    toAccumulator: OutPort<ConfirmExitMsg> = new OutPort(this)
 
     // States.
     facility: State<Point> = new State(new Point(0, 0))
@@ -209,8 +312,8 @@ export class Quadrant extends Reactor {
     // hasChildren, firstChild, secondChild, thirdChild, fourthChild are used for
     // children in Akka actor implementation.
     hasChildren: State<boolean> = new State(false)
-    totalCost: State<number> = new State(0)
     childrenBoundaries: State<Array<Box>> = new State(new Array<Box>())
+    totalCost: State<number> = new State(0)
 
     constructor (parent: Reactor,
             hasQuadrantProducer: boolean,
@@ -299,13 +402,14 @@ export class Quadrant extends Reactor {
                 this.writable(this.toSecondChild),
                 this.writable(this.toThirdChild),
                 this.writable(this.toFourthChild),
+                this.writable(this.toAccumulator),
                 this.localFacilities,
                 this.knownFacilities,
                 this.maxDepthOfKnownOpenFacility,
                 this.supportCustomers,
-                this.totalCost,
                 this.hasChildren,
-                this.childrenBoundaries),
+                this.childrenBoundaries,
+                this.totalCost),
             function (this,
                     hasQuadrantProducer,
                     positionRelativeToParent,
@@ -319,13 +423,14 @@ export class Quadrant extends Reactor {
                     toSecondChild,
                     toThirdChild,
                     toFourthChild,
+                    toAccumulator,
                     localFacilities,
                     knownFacilities,
                     maxDepthOfKnownOpenFacility,
                     supportCustomers,
-                    totalCost,
                     hasChildren,
-                    childrenBoundaries) {
+                    childrenBoundaries,
+                    totalCost) {
                 let thisReactor = this.getReactor()
                 let thisMutationSandbox = this
 
@@ -348,30 +453,38 @@ export class Quadrant extends Reactor {
                     childrenBoundaries.get().push(new Box(facility.get().x, boundary.get().y1, boundary.get().x2, facility.get().y))
 
                     // console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
+                    let accumulator = new Accumulator(thisReactor)
+                    var toAccumulatorOfQuadrant = (toAccumulator as unknown as WritablePort<Msg>).getPort()
+                    // Connect Accumulator's output to Quadrant's output.
+                    thisMutationSandbox.connect(accumulator.toNextAccumulator, toAccumulatorOfQuadrant)
                     
                     let firstChild = new Quadrant(
                         thisReactor, true, Position.BOT_LEFT, childrenBoundaries.get()[0], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
                     var toFirstChildPort = (toFirstChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toFirstChildPort, firstChild.fromProducer)
+                    thisMutationSandbox.connect(firstChild.toAccumulator, accumulator.fromFirstQuadrant)
 
                     let secondChild = new Quadrant(
                         thisReactor, true, Position.TOP_RIGHT, childrenBoundaries.get()[1], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
                     var toSecondChildPort = (toSecondChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toSecondChildPort, secondChild.fromProducer)
+                    thisMutationSandbox.connect(secondChild.toAccumulator, accumulator.fromSecondQuadrant)
 
                     let thirdChild = new Quadrant(
                         thisReactor, true, Position.BOT_LEFT, childrenBoundaries.get()[2], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
                     var toThirdChildPort = (toThirdChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toThirdChildPort, thirdChild.fromProducer)
+                    thisMutationSandbox.connect(thirdChild.toAccumulator, accumulator.fromThirdQuadrant)
 
                     let fourthChild = new Quadrant(
                         thisReactor, true, Position.BOT_RIGHT, childrenBoundaries.get()[3], threshold.get(), depth.get() + 1,
                         Point.arrayClone(localFacilities.get()), knownFacilities.get(), maxDepthOfKnownOpenFacility.get(), Point.arrayClone(supportCustomers.get()))
                     var toFourthChildPort = (toFourthChild as unknown as WritablePort<Msg>).getPort()
                     thisMutationSandbox.connect(toFourthChildPort, fourthChild.fromProducer)
+                    thisMutationSandbox.connect(fourthChild.toAccumulator, accumulator.fromFourthQuadrant)
 
                     supportCustomers.set(new Array<Point>());
                     // Indicate that children quadrant actors have been created.
@@ -417,8 +530,23 @@ export class Quadrant extends Reactor {
                             }
                         }
                         break
+                    case RequestExitMsg:
+                        if (!hasChildren.get()) {
+                            // No children, number of facilities will be counted on parent's side.
+                            toAccumulator.set(new ConfirmExitMsg(
+                                    0, // facilities
+                                    supportCustomers.get().length, // supportCustomers
+                                    1 // quadrantReactors
+                                ))
+                        } else {
+                            toFirstChild.set(msg)
+                            toSecondChild.set(msg)
+                            toThirdChild.set(msg)
+                            toFourthChild.set(msg)
+                        }
+                        break
                     default:
-                        console.log("Error: Recieved unknown message.")
+                        console.log(`Error: Recieved unknown message: ${msg?.constructor}`)
                         this.util.requestErrorStop()
                         break
                 }
@@ -430,6 +558,7 @@ export class Quadrant extends Reactor {
 export class FacilityLocation extends App {
     producer: Producer
     rootQuadrant: Quadrant
+    summary: Summary
     constructor (name: string, timeout: TimeValue | undefined = undefined, keepAlive: boolean = false, fast: boolean = false, success?: () => void, fail?: () => void) {
         super(timeout, keepAlive, fast, success, fail);
         // TODO(hokeun): Change default for numPoints to 100000.
@@ -440,7 +569,6 @@ export class FacilityLocation extends App {
 
         this.producer = new Producer(this, NUM_POINTS, GRID_SIZE, TimeValue.nsec(1))
 
-        // TODO(hokeun): Use an empty array, i.e., new Array<Point>(), for initLocalFacilities and initCustomers.
         this.rootQuadrant = new Quadrant(this,
                 false, // hasQuadrantProducer
                 Position.ROOT, // positionRelativeToParent
@@ -450,9 +578,13 @@ export class FacilityLocation extends App {
                 new Array<Point>(), // initLocalFacilities
                 1, // initKnownFacilities
                 -1, //initMaxDepthOfKnownOpenFacility
-                [new Point(12, 34), new Point(56, 78)] // initCustomers
+                new Array<Point>() // initCustomers
             )
+
+        this.summary = new Summary(this)
+
         this._connect(this.producer.toConsumer, this.rootQuadrant.fromProducer)
+        this._connect(this.rootQuadrant.toAccumulator, this.summary.fromRootQuadrant)
     }
 }
 

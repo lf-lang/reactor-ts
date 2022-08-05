@@ -75,25 +75,29 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
                 if (tag.time.isEarlierThan(physicalTime)) {
                     tag = new Tag(getCurrentPhysicalTime(), 0);
                 } else {
-                    tag = tag.getMicroStepLater();
+                    tag = tag.getMicroStepsLater(1);
                 }
             }
-
             if (this.action instanceof FederatePortAction) {
                 if (intendedTag === undefined) {
                     throw new Error("FederatedPortAction must have an intended tag from RTI.");
                 }
-                if (intendedTag <= this.action.runtime.util.getCurrentTag()) {
-                    throw new Error("Intended tag must be greater than current tag. Intended tag" +
-                    intendedTag + " Current tag: " + this.action.runtime.util.getCurrentTag());
+                if (!this.action.runtime.util.isLastTAGProvisional() && !intendedTag.isGreaterThan(this.action.runtime.util.getCurrentTag())) {
+                    throw new Error("Intended tag must be greater than current tag. Intended tag: " +
+                        intendedTag + " Current tag: " + this.action.runtime.util.getCurrentTag());
+                }
+                if (this.action.runtime.util.isLastTAGProvisional() && !intendedTag.isGreaterThanOrEqualTo(this.action.runtime.util.getCurrentTag())) {
+                    throw new Error("Intended tag must be greater than or equal to current tag" +
+                        ", when the last TAG is provisional. Intended tag: " + intendedTag +
+                        " Current tag: " + this.action.runtime.util.getCurrentTag());
                 }
                 Log.debug(this, () => "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
                 intendedTag);
                 tag = intendedTag;
-            } else if (this.action.origin == Origin.logical && !(this.action instanceof Startup)) {
-                tag = tag.getMicroStepLater();
-            }
-            
+            } else {
+                tag = tag.getMicroStepsLater(1);
+            } 
+              
             Log.debug(this, () => "Scheduling " + this.action.origin +
                 " action " + this.action._getFullyQualifiedName() + " with tag: " + tag);
     
@@ -135,8 +139,14 @@ export class Shutdown extends Action<Present> {
     }
 }
 
-export class FederatePortAction extends Action<Buffer> {
+export class Dummy extends Action<Present> {
     constructor(__parent__: Reactor) {
         super(__parent__, Origin.logical)
+    }
+}
+
+export class FederatePortAction<T extends Present> extends Action<T> {
+    constructor(__parent__: Reactor, origin: Origin) {
+        super(__parent__, origin)
     }
 }

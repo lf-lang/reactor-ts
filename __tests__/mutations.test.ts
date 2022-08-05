@@ -148,7 +148,7 @@ describe("Creating reactors at runtime", function () {
     it("Reactor with periodic timer", done => {
         //Log.global.level = LogLevel.DEBUG
 
-        let app = new Zeno(TimeValue.secs(5),  done, () => {})
+        let app = new Zeno(TimeValue.secs(4),  done, () => {})
 
         app._start();
     });

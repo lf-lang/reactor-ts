@@ -1,4 +1,4 @@
-import {Reactor, App, InPort, OutPort} from "../src/core/internal";
+import {Reactor, App, InPort, OutPort, Triggers, Args} from "../src/core/internal";
 
 class R1 extends Reactor {
     inp = new InPort<number>(this);
@@ -25,6 +25,17 @@ class R1 extends Reactor {
 
         }
     } (this)
+
+    constructor(parent: Reactor) {
+        super(parent)
+        let writer = this.writable(this.inp)
+        test('check inactive during construction', () => {
+            expect(this._active).toBe(false)
+        })
+        test ('to string', () => {
+            expect(writer.toString()).toBe('myApp.x.inp')
+        })
+    }
 }
 
 class myApp extends App {

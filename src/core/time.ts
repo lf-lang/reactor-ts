@@ -134,6 +134,19 @@ export class TimeValue {
         return TimeValue.secsAndNs(s, ns);
     }
 
+    multiply(factor: number): TimeValue {
+        let seconds = this.seconds * factor;
+        let nanoseconds = this.nanoseconds * factor;
+
+        if (nanoseconds >= TimeUnit.sec) {
+            // Carry seconds.
+            let carry = Math.floor(nanoseconds / TimeUnit.sec)
+            seconds += carry;
+            nanoseconds -= carry * TimeUnit.sec;
+        }
+        return TimeValue.secsAndNs(seconds, nanoseconds);
+    }
+
     difference(other: TimeValue): TimeValue {
         if (this.isEarlierThan(other)) {
             return other.subtract(this);
@@ -180,6 +193,20 @@ export class TimeValue {
             return true;
         }
         if (this.seconds == other.seconds && this.nanoseconds < other.nanoseconds) {
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Return true if this time value is later than the time given as a parameter.
+     * 
+     * @param other The time value to compare to this one.
+     */
+    isLaterThan(other: TimeValue) {
+        if (this.seconds > other.seconds) {
+            return true;
+        }
+        if (this.seconds == other.seconds && this.nanoseconds > other.nanoseconds) {
             return true;
         }
         return false;
@@ -368,6 +395,32 @@ export class Tag {
     }
 
     /**
+     * Return `true` if the tag is smaller than or equal to the tag given as a parameter.
+     * @param other The time instant to compare against this one.
+     */
+    isSmallerThanOrEqualTo(other: Tag): boolean {
+        return !this.isGreaterThan(other)
+    }
+
+    /**
+     * Return `true` if the tag is greater than the tag given as a parameter.
+     * @param other The time instant to compare against this one.
+     */
+    isGreaterThan(other: Tag): boolean {
+        return this.time.isLaterThan(other.time) 
+            || (this.time.isEqualTo(other.time) 
+                && this.microstep > other.microstep);
+    }
+
+    /**
+     * Return `true` if the tag is greater than or equal to the tag given as a parameter.
+     * @param other The time instant to compare against this one.
+     */
+    isGreaterThanOrEqualTo(other: Tag): boolean {
+        return !this.isSmallerThan(other)
+    }
+
+    /**
      * Return `true` if this tag is simultaneous with the tag given as
      * a parameter, false otherwise. Both `time` and `microstep` must be equal
      * for two tags to be simultaneous.
@@ -395,11 +448,10 @@ export class Tag {
     }
 
     /**
-     * Get a new time instant that has the same `time` but a `microstep` that
-     * is incremented by one relative to this time instant's `microstep`.
+     * Get a new time instant that has the same `time` but n `microsteps` later.
      */
-    getMicroStepLater() {
-        return new Tag(this.time, this.microstep+1);
+    getMicroStepsLater(n: number) {
+        return new Tag(this.time, this.microstep + n);
     }
 
     /**

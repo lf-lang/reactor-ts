@@ -12,7 +12,7 @@ import {
     Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present, 
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
     Component, ScheduledTrigger, Trigger, TriggerManager,
-    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown, WritableMultiPort
+    Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown, WritableMultiPort, Dummy
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
 import { Bank } from "./bank";
@@ -184,6 +184,11 @@ export abstract class Reactor extends Component {
      * This reactor's startup action.
      */
     readonly startup: Startup;
+
+    /**
+     * This reactor's dummy action.
+     */
+    readonly __dummy: Dummy;
 
     /**
      * The list of reactions this reactor has.
@@ -441,6 +446,7 @@ export abstract class Reactor extends Component {
         this._linkToRuntimeObject()
         this.shutdown = new Shutdown(this);
         this.startup = new Startup(this);
+        this.__dummy = new Dummy(this);
 
         // Utils get passed down the hierarchy. If this is an App,
         // the container refers to this object, making the following
@@ -1304,7 +1310,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     //     if (timer.offset.isZero()) {
     //         // getLaterTime always returns a microstep of zero, so handle the
     //         // zero offset case explicitly.
-    //         startTime = this.util.getCurrentTag().getMicroStepLater();
+    //         startTime = this.util.getCurrentTag().getMicroStepsLater();
     //     } else {
     //         startTime = this.util.getCurrentTag().getLaterTag(timer.offset);
     //     }// FIXME: startup and a timer with offset zero should be simultaneous and not retrigger events
@@ -1547,13 +1553,16 @@ interface UtilityFunctions {
     requestStop(): void;
     reportError(message?: string): void;
     requestErrorStop(message?: string): void;
+    isLastTAGProvisional(): boolean;
     getCurrentTag(): Tag;
     getCurrentLogicalTime(): TimeValue;
     getCurrentPhysicalTime(): TimeValue;
+    getStartTag(): Tag;
+    getStartTime(): TimeValue;
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
-    sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number): void;
-    sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number): void;
+    sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
+    sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -1607,6 +1616,13 @@ export class App extends Reactor {
     private _reactorsToRemove = new Array<Reactor>();
 
     /**
+     * Stores whether the last received TAG (Tag Advance Grant) was provisional.
+     * Every federate starts out assuming that it has been granted a PTAG
+     * at the start time, or if it has no upstream federates, a TAG.
+     */
+    protected _isLastTAGProvisional: boolean = false;
+
+    /**
      * Inner class that provides access to utilities that are safe to expose to
      * reaction code.
      */
@@ -1629,6 +1645,10 @@ export class App extends Reactor {
             this.app._errorMessage = message
         }
 
+        public isLastTAGProvisional(): boolean {
+            return this.app._isLastTAGProvisional;
+        }
+
         public getCurrentTag(): Tag {
             return this.app._currentTag;
         }
@@ -1641,6 +1661,14 @@ export class App extends Reactor {
             return getCurrentPhysicalTime();
         }
 
+        public getStartTag(): Tag {
+            return new Tag(this.app._startOfExecution, 0);
+        }
+
+        public getStartTime(): TimeValue {
+            return this.app._startOfExecution;
+        }
+
         public getElapsedLogicalTime(): TimeValue {
             return this.app._currentTag.time.difference(this.app._startOfExecution);
         }
@@ -1649,11 +1677,11 @@ export class App extends Reactor {
             return getCurrentPhysicalTime().subtract(this.app._startOfExecution);
         }
         
-        public sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
+        public sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
             return this.app.sendRTIMessage(data, destFederateID, destPortID);
         };
 
-        public sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
+        public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         };
 
@@ -1766,22 +1794,22 @@ export class App extends Reactor {
     /**
      * Send an (untimed) message to the designated federate port through the RTI.
      * This function throws an error if it isn't called on a FederatedApp.
-     * @param data A Buffer containing the body of the message.
+     * @param data The data that contain the body of the message.
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
-    protected sendRTIMessage(data: Buffer, destFederateID: number, destPortID: number) {
+    protected sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
     }
 
     /**
      * Send a (timed) message to the designated federate port through the RTI.
      * This function throws an error if it isn't called on a FederatedApp.
-     * @param data A Buffer containing the body of the message.
+     * @param data The data that contain the body of the message.
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
-    protected sendRTITimedMessage(data: Buffer, destFederateID: number, destPortID: number) {
+    protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
     }
 
@@ -1837,6 +1865,21 @@ export class App extends Reactor {
      */
     private _startOfExecution!: TimeValue;
 
+
+    /**
+     * Indicates if _finish() was already called.
+     * This prevents _finish() from being called recursively.
+     */
+    private _done: boolean = false;
+
+    /**
+     * Interval for snoozing and waking up.
+     */
+    private _advanceMessageInterval: TimeValue = TimeValue.secs(1);
+    public setAdvanceMessageInterval(advanceMessageInterval: TimeValue) {
+        this._advanceMessageInterval = advanceMessageInterval
+    }
+
     /**
      * Unset all the timers of this reactor.
      */
@@ -1858,7 +1901,7 @@ export class App extends Reactor {
      */
     constructor(executionTimeout: TimeValue | undefined = undefined, 
                 keepAlive: boolean = false, 
-                fast: boolean = false, 
+                fast: boolean = false,
                 public success: () => void = () => {}, 
                 public failure: () => void = () => {}) {
         super(null);
@@ -1877,7 +1920,8 @@ export class App extends Reactor {
         this._receiveRuntimeObject(this.__runtime)
         this.startup._receiveRuntimeObject(this.__runtime)
         this.shutdown._receiveRuntimeObject(this.__runtime)
-        this.snooze = new Action(this, Origin.logical, TimeValue.secs(1))
+        this.__dummy._receiveRuntimeObject(this.__runtime)
+        this.snooze = new Action(this, Origin.logical)
 
         // Initialize the scope in which reactions and mutations of this
         // reactor will execute. This is already done in the super constructor,
@@ -1912,6 +1956,19 @@ export class App extends Reactor {
      */
     protected _advanceTime(nextTag: Tag) {
         this._currentTag = nextTag;
+    }
+
+    protected _iterationComplete(): void {}
+
+    /**
+     * Add a dummy event to the event queue.
+     * Currently, the sole usage of this is to ensure LET to be sent to the RTI
+     * when there is any physical action triggering output port(s) in federated execution.
+     * 
+     * @param tag The tag at which this dummy event occurs.
+     */
+    protected _addDummyEvent(tag: Tag): void {
+        this._eventQ.push(new TaggedEvent(this.__dummy, tag, 0));
     }
 
     /**
@@ -2003,9 +2060,6 @@ export class App extends Reactor {
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
                 }
-
-                // React to all the events loaded onto the reaction queue.
-                this._react()
                 
                 // End of this execution step. Perform cleanup.
                 while (this._reactorsToRemove.length > 0) {
@@ -2021,6 +2075,14 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.time.isEqualTo(nextEvent.tag.time));
+
+            // React to all the events loaded onto the reaction queue.
+            this._react()
+
+            // Done handling events.
+            // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
+            // Make sure that a federate sends LTC only after actually handling an event.
+            this._iterationComplete();
         }
 
         // Once we've reached here, either we're done processing events and the
@@ -2030,7 +2092,7 @@ export class App extends Reactor {
             // An end of execution has been specified; a shutdown event must
             // have been scheduled, and all shutdown events must have been
             // consumed because the next tag is 
-            this._done();
+            this._finish();
         } else {
             if (nextEvent) {
                 Log.global.debug("Event queue not empty.")
@@ -2040,7 +2102,7 @@ export class App extends Reactor {
                 if (this._keepAlive) {
                     // Keep alive: snooze and wake up later.
                     Log.global.debug("Going to sleep.");
-                    this.snooze.asSchedulable(this._getKey(this.snooze)).schedule(0, this._currentTag);
+                    this.snooze.asSchedulable(this._getKey(this.snooze)).schedule(this._advanceMessageInterval, this._currentTag);
                 } else {
                     // Don't keep alive: initiate shutdown.
                     Log.global.debug("Initiating shutdown.")
@@ -2106,23 +2168,41 @@ export class App extends Reactor {
      * Clear the alarm, and set the end of execution to be the current tag. 
      */
     protected _shutdown(): void {
-        if (this.__runtime.isRunning()) {
-            this._endOfExecution = this._currentTag.getMicroStepLater() // FIXME: this could be a longer delay in distributed execution
+        if (this.__runtime.isRunning() && (this._endOfExecution === undefined || this._currentTag.time.isEarlierThan(this._endOfExecution.time))) {
+            this._endOfExecution = this._currentTag.getMicroStepsLater(1) // FIXME: this could be a longer delay in distributed execution
 
             Log.debug(this, () => "Stop requested.");
             Log.debug(this, () => "Setting end of execution to: " + this._endOfExecution);
 
             this.schedulable(this.shutdown).schedule(0, null);
-
         } else {
             Log.global.debug("Ignoring App._shutdown() call after shutdown has already started.");
         }
     }
 
     /**
+     * Setter for _endOfExecution to be used used by the subclass, FederatedApp.
+     */
+    protected _setEndOfExecution(stopTag: Tag): void {
+        this._endOfExecution = stopTag;
+        this.__runtime.schedule(new TaggedEvent(this.shutdown, this._endOfExecution, null));
+    }
+    
+    /**
+     * Getter for _endOfExecution to be used used by the subclass, FederatedApp.
+     */
+    protected _getEndOfExecution(): Tag | undefined {
+        return this._endOfExecution;
+    }
+
+    /**
      * Wrap up execution by logging information and reporting errors if applicable.
      */
-    private _done(): void {
+     protected _finish(): void {
+         if (this._done) {
+             return;
+         }
+         this._done = true;
         this._cancelNext();
         Log.info(this, () => Log.hr);
         Log.info(this, () => ">>> End of execution at (logical) time: " + this.util.getCurrentLogicalTime());
