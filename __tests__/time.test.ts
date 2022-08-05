@@ -180,6 +180,7 @@ describe('time helper functions', function () {
      * Microstep indices are taken into consideration.
      */
     it('compare tags', function () {
+        // isSmallerThan
         expect(tiZero.isSmallerThan(tiZero)).toBeFalsy();
         expect(tiZero.isSmallerThan(tiZero1)).toBeTruthy();
         expect(tiZero1.isSmallerThan(tiZero)).toBeFalsy();
@@ -198,6 +199,62 @@ describe('time helper functions', function () {
         expect(tiFiveSeconds0.isSmallerThan(tiZero1)).toBeFalsy();
         expect(tiFiveSeconds1.isSmallerThan(tiZero1)).toBeFalsy();
 
+        // isSmallerThanOrEqualTo
+        expect(tiZero.isSmallerThanOrEqualTo(tiZero)).toBeTruthy();
+        expect(tiZero.isSmallerThanOrEqualTo(tiZero1)).toBeTruthy();
+        expect(tiZero1.isSmallerThanOrEqualTo(tiZero)).toBeFalsy();
+
+        expect(tiFiveSeconds0.isSmallerThanOrEqualTo(tiFiveSeconds0)).toBeTruthy();
+        expect(tiFiveSeconds0.isSmallerThanOrEqualTo(tiFiveSeconds1)).toBeTruthy();
+        expect(tiFiveSeconds1.isSmallerThanOrEqualTo(tiFiveSeconds0)).toBeFalsy();
+
+        expect(tiZero.isSmallerThanOrEqualTo(tiFiveSeconds0)).toBeTruthy();
+        expect(tiZero.isSmallerThanOrEqualTo(tiFiveSeconds1)).toBeTruthy();
+        expect(tiZero1.isSmallerThanOrEqualTo(tiFiveSeconds0)).toBeTruthy();
+        expect(tiZero1.isSmallerThanOrEqualTo(tiFiveSeconds1)).toBeTruthy();
+        
+        expect(tiFiveSeconds0.isSmallerThanOrEqualTo(tiZero)).toBeFalsy();
+        expect(tiFiveSeconds1.isSmallerThanOrEqualTo(tiZero)).toBeFalsy();
+        expect(tiFiveSeconds0.isSmallerThanOrEqualTo(tiZero1)).toBeFalsy();
+        expect(tiFiveSeconds1.isSmallerThanOrEqualTo(tiZero1)).toBeFalsy();
+
+        // isGreaterThan
+        expect(tiZero.isGreaterThan(tiZero)).toBeFalsy();
+        expect(tiZero.isGreaterThan(tiZero1)).toBeFalsy();
+        expect(tiZero1.isGreaterThan(tiZero)).toBeTruthy();
+
+        expect(tiFiveSeconds0.isGreaterThan(tiFiveSeconds0)).toBeFalsy();
+        expect(tiFiveSeconds0.isGreaterThan(tiFiveSeconds1)).toBeFalsy();
+        expect(tiFiveSeconds1.isGreaterThan(tiFiveSeconds0)).toBeTruthy();
+
+        expect(tiZero.isGreaterThan(tiFiveSeconds0)).toBeFalsy();
+        expect(tiZero.isGreaterThan(tiFiveSeconds1)).toBeFalsy();
+        expect(tiZero1.isGreaterThan(tiFiveSeconds0)).toBeFalsy();
+        expect(tiZero1.isGreaterThan(tiFiveSeconds1)).toBeFalsy();
+        
+        expect(tiFiveSeconds0.isGreaterThan(tiZero)).toBeTruthy();
+        expect(tiFiveSeconds1.isGreaterThan(tiZero)).toBeTruthy();
+        expect(tiFiveSeconds0.isGreaterThan(tiZero1)).toBeTruthy();
+        expect(tiFiveSeconds1.isGreaterThan(tiZero1)).toBeTruthy();
+
+        // isGreaterThanOrEqualTo
+        expect(tiZero.isGreaterThanOrEqualTo(tiZero)).toBeTruthy();
+        expect(tiZero.isGreaterThanOrEqualTo(tiZero1)).toBeFalsy();
+        expect(tiZero1.isGreaterThanOrEqualTo(tiZero)).toBeTruthy();
+
+        expect(tiFiveSeconds0.isGreaterThanOrEqualTo(tiFiveSeconds0)).toBeTruthy();
+        expect(tiFiveSeconds0.isGreaterThanOrEqualTo(tiFiveSeconds1)).toBeFalsy();
+        expect(tiFiveSeconds1.isGreaterThan(tiFiveSeconds0)).toBeTruthy();
+
+        expect(tiZero.isGreaterThanOrEqualTo(tiFiveSeconds0)).toBeFalsy();
+        expect(tiZero.isGreaterThanOrEqualTo(tiFiveSeconds1)).toBeFalsy();
+        expect(tiZero1.isGreaterThanOrEqualTo(tiFiveSeconds0)).toBeFalsy();
+        expect(tiZero1.isGreaterThanOrEqualTo(tiFiveSeconds1)).toBeFalsy();
+        
+        expect(tiFiveSeconds0.isGreaterThanOrEqualTo(tiZero)).toBeTruthy();
+        expect(tiFiveSeconds1.isGreaterThanOrEqualTo(tiZero)).toBeTruthy();
+        expect(tiFiveSeconds0.isGreaterThanOrEqualTo(tiZero1)).toBeTruthy();
+        expect(tiFiveSeconds1.isGreaterThanOrEqualTo(tiZero1)).toBeTruthy();
     });
 
     /**
@@ -255,7 +312,11 @@ describe('time helper functions', function () {
      * Compare two time values and find out which one is earlier.
      */
     it('compare time values', function() {
+        expect(TimeValue.secsAndNs(10, 10).isEarlierThan(TimeValue.secsAndNs(11, 1))).toEqual(true)
         expect(TimeValue.secsAndNs(0, 999999998).isEarlierThan(TimeValue.secsAndNs(0, 999999999))).toEqual(true)
+
+        expect(TimeValue.secsAndNs(0, 999999999).isLaterThan(TimeValue.secsAndNs(0, 999999998))).toEqual(true)
+        expect(TimeValue.secsAndNs(11, 1).isLaterThan(TimeValue.secsAndNs(10, 10))).toEqual(true)
     });
 
 

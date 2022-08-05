@@ -2062,9 +2062,6 @@ export class App extends Reactor {
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
                 }
-
-                // React to all the events loaded onto the reaction queue.
-                this._react()
                 
                 // End of this execution step. Perform cleanup.
                 while (this._reactorsToRemove.length > 0) {
@@ -2080,6 +2077,9 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.time.isEqualTo(nextEvent.tag.time));
+
+            // React to all the events loaded onto the reaction queue.
+            this._react()
 
             // Done handling events.
             // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
