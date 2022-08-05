@@ -2077,7 +2077,6 @@ export class App extends Reactor {
                                 null));
                         }
                     }
-                    console.log(`network control, current tag: ${this.util.getCurrentTag()}`);
                     // Load reactions onto the reaction queue.
                     trigger.update(nextEvent);
                     

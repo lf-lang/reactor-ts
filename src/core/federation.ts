@@ -998,7 +998,7 @@ export class FederatedApp extends App {
 
         
     public registerinputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
-
+        this.inputControlReactionTriggerArray.push(portAction);
     }
         
     public registeroutputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
