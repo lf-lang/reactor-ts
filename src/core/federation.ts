@@ -619,16 +619,14 @@ class RTIClient extends EventEmitter {
     }
 
     //FIXME: port-absent
-    public sendRTIPortAbsent(additionalDelay: Tag, federatePortID: number, federateID: number) {
+    public sendRTIPortAbsent(intendedTag: Tag, federatePortID: number, federateID: number) {
         let msg = Buffer.alloc(17);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
         msg.writeUInt16LE(federatePortID, 1);
         msg.writeUInt16LE(federateID, 3);
-        additionalDelay.toBinary().copy(msg, 5);
+        intendedTag.toBinary().copy(msg, 5);
         try {
-            Log.debug(this, () => {return `Sending RTI Port Absent message for `
-                + `tag ${additionalDelay} for port ${federatePortID} to `
-                + `federate ${federateID}.`});
+            Log.debug(this, () => {return `Sending RTI Port Absent message`});
             this.socket?.write(msg);
         } catch (e) {
             Log.error(this, () => {return `${e}`});
@@ -976,6 +974,9 @@ export class FederatedApp extends App {
     private upstreamFedDelays: bigint[] = [];
     private downstreamFedIDs: number[] = [];
 
+    private inputControlReactionTriggerArray: Action<Present>[] = [];
+    private outputControlReactionTriggerArray: Action<Present>[] = [];
+
     /**
      * The default value, null, indicates there is no output depending on a physical action. 
      */ 
@@ -993,6 +994,15 @@ export class FederatedApp extends App {
 
     public setMinDelayFromPhysicalActionToFederateOutput(minDelay: TimeValue) {
         this.minDelayFromPhysicalActionToFederateOutput = minDelay;
+    }
+
+        
+    public registerinputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
+
+    }
+        
+    public registeroutputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
+        this.outputControlReactionTriggerArray.push(portAction);
     }
 
     /**
@@ -1091,10 +1101,8 @@ export class FederatedApp extends App {
             // logical connection. No need to trigger network input control
             // reactions.
         }
-        for (let i = 0; i < this.upstreamFedIDs.length; i++) {
-            // for (int i = 0; i < trigger for network input conrol; i++) {
-            //    schedule all network input control reaction that doesn't update the status of any port 
-            //}
+        for (let i = 0; i < this.inputControlReactionTriggerArray.length; i++) {
+            // FIXME: figure out what to do in this for loop
         }
     }
 
@@ -1104,10 +1112,18 @@ export class FederatedApp extends App {
      * message to downstream federates if a given network output port is not present.
      */
     protected enqueueNetworkOutputControlReactions(): void {
-        // for (int i = 0; i < trigger for network output conrol; i++) {
-        //  schedule all the output conrol reaction
-        //  Is a variable is_a_control_reaction needed? see 1582th line of reactor_common.c 
-        // }
+        if (this.downstreamFedIDs.length === 0) {
+            return;
+            // This federate is not connected to any downstream federates via a
+            // logical connection. No need to trigger network output control
+            // reactions.
+        }
+        for (let i = 0; i < this.outputControlReactionTriggerArray.length; i++) {
+            let trigger = this.outputControlReactionTriggerArray[0];
+            let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
+            Log.debug(this, () => `Inserting network output control reaction on reaction queue.`);
+            trigger.update(event);
+        }
     }
     
     /**
@@ -1274,8 +1290,14 @@ export class FederatedApp extends App {
     /**
      * Send the RTI a port absent message
      */
-    public sendRTIPortAbsent(additionalDelay: Tag, destFederateID: number, destPortID: number): void {
-        this.rtiClient.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
+    public sendRTIPortAbsent(additionalDelay:0 | TimeValue, destFederateID: number, destPortID: number): void {
+        let intendedTag = this.util.getCurrentTag();
+        if (additionalDelay instanceof TimeValue) {
+            intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
+        }
+        Log.debug(this, () => {return `Sending RTI port absent to federate ID: ${destFederateID}`
+        + ` port ID: ${destPortID}.`});
+        this.rtiClient.sendRTIPortAbsent(intendedTag, destFederateID, destPortID);
     }
 
     /**
@@ -1436,6 +1458,7 @@ export class FederatedApp extends App {
             // This function should have same logic with update_last_known_status_on_input_port() in c
             // federate.c, 1655
             // Should add lastKnownStatusTag for each port.
+            console.log(`emit function in federate`);
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);

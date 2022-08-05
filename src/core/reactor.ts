@@ -16,6 +16,7 @@ import {
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
 import { Bank } from "./bank";
+import { REFUSED } from "dns";
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -1565,7 +1566,7 @@ interface UtilityFunctions {
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
-    sendRTIPortAbsent (additionalDealy: Tag, federatePortID: number, federateID: number): void;
+    sendRTIPortAbsent (additionalDealy: 0 | TimeValue, destFederateID: number, destPortID: number): void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -1688,9 +1689,9 @@ export class App extends Reactor {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         }
 //FIXEME: port-absent
-        public sendRTIPortAbsent (additionalDelay: Tag, federatePortID: number, federateID: number) {
+        public sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
             console.log(`PortAbsent invoked`);
-            return this.app.sendRTIPortAbsent(additionalDelay, federatePortID, federateID);
+            return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
         }
     }(this);
 
@@ -1717,7 +1718,7 @@ export class App extends Reactor {
          */ 
         public stage(reaction: Reaction<unknown>): void {
             if (this.app._active) {
-                this.app._reactionQ.push(reaction)
+                this.app._readyReactionQ.push(reaction)
             } else {
                 // If execution hasn't started yet, collect the staged reactions.
                 // They will be queued once they have been assigned priorities.
@@ -1824,7 +1825,7 @@ export class App extends Reactor {
      * Send a MSG_TYPE_PORT_ABSENT
      * please add explanation of this message.  
      */
-    protected sendRTIPortAbsent (additionalDelay: Tag, destFederateID: number, destPortID: number) {
+    protected sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
     }
 
@@ -1873,6 +1874,8 @@ export class App extends Reactor {
      * Priority set that keeps track of reactions at the current Logical time.
      */
     private _reactionQ = new ReactionQueue();
+    private _readyReactionQ = new ReactionQueue();
+    private _waitingReactionQ = new ReactionQueue();
 
     /**
      * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
@@ -1990,9 +1993,9 @@ export class App extends Reactor {
      * Iterate over all reactions in the reaction queue and execute them.
      */
     private _react() {
-        while (this._reactionQ.size() > 0) {
+        while (this._readyReactionQ.size() > 0) {
             try {
-                var r = this._reactionQ.pop();
+                var r = this._readyReactionQ.pop();
                 r.doReact();
             } catch (e) {
                 Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
@@ -2074,16 +2077,14 @@ export class App extends Reactor {
                                 null));
                         }
                     }
-
+                    console.log(`network control, current tag: ${this.util.getCurrentTag()}`);
                     // Load reactions onto the reaction queue.
                     trigger.update(nextEvent);
                     
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
-                }
-                // FIXME: port-absent
-                // enqueue_network_control_reactions() need to be added
-                
+                }            
+
                 // End of this execution step. Perform cleanup.
                 while (this._reactorsToRemove.length > 0) {
                     let r = this._reactorsToRemove.pop()
@@ -2098,7 +2099,9 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.time.isEqualTo(nextEvent.tag.time));
-
+            // FIXME: port-absent
+            // enqueue_network_control_reactions() need to be added
+            this.enqueueNetworkControlReactions();
             // React to all the events loaded onto the reaction queue.
             this._react()
 
@@ -2342,7 +2345,7 @@ export class App extends Reactor {
      * app's instantiation onto the reaction queue.
      */
     protected _loadStartupReactions() {
-        this._reactionsAtStartup.forEach(r => this._reactionQ.push(r))
+        this._reactionsAtStartup.forEach(r => this._readyReactionQ.push(r))
     }
 
     /**
@@ -2355,6 +2358,9 @@ export class App extends Reactor {
         
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
+
+        // Enqueue the network control reactions for startup reactions
+        this.enqueueNetworkControlReactions();
 
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
