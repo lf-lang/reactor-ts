@@ -619,7 +619,7 @@ class RTIClient extends EventEmitter {
     }
 
     //FIXME: port-absent
-    public sendRTIPortAbsent(intendedTag: Tag, federatePortID: number, federateID: number) {
+    public sendRTIPortAbsent(intendedTag: Tag, federateID: number, federatePortID: number) {
         let msg = Buffer.alloc(17);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
         msg.writeUInt16LE(federatePortID, 1);
@@ -997,11 +997,11 @@ export class FederatedApp extends App {
     }
 
         
-    public registerinputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
+    public registerInputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
         this.inputControlReactionTriggerArray.push(portAction);
     }
         
-    public registeroutputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
+    public registerOutputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
         this.outputControlReactionTriggerArray.push(portAction);
     }
 
