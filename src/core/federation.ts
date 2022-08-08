@@ -974,8 +974,8 @@ export class FederatedApp extends App {
     private upstreamFedDelays: bigint[] = [];
     private downstreamFedIDs: number[] = [];
 
-    private inputControlReactionTriggerArray: Action<Present>[] = [];
-    private outputControlReactionTriggerArray: Action<Present>[] = [];
+    private inputControlReactionTriggers: Action<Present>[] = [];
+    private outputControlReactionTriggers: Action<Present>[] = [];
 
     /**
      * The default value, null, indicates there is no output depending on a physical action. 
@@ -998,11 +998,11 @@ export class FederatedApp extends App {
 
         
     public registerInputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
-        this.inputControlReactionTriggerArray.push(portAction);
+        this.inputControlReactionTriggers.push(portAction);
     }
         
     public registerOutputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
-        this.outputControlReactionTriggerArray.push(portAction);
+        this.outputControlReactionTriggers.push(portAction);
     }
 
     /**
@@ -1101,7 +1101,7 @@ export class FederatedApp extends App {
             // logical connection. No need to trigger network input control
             // reactions.
         }
-        for (let i = 0; i < this.inputControlReactionTriggerArray.length; i++) {
+        for (let i = 0; i < this.inputControlReactionTriggers.length; i++) {
             // FIXME: figure out what to do in this for loop
         }
     }
@@ -1118,8 +1118,8 @@ export class FederatedApp extends App {
             // logical connection. No need to trigger network output control
             // reactions.
         }
-        for (let i = 0; i < this.outputControlReactionTriggerArray.length; i++) {
-            let trigger = this.outputControlReactionTriggerArray[0];
+        for (let i = 0; i < this.outputControlReactionTriggers.length; i++) {
+            let trigger = this.outputControlReactionTriggers[i];
             let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
             Log.debug(this, () => `Inserting network output control reaction on reaction queue.`);
             trigger.update(event);
