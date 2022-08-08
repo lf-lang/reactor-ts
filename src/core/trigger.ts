@@ -91,7 +91,7 @@ export interface TriggerManager {
             // This action has never been scheduled before.
             return false;
         }
-        if (this.tag.isSimultaneousWith(this.runtime.util.getCurrentTag())) {
+        if (this.tag.time.isEqualTo(this.runtime.util.getCurrentLogicalTime())) {
             return true;
         } else {
             return false;
