@@ -2096,8 +2096,8 @@ export class App extends Reactor {
                 // Peek at the event queue to see whether we can process the next event
                 // or should give control back to the JS event loop.
                 nextEvent = this._eventQ.peek();
-
-            } while (nextEvent && this._currentTag.time.isEqualTo(nextEvent.tag.time));
+                
+            } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
             // FIXME: port-absent
             // enqueue_network_control_reactions() need to be added
             this.enqueueNetworkControlReactions();
