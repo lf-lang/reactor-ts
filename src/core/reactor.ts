@@ -1690,7 +1690,6 @@ export class App extends Reactor {
         }
 //FIXEME: port-absent
         public sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
-            console.log(`PortAbsent invoked`);
             return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
         }
     }(this);

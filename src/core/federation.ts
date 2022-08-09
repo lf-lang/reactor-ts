@@ -626,7 +626,7 @@ class RTIClient extends EventEmitter {
         msg.writeUInt16LE(federateID, 3);
         intendedTag.toBinary().copy(msg, 5);
         try {
-            Log.debug(this, () => {return `Sending RTI Port Absent message`});
+            Log.debug(this, () => {return `Sending RTI Port Absent message, tag: ${intendedTag}`});
             this.socket?.write(msg);
         } catch (e) {
             Log.error(this, () => {return `${e}`});
@@ -873,8 +873,7 @@ class RTIClient extends EventEmitter {
                         let timeBuffer = Buffer.alloc(12);
                         assembledData.copy(timeBuffer, 0, bufferIndex + 5, bufferIndex + 13 );
                         let intendedTag = Tag.fromBinary(timeBuffer);
-                        Log.debug(thiz, () => { return `Handling port absent for tag (${intendedTag.time}, `
-                        +`${intendedTag.microstep}) for port ${portID}`;      
+                        Log.debug(thiz, () => { return `Handling port absent for tag ${intendedTag} for port ${portID}`;      
                         }) //FIXME: federate.c, 1631
                         let destPortAction = thiz.federatePortActionByID.get(portID);
                         thiz.emit('portAbsent', destPortAction, intendedTag);
@@ -1295,7 +1294,7 @@ export class FederatedApp extends App {
         if (additionalDelay instanceof TimeValue) {
             intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
         }
-        Log.debug(this, () => {return `Sending RTI port absent to federate ID: ${destFederateID}`
+        Log.debug(this, () => {return `Sending RTI port absent for tag ${intendedTag} to federate ID: ${destFederateID}`
         + ` port ID: ${destPortID}.`});
         this.rtiClient.sendRTIPortAbsent(intendedTag, destFederateID, destPortID);
     }
@@ -1458,7 +1457,6 @@ export class FederatedApp extends App {
             // This function should have same logic with update_last_known_status_on_input_port() in c
             // federate.c, 1655
             // Should add lastKnownStatusTag for each port.
-            console.log(`emit function in federate`);
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
