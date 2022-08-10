@@ -969,6 +969,10 @@ export class FederatedApp extends App {
      */
     private greatestTimeAdvanceGrant: Tag | null = null;
 
+    // FIXME: port-absent
+    // 
+    private lastKnownStatusTags: Map<number, Action<any>> = new Map<number, Action<any>>();
+
     private upstreamFedIDs: number[] = [];
     private upstreamFedDelays: bigint[] = [];
     private downstreamFedIDs: number[] = [];
@@ -996,12 +1000,12 @@ export class FederatedApp extends App {
     }
 
         
-    public registerInputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
-        this.inputControlReactionTriggers.push(portAction);
+    public registerInputControlReactionTrigger<T extends Present>(inputControlReactionTrigger: Action<Present>) {
+        this.inputControlReactionTriggers.push(inputControlReactionTrigger);
     }
         
-    public registerOutputControlReactionTrigger<T extends Present>(portAction: Action<Present>) {
-        this.outputControlReactionTriggers.push(portAction);
+    public registerOutputControlReactionTrigger<T extends Present>(outputControlReactionTrigger: Action<Present>) {
+        this.outputControlReactionTriggers.push(outputControlReactionTrigger);
     }
 
     /**
