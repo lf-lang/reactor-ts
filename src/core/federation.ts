@@ -861,23 +861,23 @@ class RTIClient extends EventEmitter {
                     // The next 2 bytes will be the federate id of the destination federate.
                     // The next 8 bytes are the intended time of the absent message
                     // The next 4 bytes are the intended microstep of the absent message
-                    let incomplete = assembledData.length < 17 + bufferIndex;
+                    /**let incomplete = assembledData.length < 17 + bufferIndex;
 
                     if (incomplete) {
                         thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
                         assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
-                    } else {
+                    } else {*/
                         let portID = assembledData.readUInt16LE(bufferIndex + 1);
                         // The next part of the message is the federate_id, but we don't need it.
                         // let federateID = assembledData.readUInt16LE(bufferIndex + 3);
-                        let timeBuffer = Buffer.alloc(12);
-                        assembledData.copy(timeBuffer, 0, bufferIndex + 5, bufferIndex + 13 );
-                        let intendedTag = Tag.fromBinary(timeBuffer);
+                        let tagBuffer = Buffer.alloc(12);
+                        assembledData.copy(tagBuffer, 0, bufferIndex + 5, bufferIndex + 17 );
+                        let intendedTag = Tag.fromBinary(tagBuffer);
                         Log.debug(thiz, () => { return `Handling port absent for tag ${intendedTag} for port ${portID}`;      
                         }) //FIXME: federate.c, 1631
                         let destPortAction = thiz.federatePortActionByID.get(portID);
                         thiz.emit('portAbsent', destPortAction, intendedTag);
-                    }
+                    //}
                     bufferIndex += 17;
                     break;
                 }
