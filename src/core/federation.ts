@@ -861,23 +861,15 @@ class RTIClient extends EventEmitter {
                     // The next 2 bytes will be the federate id of the destination federate.
                     // The next 8 bytes are the intended time of the absent message
                     // The next 4 bytes are the intended microstep of the absent message
-                    /**let incomplete = assembledData.length < 17 + bufferIndex;
-
-                    if (incomplete) {
-                        thiz.chunkedBuffer = Buffer.alloc(assembledData.length - bufferIndex);
-                        assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex)
-                    } else {*/
-                        let portID = assembledData.readUInt16LE(bufferIndex + 1);
-                        // The next part of the message is the federate_id, but we don't need it.
-                        // let federateID = assembledData.readUInt16LE(bufferIndex + 3);
-                        let tagBuffer = Buffer.alloc(12);
-                        assembledData.copy(tagBuffer, 0, bufferIndex + 5, bufferIndex + 17 );
-                        let intendedTag = Tag.fromBinary(tagBuffer);
-                        Log.debug(thiz, () => { return `Handling port absent for tag ${intendedTag} for port ${portID}`;      
-                        }) //FIXME: federate.c, 1631
-                        let destPortAction = thiz.federatePortActionByID.get(portID);
-                        thiz.emit('portAbsent', destPortAction, intendedTag);
-                    //}
+                    let portID = assembledData.readUInt16LE(bufferIndex + 1);
+                    // The next part of the message is the federate_id, but we don't need it.
+                    // let federateID = assembledData.readUInt16LE(bufferIndex + 3);
+                    let tagBuffer = Buffer.alloc(12);
+                    assembledData.copy(tagBuffer, 0, bufferIndex + 5, bufferIndex + 17 );
+                    let intendedTag = Tag.fromBinary(tagBuffer);
+                    Log.debug(thiz, () => { return `Handling port absent for tag ${intendedTag} for port ${portID}.`      
+                    }); 
+                    thiz.emit('portAbsent', portID, intendedTag);
                     bufferIndex += 17;
                     break;
                 }
@@ -971,7 +963,7 @@ export class FederatedApp extends App {
 
     // FIXME: port-absent
     // 
-    private lastKnownStatusTags: Map<number, Action<any>> = new Map<number, Action<any>>();
+    private lastKnownStatusTags: Map<number, Tag> = new Map<number, Tag>();
 
     private upstreamFedIDs: number[] = [];
     private upstreamFedDelays: bigint[] = [];
@@ -1000,14 +992,18 @@ export class FederatedApp extends App {
     }
 
         
-    public registerInputControlReactionTrigger<T extends Present>(inputControlReactionTrigger: Action<Present>) {
+    public registerInputControlReactionTrigger(inputControlReactionTrigger: Action<Present>) {
         this.inputControlReactionTriggers.push(inputControlReactionTrigger);
     }
         
-    public registerOutputControlReactionTrigger<T extends Present>(outputControlReactionTrigger: Action<Present>) {
+    public registerOutputControlReactionTrigger(outputControlReactionTrigger: Action<Present>) {
         this.outputControlReactionTriggers.push(outputControlReactionTrigger);
     }
 
+    protected setLastKnownStatusTag(portNumber: number) {
+        this.lastKnownStatusTags.set(portNumber, this.util.getCurrentTag());
+        this.lastKnownStatusTags.set(2, this.util.getCurrentTag());
+    }
     /**
      * Getter for rtiSynchronized
      */
@@ -1208,6 +1204,8 @@ export class FederatedApp extends App {
             this.rtiSynchronized = true;
         }
         this.rtiClient.registerFederatePortAction(federatePortID, federatePortAction);
+        //FIXME: port-absent
+        this.setLastKnownStatusTag(federatePortID);
     }
 
     /**
@@ -1403,6 +1401,9 @@ export class FederatedApp extends App {
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+                for (let i of this.lastKnownStatusTags.keys()) {
+                    this.lastKnownStatusTags.set(i, tag);
+                }
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
@@ -1420,6 +1421,9 @@ export class FederatedApp extends App {
                 // FIXME: Temporarily disabling PTAG handling until the 
                 // input control reaction is implemented.
                 /*
+                for (let i of this.lastKnownStatusTags.keys()) {
+                    this.lastKnownStatusTags.set(i, tag);
+                }
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
@@ -1456,11 +1460,10 @@ export class FederatedApp extends App {
                 this._setEndOfExecution(tag);
         });
         //FIXME: port-absent
-        this.rtiClient.on(`portAbsent`, <T extends Present>(destPortAction: Action<T>,intendedTag: Tag) => {
+        this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
-            // This function should have same logic with update_last_known_status_on_input_port() in c
-            // federate.c, 1655
-            // Should add lastKnownStatusTag for each port.
+            Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${intendedTag}`});
+            this.lastKnownStatusTags.set(portID, intendedTag);
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
