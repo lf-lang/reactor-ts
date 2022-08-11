@@ -5,9 +5,6 @@ import {
     Log, Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm,
     Present, App, Action, TaggedEvent
 } from './internal';
-import { State } from './state';
-import { taggedTemplateExpression } from '@babel/types';
-import { Port } from './port';
 
 //---------------------------------------------------------------------//
 // Federated Execution Constants and Enums                             //
@@ -908,7 +905,7 @@ enum StopRequestState {
 /**
  *  Enum type to store the state of input port.
  */
-enum PortState {
+enum PortStatus {
     PRESENT,
     ABSENT,
     UNKNOWN
@@ -928,11 +925,11 @@ class StopRequestInfo {
 }
 
 class PortInfo {
-    constructor(state: PortState, tag: Tag) {
-        this.state = state;
+    constructor(status: PortStatus, tag: Tag) {
+        this.status = status;
         this.lastKnownStatusTag = tag;
     }
-    state: PortState;
+    status: PortStatus;
     lastKnownStatusTag: Tag;
 }
 
@@ -1013,45 +1010,16 @@ export class FederatedApp extends App {
     }
 
         
-    public registerInputControlReactionTrigger(inputControlReactionTrigger: Action<Present>) {
+    public registerInputControlReactionTrigger(portID: number, inputControlReactionTrigger: Action<Present>) {
         this.inputControlReactionTriggers.push(inputControlReactionTrigger);
+        //FIXME: port-absent
+        this.registerPortInfo(portID);
     }
         
     public registerOutputControlReactionTrigger(outputControlReactionTrigger: Action<Present>) {
         this.outputControlReactionTriggers.push(outputControlReactionTrigger);
     }
 
-    protected registerPortInfo(portNumber: number) {
-        this.portInfoByID.set(portNumber, new PortInfo(PortState.UNKNOWN, this.util.getCurrentTag()));
-    }
-
-    protected updatelastKnownStatusTag(tag: Tag, portID: number) {
-        let portInfo = this.portInfoByID.get(portID);
-        if (portInfo !== undefined) {
-            let lastKnownStatusTag = portInfo.lastKnownStatusTag;
-            if (tag.isGreaterThan(lastKnownStatusTag)) {
-                /** FIXME: Figure out whether these codes are needed or not. See federate.c 1188
-                if (lastKnownStatusTag !== undefined && tag.isSimultaneousWith(lastKnownStatusTag)){
-                    tag.getMicroStepsLater(1);
-                }*/
-                Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${tag}`});
-                portInfo.lastKnownStatusTag = tag;
-            } else {
-                Log.debug(this, () => {return `Attempt to update the last known status tag `
-                + `of network input port ${portID} to an earlier tag was ignored.`})
-            }
-        }
-    }
-
-    protected updatelastKnownStatusTags(tag: Tag) {
-        for (let i of this.portInfoByID.keys()) {
-            let portInfo = this.portInfoByID.get(i);
-            if (portInfo?.lastKnownStatusTag !== undefined && tag.isGreaterThan(portInfo.lastKnownStatusTag)) {
-                Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${i} to ${tag}`});
-                portInfo.lastKnownStatusTag = tag;
-            }
-        }
-    }
     /**
      * Getter for rtiSynchronized
      */
@@ -1135,6 +1103,81 @@ export class FederatedApp extends App {
         this.sendRTILogicalTimeComplete(currentTime);
     }
 
+    ///////////////////////////////////Port Status Handling//////////////////////////////////////
+        
+    protected registerPortInfo(portID: number) {
+        this.portInfoByID.set(portID, new PortInfo(PortStatus.UNKNOWN, this.util.getCurrentTag()));
+    }
+
+    protected resetStatusFieldsOnInputPorts() {
+        for (let i of this.portInfoByID.keys()) {
+            let portInfo = this.portInfoByID.get(i);
+            if (portInfo !== undefined) {
+                portInfo.status = PortStatus.UNKNOWN;
+            }   
+        }
+    }
+
+    protected setNetworkPortStatus(portID: number, status: PortStatus) {
+        let portInfo = this.portInfoByID.get(portID);
+        if (portInfo !== undefined) {
+            portInfo.status = status;
+        }
+    }
+
+    protected updatelastKnownStatusTag(tag: Tag, portID: number) {
+        let portInfo = this.portInfoByID.get(portID);
+        if (portInfo !== undefined) {
+            let lastKnownStatusTag = portInfo.lastKnownStatusTag;
+            if (tag.isGreaterThan(lastKnownStatusTag)) {
+                /** FIXME: Figure out whether these codes are needed or not. See federate.c 1188
+                if (lastKnownStatusTag !== undefined && tag.isSimultaneousWith(lastKnownStatusTag)){
+                    tag.getMicroStepsLater(1);
+                }*/
+                Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${tag}`});
+                portInfo.lastKnownStatusTag = tag;
+            } else {
+                Log.debug(this, () => {return `Attempt to update the last known status tag `
+                + `of network input port ${portID} to an earlier tag was ignored.`})
+            }
+        }
+    }
+
+    protected updatelastKnownStatusTags(tag: Tag) {
+        for (let i of this.portInfoByID.keys()) {
+            let portInfo = this.portInfoByID.get(i);
+            if (portInfo?.lastKnownStatusTag !== undefined && tag.isGreaterThan(portInfo.lastKnownStatusTag)) {
+                Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${i} to ${tag}`});
+                portInfo.lastKnownStatusTag = tag;
+            }
+        }
+    }
+
+    /**
+     * @param portID the ID of the port to determine status for
+     * @returns the status of the port at the current tag.
+     */
+    protected getCurrentPortStatus(portID: number) {
+        // Check whether the status of the port is known at the current tag.
+        let portInfo = this.portInfoByID.get(portID);
+        if (portInfo !== undefined) {
+            if (portInfo.status === PortStatus.PRESENT) {
+                return PortStatus.PRESENT
+            } else if (portInfo.status === PortStatus.ABSENT) {
+                return PortStatus.ABSENT;
+            } else if (portInfo.status === PortStatus.UNKNOWN
+                && portInfo.lastKnownStatusTag.isGreaterThanOrEqualTo(this.util.getCurrentTag())) {
+                this.setNetworkPortStatus(portID, PortStatus.ABSENT);
+                return PortStatus.ABSENT;
+            } else if (this._isLastTAGProvisional
+                && this.greatestTimeAdvanceGrant?.isGreaterThan(this.util.getCurrentTag())) {
+                this.setNetworkPortStatus(portID, PortStatus.ABSENT);
+                return PortStatus.ABSENT;
+            }
+            return PortStatus.UNKNOWN;
+        }
+    }
+
     /**
      * FIXME: port-absent
      * Enqueue network input control reactions that determine if the trigger for a
@@ -1148,8 +1191,11 @@ export class FederatedApp extends App {
             // logical connection. No need to trigger network input control
             // reactions.
         }
-        for (let i = 0; i < this.inputControlReactionTriggers.length; i++) {
-            // FIXME: figure out what to do in this for loop
+        for (let i of this.portInfoByID.keys()) {
+            if (this.getCurrentPortStatus(i) === PortStatus.UNKNOWN) {
+                // FIXME: figure out what to do in this for loop
+                let trigger = this.inputControlReactionTriggers[i];
+            }
         }
     }
 
@@ -1165,12 +1211,10 @@ export class FederatedApp extends App {
             // logical connection. No need to trigger network output control
             // reactions.
         }
-        for (let i = 0; i < this.outputControlReactionTriggers.length; i++) {
-            let trigger = this.outputControlReactionTriggers[i];
-            let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
-            Log.debug(this, () => `Inserting network output control reaction on reaction queue.`);
-            trigger.update(event);
-        }
+        let trigger = this.outputControlReactionTriggers[0];
+        let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
+        Log.debug(this, () => `Inserting network output control reaction on reaction queue.`);
+        trigger.update(event);
     }
     
     /**
@@ -1187,6 +1231,8 @@ export class FederatedApp extends App {
         }
         this.enqueueNetworkInputControlReactions();
     }
+
+///////////////////////////////////////////
 
     protected _finish() {
         this.sendRTILogicalTimeComplete(this.util.getCurrentTag());
@@ -1252,8 +1298,6 @@ export class FederatedApp extends App {
             this.rtiSynchronized = true;
         }
         this.rtiClient.registerFederatePortAction(federatePortID, federatePortAction);
-        //FIXME: port-absent
-        this.registerPortInfo(federatePortID);
     }
 
     /**
@@ -1445,7 +1489,8 @@ export class FederatedApp extends App {
                 destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value);
             }
             //FIXME: should add to update last known status tag
-            this.updatelastKnownStatusTag(tag, destPortID)
+            this.updatelastKnownStatusTag(tag, destPortID);
+            this.setNetworkPortStatus(destPortID, PortStatus.PRESENT);
         });
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
