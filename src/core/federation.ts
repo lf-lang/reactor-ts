@@ -777,7 +777,7 @@ class RTIClient extends EventEmitter {
                             let messageBuffer = Buffer.alloc(messageLength);
                             assembledData.copy(messageBuffer, 0, bufferIndex + 21, bufferIndex + 21 +  messageLength);  
                             let destPort = thiz.federatePortActionByID.get(destPortID);
-                            thiz.emit('timedMessage', destPort, messageBuffer, tag);
+                            thiz.emit('timedMessage', destPort, destPortID, messageBuffer, tag);
                         }
 
                         bufferIndex += messageLength + 21;
@@ -1002,7 +1002,31 @@ export class FederatedApp extends App {
 
     protected setLastKnownStatusTag(portNumber: number) {
         this.lastKnownStatusTags.set(portNumber, this.util.getCurrentTag());
-        this.lastKnownStatusTags.set(2, this.util.getCurrentTag());
+    }
+
+    protected updateLastKnownStatusOnInputPort(tag: Tag, portID: number) {
+        let lastKnownStatusTag = this.lastKnownStatusTags.get(portID);
+        if (lastKnownStatusTag === undefined || tag.isGreaterThan(lastKnownStatusTag)) {
+            /** FIXME: Figure out whether these codes are needed or not. See federate.c 1188
+            if (lastKnownStatusTag !== undefined && tag.isSimultaneousWith(lastKnownStatusTag)){
+                tag.getMicroStepsLater(1);
+            }*/
+            Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${tag}`});
+            this.lastKnownStatusTags.set(portID, tag);
+        } else {
+            Log.debug(this, () => {return `Attempt to update the last known status tag `
+            + `of network input port ${portID} to an earlier tag was ignored.`})
+        }
+    }
+
+    protected updateLastKnownStatusOnInputPorts(tag: Tag) {
+        for (let i of this.lastKnownStatusTags.keys()) {
+            let lastKnownStatusTag = this.lastKnownStatusTags.get(i);
+            if (lastKnownStatusTag === undefined || tag.isGreaterThan(lastKnownStatusTag)) {
+                Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${i} to ${tag}`});
+                this.lastKnownStatusTags.set(i, tag);
+            }
+        }
     }
     /**
      * Getter for rtiSynchronized
@@ -1361,8 +1385,8 @@ export class FederatedApp extends App {
             destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value);
         });
 
-        this.rtiClient.on('timedMessage', <T extends Present>(destPortAction: Action<T>, messageBuffer: Buffer,
-            tag: Tag) => {
+        this.rtiClient.on('timedMessage', <T extends Present>(destPortAction: Action<T>, destPortID: number, 
+            messageBuffer: Buffer, tag: Tag) => {
             // Schedule this federate port's action.
 
             /**
@@ -1397,15 +1421,13 @@ export class FederatedApp extends App {
                 destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value);
             }
             //FIXME: should add to update last known status tag
+            this.updateLastKnownStatusOnInputPort(tag, destPortID)
         });
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
-                //FIXME: should compare current last known tag and message's tag
-                for (let i of this.lastKnownStatusTags.keys()) {
-                    this.lastKnownStatusTags.set(i, tag);
-                }
+                this.updateLastKnownStatusOnInputPorts(tag);
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
@@ -1422,10 +1444,9 @@ export class FederatedApp extends App {
 
                 // FIXME: Temporarily disabling PTAG handling until the 
                 // input control reaction is implemented.
-                /*
-                for (let i of this.lastKnownStatusTags.keys()) {
-                    this.lastKnownStatusTags.set(i, tag);
-                }
+                /**
+                this.updateLastKnownStatusOnInputPorts(tag);
+
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
@@ -1464,8 +1485,7 @@ export class FederatedApp extends App {
         //FIXME: port-absent
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
-            Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${intendedTag}`});
-            this.lastKnownStatusTags.set(portID, intendedTag);
+            this.updateLastKnownStatusOnInputPort(intendedTag, portID);
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
