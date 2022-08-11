@@ -1396,11 +1396,13 @@ export class FederatedApp extends App {
                 // Tr = max(r, R + A)
                 destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value);
             }
+            //FIXME: should add to update last known status tag
         });
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+                //FIXME: should compare current last known tag and message's tag
                 for (let i of this.lastKnownStatusTags.keys()) {
                     this.lastKnownStatusTags.set(i, tag);
                 }
