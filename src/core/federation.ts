@@ -5,6 +5,9 @@ import {
     Log, Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm,
     Present, App, Action, TaggedEvent
 } from './internal';
+import { State } from './state';
+import { taggedTemplateExpression } from '@babel/types';
+import { Port } from './port';
 
 //---------------------------------------------------------------------//
 // Federated Execution Constants and Enums                             //
@@ -903,6 +906,15 @@ enum StopRequestState {
 }
 
 /**
+ *  Enum type to store the state of input port.
+ */
+enum PortState {
+    PRESENT,
+    ABSENT,
+    UNKNOWN
+}
+
+/**
  * Class for storing stop request-related information 
  * including the current state and the tag associated with the stop requested or stop granted.
  */
@@ -913,6 +925,15 @@ class StopRequestInfo {
     }
     readonly state: StopRequestState;
     readonly tag: Tag | null;
+}
+
+class PortInfo {
+    constructor(state: PortState, tag: Tag) {
+        this.state = state;
+        this.lastKnownStatusTag = tag;
+    }
+    state: PortState;
+    lastKnownStatusTag: Tag;
 }
 
 /**
@@ -963,7 +984,7 @@ export class FederatedApp extends App {
 
     // FIXME: port-absent
     // 
-    private lastKnownStatusTags: Map<number, Tag> = new Map<number, Tag>();
+    private portInfoByID: Map<number, PortInfo> = new Map<number, PortInfo>();
 
     private upstreamFedIDs: number[] = [];
     private upstreamFedDelays: bigint[] = [];
@@ -1000,31 +1021,34 @@ export class FederatedApp extends App {
         this.outputControlReactionTriggers.push(outputControlReactionTrigger);
     }
 
-    protected setLastKnownStatusTag(portNumber: number) {
-        this.lastKnownStatusTags.set(portNumber, this.util.getCurrentTag());
+    protected registerPortInfo(portNumber: number) {
+        this.portInfoByID.set(portNumber, new PortInfo(PortState.UNKNOWN, this.util.getCurrentTag()));
     }
 
-    protected updateLastKnownStatusOnInputPort(tag: Tag, portID: number) {
-        let lastKnownStatusTag = this.lastKnownStatusTags.get(portID);
-        if (lastKnownStatusTag === undefined || tag.isGreaterThan(lastKnownStatusTag)) {
-            /** FIXME: Figure out whether these codes are needed or not. See federate.c 1188
-            if (lastKnownStatusTag !== undefined && tag.isSimultaneousWith(lastKnownStatusTag)){
-                tag.getMicroStepsLater(1);
-            }*/
-            Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${tag}`});
-            this.lastKnownStatusTags.set(portID, tag);
-        } else {
-            Log.debug(this, () => {return `Attempt to update the last known status tag `
-            + `of network input port ${portID} to an earlier tag was ignored.`})
+    protected updatelastKnownStatusTag(tag: Tag, portID: number) {
+        let portInfo = this.portInfoByID.get(portID);
+        if (portInfo !== undefined) {
+            let lastKnownStatusTag = portInfo.lastKnownStatusTag;
+            if (tag.isGreaterThan(lastKnownStatusTag)) {
+                /** FIXME: Figure out whether these codes are needed or not. See federate.c 1188
+                if (lastKnownStatusTag !== undefined && tag.isSimultaneousWith(lastKnownStatusTag)){
+                    tag.getMicroStepsLater(1);
+                }*/
+                Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${tag}`});
+                portInfo.lastKnownStatusTag = tag;
+            } else {
+                Log.debug(this, () => {return `Attempt to update the last known status tag `
+                + `of network input port ${portID} to an earlier tag was ignored.`})
+            }
         }
     }
 
-    protected updateLastKnownStatusOnInputPorts(tag: Tag) {
-        for (let i of this.lastKnownStatusTags.keys()) {
-            let lastKnownStatusTag = this.lastKnownStatusTags.get(i);
-            if (lastKnownStatusTag === undefined || tag.isGreaterThan(lastKnownStatusTag)) {
+    protected updatelastKnownStatusTags(tag: Tag) {
+        for (let i of this.portInfoByID.keys()) {
+            let portInfo = this.portInfoByID.get(i);
+            if (portInfo?.lastKnownStatusTag !== undefined && tag.isGreaterThan(portInfo.lastKnownStatusTag)) {
                 Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${i} to ${tag}`});
-                this.lastKnownStatusTags.set(i, tag);
+                portInfo.lastKnownStatusTag = tag;
             }
         }
     }
@@ -1229,7 +1253,7 @@ export class FederatedApp extends App {
         }
         this.rtiClient.registerFederatePortAction(federatePortID, federatePortAction);
         //FIXME: port-absent
-        this.setLastKnownStatusTag(federatePortID);
+        this.registerPortInfo(federatePortID);
     }
 
     /**
@@ -1421,13 +1445,13 @@ export class FederatedApp extends App {
                 destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value);
             }
             //FIXME: should add to update last known status tag
-            this.updateLastKnownStatusOnInputPort(tag, destPortID)
+            this.updatelastKnownStatusTag(tag, destPortID)
         });
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
-                this.updateLastKnownStatusOnInputPorts(tag);
+                this.updatelastKnownStatusTags(tag);
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
@@ -1445,7 +1469,7 @@ export class FederatedApp extends App {
                 // FIXME: Temporarily disabling PTAG handling until the 
                 // input control reaction is implemented.
                 /**
-                this.updateLastKnownStatusOnInputPorts(tag);
+                this.updatelastKnownStatusTags(tag);
 
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
@@ -1485,7 +1509,7 @@ export class FederatedApp extends App {
         //FIXME: port-absent
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
-            this.updateLastKnownStatusOnInputPort(intendedTag, portID);
+            this.updatelastKnownStatusTag(intendedTag, portID);
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
