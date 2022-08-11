@@ -1213,8 +1213,9 @@ export class FederatedApp extends App {
         }
         let trigger = this.outputControlReactionTriggers[0];
         let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
-        Log.debug(this, () => `Inserting network output control reaction on reaction queue.`);
+        Log.debug(this, () => {return`Inserting network output control reaction on reaction queue.`});
         trigger.update(event);
+        // Maybe we can execute this output control reaction in this function directly.
     }
     
     /**
