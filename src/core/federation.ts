@@ -1118,6 +1118,12 @@ export class FederatedApp extends App {
         }
     }
 
+    /**
+     * Set the status of network port with id portID.
+     * 
+     * @param portID The network port ID
+     * @param status The network port status (port_status_t)
+     */
     protected setNetworkPortStatus(portID: number, status: PortStatus) {
         let portInfo = this.portInfoByID.get(portID);
         if (portInfo !== undefined) {
@@ -1125,6 +1131,15 @@ export class FederatedApp extends App {
         }
     }
 
+    /**
+     * Update the last known status tag of a network input port
+     * to the value of "tag". This is the largest tag at which the status
+     * (present or absent) of the port was known.
+     *
+     * @param tag The tag on which the latest status of network input
+     *  ports is known.
+     * @param portID The port ID
+     */
     protected updatelastKnownStatusTag(tag: Tag, portID: number) {
         let portInfo = this.portInfoByID.get(portID);
         if (portInfo !== undefined) {
@@ -1143,6 +1158,16 @@ export class FederatedApp extends App {
         }
     }
 
+    /**
+     * Update the last known status tag of all network input ports
+     * to the value of `tag`, unless that the provided `tag` is less
+     * than the last_known_status_tag of the port. This is called when
+     * all inputs to network ports with tags up to an including `tag`
+     * have been received by those ports. 
+     *
+     * @param tag The tag on which the latest status of network input
+     *  ports is known.
+     */
     protected updatelastKnownStatusTags(tag: Tag) {
         for (let i of this.portInfoByID.keys()) {
             let portInfo = this.portInfoByID.get(i);
@@ -1179,12 +1204,17 @@ export class FederatedApp extends App {
     }
 
     /**
-     * FIXME: port-absent
      * Enqueue network input control reactions that determine if the trigger for a
     *  given network input port is going to be present at the current logical time
     *  or absent.
      */
     protected enqueueNetworkInputControlReactions(): void {
+        // If the granted tag is not provisional, there is no 
+        // need for network input conrol reactions
+        if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
+        || this._isLastTAGProvisional === false) {
+            return;
+        }
         if (this.upstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any upstream federates via a
@@ -1200,7 +1230,6 @@ export class FederatedApp extends App {
     }
 
     /**
-     * FIXME: port-absent
      * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
      * message to downstream federates if a given network output port is not present.
      */
@@ -1220,20 +1249,15 @@ export class FederatedApp extends App {
     
     /**
      *  FIXME: port-absent
+     *  The input and output control reactions should be enqueued seperately
      *  Enqueue network conrol reactions
      */
     protected enqueueNetworkControlReactions(): void {
         this.enqueueNetworkOutputControlReactions();
-        // If the granted tag is not provisional, there is no 
-        // need for network input conrol reactions
-        if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
-        || this._isLastTAGProvisional === false) {
-            return;
-        }
         this.enqueueNetworkInputControlReactions();
     }
 
-///////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     protected _finish() {
         this.sendRTILogicalTimeComplete(this.util.getCurrentTag());
