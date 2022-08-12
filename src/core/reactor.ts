@@ -1717,7 +1717,7 @@ export class App extends Reactor {
          */ 
         public stage(reaction: Reaction<unknown>): void {
             if (this.app._active) {
-                this.app._readyReactionQ.push(reaction)
+                this.app._reactionQ.push(reaction)
             } else {
                 // If execution hasn't started yet, collect the staged reactions.
                 // They will be queued once they have been assigned priorities.
@@ -1872,9 +1872,9 @@ export class App extends Reactor {
     /**
      * Priority set that keeps track of reactions at the current Logical time.
      */
-    private _reactionQ = new ReactionQueue();
-    private _readyReactionQ = new ReactionQueue();
-    private _waitingReactionQ = new ReactionQueue();
+    protected _reactionQ = new ReactionQueue();
+    protected _readyReactionQ = new ReactionQueue();
+    protected _waitingReactionQ = new ReactionQueue();
 
     /**
      * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
@@ -1991,10 +1991,10 @@ export class App extends Reactor {
     /**
      * Iterate over all reactions in the reaction queue and execute them.
      */
-    private _react() {
-        while (this._readyReactionQ.size() > 0) {
+    protected _react() {
+        while (this._reactionQ.size() > 0) {
             try {
-                var r = this._readyReactionQ.pop();
+                var r = this._reactionQ.pop();
                 r.doReact();
             } catch (e) {
                 Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
@@ -2009,7 +2009,8 @@ export class App extends Reactor {
      *  FIXME:port-absent 
      *  Enqueue network control reactions
      */
-    protected enqueueNetworkControlReactions(): void {}
+    protected enqueueNetworkInputControlReactions(): void {}
+    protected triggerNetworkOutputControlReactions(): void {}
 
     /**
      * Handle the next events on the event queue.
@@ -2098,10 +2099,14 @@ export class App extends Reactor {
                 
             } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
             // FIXME: port-absent
-            // enqueue_network_control_reactions() need to be added
-            this.enqueueNetworkControlReactions();
+            // enqueue networkInputControlReactions
+            this.enqueueNetworkInputControlReactions();
+
             // React to all the events loaded onto the reaction queue.
             this._react()
+
+            // trigger networkOutputControlReactions
+            this.triggerNetworkOutputControlReactions();
 
             // Done handling events.
             // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
@@ -2343,7 +2348,7 @@ export class App extends Reactor {
      * app's instantiation onto the reaction queue.
      */
     protected _loadStartupReactions() {
-        this._reactionsAtStartup.forEach(r => this._readyReactionQ.push(r))
+        this._reactionsAtStartup.forEach(r => this._reactionQ.push(r))
     }
 
     /**
@@ -2357,11 +2362,11 @@ export class App extends Reactor {
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
 
-        // Enqueue the network control reactions for startup reactions
-        this.enqueueNetworkControlReactions();
-
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
+
+        // Enqueue the network control reactions for startup reactions
+        this.triggerNetworkOutputControlReactions();
 
         // Continue execution by processing the next event.
         this._next()

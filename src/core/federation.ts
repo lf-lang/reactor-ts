@@ -1098,6 +1098,23 @@ export class FederatedApp extends App {
         return true;
     }
 
+    /**
+     * Iterate over all reactions in the reaction queue and execute them.
+     */
+     protected _react() {
+        while (this._readyReactionQ.size() > 0) {
+            try {
+                var r = this._readyReactionQ.pop();
+                r.doReact();
+            } catch (e) {
+                Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
+                // Allow errors in reactions to kill execution.
+                throw e; 
+            }            
+        }
+        Log.global.debug("Finished handling all events at current time.");
+    }
+
     protected _iterationComplete(): void {
         let currentTime = this.util.getCurrentTag()
         this.sendRTILogicalTimeComplete(currentTime);
@@ -1233,7 +1250,7 @@ export class FederatedApp extends App {
      * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
      * message to downstream federates if a given network output port is not present.
      */
-    protected enqueueNetworkOutputControlReactions(): void {
+    protected triggerNetworkOutputControlReactions(): void {
         if (this.downstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any downstream federates via a
@@ -1244,17 +1261,8 @@ export class FederatedApp extends App {
         let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
         Log.debug(this, () => {return`Inserting network output control reaction on reaction queue.`});
         trigger.update(event);
+        super._react();
         // Maybe we can execute this output control reaction in this function directly.
-    }
-    
-    /**
-     *  FIXME: port-absent
-     *  The input and output control reactions should be enqueued seperately
-     *  Enqueue network conrol reactions
-     */
-    protected enqueueNetworkControlReactions(): void {
-        this.enqueueNetworkOutputControlReactions();
-        this.enqueueNetworkInputControlReactions();
     }
 
     ////////////////////////////////////////////////////////////////////////////
