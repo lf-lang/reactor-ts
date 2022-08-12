@@ -1102,9 +1102,9 @@ export class FederatedApp extends App {
      * Iterate over all reactions in the reaction queue and execute them.
      */
      protected _react() {
-        while (this._readyReactionQ.size() > 0) {
+        while (this._readyReactionQ.size() > 0 || this._reactionQ.size() > 0) {
             try {
-                var r = this._readyReactionQ.pop();
+                var r = this._reactionQ.pop();
                 r.doReact();
             } catch (e) {
                 Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
@@ -1242,6 +1242,9 @@ export class FederatedApp extends App {
             if (this.getCurrentPortStatus(i) === PortStatus.UNKNOWN) {
                 // FIXME: figure out what to do in this for loop
                 let trigger = this.inputControlReactionTriggers[i];
+                let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
+                Log.debug(this, () => {return`Inserting network output control reaction on reaction queue.`});
+                trigger.update(event);
             }
         }
     }
@@ -1546,13 +1549,13 @@ export class FederatedApp extends App {
 
                 // FIXME: Temporarily disabling PTAG handling until the 
                 // input control reaction is implemented.
-                /**
+
                 this.updatelastKnownStatusTags(tag);
 
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
-                */
+
 
                 // FIXME: Add input control reaction handling.
             }

@@ -2362,10 +2362,13 @@ export class App extends Reactor {
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
 
+        // Enqueue the network input control reactions for startup reactions
+        this.enqueueNetworkInputControlReactions();
+        
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
 
-        // Enqueue the network control reactions for startup reactions
+        // Enqueue the network output control reactions for startup reactions
         this.triggerNetworkOutputControlReactions();
 
         // Continue execution by processing the next event.
