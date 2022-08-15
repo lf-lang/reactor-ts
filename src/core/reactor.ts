@@ -678,7 +678,7 @@ export abstract class Reactor extends Component {
      * @param late 
      */
     protected addReaction<T>(trigs: Triggers, args: Args<ArgList<T>>,
-        react: (this: ReactionSandbox, ...args: ArgList<T>) => void, deadline?: TimeValue,
+        react: (this: ReactionSandbox, ...args: ArgList<T>) => any, deadline?: TimeValue,
         late: (this: ReactionSandbox, ...args: ArgList<T>) => void =
             () => { Log.global.warn("Deadline violation occurred!") }) {
         let calleePorts = trigs.list.filter(trig => trig instanceof CalleePort)
@@ -838,14 +838,14 @@ export abstract class Reactor extends Component {
         }
     }
 
-protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
-    if (this._mutations.length > 0) {
-        return this._mutations[0]
+    protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
+        if (this._mutations.length > 0) {
+            return this._mutations[0]
+        }
+        if (this._reactions.length > 0) {
+            return this._reactions[0]
+        }
     }
-    if (this._reactions.length > 0) {
-        return this._reactions[0]
-    }
-}
 
     /**
      * Return the last reaction or mutation of this reactor.

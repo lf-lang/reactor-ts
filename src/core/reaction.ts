@@ -1,3 +1,4 @@
+import { FederatedApp } from "./federation";
 import {
     Sortable, PrioritySetElement, Log,
     ReactionSandbox, Timer, MutationSandbox,
@@ -58,7 +59,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
         private sandbox: ReactionSandbox,
         readonly trigs: Triggers,
         readonly args: Args<ArgList<T>>,
-        private react: (...args: ArgList<T>) => void,
+        private react: (...args: ArgList<T>) => any,
         private deadline?: TimeValue,
         private late: (...args: ArgList<T>) => void = () => 
             { Log.global.warn("Deadline violation occurred!") }) {
@@ -135,7 +136,7 @@ export class Reaction<T> implements Sortable<Priority>, PrioritySetElement<Prior
                 .isSmallerThan(new Tag(this.sandbox.util.getCurrentPhysicalTime(), 0))) {
             this.late.apply(this.sandbox, this.args.tuple); // late
         } else {
-            this.react.apply(this.sandbox, this.args.tuple); // on time
+            return this.react.apply(this.sandbox, this.args.tuple); // on time
         }
     }
 

@@ -1102,10 +1102,13 @@ export class FederatedApp extends App {
      * Iterate over all reactions in the reaction queue and execute them.
      */
      protected _react() {
-        while (this._readyReactionQ.size() > 0 || this._reactionQ.size() > 0) {
+        while (this._reactionQ.size() > 0 || this._readyReactionQ.size() > 0) {
             try {
                 var r = this._reactionQ.pop();
-                r.doReact();
+                let isReactionWaiting = r.doReact();
+                if (isReactionWaiting === true) {
+                    // enqueue network input control again
+                }
             } catch (e) {
                 Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
                 // Allow errors in reactions to kill execution.
