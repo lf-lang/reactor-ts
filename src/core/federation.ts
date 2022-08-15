@@ -1107,9 +1107,8 @@ export class FederatedApp extends App {
                 var r = this._reactionQ.peek();
                 let isReactionWaiting = r.doReact();
                 if (isReactionWaiting === true) {
-                    console.log(`true`);
                     // enqueue network input control again
-                    Log.debug(this, () => {return`Inserting network input control reaction on reaction queue.`});
+                    Log.debug(this, () => {return`React network input control reaction again.`});
                     this.snooze.asSchedulable(this._getKey(this.snooze)).schedule(TimeValue.secs(100), this.util.getCurrentTag());
                 } else {
                     this._reactionQ.pop();
@@ -1211,13 +1210,6 @@ export class FederatedApp extends App {
         // Check whether the status of the port is known at the current tag.
         let portInfo = this.portInfoByID.get(portID);
         if (portInfo !== undefined) {
-            if (portInfo.status === PortStatus.PRESENT) {
-                console.log(`port ${portID}: present`);
-                } else if (portInfo.status === PortStatus.ABSENT) {
-                console.log(`port ${portID}: absent`);
-                } else if (portInfo.status === PortStatus.UNKNOWN) {
-                console.log(`port ${portID}: unknown`);
-            }
             if (portInfo.status === PortStatus.PRESENT) {
                 return PortStatus.PRESENT
             } else if (portInfo.status === PortStatus.ABSENT) {
