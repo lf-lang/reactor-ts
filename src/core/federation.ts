@@ -1104,10 +1104,15 @@ export class FederatedApp extends App {
      protected _react() {
         while (this._reactionQ.size() > 0 || this._readyReactionQ.size() > 0) {
             try {
-                var r = this._reactionQ.pop();
+                var r = this._reactionQ.peek();
                 let isReactionWaiting = r.doReact();
                 if (isReactionWaiting === true) {
+                    console.log(`true`);
                     // enqueue network input control again
+                    Log.debug(this, () => {return`Inserting network input control reaction on reaction queue.`});
+                    this.snooze.asSchedulable(this._getKey(this.snooze)).schedule(TimeValue.secs(100), this.util.getCurrentTag());
+                } else {
+                    this._reactionQ.pop();
                 }
             } catch (e) {
                 Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
@@ -1207,6 +1212,13 @@ export class FederatedApp extends App {
         let portInfo = this.portInfoByID.get(portID);
         if (portInfo !== undefined) {
             if (portInfo.status === PortStatus.PRESENT) {
+                console.log(`port ${portID}: present`);
+                } else if (portInfo.status === PortStatus.ABSENT) {
+                console.log(`port ${portID}: absent`);
+                } else if (portInfo.status === PortStatus.UNKNOWN) {
+                console.log(`port ${portID}: unknown`);
+            }
+            if (portInfo.status === PortStatus.PRESENT) {
                 return PortStatus.PRESENT
             } else if (portInfo.status === PortStatus.ABSENT) {
                 return PortStatus.ABSENT;
@@ -1231,10 +1243,10 @@ export class FederatedApp extends App {
     protected enqueueNetworkInputControlReactions(): void {
         // If the granted tag is not provisional, there is no 
         // need for network input conrol reactions
-        if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
+        /**if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
         || this._isLastTAGProvisional === false) {
             return;
-        }
+        }*/
         if (this.upstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any upstream federates via a
@@ -1246,7 +1258,7 @@ export class FederatedApp extends App {
                 // FIXME: figure out what to do in this for loop
                 let trigger = this.inputControlReactionTriggers[i];
                 let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
-                Log.debug(this, () => {return`Inserting network output control reaction on reaction queue.`});
+                Log.debug(this, () => {return`Inserting network input control reaction on reaction queue.`});
                 trigger.update(event);
             }
         }

@@ -1,4 +1,3 @@
-import { FederatedApp } from "./federation";
 import {
     Sortable, PrioritySetElement, Log,
     ReactionSandbox, Timer, MutationSandbox,

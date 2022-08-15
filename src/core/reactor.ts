@@ -1567,6 +1567,7 @@ interface UtilityFunctions {
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
     sendRTIPortAbsent (additionalDealy: 0 | TimeValue, destFederateID: number, destPortID: number): void;
+    getCurrentPortStatus(portID: number): any;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -1691,6 +1692,9 @@ export class App extends Reactor {
 //FIXEME: port-absent
         public sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
             return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
+        }
+        public getCurrentPortStatus(portID: number) {
+            return this.app.getCurrentPortStatus(portID);
         }
     }(this);
 
@@ -1828,6 +1832,10 @@ export class App extends Reactor {
         throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
     }
 
+    protected getCurrentPortStatus (portID: number) {
+        throw new Error("Cannot call getCurrentPortStatus from an App. getCurrentPortStatus may be called only from a FederatedApp");
+    }
+
     /**
      * The current time, made available so actions may be scheduled relative to it.
      */
@@ -1904,7 +1912,7 @@ export class App extends Reactor {
         Object.entries(this).filter(it => it[1] instanceof Timer).forEach(it => this._unsetTimer(it[1]))
     }
 
-    private snooze: Action<Tag>;
+    protected snooze: Action<Tag>;
 
     readonly _name:string
 
