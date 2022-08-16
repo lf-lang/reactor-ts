@@ -2159,6 +2159,16 @@ export class App extends Reactor {
             this._immediateRef = undefined;
         }
         this._eventQ.empty()
+    }    
+    
+    protected _sleep(duration: TimeValue) {        
+        let physicalTime = getCurrentPhysicalTime();
+        // Set an alarm to be woken up when the event's tag matches physical
+        // time.
+        console.log(`sleep function`);
+        this._alarm.set(function (this: App) {
+            this._startExecuting();
+        }.bind(this), duration)
     }
 
     /**
