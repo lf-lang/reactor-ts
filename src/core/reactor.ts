@@ -1973,7 +1973,7 @@ export class App extends Reactor {
     protected _canProceed(event: TaggedEvent<Present>) {
         return true
     }
-
+    
     /**
      * Set the current tag to be the next tag.
      * 

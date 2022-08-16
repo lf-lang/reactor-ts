@@ -1109,7 +1109,8 @@ export class FederatedApp extends App {
                 if (isReactionWaiting === true) {
                     // enqueue network input control again
                     Log.debug(this, () => {return`React network input control reaction again.`});
-                    this._sleep(TimeValue.msec(10));
+                    //this._sleep(TimeValue.msec(10));
+                    this._reactionQ.pop();
                 } else {
                     this._reactionQ.pop();
                 }
@@ -1125,6 +1126,8 @@ export class FederatedApp extends App {
     protected _iterationComplete(): void {
         let currentTime = this.util.getCurrentTag()
         this.sendRTILogicalTimeComplete(currentTime);
+        this.resetStatusFieldsOnInputPorts();
+        console.log(`time ${currentTime} finished.`);
     }
 
     ///////////////////////////////////Port Status Handling//////////////////////////////////////
@@ -1133,7 +1136,14 @@ export class FederatedApp extends App {
         this.portInfoByID.set(portID, new PortInfo(PortStatus.UNKNOWN, this.util.getCurrentTag()));
     }
 
+    /**
+     * Reset the status fields on network input ports to unknown.
+     * 
+     * @note This function must be called at the beginning of each
+     *  logical time.
+     */
     protected resetStatusFieldsOnInputPorts() {
+        Log.debug(this, () => `Reset all input ports' status before advance Tag.`);
         for (let i of this.portInfoByID.keys()) {
             let portInfo = this.portInfoByID.get(i);
             if (portInfo !== undefined) {
@@ -1246,6 +1256,7 @@ export class FederatedApp extends App {
             // reactions.
         }
         for (let i of this.portInfoByID.keys()) {
+            console.log(`status: ${this.getCurrentPortStatus(i)}`);
             if (this.getCurrentPortStatus(i) === PortStatus.UNKNOWN) {
                 // FIXME: figure out what to do in this for loop
                 let trigger = this.inputControlReactionTriggers[i];
