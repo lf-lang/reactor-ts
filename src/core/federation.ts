@@ -1109,7 +1109,7 @@ export class FederatedApp extends App {
                 if (isReactionWaiting === true) {
                     // enqueue network input control again
                     Log.debug(this, () => {return`React network input control reaction again.`});
-                    this.snooze.asSchedulable(this._getKey(this.snooze)).schedule(TimeValue.secs(100), this.util.getCurrentTag());
+                    this._sleep(TimeValue.msec(10));
                 } else {
                     this._reactionQ.pop();
                 }

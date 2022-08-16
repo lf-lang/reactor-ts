@@ -2167,7 +2167,7 @@ export class App extends Reactor {
         // time.
         console.log(`sleep function`);
         this._alarm.set(function (this: App) {
-            this._startExecuting();
+            this._next();
         }.bind(this), duration)
     }
 
