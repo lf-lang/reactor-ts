@@ -1627,6 +1627,8 @@ export class App extends Reactor {
      */
     protected _isLastTAGProvisional: boolean = false;
 
+    protected _isReactionRemainedAtThisTag: boolean = false;
+
     /**
      * Inner class that provides access to utilities that are safe to expose to
      * reaction code.
@@ -1881,8 +1883,6 @@ export class App extends Reactor {
      * Priority set that keeps track of reactions at the current Logical time.
      */
     protected _reactionQ = new ReactionQueue();
-    protected _readyReactionQ = new ReactionQueue();
-    protected _waitingReactionQ = new ReactionQueue();
 
     /**
      * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
@@ -1981,8 +1981,10 @@ export class App extends Reactor {
      */
     protected _advanceTime(nextTag: Tag) {
         this._currentTag = nextTag;
+        this.resetStatusFieldsOnInputPorts();
     }
 
+    protected resetStatusFieldsOnInputPorts(): void{}
     protected _iterationComplete(): void {}
 
     /**
@@ -1999,7 +2001,7 @@ export class App extends Reactor {
     /**
      * Iterate over all reactions in the reaction queue and execute them.
      */
-    protected _react() {
+    protected _react(): boolean {
         while (this._reactionQ.size() > 0) {
             try {
                 var r = this._reactionQ.pop();
@@ -2011,6 +2013,7 @@ export class App extends Reactor {
             }            
         }
         Log.global.debug("Finished handling all events at current time.");
+        return false;
     }
 
     /** 
@@ -2040,7 +2043,21 @@ export class App extends Reactor {
      */
     private _next() {
         var nextEvent = this._eventQ.peek();
-        if (nextEvent) {
+        if (this._isReactionRemainedAtThisTag) {
+            if (this._react()) {
+                return;
+            } else {
+                this._isReactionRemainedAtThisTag = false;     
+
+                // trigger networkOutputControlReactions
+                this.triggerNetworkOutputControlReactions();
+    
+                // Done handling events.
+                // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
+                // Make sure that a federate sends LTC only after actually handling an event.
+                this._iterationComplete();
+            }
+        } else if (nextEvent) {
 
             // Check whether the next event can be handled, or not quite yet.
             // A holdup can occur in a federated execution.
@@ -2058,6 +2075,9 @@ export class App extends Reactor {
                 return;
             }
 
+            // Advance logical time.
+            this._advanceTime(nextEvent.tag)
+
             // Start processing events. Execute all reactions that are triggered
             // at the current tag in topological order. After that, if the next
             // event on the event queue has the same time (but a greater
@@ -2067,9 +2087,6 @@ export class App extends Reactor {
             // typically reported via physical actions, the tags of the
             // resulting events would be in the future, anyway.
             do {
-                // Advance logical time.
-                this._advanceTime(nextEvent.tag)
-
                 // Keep popping the event queue until the next event has a different tag.
                 while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
                     var trigger = nextEvent.trigger;
@@ -2111,7 +2128,10 @@ export class App extends Reactor {
             this.enqueueNetworkInputControlReactions();
 
             // React to all the events loaded onto the reaction queue.
-            this._react()
+            if (this._react()) {
+                this._isReactionRemainedAtThisTag = true;
+                return;
+            }
 
             // trigger networkOutputControlReactions
             this.triggerNetworkOutputControlReactions();
@@ -2160,16 +2180,6 @@ export class App extends Reactor {
         }
         this._eventQ.empty()
     }    
-    
-    protected _sleep(duration: TimeValue) {        
-        let physicalTime = getCurrentPhysicalTime();
-        // Set an alarm to be woken up when the event's tag matches physical
-        // time.
-        console.log(`sleep function`);
-        this._alarm.set(function (this: App) {
-            this._next();
-        }.bind(this), duration)
-    }
 
     /**
      * 

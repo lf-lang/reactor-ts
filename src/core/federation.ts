@@ -906,8 +906,7 @@ enum StopRequestState {
  *  Enum type to store the state of input port.
  */
 enum PortStatus {
-    PRESENT,
-    ABSENT,
+    KNOWN,
     UNKNOWN
 }
 
@@ -1100,17 +1099,18 @@ export class FederatedApp extends App {
 
     /**
      * Iterate over all reactions in the reaction queue and execute them.
+     * 
+     *  @returns whether the reaction is remained at this tag due to unknown input ports
      */
-     protected _react() {
-        while (this._reactionQ.size() > 0 || this._readyReactionQ.size() > 0) {
+     protected _react(): boolean {
+        while (this._reactionQ.size() > 0) {
             try {
                 var r = this._reactionQ.peek();
                 let isReactionWaiting = r.doReact();
                 if (isReactionWaiting === true) {
-                    // enqueue network input control again
+                    // Reaction should wait until port status becomes known
                     Log.debug(this, () => {return`React network input control reaction again.`});
-                    //this._sleep(TimeValue.msec(10));
-                    this._reactionQ.pop();
+                    return true;
                 } else {
                     this._reactionQ.pop();
                 }
@@ -1121,13 +1121,12 @@ export class FederatedApp extends App {
             }            
         }
         Log.global.debug("Finished handling all events at current time.");
+        return false;
     }
 
     protected _iterationComplete(): void {
         let currentTime = this.util.getCurrentTag()
         this.sendRTILogicalTimeComplete(currentTime);
-        this.resetStatusFieldsOnInputPorts();
-        console.log(`time ${currentTime} finished.`);
     }
 
     ///////////////////////////////////Port Status Handling//////////////////////////////////////
@@ -1137,17 +1136,23 @@ export class FederatedApp extends App {
     }
 
     /**
-     * Reset the status fields on network input ports to unknown.
+     * Reset the status fields on network input ports 
+     * which can't receive the network message at the current Tag.
+     * 
+     * //FIXME: port-absen - The name of function should be adjust
      * 
      * @note This function must be called at the beginning of each
      *  logical time.
      */
-    protected resetStatusFieldsOnInputPorts() {
+    protected resetStatusFieldsOnInputPorts(): void {
         Log.debug(this, () => `Reset all input ports' status before advance Tag.`);
         for (let i of this.portInfoByID.keys()) {
             let portInfo = this.portInfoByID.get(i);
             if (portInfo !== undefined) {
-                portInfo.status = PortStatus.UNKNOWN;
+                let currentTag = this.util.getCurrentTag();
+                if (currentTag.isGreaterThan(portInfo.lastKnownStatusTag)) {
+                    portInfo.status = PortStatus.UNKNOWN;
+                }
             }   
         }
     }
@@ -1220,18 +1225,16 @@ export class FederatedApp extends App {
         // Check whether the status of the port is known at the current tag.
         let portInfo = this.portInfoByID.get(portID);
         if (portInfo !== undefined) {
-            if (portInfo.status === PortStatus.PRESENT) {
-                return PortStatus.PRESENT
-            } else if (portInfo.status === PortStatus.ABSENT) {
-                return PortStatus.ABSENT;
+            if (portInfo.status === PortStatus.KNOWN) {
+                return PortStatus.KNOWN;
             } else if (portInfo.status === PortStatus.UNKNOWN
                 && portInfo.lastKnownStatusTag.isGreaterThanOrEqualTo(this.util.getCurrentTag())) {
-                this.setNetworkPortStatus(portID, PortStatus.ABSENT);
-                return PortStatus.ABSENT;
+                this.setNetworkPortStatus(portID, PortStatus.KNOWN);
+                return PortStatus.KNOWN;
             } else if (this._isLastTAGProvisional
                 && this.greatestTimeAdvanceGrant?.isGreaterThan(this.util.getCurrentTag())) {
-                this.setNetworkPortStatus(portID, PortStatus.ABSENT);
-                return PortStatus.ABSENT;
+                this.setNetworkPortStatus(portID, PortStatus.KNOWN);
+                return PortStatus.KNOWN;
             }
             return PortStatus.UNKNOWN;
         }
@@ -1245,10 +1248,10 @@ export class FederatedApp extends App {
     protected enqueueNetworkInputControlReactions(): void {
         // If the granted tag is not provisional, there is no 
         // need for network input conrol reactions
-        /**if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
+        if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
         || this._isLastTAGProvisional === false) {
             return;
-        }*/
+        }
         if (this.upstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any upstream federates via a
@@ -1256,7 +1259,6 @@ export class FederatedApp extends App {
             // reactions.
         }
         for (let i of this.portInfoByID.keys()) {
-            console.log(`status: ${this.getCurrentPortStatus(i)}`);
             if (this.getCurrentPortStatus(i) === PortStatus.UNKNOWN) {
                 // FIXME: figure out what to do in this for loop
                 let trigger = this.inputControlReactionTriggers[i];
@@ -1544,7 +1546,8 @@ export class FederatedApp extends App {
             }
             //FIXME: should add to update last known status tag
             this.updatelastKnownStatusTag(tag, destPortID);
-            this.setNetworkPortStatus(destPortID, PortStatus.PRESENT);
+            this.setNetworkPortStatus(destPortID, PortStatus.KNOWN);
+            this._requestImmediateInvocationOfNext();
         });
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
@@ -1609,6 +1612,7 @@ export class FederatedApp extends App {
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
             this.updatelastKnownStatusTag(intendedTag, portID);
+            this._requestImmediateInvocationOfNext();
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
