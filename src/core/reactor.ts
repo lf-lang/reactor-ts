@@ -1912,7 +1912,7 @@ export class App extends Reactor {
         Object.entries(this).filter(it => it[1] instanceof Timer).forEach(it => this._unsetTimer(it[1]))
     }
 
-    protected snooze: Action<Tag>;
+    private snooze: Action<Tag>;
 
     readonly _name:string
 
