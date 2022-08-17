@@ -36,6 +36,9 @@
         "typedoc": "^0.21.4",
         "typescript": "^4.3.5"
     },
+    "files": [
+        "lib"
+    ],
     "scripts": {
         "check-types": "tsc",
         "build": "rm -rf dist lib && babel src --out-dir lib --extensions .ts",
