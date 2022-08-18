@@ -2068,7 +2068,6 @@ export class App extends Reactor {
 
             // Check whether the next event can be handled, or not quite yet.
             // A holdup can occur in a federated execution.
-            console.log(`canProceed`);
             if (!this._canProceed(nextEvent)) {
                 // If this happens, then a TAG from the RTI will trigger the
                 // next invocation of _next.
@@ -2137,7 +2136,6 @@ export class App extends Reactor {
 
             // React to all the events loaded onto the reaction queue.
             if (this._react()) {
-                console.log(`true`);
                 this._isReactionRemainedAtThisTag = true;
                 return;
             }
@@ -2404,7 +2402,6 @@ export class App extends Reactor {
         
         // Handle the reactions that were loaded onto the reaction queue.
         if (this._react() == true) {
-            console.log(`true`);
             this._isReactionRemainedAtThisTag = true;
         } else {
         // Enqueue the network output control reactions for startup reactions
