@@ -1267,10 +1267,10 @@ export class FederatedApp extends App {
     protected enqueueNetworkInputControlReactions(): void {
         // If the granted tag is not provisional, there is no 
         // need for network input conrol reactions
-        /**if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
+        if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
         || this._isLastTAGProvisional === false) {
             return;
-        }*/
+        }
         if (this.upstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any upstream federates via a
