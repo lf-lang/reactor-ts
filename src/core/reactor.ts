@@ -2399,13 +2399,14 @@ export class App extends Reactor {
 
         // Enqueue the network input control reactions for startup reactions
         this.enqueueNetworkInputControlReactions();
-        
+
         // Handle the reactions that were loaded onto the reaction queue.
-        if (this._react() == true) {
+        if (this._react() === true) {
             this._isReactionRemainedAtThisTag = true;
         } else {
-        // Enqueue the network output control reactions for startup reactions
-        this.triggerNetworkOutputControlReactions();
+            // Enqueue the network output control reactions for startup reactions 
+            // if all startup reactions are executed
+            this.triggerNetworkOutputControlReactions();
         }
 
         // Continue execution by processing the next event.
