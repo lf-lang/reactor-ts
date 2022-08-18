@@ -1127,9 +1127,10 @@ export class FederatedApp extends App {
                     // Reaction should wait until port status becomes known
                     Log.debug(this, () => {return`React network input control reaction again.`});
                     return true;
-                } else {
-                    this._reactionQ.pop();
+                } else if (isReactionWaiting === false) {
+                    Log.debug(this, () => {return`Escape a network input control reaction.`});
                 }
+                this._reactionQ.pop();
             } catch (e) {
                 Log.error(this, () => "Exception occurred in reaction: " + r + ": " + e);
                 // Allow errors in reactions to kill execution.
@@ -1161,7 +1162,9 @@ export class FederatedApp extends App {
      *  logical time.
      */
     protected resetStatusFieldsOnInputPorts(): void {
-        Log.debug(this, () => `Reset all input ports' status before advance Tag.`);
+        if (this.portInfoByID.size != 0) {
+            Log.debug(this, () => `Reset all input ports' status before advance Tag.`);
+        }
         for (let i of this.portInfoByID.keys()) {
             let portInfo = this.portInfoByID.get(i);
             if (portInfo !== undefined) {
@@ -1264,10 +1267,10 @@ export class FederatedApp extends App {
     protected enqueueNetworkInputControlReactions(): void {
         // If the granted tag is not provisional, there is no 
         // need for network input conrol reactions
-        if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
+        /**if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
         || this._isLastTAGProvisional === false) {
             return;
-        }
+        }*/
         if (this.upstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any upstream federates via a
