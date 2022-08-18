@@ -16,7 +16,6 @@ import {
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
 import { Bank } from "./bank";
-import { REFUSED } from "dns";
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -1691,10 +1690,11 @@ export class App extends Reactor {
         public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         }
-//FIXEME: port-absent
+
         public sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
             return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
         }
+
         public getCurrentPortStatus(portID: number) {
             return this.app.getCurrentPortStatus(portID);
         }
@@ -1827,8 +1827,16 @@ export class App extends Reactor {
     }
 
     /**
-     * Send a MSG_TYPE_PORT_ABSENT
-     * please add explanation of this message.  
+     * Send a port absent message to federate with fed_ID, informing the
+     * remote federate that the current federate will not produce an event
+     * on this network port at the current logical time.
+     * 
+     * @param additional_delay The offset applied to the timestamp
+     *  using after. The additional delay will be greater or equal to zero
+     *  if an after is used on the connection. If no after is given in the
+     *  program, -1 is passed.
+     * @param destFederatedID The fed ID of the receiving federate.
+     * @param destPortID The ID of the receiving port.
      */
     protected sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
@@ -1973,7 +1981,7 @@ export class App extends Reactor {
     protected _canProceed(event: TaggedEvent<Present>) {
         return true
     }
-    
+
     /**
      * Set the current tag to be the next tag.
      * 
@@ -2017,7 +2025,6 @@ export class App extends Reactor {
     }
 
     /** 
-     *  FIXME:port-absent 
      *  Enqueue network control reactions
      */
     protected enqueueNetworkInputControlReactions(): void {}
@@ -2107,7 +2114,7 @@ export class App extends Reactor {
                     
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
-                }            
+                }
 
                 // End of this execution step. Perform cleanup.
                 while (this._reactorsToRemove.length > 0) {
@@ -2121,9 +2128,9 @@ export class App extends Reactor {
                 // Peek at the event queue to see whether we can process the next event
                 // or should give control back to the JS event loop.
                 nextEvent = this._eventQ.peek();
-                
+
             } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
-            // FIXME: port-absent
+
             // enqueue networkInputControlReactions
             this.enqueueNetworkInputControlReactions();
 
@@ -2179,7 +2186,7 @@ export class App extends Reactor {
             this._immediateRef = undefined;
         }
         this._eventQ.empty()
-    }    
+    }
 
     /**
      * 

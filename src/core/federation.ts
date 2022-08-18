@@ -618,7 +618,15 @@ class RTIClient extends EventEmitter {
         }
     }
 
-    //FIXME: port-absent
+    /**
+     * Send a port absent message to federate with fed_ID, informing the
+     * remote federate that the current federate will not produce an event
+     * on this network port at the current logical time.
+     * 
+     * @param intendedTag The last tag that the federate can assure that this port is absent
+     * @param federateID The fed ID of the receiving federate.
+     * @param federatePortID The ID of the receiving port. 
+     */
     public sendRTIPortAbsent(intendedTag: Tag, federateID: number, federatePortID: number) {
         let msg = Buffer.alloc(17);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
@@ -855,7 +863,6 @@ class RTIClient extends EventEmitter {
                     bufferIndex += 13;
                     break;
                 }
-                //FIXME: port-absent
                 case RTIMessageTypes.MSG_TYPE_PORT_ABSENT: {
                     // The next 2 bytes is the port id.
                     // The next 2 bytes will be the federate id of the destination federate.
@@ -904,6 +911,8 @@ enum StopRequestState {
 
 /**
  *  Enum type to store the state of input port.
+ *  Determines the status of the port at the current logical time. Therefore, this
+ *  value needs to be reset at the beginning of each logical time.
  */
 enum PortStatus {
     KNOWN,
@@ -923,6 +932,10 @@ class StopRequestInfo {
     readonly tag: Tag | null;
 }
 
+/**
+ * Class for storing state of input ports information 
+ * including the current state and the last known status tag.
+ */
 class PortInfo {
     constructor(status: PortStatus, tag: Tag) {
         this.status = status;
@@ -978,8 +991,12 @@ export class FederatedApp extends App {
      */
     private greatestTimeAdvanceGrant: Tag | null = null;
 
-    // FIXME: port-absent
-    // 
+
+    /**
+     * Establish the mapping between a federate port's info and its ID.
+     * @param federatePortID The federate port's ID.
+     * @param federatePort The federate port's information.
+     */
     private portInfoByID: Map<number, PortInfo> = new Map<number, PortInfo>();
 
     private upstreamFedIDs: number[] = [];
@@ -1011,7 +1028,6 @@ export class FederatedApp extends App {
         
     public registerInputControlReactionTrigger(portID: number, inputControlReactionTrigger: Action<Present>) {
         this.inputControlReactionTriggers.push(inputControlReactionTrigger);
-        //FIXME: port-absent
         this.registerPortInfo(portID);
     }
         
@@ -1437,7 +1453,16 @@ export class FederatedApp extends App {
     }
 
     /**
-     * Send the RTI a port absent message
+     * Send a port absent message to federate with fed_ID, informing the
+     * remote federate that the current federate will not produce an event
+     * on this network port at the current logical time.
+     * 
+     * @param additional_delay The offset applied to the timestamp
+     *  using after. The additional delay will be greater or equal to zero
+     *  if an after is used on the connection. If no after is given in the
+     *  program, -1 is passed.
+     * @param destFederatedID The fed ID of the receiving federate.
+     * @param destPortID The ID of the receiving port.
      */
     public sendRTIPortAbsent(additionalDelay:0 | TimeValue, destFederateID: number, destPortID: number): void {
         let intendedTag = this.util.getCurrentTag();
@@ -1544,7 +1569,7 @@ export class FederatedApp extends App {
                 // Tr = max(r, R + A)
                 destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value);
             }
-            //FIXME: should add to update last known status tag
+            // Update port's info
             this.updatelastKnownStatusTag(tag, destPortID);
             this.setNetworkPortStatus(destPortID, PortStatus.KNOWN);
             this._requestImmediateInvocationOfNext();
@@ -1608,7 +1633,7 @@ export class FederatedApp extends App {
             else
                 this._setEndOfExecution(tag);
         });
-        //FIXME: port-absent
+
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
             this.updatelastKnownStatusTag(intendedTag, portID);
