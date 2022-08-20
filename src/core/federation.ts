@@ -1267,7 +1267,8 @@ export class FederatedApp extends App {
     protected enqueueNetworkInputControlReactions(): void {
         // If the granted tag is not provisional, there is no 
         // need for network input conrol reactions
-        if (!this.greatestTimeAdvanceGrant?.isSimultaneousWith(this.util.getCurrentTag())
+        let currentTag = this.util.getCurrentTag();
+        if ((this.greatestTimeAdvanceGrant !== null && !this.greatestTimeAdvanceGrant.isSimultaneousWith(currentTag))
         || this._isLastTAGProvisional === false) {
             return;
         }
@@ -1281,7 +1282,7 @@ export class FederatedApp extends App {
             if (this.getCurrentPortStatus(i) === PortStatus.UNKNOWN) {
                 // FIXME: figure out what to do in this for loop
                 let trigger = this.inputControlReactionTriggers[i];
-                let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
+                let event = new TaggedEvent(trigger, currentTag, null);
                 Log.debug(this, () => {return`Inserting network input control reaction on reaction queue.`});
                 trigger.update(event);
             }
