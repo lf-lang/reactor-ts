@@ -1626,8 +1626,6 @@ export class App extends Reactor {
      */
     protected _isLastTAGProvisional: boolean = false;
 
-    protected _isReactionRemainedAtThisTag: boolean = false;
-
     /**
      * Inner class that provides access to utilities that are safe to expose to
      * reaction code.
@@ -2009,7 +2007,7 @@ export class App extends Reactor {
     /**
      * Iterate over all reactions in the reaction queue and execute them.
      */
-    protected _react(): boolean {
+    protected _react() {
         while (this._reactionQ.size() > 0) {
             try {
                 var r = this._reactionQ.pop();
@@ -2020,8 +2018,7 @@ export class App extends Reactor {
                 throw e; 
             }            
         }
-        Log.global.debug("Finished handling all events at current time.");
-        return false;
+        Log.global.debug("Finished handling all events at current tag.");
     }
 
     /** 
@@ -2050,21 +2047,7 @@ export class App extends Reactor {
      */
     private _next() {
         var nextEvent = this._eventQ.peek();
-        if (this._isReactionRemainedAtThisTag) {
-            if (this._react()) {
-                return;
-            } else {
-                this._isReactionRemainedAtThisTag = false;     
-
-                // trigger networkOutputControlReactions
-                this.triggerNetworkOutputControlReactions();
-    
-                // Done handling events.
-                // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
-                // Make sure that a federate sends LTC only after actually handling an event.
-                this._iterationComplete();
-            }
-        } else if (nextEvent) {
+        if (nextEvent) {
 
             // Check whether the next event can be handled, or not quite yet.
             // A holdup can occur in a federated execution.
@@ -2135,10 +2118,7 @@ export class App extends Reactor {
             this.enqueueNetworkInputControlReactions();
 
             // React to all the events loaded onto the reaction queue.
-            if (this._react()) {
-                this._isReactionRemainedAtThisTag = true;
-                return;
-            }
+            this._react()
 
             // trigger networkOutputControlReactions
             this.triggerNetworkOutputControlReactions();
@@ -2401,13 +2381,11 @@ export class App extends Reactor {
         this.enqueueNetworkInputControlReactions();
 
         // Handle the reactions that were loaded onto the reaction queue.
-        if (this._react() === true) {
-            this._isReactionRemainedAtThisTag = true;
-        } else {
-            // Enqueue the network output control reactions for startup reactions 
-            // if all startup reactions are executed
-            this.triggerNetworkOutputControlReactions();
-        }
+        this._react() 
+    
+        // Enqueue the network output control reactions for startup reactions 
+        // if all startup reactions are executed
+        this.triggerNetworkOutputControlReactions();
 
         // Continue execution by processing the next event.
         this._next()

@@ -1118,7 +1118,7 @@ export class FederatedApp extends App {
      * 
      *  @returns whether the reaction is remained at this tag due to unknown input ports
      */
-     protected _react(): boolean {
+     protected _react() {
         while (this._reactionQ.size() > 0) {
             try {
                 var r = this._reactionQ.peek();
@@ -1126,7 +1126,7 @@ export class FederatedApp extends App {
                 if (isReactionWaiting === true) {
                     // Reaction should wait until port status becomes known
                     Log.debug(this, () => {return`React network input control reaction again.`});
-                    return true;
+                    // FIXME: add await function to read and process RTI messages
                 } else if (isReactionWaiting === false) {
                     Log.debug(this, () => {return`Escape a network input control reaction.`});
                 }
@@ -1137,7 +1137,7 @@ export class FederatedApp extends App {
                 throw e; 
             }            
         }
-        Log.global.debug("Finished handling all events at current time.");
+        Log.global.debug("Finished handling all events at current tag.");
         return false;
     }
 
@@ -1576,7 +1576,6 @@ export class FederatedApp extends App {
             // Update port's info
             this.updatelastKnownStatusTag(tag, destPortID);
             this.setNetworkPortStatus(destPortID, PortStatus.KNOWN);
-            this._requestImmediateInvocationOfNext();
         });
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
@@ -1641,7 +1640,6 @@ export class FederatedApp extends App {
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
             this.updatelastKnownStatusTag(intendedTag, portID);
-            this._requestImmediateInvocationOfNext();
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
