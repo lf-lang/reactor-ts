@@ -1138,7 +1138,6 @@ export class FederatedApp extends App {
             }            
         }
         Log.global.debug("Finished handling all events at current tag.");
-        return false;
     }
 
     protected _iterationComplete(): void {
