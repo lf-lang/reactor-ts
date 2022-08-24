@@ -4,7 +4,7 @@
     "description": "Reactor runtime written in TypeScript",
     "main": "lib/core/index.js",
     "type": "commonjs",
-    "types": "src",
+    "types": "src/core",
     "dependencies": {
         "@definitelytyped/header-parser": "0.0.29",
         "@definitelytyped/typescript-versions": "0.0.29",
