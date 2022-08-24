@@ -302,7 +302,7 @@ export class TimeValue {
      * Used by federates.
      */
     public toBinary(): Buffer {
-        let buff =Buffer.alloc(8);
+        let buff = Buffer.alloc(8);
         if (this.seconds === Number.MIN_SAFE_INTEGER) {
             buff.writeBigUInt64LE(BigInt(0x8000000000000000), 0);
         } else if (this.seconds === Number.MAX_SAFE_INTEGER) {
