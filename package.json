@@ -45,8 +45,7 @@
         "deploy": "npm run build && npm run doc",
         "doc": "typedoc --exclude \"**/+(example|benchmark|share)/**/*.ts\" --out docs src && touch docs/.nojekyll",
         "dtslint": "dtslint __tests__/types",
-        "test": "jest --coverage",
-        "postinstall": "mkdir -p node_modules/@types/ulog; cp src/core/ulog.d.ts node_modules/@types/ulog/index.d.ts"
+        "test": "jest --coverage"
     },
     "jest": {
         "globals": {
