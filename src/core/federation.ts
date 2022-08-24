@@ -196,6 +196,19 @@ enum RTIMessageTypes {
     MSG_TYPE_STOP_GRANTED = 12,
 
     /**
+     * A port absent message, informing the receiver that a given port
+     * will not have event for the current logical time.
+     * 
+     * The next 2 bytes is the port id.
+     * The next 2 bytes will be the federate id of the destination federate.
+     *  This is needed for the centralized coordination so that the RTI knows where
+     *  to forward the message.
+     * The next 8 bytes are the intended time of the absent message
+     * The next 4 bytes are the intended microstep of the absent message
+     */
+    MSG_TYPE_PORT_ABSENT = 23,
+
+    /**
      * A message that informs the RTI about connections between this federate and
      * other federates where messages are routed through the RTI. Currently, this
      * only includes logical connections when the coordination is centralized. This
@@ -606,6 +619,29 @@ class RTIClient extends EventEmitter {
     }
 
     /**
+     * Send a port absent message to federate with fed_ID, informing the
+     * remote federate that the current federate will not produce an event
+     * on this network port at the current logical time.
+     * 
+     * @param intendedTag The last tag that the federate can assure that this port is absent
+     * @param federateID The fed ID of the receiving federate.
+     * @param federatePortID The ID of the receiving port. 
+     */
+    public sendRTIPortAbsent(intendedTag: Tag, federateID: number, federatePortID: number) {
+        let msg = Buffer.alloc(17);
+        msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
+        msg.writeUInt16LE(federatePortID, 1);
+        msg.writeUInt16LE(federateID, 3);
+        intendedTag.toBinary().copy(msg, 5);
+        try {
+            Log.debug(this, () => {return `Sending RTI Port Absent message, tag: ${intendedTag}`});
+            this.socket?.write(msg);
+        } catch (e) {
+            Log.error(this, () => {return `${e}`});
+        }
+    }
+
+    /**
      * The handler for the socket's data event. 
      * The data Buffer given to the handler may contain 0 or more complete messages.
      * Iterate through the complete messages, and if the last message is incomplete
@@ -827,6 +863,23 @@ class RTIClient extends EventEmitter {
                     bufferIndex += 13;
                     break;
                 }
+                case RTIMessageTypes.MSG_TYPE_PORT_ABSENT: {
+                    // The next 2 bytes is the port id.
+                    // The next 2 bytes will be the federate id of the destination federate.
+                    // The next 8 bytes are the intended time of the absent message
+                    // The next 4 bytes are the intended microstep of the absent message
+                    let portID = assembledData.readUInt16LE(bufferIndex + 1);
+                    // The next part of the message is the federate_id, but we don't need it.
+                    // let federateID = assembledData.readUInt16LE(bufferIndex + 3);
+                    let tagBuffer = Buffer.alloc(12);
+                    assembledData.copy(tagBuffer, 0, bufferIndex + 5, bufferIndex + 17 );
+                    let intendedTag = Tag.fromBinary(tagBuffer);
+                    Log.debug(thiz, () => { return `Handling port absent for tag ${intendedTag} for port ${portID}.`      
+                    }); 
+                    thiz.emit('portAbsent', portID, intendedTag);
+                    bufferIndex += 17;
+                    break;
+                }
                 case RTIMessageTypes.MSG_TYPE_ACK: {
                     Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_ACK'});
                     bufferIndex += 1;
@@ -919,6 +972,8 @@ export class FederatedApp extends App {
     private upstreamFedDelays: bigint[] = [];
     private downstreamFedIDs: number[] = [];
 
+    private outputControlReactionTriggers: Action<Present>[] = [];
+
     /**
      * The default value, null, indicates there is no output depending on a physical action. 
      */ 
@@ -936,6 +991,10 @@ export class FederatedApp extends App {
 
     public setMinDelayFromPhysicalActionToFederateOutput(minDelay: TimeValue) {
         this.minDelayFromPhysicalActionToFederateOutput = minDelay;
+    }
+
+    public registerOutputControlReactionTrigger(outputControlReactionTrigger: Action<Present>) {
+        this.outputControlReactionTriggers.push(outputControlReactionTrigger);
     }
 
     /**
@@ -1019,6 +1078,25 @@ export class FederatedApp extends App {
     protected _iterationComplete(): void {
         let currentTime = this.util.getCurrentTag()
         this.sendRTILogicalTimeComplete(currentTime);
+    }
+
+    /**
+     * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
+     * message to downstream federates if a given network output port is not present.
+     */
+     protected triggerNetworkOutputControlReactions(): void {
+        if (this.downstreamFedIDs.length === 0) {
+            return;
+            // This federate is not connected to any downstream federates via a
+            // logical connection. No need to trigger network output control
+            // reactions.
+        }
+        let trigger = this.outputControlReactionTriggers[0];
+        let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
+        Log.debug(this, () => {return`Inserting network output control reaction on reaction queue.`});
+        trigger.update(event);
+        this._react();
+        // Maybe we can execute this output control reaction in this function directly.
     }
 
     protected _finish() {
@@ -1165,6 +1243,28 @@ export class FederatedApp extends App {
         this.stopRequestInfo = new StopRequestInfo(StopRequestState.SENT, stopTag);
         let tag = stopTag.toBinary();
         this.rtiClient.sendRTIStopRequestReply(tag);
+    }
+
+    /**
+     * Send a port absent message to federate with fed_ID, informing the
+     * remote federate that the current federate will not produce an event
+     * on this network port at the current logical time.
+     * 
+     * @param additional_delay The offset applied to the timestamp
+     *  using after. The additional delay will be greater or equal to zero
+     *  if an after is used on the connection. If no after is given in the
+     *  program, -1 is passed.
+     * @param destFederatedID The fed ID of the receiving federate.
+     * @param destPortID The ID of the receiving port.
+     */
+    public sendRTIPortAbsent(additionalDelay:0 | TimeValue, destFederateID: number, destPortID: number): void {
+        let intendedTag = this.util.getCurrentTag();
+        if (additionalDelay instanceof TimeValue) {
+            intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
+        }
+        Log.debug(this, () => {return `Sending RTI port absent for tag ${intendedTag} to federate ID: ${destFederateID}`
+        + ` port ID: ${destPortID}.`});
+        this.rtiClient.sendRTIPortAbsent(intendedTag, destFederateID, destPortID);
     }
 
     /**
@@ -1318,6 +1418,11 @@ export class FederatedApp extends App {
             }
             else
                 this._setEndOfExecution(tag);
+        });
+
+        this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
+            Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
+            // TODO: add port status control
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);

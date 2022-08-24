@@ -1565,6 +1565,7 @@ interface UtilityFunctions {
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
+    sendRTIPortAbsent (additionalDealy: 0 | TimeValue, destFederateID: number, destPortID: number): void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -1687,6 +1688,9 @@ export class App extends Reactor {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         };
 
+        public sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
+            return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
+        }
     }(this);
 
     /**
@@ -1813,6 +1817,22 @@ export class App extends Reactor {
      */
     protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
+    }
+
+    /**
+     * Send a port absent message to federate with fed_ID, informing the
+     * remote federate that the current federate will not produce an event
+     * on this network port at the current logical time.
+     * 
+     * @param additional_delay The offset applied to the timestamp
+     *  using after. The additional delay will be greater or equal to zero
+     *  if an after is used on the connection. If no after is given in the
+     *  program, -1 is passed.
+     * @param destFederatedID The fed ID of the receiving federate.
+     * @param destPortID The ID of the receiving port.
+     */
+    protected sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
+        throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
     }
 
     /**
@@ -1976,7 +1996,7 @@ export class App extends Reactor {
     /**
      * Iterate over all reactions in the reaction queue and execute them.
      */
-    private _react() {
+    protected _react() {
         while (this._reactionQ.size() > 0) {
             try {
                 var r = this._reactionQ.pop();
@@ -1989,6 +2009,8 @@ export class App extends Reactor {
         }
         Log.global.debug("Finished handling all events at current time.");
     }
+
+    protected triggerNetworkOutputControlReactions(): void {}
 
     /**
      * Handle the next events on the event queue.
@@ -2028,6 +2050,9 @@ export class App extends Reactor {
                 return;
             }
 
+            // Advance logical time.
+            this._advanceTime(nextEvent.tag)
+
             // Start processing events. Execute all reactions that are triggered
             // at the current tag in topological order. After that, if the next
             // event on the event queue has the same time (but a greater
@@ -2037,8 +2062,6 @@ export class App extends Reactor {
             // typically reported via physical actions, the tags of the
             // resulting events would be in the future, anyway.
             do {
-                // Advance logical time.
-                this._advanceTime(nextEvent.tag)
 
                 // Keep popping the event queue until the next event has a different tag.
                 while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
@@ -2080,6 +2103,9 @@ export class App extends Reactor {
 
             // React to all the events loaded onto the reaction queue.
             this._react()
+
+            // trigger networkOutputControlReactions
+            this.triggerNetworkOutputControlReactions();
 
             // Done handling events.
             // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
@@ -2337,6 +2363,9 @@ export class App extends Reactor {
 
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
+
+        // trigger networkOutputControlReactions
+        this.triggerNetworkOutputControlReactions();
 
         // Continue execution by processing the next event.
         this._next()
