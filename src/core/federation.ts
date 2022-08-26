@@ -1070,6 +1070,13 @@ export class FederatedApp extends App {
         }
         this.rtiClient = new RTIClient(config.federationID, config.federateID);
         this.rtiHost = config.rtiHost
+        for (let sendsToFedId of config.sendsTo) {
+            this.addDownstreamFederate(sendsToFedId);
+        }
+        for (let dependsOnFedId of config.dependsOn) {
+            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.zero().
+            this.addUpstreamFederate(dependsOnFedId, TimeValue.zero());
+        }
     }
 
     /**
