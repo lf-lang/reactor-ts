@@ -113,8 +113,9 @@ export interface FederateConfig {
     executionTimeout?: TimeValue
     fast: boolean
     federateID: number
-    federationID: number
+    federationID: string
     keepAlive?: boolean
+    minOutputDelay?: TimeValue
     networkMessageActions: string[]
     rtiHost: string
     rtiPort: number
