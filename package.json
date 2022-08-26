@@ -42,7 +42,7 @@
     },
     "scripts": {
         "check-types": "tsc",
-        "install": "esbuild ./src/core/index.ts --bundle --outfile=lib/core/index.js --format=cjs --platform=node --external:microtime",
+        "install": "npx esbuild ./src/core/index.ts --bundle --outfile=lib/core/index.js --format=cjs --platform=node --external:microtime",
         "deploy": "npm run build && npm run doc",
         "doc": "typedoc --exclude \"**/+(example|benchmark|share)/**/*.ts\" --out docs src && touch docs/.nojekyll",
         "dtslint": "dtslint __tests__/types",
