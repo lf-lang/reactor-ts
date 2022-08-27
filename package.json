@@ -6,6 +6,9 @@
     "type": "commonjs",
     "types": "src/core",
     "dependencies": {
+        "@types/jest": "^26.0.24",
+        "@types/node": "^16.3.3",
+        "@types/uuid": "^8.3.4",
         "@definitelytyped/header-parser": "0.0.29",
         "@definitelytyped/typescript-versions": "0.0.29",
         "@babel/cli": "^7.4.3",
@@ -24,20 +27,17 @@
         "microtime": "^3.0.0",
         "nanotimer": "^0.3.15",
         "rimraf": "^3.0.2",
+        "typescript": "~4.4.4",
         "ulog": "^1.1.0",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
-        "@types/jest": "^26.0.24",
-        "@types/node": "^16.3.3",
-        "@types/uuid": "^8.3.4",
         "dtslint": "^3.4.2",
         "jest": "^27.0.6",
         "marked": ">=4.0.10",
         "parsimmon": "1.13.0",
         "ts-jest": "^27.0.3",
-        "typedoc": "^0.21.4",
-        "typescript": "^4.3.5"
+        "typedoc": "^0.21.4"
     },
     "scripts": {
         "check-types": "tsc",
