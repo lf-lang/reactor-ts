@@ -2076,7 +2076,7 @@ export class App extends Reactor {
                 // or should give control back to the JS event loop.
                 nextEvent = this._eventQ.peek();
 
-            } while (nextEvent && this._currentTag.time.isEqualTo(nextEvent.tag.time));
+            } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
 
             // React to all the events loaded onto the reaction queue.
             this._react()

@@ -402,7 +402,7 @@ class RTIClient extends EventEmitter {
         this.socket?.unref(); // Allow the program to exit
     }
 
-    public sendNeighborStructure(upstreamFedIDs: number[], upstreamFedDelays: bigint[], downstreamFedIDs: number[]) {
+    public sendNeighborStructure(upstreamFedIDs: number[], upstreamFedDelays: TimeValue[], downstreamFedIDs: number[]) {
         let msg = Buffer.alloc(9 + upstreamFedIDs.length * 10 + downstreamFedIDs.length * 2);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEIGHBOR_STRUCTURE);
         msg.writeUInt32LE(upstreamFedIDs.length, 1);
@@ -411,7 +411,8 @@ class RTIClient extends EventEmitter {
         let bufferIndex = 9;
         for (let i = 0; i < upstreamFedIDs.length; i++) {
             msg.writeUInt16LE(upstreamFedIDs[i], bufferIndex);
-            msg.writeBigUInt64LE(upstreamFedDelays[i], bufferIndex + 2);
+            let delay = upstreamFedDelays[i].toBinary();
+            delay.copy(msg, bufferIndex + 2);
             bufferIndex += 10;
         }
 
@@ -916,7 +917,7 @@ export class FederatedApp extends App {
     private greatestTimeAdvanceGrant: Tag | null = null;
 
     private upstreamFedIDs: number[] = [];
-    private upstreamFedDelays: bigint[] = [];
+    private upstreamFedDelays: TimeValue[] = [];
     private downstreamFedIDs: number[] = [];
 
     /**
@@ -924,7 +925,7 @@ export class FederatedApp extends App {
      */
     private minDelayFromPhysicalActionToFederateOutput: TimeValue | null = null;
 
-    public addUpstreamFederate(fedID: number, fedDelay: bigint) {
+    public addUpstreamFederate(fedID: number, fedDelay: TimeValue) {
         this.upstreamFedIDs.push(fedID);
         this.upstreamFedDelays.push(fedDelay);
         this._isLastTAGProvisional = true;
@@ -1061,6 +1062,10 @@ export class FederatedApp extends App {
                 failure? failure(): () => {};
                 this._shutdown();
             });
+        if (this.rtiPort === 0) {
+            // When given rtiPort is 0, set it to default, 15045.
+            this.rtiPort = 15045;
+        }
         this.rtiClient = new RTIClient(federationID, federateID);
     }
 
