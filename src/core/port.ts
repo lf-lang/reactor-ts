@@ -4,7 +4,7 @@ import {
 } from "./internal"
 
 export abstract class Port<T extends Present> extends Trigger {
-    
+
     protected receivers: Set<WritablePort<T>> = new Set();
 
     protected runtime!: Runtime;
@@ -34,7 +34,7 @@ export abstract class Port<T extends Present> extends Trigger {
     public isPresent() {
 
         Log.debug(this, () => "In isPresent()...")
-        Log.debug(this, () => "value: " + this.value);
+        Log.debug(this, () => "value: " + this.value?.toString);
         Log.debug(this, () => "tag: " + this.tag);
         Log.debug(this, () => "time: " + this.runtime.util.getCurrentLogicalTime())
 
@@ -103,8 +103,8 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     }
 
     /**
-     * 
-     * @param container Reference to the container of this port 
+     *
+     * @param container Reference to the container of this port
      * (or the container thereof).
      */
     public getManager(key: Symbol | undefined): IOPortManager<T> {
