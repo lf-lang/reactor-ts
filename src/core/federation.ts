@@ -3,7 +3,7 @@ import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter} from 'events';
 import {
     Log, Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm,
-    Present, App, Action, TaggedEvent
+    Present, App, Action, TaggedEvent, FederateConfig
 } from './internal';
 
 //---------------------------------------------------------------------//
@@ -415,7 +415,7 @@ class RTIClient extends EventEmitter {
         this.socket?.unref(); // Allow the program to exit
     }
 
-    public sendNeighborStructure(upstreamFedIDs: number[], upstreamFedDelays: bigint[], downstreamFedIDs: number[]) {
+    public sendNeighborStructure(upstreamFedIDs: number[], upstreamFedDelays: TimeValue[], downstreamFedIDs: number[]) {
         let msg = Buffer.alloc(9 + upstreamFedIDs.length * 10 + downstreamFedIDs.length * 2);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEIGHBOR_STRUCTURE);
         msg.writeUInt32LE(upstreamFedIDs.length, 1);
@@ -424,7 +424,8 @@ class RTIClient extends EventEmitter {
         let bufferIndex = 9;
         for (let i = 0; i < upstreamFedIDs.length; i++) {
             msg.writeUInt16LE(upstreamFedIDs[i], bufferIndex);
-            msg.writeBigUInt64LE(upstreamFedDelays[i], bufferIndex + 2);
+            let delay = upstreamFedDelays[i].toBinary();
+            delay.copy(msg, bufferIndex + 2);
             bufferIndex += 10;
         }
 
@@ -1000,7 +1001,7 @@ export class FederatedApp extends App {
     private portInfoByID: Map<number, PortInfo> = new Map<number, PortInfo>();
 
     private upstreamFedIDs: number[] = [];
-    private upstreamFedDelays: bigint[] = [];
+    private upstreamFedDelays: TimeValue[] = [];
     private downstreamFedIDs: number[] = [];
 
     private inputControlReactionTriggers: Action<Present>[] = [];
@@ -1010,8 +1011,10 @@ export class FederatedApp extends App {
      * The default value, null, indicates there is no output depending on a physical action. 
      */ 
     private minDelayFromPhysicalActionToFederateOutput: TimeValue | null = null;
+    rtiPort: number;
+    rtiHost: string;
 
-    public addUpstreamFederate(fedID: number, fedDelay: bigint) {
+    public addUpstreamFederate(fedID: number, fedDelay: TimeValue) {
         this.upstreamFedIDs.push(fedID);
         this.upstreamFedDelays.push(fedDelay);
         this._isLastTAGProvisional = true;
@@ -1336,11 +1339,9 @@ export class FederatedApp extends App {
      * @param success Optional argument. Called when the FederatedApp exits with success.
      * @param failure Optional argument. Called when the FederatedApp exits with failure.
      */
-    constructor (federationID: string, federateID: number, private rtiPort: number, private rtiHost: string,
-        executionTimeout?: TimeValue | undefined, keepAlive?: boolean,
-        fast?: boolean, success?: () => void, failure?: () => void) {
+    constructor (config: FederateConfig, success?: () => void, failure?: () => void) {
 
-        super(executionTimeout, keepAlive, fast,
+        super(config.executionTimeout, config.keepAlive, config.fast,
             // Let super class (App) call FederateApp's _shutdown in success and failure.
             () => {
                 success? success(): () => {};
@@ -1350,11 +1351,21 @@ export class FederatedApp extends App {
                 failure? failure(): () => {};
                 this._shutdown();
             });
-        if (this.rtiPort === 0) {
+        if (config.rtiPort === 0) {
             // When given rtiPort is 0, set it to default, 15045.
             this.rtiPort = 15045;
+        } else {
+            this.rtiPort = config.rtiPort
         }
-        this.rtiClient = new RTIClient(federationID, federateID);
+        this.rtiClient = new RTIClient(config.federationID, config.federateID);
+        this.rtiHost = config.rtiHost
+        for (let sendsToFedId of config.sendsTo) {
+            this.addDownstreamFederate(sendsToFedId);
+        }
+        for (let dependsOnFedId of config.dependsOn) {
+            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.zero().
+            this.addUpstreamFederate(dependsOnFedId, TimeValue.zero());
+        }
     }
 
     /**
