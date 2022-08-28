@@ -1117,9 +1117,10 @@ export class FederatedApp extends App {
     }
 
     /**
+     * @override
      * Iterate over all reactions in the reaction queue and execute them.
      * 
-     *  @returns whether the reaction is remained at this tag due to unknown input ports
+     * @returns whether the reaction remained at the current tag due to unknown input ports
      */
      protected _react(): boolean {
         while (this._reactionQ.size() > 0) {

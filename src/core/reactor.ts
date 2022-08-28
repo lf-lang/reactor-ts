@@ -2008,6 +2008,10 @@ export class App extends Reactor {
 
     /**
      * Iterate over all reactions in the reaction queue and execute them.
+     * 
+     * @returns whether the reaction remained at the current tag due to unknown input ports
+     * 
+     * @note This function is called only at the non-federated execution, so it always returns false.
      */
     protected _react(): boolean {
         while (this._reactionQ.size() > 0) {
