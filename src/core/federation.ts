@@ -1004,8 +1004,8 @@ export class FederatedApp extends App {
     private upstreamFedDelays: TimeValue[] = [];
     private downstreamFedIDs: number[] = [];
 
-    private inputControlReactionTriggers: Action<Present>[] = [];
-    private outputControlReactionTriggers: Action<Present>[] = [];
+    private networkInputControlReactionsTriggers: Action<Present>[] = [];
+    private networkOutputControlReactionTriggers: Action<Present>[] = [];
 
     /**
      * The default value, null, indicates there is no output depending on a physical action. 
@@ -1029,13 +1029,13 @@ export class FederatedApp extends App {
     }
 
         
-    public registerInputControlReactionTrigger(portID: number, inputControlReactionTrigger: Action<Present>) {
-        this.inputControlReactionTriggers.push(inputControlReactionTrigger);
+    public registerNetworkInputControlReactionsTriggers(portID: number, networkInputControlReactionTrigger: Action<Present>) {
+        this.networkInputControlReactionsTriggers.push(networkInputControlReactionTrigger);
         this.registerPortInfo(portID);
     }
         
-    public registerOutputControlReactionTrigger(outputControlReactionTrigger: Action<Present>) {
-        this.outputControlReactionTriggers.push(outputControlReactionTrigger);
+    public registerNetworkOutputControlReactionTrigger(networkOutputControlReactionTrigger: Action<Present>) {
+        this.networkOutputControlReactionTriggers.push(networkOutputControlReactionTrigger);
     }
 
     /**
@@ -1285,7 +1285,7 @@ export class FederatedApp extends App {
         for (let i of this.portInfoByID.keys()) {
             if (this.getCurrentPortStatus(i) === PortStatus.UNKNOWN) {
                 // FIXME: figure out what to do in this for loop
-                let trigger = this.inputControlReactionTriggers[i];
+                let trigger = this.networkInputControlReactionsTriggers[i];
                 let event = new TaggedEvent(trigger, currentTag, null);
                 Log.debug(this, () => {return`Inserting network input control reaction on reaction queue.`});
                 trigger.update(event);
@@ -1304,7 +1304,7 @@ export class FederatedApp extends App {
             // logical connection. No need to trigger network output control
             // reactions.
         }
-        let trigger = this.outputControlReactionTriggers[0];
+        let trigger = this.networkOutputControlReactionTriggers[0];
         let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
         Log.debug(this, () => {return`Inserting network output control reaction on reaction queue.`});
         trigger.update(event);
