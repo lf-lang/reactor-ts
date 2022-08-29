@@ -1,22 +1,16 @@
 {
     "name": "reactor-ts",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "Reactor runtime written in TypeScript",
-    "main": "lib/reactor.js",
+    "main": "lib/core/index.js",
+    "type": "commonjs",
+    "types": "src/core",
     "dependencies": {
+        "@types/jest": "^27.0.0",
+        "@types/node": "^16.3.3",
+        "@types/uuid": "^8.3.4",
         "@definitelytyped/header-parser": "0.0.29",
         "@definitelytyped/typescript-versions": "0.0.29",
-        "@types/microtime": "^2.1.0",
-        "@types/parsimmon": "^1.10.1",
-        "command-line-args": "^5.1.1",
-        "got": "^11.8.5",
-        "heap": "^0.2.6",
-        "microtime": "^3.0.0",
-        "nanotimer": "^0.3.15",
-        "ulog": "^1.1.0",
-        "uuid": "^8.3.2"
-    },
-    "devDependencies": {
         "@babel/cli": "^7.4.3",
         "@babel/core": "^7.4.3",
         "@babel/node": "^7.2.2",
@@ -25,28 +19,33 @@
         "@babel/plugin-proposal-optional-chaining": "^7.8.0",
         "@babel/preset-env": "^7.4.3",
         "@babel/preset-typescript": "^7.7.7",
-        "@types/jest": "^26.0.24",
-        "@types/node": "^16.3.3",
-        "@types/uuid": "^8.3.4",
+        "@types/microtime": "^2.1.0",
+        "@types/parsimmon": "^1.10.1",
+        "command-line-args": "^5.1.1",
+        "got": "^11.8.5",
+        "heap": "^0.2.6",
+        "microtime": "^3.0.0",
+        "nanotimer": "^0.3.15",
+        "rimraf": "^3.0.2",
+        "typescript": "~4.8.2",
+        "ulog": "^1.1.0",
+        "uuid": "^8.3.2"
+    },
+    "devDependencies": {
         "dtslint": "^3.4.2",
         "jest": "^27.0.6",
         "marked": ">=4.0.10",
         "parsimmon": "1.13.0",
         "ts-jest": "^27.0.3",
-        "typedoc": "^0.21.4",
-        "typescript": "^4.3.5"
+        "typedoc": "0.23.11"
     },
-    "files": [
-        "lib"
-    ],
     "scripts": {
         "check-types": "tsc",
-        "build": "rm -rf dist && babel src --out-dir dist --extensions .ts",
+        "install": "npx rimraf lib && npx babel src --out-dir lib --extensions .ts",
         "deploy": "npm run build && npm run doc",
         "doc": "typedoc --exclude \"**/+(example|benchmark|share)/**/*.ts\" --out docs src && touch docs/.nojekyll",
         "dtslint": "dtslint __tests__/types",
-        "test": "jest --coverage",
-        "postinstall": "mkdir -p node_modules/@types/ulog; cp src/core/ulog.d.ts node_modules/@types/ulog/index.d.ts"
+        "test": "jest --coverage"
     },
     "jest": {
         "globals": {
@@ -69,7 +68,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git@github.com:icyphy/reactor-ts.git"
+        "url": "git@github.com:lf-lang/reactor-ts.git"
     },
     "keywords": [
         "IoT",
@@ -84,7 +83,11 @@
         "url": "http://people.eecs.berkeley.edu/~marten"
     },
     "contributors": [
+        "Yunsang Cho",
+        "Wonseo Choi",
+        "Peter Donovan",
         "Andres Goens",
+        "Hokeun Kim",
         "Matt Weber",
         "Ben Zhang"
     ],
