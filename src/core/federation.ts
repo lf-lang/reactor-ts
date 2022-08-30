@@ -11,20 +11,20 @@ import {
 //---------------------------------------------------------------------//
 
 // FIXME: For now this constant is unused.
-/** 
+/**
  *  Size of the buffer used for messages sent between federates.
  *  This is used by both the federates and the rti, so message lengths
  *  should generally match.
  */
 export const BUFFER_SIZE: number = 256;
 
-/** 
+/**
  *  Number of seconds that elapse between a federate's attempts
  *  to connect to the RTI.
  */
 export const CONNECT_RETRY_INTERVAL: TimeValue = TimeValue.secs(2);
 
-/** 
+/**
  *  Bound on the number of retries to connect to the RTI.
  *  A federate will retry every CONNECT_RETRY_INTERVAL seconds
  *  this many times before giving up. E.g., 500 retries every
@@ -47,7 +47,7 @@ enum RTIMessageTypes {
      */
     MSG_TYPE_REJECT = 0,
 
-    /** 
+    /**
      *  Byte identifying a message from a federate to an RTI containing
      *  the federation ID and the federate ID. The message contains, in
      *  this order:
@@ -74,7 +74,7 @@ enum RTIMessageTypes {
      */
     MSG_TYPE_TIMESTAMP = 2,
 
-    /** 
+    /**
      *  Byte identifying a message to forward to another federate.
      *  The next two bytes will be the ID of the destination port.
      *  The next two bytes are the destination federate ID.
@@ -86,12 +86,12 @@ enum RTIMessageTypes {
      */
     MSG_TYPE_MESSAGE = 3,
 
-    /** 
+    /**
      * Byte identifying that the federate is ending its execution.
      */
     MSG_TYPE_RESIGN = 4,
 
-    /** 
+    /**
      *  Byte identifying a timestamped message to forward to another federate.
      *  The next two bytes will be the ID of the destination reactor port.
      *  The next two bytes are the destination federate ID.
@@ -106,13 +106,13 @@ enum RTIMessageTypes {
      */
     MSG_TYPE_TAGGED_MESSAGE = 5,
 
-    /** 
+    /**
      * Byte identifying a next event tag (NET) message sent from a federate
      * in centralized coordination.
      * The next eight bytes will be the timestamp.
      * The next four bytes will be the microstep.
-     * This message from a federate tells the RTI the tag of the earliest event 
-     * on that federate's event queue. In other words, absent any further inputs 
+     * This message from a federate tells the RTI the tag of the earliest event
+     * on that federate's event queue. In other words, absent any further inputs
      * from other federates, this will be the least tag of the next set of
      * reactions on that federate. If the event queue is empty and a timeout
      * time has been specified, then the timeout time will be sent. If there is
@@ -123,7 +123,7 @@ enum RTIMessageTypes {
      */
      MSG_TYPE_NEXT_EVENT_TAG = 6,
 
-    /** 
+    /**
      * Byte identifying a time advance grant (TAG) sent by the RTI to a federate
      * in centralized coordination. This message is a promise by the RTI to the federate
      * that no later message sent to the federate will have a tag earlier than or
@@ -133,7 +133,7 @@ enum RTIMessageTypes {
      */
     MSG_TYPE_TAG_ADVANCE_GRANT = 7,
 
-    /** 
+    /**
      * Byte identifying a provisional time advance grant (PTAG) sent by the RTI to a federate
      * in centralized coordination. This message is a promise by the RTI to the federate
      * that no later message sent to the federate will have a tag earlier than the tag
@@ -143,7 +143,7 @@ enum RTIMessageTypes {
      */
     MSG_TYPE_PROVISIONAL_TAG_ADVANCE_GRANT = 8,
 
-    /** 
+    /**
      * Byte identifying a logical tag complete (LTC) message sent by a federate
      * to the RTI.
      * The next eight bytes will be the timestep of the completed tag.
@@ -170,7 +170,7 @@ enum RTIMessageTypes {
      * that specifies the stop time on all other federates, then every federate
      * depends on every other federate and time cannot be advanced.
      * Hence, the actual stop time may be nondeterministic.
-     * 
+     *
      * If, on the other hand, the federate requesting the stop is upstream of every
      * other federate, then it should be possible to respect its requested stop tag.
      */
@@ -213,14 +213,14 @@ enum RTIMessageTypes {
      * other federates where messages are routed through the RTI. Currently, this
      * only includes logical connections when the coordination is centralized. This
      * information is needed for the RTI to perform the centralized coordination.
-     * 
+     *
      * @note Only information about the immediate neighbors is required. The RTI can
      * transitively obtain the structure of the federation based on each federate's
      * immediate neighbor information.
      *
-     * The next 4 bytes is the number of upstream federates. 
+     * The next 4 bytes is the number of upstream federates.
      * The next 4 bytes is the number of downstream federates.
-     * 
+     *
      * Depending on the first four bytes, the next bytes are pairs of (fed ID (2
      * bytes), delay (8 bytes)) for this federate's connection to upstream federates
      * (by direct connection). The delay is the minimum "after" delay of all
@@ -281,9 +281,9 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  * RTIClient exposes functions for federate-level operations like
  * establishing a connection to the RTI or sending a message.
  * RTIClient is an EventEmitter, and asynchronously emits events for:
- * 'startTime', 'connected', 'message', 'timedMessage', and 
+ * 'startTime', 'connected', 'message', 'timedMessage', and
  * 'timeAdvanceGrant'. The federatedApp is responsible for handling the
- * events to ensure a correct exeuction. 
+ * events to ensure a correct execution.
  */
 class RTIClient extends EventEmitter {
 
@@ -291,17 +291,17 @@ class RTIClient extends EventEmitter {
     private federationID:string;
 
     // ID of this federate.
-    private id:number;         
-    
+    private id:number;
+
     // The socket descriptor for communicating with this federate.
     private socket: Socket | null = null;
 
     // The mapping between a federate port ID and the federate port action
     // scheduled upon reception of a message designated for that federate port.
-    
+
     /**
      * A mapping from port IDs to FederatePortAction instances. Unfortunately, the data type of the action has to be `any`,
-     * meaning that the type checker cannot check whether uses of the action are type safe. 
+     * meaning that the type checker cannot check whether uses of the action are type safe.
      * In an alternative design, type information might be preserved. TODO(marten): Look into this.
      */
     private federatePortActionByID: Map<number, Action<any>> = new Map<number, Action<any>>();
@@ -335,15 +335,15 @@ class RTIClient extends EventEmitter {
     // The number of attempts made by this federate to connect to the RTI.
     private connectionAttempts = 0;
 
-    /** 
+    /**
      *  Create a socket connection to the RTI and register this federate's
      *  ID with the RTI. If unable to make a connection, retry.
      *  @param port The RTI's remote port number.
-     *  @param host The RTI's remote host name. 
+     *  @param host The RTI's remote host name.
      */
     public connectToRTI(port: number, host: string) {
         // Create an IPv4 socket for TCP (not UDP) communication over IP (0)
-    
+
         let thiz = this;
 
         const options: SocketConnectOpts = {
@@ -420,7 +420,7 @@ class RTIClient extends EventEmitter {
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEIGHBOR_STRUCTURE);
         msg.writeUInt32LE(upstreamFedIDs.length, 1);
         msg.writeUInt32LE(downstreamFedIDs.length, 5);
-        
+
         let bufferIndex = 9;
         for (let i = 0; i < upstreamFedIDs.length; i++) {
             msg.writeUInt16LE(upstreamFedIDs[i], bufferIndex);
@@ -452,7 +452,7 @@ class RTIClient extends EventEmitter {
         }
     }
 
-    /** 
+    /**
      *  Send the specified TimeValue to the RTI and set up
      *  a handler for the response.
      *  The specified TimeValue should be current physical time of the
@@ -486,7 +486,7 @@ class RTIClient extends EventEmitter {
      */
     public sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
         const value = Buffer.from(JSON.stringify(data), "utf-8");
-        
+
         let msg = Buffer.alloc(value.length + 9);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
@@ -515,7 +515,7 @@ class RTIClient extends EventEmitter {
      */
     public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, time: Buffer) {
         const value = Buffer.from(JSON.stringify(data), "utf-8");
-        
+
         let msg = Buffer.alloc(value.length + 21);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TAGGED_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
@@ -589,8 +589,8 @@ class RTIClient extends EventEmitter {
         }
     }
 
-    /** 
-     * Send the RTI a stop request message. 
+    /**
+     * Send the RTI a stop request message.
      */
     public sendRTIStopRequest(stopTag: Buffer) {
         let msg = Buffer.alloc(13);
@@ -604,7 +604,7 @@ class RTIClient extends EventEmitter {
         }
     }
 
-    /** 
+    /**
      * Send the RTI a stop request reply message.
      */
     public sendRTIStopRequestReply(stopTag: Buffer) {
@@ -620,6 +620,7 @@ class RTIClient extends EventEmitter {
     }
 
     /**
+<<<<<<< HEAD
      * Send a port absent message to federate with fed_ID, informing the
      * remote federate that the current federate will not produce an event
      * on this network port at the current logical time.
@@ -643,7 +644,7 @@ class RTIClient extends EventEmitter {
     }
 
     /**
-     * The handler for the socket's data event. 
+     * The handler for the socket's data event.
      * The data Buffer given to the handler may contain 0 or more complete messages.
      * Iterate through the complete messages, and if the last message is incomplete
      * save it as thiz.chunkedBuffer so it can be prepended onto the
@@ -675,16 +676,16 @@ class RTIClient extends EventEmitter {
         Log.debug(thiz, () => {return `Assembled data is: ${assembledData.toString('hex')}`});
 
         while (bufferIndex < assembledData.length) {
-            
+
             let messageTypeByte = assembledData[bufferIndex]
             switch (messageTypeByte) {
                 case RTIMessageTypes.MSG_TYPE_FED_IDS: {
                     // MessageType: 1 byte.
                     // Federate ID: 2 bytes long.
                     // Should never be received by a federate.
-                    
-                    Log.error(thiz, () => {return "Received MSG_TYPE_FED_IDS message from the RTI."});     
-                    throw new Error('Received a MSG_TYPE_FED_IDS message from the RTI. ' 
+
+                    Log.error(thiz, () => {return "Received MSG_TYPE_FED_IDS message from the RTI."});
+                    throw new Error('Received a MSG_TYPE_FED_IDS message from the RTI. '
                         + 'MSG_TYPE_FED_IDS messages may only be sent by federates');
                     break;
                 }
@@ -702,10 +703,10 @@ class RTIClient extends EventEmitter {
                         assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9 );
                         let startTime = TimeValue.fromBinary(timeBuffer);
                         Log.debug(thiz, () => { return "Received MSG_TYPE_TIMESTAMP buffer from the RTI " +
-                        `with startTime: ${timeBuffer.toString('hex')}`;      
+                        `with startTime: ${timeBuffer.toString('hex')}`;
                         })
                         Log.debug(thiz, () => { return "Received MSG_TYPE_TIMESTAMP message from the RTI " +
-                            `with startTime: ${startTime}`;      
+                            `with startTime: ${startTime}`;
                         })
                         thiz.emit('startTime', startTime);
                     }
@@ -741,7 +742,7 @@ class RTIClient extends EventEmitter {
                         } else {
                             // Finish processing the complete message.
                             let messageBuffer = Buffer.alloc(messageLength);
-                            assembledData.copy(messageBuffer, 0, bufferIndex + 9, bufferIndex + 9 + messageLength);  
+                            assembledData.copy(messageBuffer, 0, bufferIndex + 9, bufferIndex + 9 + messageLength);
                             let destPortAction = thiz.federatePortActionByID.get(destPortID);
                             thiz.emit('message', destPortAction, messageBuffer);
                         }
@@ -784,7 +785,7 @@ class RTIClient extends EventEmitter {
                         } else {
                             // Finish processing the complete message.
                             let messageBuffer = Buffer.alloc(messageLength);
-                            assembledData.copy(messageBuffer, 0, bufferIndex + 21, bufferIndex + 21 +  messageLength);  
+                            assembledData.copy(messageBuffer, 0, bufferIndex + 21, bufferIndex + 21 +  messageLength);
                             let destPort = thiz.federatePortActionByID.get(destPortID);
                             thiz.emit('timedMessage', destPort, messageBuffer, tag);
                         }
@@ -854,7 +855,7 @@ class RTIClient extends EventEmitter {
                     break;
                 }
                 case RTIMessageTypes.MSG_TYPE_STOP_GRANTED: {
-                    // The next 8 bytes will be the time at which the federates will stop. 
+                    // The next 8 bytes will be the time at which the federates will stop.
                     // The next 4 bytes will be the microstep at which the federates will stop.
                     Log.debug(thiz, () => {return 'Received an RTI MSG_TYPE_STOP_GRANTED'});
                     let tagBuffer = Buffer.alloc(12);
@@ -903,7 +904,7 @@ class RTIClient extends EventEmitter {
 
 /**
  * Enum type to store the state of stop request.
- * */ 
+ * */
 enum StopRequestState {
     NOT_SENT,
     SENT,
@@ -911,7 +912,7 @@ enum StopRequestState {
 }
 
 /**
- * Class for storing stop request-related information 
+ * Class for storing stop request-related information
  * including the current state and the tag associated with the stop requested or stop granted.
  */
 class StopRequestInfo {
@@ -932,7 +933,7 @@ class StopRequestInfo {
  * Like an app, a federated app is the top level reactor for a particular process,
  * but a federated app must follow the direction of the RTI for beginning execution,
  * advancing time, and exchanging messages with other federates.
- * 
+ *
  * Note: There is no special class for a federate. A federate is the name for a top
  * level reactor of a federated app.
  */
@@ -947,7 +948,7 @@ export class FederatedApp extends App {
     private rtiClient: RTIClient;
 
     /**
-     * If a federated app uses logical connections, its execution 
+     * If a federated app uses logical connections, its execution
      * with respect to time advancement must be sychronized with the RTI.
      * If this variable is true, logical time in this federate
      * cannot advance beyond the time given in the greatest Time Advance Grant
@@ -956,7 +957,7 @@ export class FederatedApp extends App {
     private rtiSynchronized: boolean = false;
 
     /**
-     * Stop request-related information 
+     * Stop request-related information
      * including the current state and the tag associated with the stop requested or stop granted.
      */
     private stopRequestInfo: StopRequestInfo = new StopRequestInfo(StopRequestState.NOT_SENT, null);
@@ -976,8 +977,8 @@ export class FederatedApp extends App {
     private outputControlReactionTriggers: Action<Present>[] = [];
 
     /**
-     * The default value, null, indicates there is no output depending on a physical action. 
-     */ 
+     * The default value, null, indicates there is no output depending on a physical action.
+     */
     private minDelayFromPhysicalActionToFederateOutput: TimeValue | null = null;
 
     public addUpstreamFederate(fedID: number, fedDelay: TimeValue) {
@@ -1036,13 +1037,13 @@ export class FederatedApp extends App {
     /**
      * Return whether the next event can be handled, or handling the next event
      * has to be postponed to a later time.
-     * 
+     *
      * If this federated app has not received a sufficiently large time advance
      * grant (TAG) from the RTI for the next event, send it a Next Event Time
      * (NET) message and return. _next() will be called when a new greatest TAG
      * is received. The NET message is not sent if the connection to the RTI is
      * closed. FIXME: what happens in that case? Will next be called?
-     * @param nextEvent 
+     * @param nextEvent
      */
     protected _canProceed(nextEvent: TaggedEvent<Present>) {
         let tagBarrier = null;
@@ -1053,7 +1054,7 @@ export class FederatedApp extends App {
         } else {
             tagBarrier = this._getGreatestTimeAdvanceGrant();
         }
-        
+
         if (this._isRTISynchronized() || tagBarrier !== null) {
             if (tagBarrier === null || tagBarrier.isSmallerThan(nextEvent.tag)) {
                 if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
@@ -1112,7 +1113,7 @@ export class FederatedApp extends App {
 
     /**
      * Federated app constructor. The primary difference from an App constructor
-     * is the federateID and the rtiPort. 
+     * is the federateID and the rtiPort.
      * @param federationID Unique ID of the federation that this federate will join.
      * @param federateID The ID for the federate assigned to this federatedApp.
      * For compatability with the C RTI the ID must be expressable as a 16 bit
@@ -1227,7 +1228,7 @@ export class FederatedApp extends App {
     }
 
     /**
-     * Send the RTI a stop request message. 
+     * Send the RTI a stop request message.
      */
     public sendRTIStopRequest(stopTag: Tag) {
         Log.debug(this, () => {return `Sending RTI stop request with time: ${stopTag}`});
@@ -1343,18 +1344,18 @@ export class FederatedApp extends App {
              * We assume that always R <= r.
 
              * Logical connection, centralized control: Tr = Ts + A
-             * Logical connection, decentralized control: Tr = Ts + A or, if R > Ts + A, 
+             * Logical connection, decentralized control: Tr = Ts + A or, if R > Ts + A,
              *  ERROR triggers at a logical time >= R
              * Physical connection, centralized or decentralized control: Tr = max(r, R + A)
-             * 
+             *
              */
-           
+
 
             // FIXME: implement decentralized control.
 
             Log.debug(this, () => {return `Timed Message received from RTI with tag ${tag}.`})
             const value: T = JSON.parse(messageBuffer.toString());
-            
+
             if (destPortAction.origin == Origin.logical) {
                 destPortAction.asSchedulable(this._getKey(destPortAction)).schedule(0, value, tag);
 
@@ -1368,7 +1369,7 @@ export class FederatedApp extends App {
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
-                // Update the greatest time advance grant and immediately 
+                // Update the greatest time advance grant and immediately
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = false;
@@ -1379,10 +1380,10 @@ export class FederatedApp extends App {
         this.rtiClient.on('provisionalTimeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Provisional Time Advance Grant received from RTI for ${tag}.`});
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
-                // Update the greatest time advance grant and immediately 
+                // Update the greatest time advance grant and immediately
                 // wake up _next, in case it was blocked by the old time advance grant
 
-                // FIXME: Temporarily disabling PTAG handling until the 
+                // FIXME: Temporarily disabling PTAG handling until the
                 // input control reaction is implemented.
                 /*
                 this.greatestTimeAdvanceGrant = tag;
