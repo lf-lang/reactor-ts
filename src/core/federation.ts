@@ -1109,7 +1109,6 @@ export class FederatedApp extends App {
                 Log.debug(this, () => "The greatest time advance grant " +
                     "received from the RTI is less than the timestamp of the " +
                     "next event on the event queue");
-                Log.global.debug("Exiting _next.");
                 return false;
             }
         }
@@ -1364,8 +1363,8 @@ export class FederatedApp extends App {
             this.addDownstreamFederate(sendsToFedId);
         }
         for (let dependsOnFedId of config.dependsOn) {
-            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.zero().
-            this.addUpstreamFederate(dependsOnFedId, TimeValue.zero());
+            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.NEVER().
+            this.addUpstreamFederate(dependsOnFedId, TimeValue.NEVER());
         }
     }
 
