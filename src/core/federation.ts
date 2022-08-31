@@ -1129,6 +1129,7 @@ export class FederatedApp extends App {
                 if (isReactionWaiting === true) {
                     // Reaction should wait until port status becomes known
                     Log.debug(this, () => {return`React network input control reaction again.`});
+                    this.sendRTINextEventTag(this.util.getCurrentTag());
                     return true;
                 } else if (isReactionWaiting === false) {
                     Log.debug(this, () => {return`Escape a network input control reaction.`});
@@ -1302,6 +1303,12 @@ export class FederatedApp extends App {
             // This federate is not connected to any downstream federates via a
             // logical connection. No need to trigger network output control
             // reactions.
+        }
+        Log.debug(this, () => {return`Enqueueing output control reactions.`});
+        if (this.networkOutputControlReactionTriggers.length === 0) {
+            // There are no network output control reactions
+            Log.debug(this, () => {return`No output control reactions.`});
+            return;
         }
         let trigger = this.networkOutputControlReactionTriggers[0];
         let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
@@ -1652,7 +1659,7 @@ export class FederatedApp extends App {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
             //FIXME: Schedule a proper port action like tagged message 
             this.updatelastKnownStatusTag(intendedTag, portID);
-            this._requestImmediateInvocationOfNext();
+            //this._requestImmediateInvocationOfNext();
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
