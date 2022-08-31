@@ -1587,7 +1587,6 @@ export class FederatedApp extends App {
             // Update port's info
             this.updatelastKnownStatusTag(tag, destPortID);
             this.setNetworkPortStatus(destPortID, PortStatus.KNOWN);
-            this._requestImmediateInvocationOfNext();
         });
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
@@ -1651,6 +1650,7 @@ export class FederatedApp extends App {
 
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
+            //FIXME: Schedule a proper port action like tagged message 
             this.updatelastKnownStatusTag(intendedTag, portID);
             this._requestImmediateInvocationOfNext();
         });
