@@ -9,6 +9,7 @@
         "sourceMap": true,
         "strict": true,
         "moduleResolution": "node",
+        "skipLibCheck": true,
         "strictBindCallApply": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
