@@ -2032,7 +2032,8 @@ export class App extends Reactor {
      *  Enqueue network control reactions
      */
     protected enqueueNetworkInputControlReactions(): void {}
-    protected triggerNetworkOutputControlReactions(): void {}
+    protected enqueueNetworkOutputControlReactions(): void {}
+    protected enqueueNetworkControlReactions(): void {}
 
     /**
      * Handle the next events on the event queue.
@@ -2059,10 +2060,6 @@ export class App extends Reactor {
                 return;
             } else {
                 this._isReactionRemainedAtThisTag = false;     
-
-                // trigger networkOutputControlReactions
-                this.triggerNetworkOutputControlReactions();
-    
                 // Done handling events.
                 // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
                 // Make sure that a federate sends LTC only after actually handling an event.
@@ -2136,17 +2133,13 @@ export class App extends Reactor {
             } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
 
             // enqueue networkInputControlReactions
-            this.enqueueNetworkInputControlReactions();
+            this.enqueueNetworkControlReactions();
 
             // React to all the events loaded onto the reaction queue.
             if (this._react()) {
                 this._isReactionRemainedAtThisTag = true;
                 return;
             }
-
-            // trigger networkOutputControlReactions
-            this.triggerNetworkOutputControlReactions();
-
             // Done handling events.
             // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
             // Make sure that a federate sends LTC only after actually handling an event.
@@ -2402,7 +2395,7 @@ export class App extends Reactor {
         Log.info(this, () => Log.hr);
 
         // Enqueue the network input control reactions for startup reactions
-        this.enqueueNetworkInputControlReactions();
+        this.enqueueNetworkControlReactions();
 
         // Handle the reactions that were loaded onto the reaction queue.
         if (this._react() === true) {
@@ -2410,7 +2403,6 @@ export class App extends Reactor {
         } else {
             // Enqueue the network output control reactions for startup reactions 
             // if all startup reactions are executed
-            this.triggerNetworkOutputControlReactions();
             this._iterationComplete();
         }
 

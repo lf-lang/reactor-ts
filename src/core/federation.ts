@@ -1214,10 +1214,11 @@ export class FederatedApp extends App {
         if (portInfo !== undefined) {
             let lastKnownStatusTag = portInfo.lastKnownStatusTag;
             if (tag.isGreaterThan(lastKnownStatusTag)) {
-                // FIXME: Figure out whether these codes are needed or not. See federate.c 1188
+                // FIXME: Figure out whether this if statement is needed or not. See federate.c 1188
                 if (lastKnownStatusTag !== undefined && tag.isSimultaneousWith(lastKnownStatusTag)){
                     tag.getMicroStepsLater(1);
                 }
+
                 Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${tag}`});
                 portInfo.lastKnownStatusTag = tag;
             } else {
@@ -1276,13 +1277,6 @@ export class FederatedApp extends App {
     *  or absent.
      */
     protected enqueueNetworkInputControlReactions(): void {
-        // If the granted tag is not provisional, there is no 
-        // need for network input conrol reactions
-        let currentTag = this.util.getCurrentTag();
-        if ((this.greatestTimeAdvanceGrant !== null && !this.greatestTimeAdvanceGrant.isSimultaneousWith(currentTag))
-        || this._isLastTAGProvisional === false) {
-            return;
-        }
         if (this.upstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any upstream federates via a
@@ -1291,9 +1285,8 @@ export class FederatedApp extends App {
         }
         for (let i of this.portInfoByID.keys()) {
             if (this.getCurrentPortStatus(i) === PortStatus.UNKNOWN) {
-                // FIXME: figure out what to do in this for loop
                 let trigger = this.networkInputControlReactionsTriggers[i];
-                let event = new TaggedEvent(trigger, currentTag, null);
+                let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
                 Log.debug(this, () => {return`Inserting network input control reaction on reaction queue.`});
                 trigger.update(event);
             }
@@ -1304,7 +1297,7 @@ export class FederatedApp extends App {
      * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
      * message to downstream federates if a given network output port is not present.
      */
-    protected triggerNetworkOutputControlReactions(): void {
+    protected enqueueNetworkOutputControlReactions(): void {
         if (this.downstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any downstream federates via a
@@ -1321,8 +1314,20 @@ export class FederatedApp extends App {
         let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
         Log.debug(this, () => {return`Inserting network output control reaction on reaction queue.`});
         trigger.update(event);
-        super._react();
-        // Maybe we can execute this output control reaction in this function directly.
+    }
+    /**
+     * Enqueue network control reactions.
+     */
+    protected enqueueNetworkControlReactions(): void {
+        this.enqueueNetworkOutputControlReactions();
+        // If the granted tag is not provisional, there is no 
+        // need for network input conrol reactions
+        let currentTag = this.util.getCurrentTag();
+        if ((this.greatestTimeAdvanceGrant !== null && !this.greatestTimeAdvanceGrant.isSimultaneousWith(currentTag))
+        || this._isLastTAGProvisional === false) {
+            return;
+        }
+        this.enqueueNetworkInputControlReactions();
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1667,7 +1672,9 @@ export class FederatedApp extends App {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
             //FIXME: Schedule a proper port action like tagged message 
             this.updatelastKnownStatusTag(intendedTag, portID);
-            //this._requestImmediateInvocationOfNext();
+            if (this._isReactionRemainedAtThisTag === true) {
+                this._requestImmediateInvocationOfNext();
+            }
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
