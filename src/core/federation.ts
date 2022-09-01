@@ -1491,15 +1491,12 @@ export class FederatedApp extends App {
      * @param additional_delay The offset applied to the timestamp
      *  using after. The additional delay will be greater or equal to zero
      *  if an after is used on the connection. If no after is given in the
-     *  program, -1 is passed.
+     *  program, NEVER is passed.
      * @param destFederatedID The fed ID of the receiving federate.
      * @param destPortID The ID of the receiving port.
      */
-    public sendRTIPortAbsent(additionalDelay:0 | TimeValue, destFederateID: number, destPortID: number): void {
-        let intendedTag = this.util.getCurrentTag();
-        if (additionalDelay instanceof TimeValue) {
-            intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
-        }
+    public sendRTIPortAbsent(additionalDelay: TimeValue, destFederateID: number, destPortID: number): void {
+        let intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
         Log.debug(this, () => {return `Sending RTI port absent for tag ${intendedTag} to federate ID: ${destFederateID}`
         + ` port ID: ${destPortID}.`});
         this.rtiClient.sendRTIPortAbsent(intendedTag, destFederateID, destPortID);

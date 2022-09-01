@@ -1565,7 +1565,7 @@ interface UtilityFunctions {
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, additionalDelay: TimeValue): void;
-    sendRTIPortAbsent (additionalDealy: 0 | TimeValue, destFederateID: number, destPortID: number): void;
+    sendRTIPortAbsent (additionalDealy: TimeValue, destFederateID: number, destPortID: number): void;
     getCurrentPortStatus(portID: number): any;
 }
 
@@ -1691,7 +1691,7 @@ export class App extends Reactor {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID, additionalDelay);
         };
 
-        public sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
+        public sendRTIPortAbsent (additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
             return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
         }
 
@@ -1838,7 +1838,7 @@ export class App extends Reactor {
      * @param destFederatedID The fed ID of the receiving federate.
      * @param destPortID The ID of the receiving port.
      */
-    protected sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
+    protected sendRTIPortAbsent (additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
     }
 
