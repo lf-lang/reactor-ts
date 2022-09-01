@@ -1073,17 +1073,16 @@ export class FederatedApp extends App {
         for (let sendsToFedId of config.sendsTo) {
             this.addDownstreamFederate(sendsToFedId);
         }
-        if (config.processDelay.length !== 0) {
+        for (let dependsOnFedId of config.dependsOn) {
+            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.zero().
             let processDelay = TimeValue.FOREVER();
-            for (let candidate of config.processDelay) {
+            for (let candidate of config.processDelay[dependsOnFedId]) {
                 if (processDelay.isLaterThan(candidate)) {
                     processDelay = candidate;
                 }
             }
-            for (let dependsOnFedId of config.dependsOn) {
-                // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.zero().
-                this.addUpstreamFederate(dependsOnFedId, processDelay);
-            }
+            console.log(`processDealy: ${processDelay}`);
+            this.addUpstreamFederate(dependsOnFedId, processDelay);
         }
     }
 
