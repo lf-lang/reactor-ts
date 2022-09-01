@@ -110,6 +110,7 @@ export class Triggers {
 /** Interface for passing in configuration options to a federate */
 export interface FederateConfig {
     dependsOn: number[]
+    processDelay: TimeValue[] []
     executionTimeout?: TimeValue
     fast: boolean
     federateID: number

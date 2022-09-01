@@ -1564,7 +1564,7 @@ interface UtilityFunctions {
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
-    sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
+    sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, additionalDelay: TimeValue): void;
     sendRTIPortAbsent (additionalDealy: 0 | TimeValue, destFederateID: number, destPortID: number): void;
     getCurrentPortStatus(portID: number): any;
 }
@@ -1687,9 +1687,9 @@ export class App extends Reactor {
             return this.app.sendRTIMessage(data, destFederateID, destPortID);
         }
 
-        public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
-            return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
-        }
+        public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, additionalDelay: TimeValue) {
+            return this.app.sendRTITimedMessage(data, destFederateID, destPortID, additionalDelay);
+        };
 
         public sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
             return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
@@ -1822,7 +1822,7 @@ export class App extends Reactor {
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
-    protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
+    protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, additionalDelay: TimeValue) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
     }
 

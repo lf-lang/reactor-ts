@@ -1370,8 +1370,14 @@ export class FederatedApp extends App {
             this.addDownstreamFederate(sendsToFedId);
         }
         for (let dependsOnFedId of config.dependsOn) {
-            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.NEVER().
-            this.addUpstreamFederate(dependsOnFedId, TimeValue.NEVER());
+            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.zero().
+            let processDelay = TimeValue.FOREVER();
+            for (let candidate of config.processDelay[dependsOnFedId]) {
+                if (processDelay.isLaterThan(candidate)) {
+                    processDelay = candidate;
+                }
+            }
+            this.addUpstreamFederate(dependsOnFedId, processDelay);
         }
     }
 
@@ -1414,9 +1420,12 @@ export class FederatedApp extends App {
      * @param msg The message encoded as a Buffer.
      * @param destFederateID The ID of the Federate intended to receive the message.
      * @param destPortID The ID of the FederateInPort intended to receive the message.
+     * @param additional_delay The offset applied to the timestamp using after.
+     * The additional delay will be greater or equal to zero if an after is used on the connection. 
+     * If no after is given in the program, NEVER is passed.
      */
-    public sendRTITimedMessage<T extends Present>(msg: T, destFederateID: number, destPortID: number ) {
-        let time = this.util.getCurrentTag().toBinary();
+    public sendRTITimedMessage<T extends Present>(msg: T, destFederateID: number, destPortID: number, additionalDelay: TimeValue) {
+        let time = this.util.getCurrentTag().getLaterTag(additionalDelay).toBinary();
         Log.debug(this, () => {return `Sending RTI timed message to federate ID: ${destFederateID}`
             + ` port ID: ${destPortID} and time: ${time.toString('hex')}`});
         this.rtiClient.sendRTITimedMessage(msg, destFederateID, destPortID, time);
