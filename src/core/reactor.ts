@@ -2411,6 +2411,7 @@ export class App extends Reactor {
             // Enqueue the network output control reactions for startup reactions 
             // if all startup reactions are executed
             this.triggerNetworkOutputControlReactions();
+            this._iterationComplete();
         }
 
         // Continue execution by processing the next event.

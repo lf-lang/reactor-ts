@@ -1105,6 +1105,10 @@ export class FederatedApp extends App {
                             return false;
                         }
                 }
+                if (this.stopRequestInfo.state !== StopRequestState.SENT && this.upstreamFedDelays.length === 0) {
+                    Log.debug(this, () => {return`This federate don't have to wait because it doesn't have any upstream.`});
+                    return true;
+                }
                 this.sendRTINextEventTag(nextEvent.tag);
                 Log.debug(this, () => "The greatest time advance grant " +
                     "received from the RTI is less than the timestamp of the " +
@@ -1129,6 +1133,7 @@ export class FederatedApp extends App {
                 if (isReactionWaiting === true) {
                     // Reaction should wait until port status becomes known
                     Log.debug(this, () => {return`React network input control reaction again.`});
+                    // When the reaction wait for input port at the startup, should send NET to RTI to grant PTAG. 
                     if (this.util.getCurrentTag().isSimultaneousWith(this.util.getStartTag())) {
                         this.sendRTINextEventTag(this.util.getCurrentTag());
                     }
@@ -1209,10 +1214,10 @@ export class FederatedApp extends App {
         if (portInfo !== undefined) {
             let lastKnownStatusTag = portInfo.lastKnownStatusTag;
             if (tag.isGreaterThan(lastKnownStatusTag)) {
-                /** FIXME: Figure out whether these codes are needed or not. See federate.c 1188
+                // FIXME: Figure out whether these codes are needed or not. See federate.c 1188
                 if (lastKnownStatusTag !== undefined && tag.isSimultaneousWith(lastKnownStatusTag)){
                     tag.getMicroStepsLater(1);
-                }*/
+                }
                 Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${portID} to ${tag}`});
                 portInfo.lastKnownStatusTag = tag;
             } else {
@@ -1258,7 +1263,6 @@ export class FederatedApp extends App {
                 return PortStatus.KNOWN;
             } else if (this._isLastTAGProvisional
                 && this.greatestTimeAdvanceGrant?.isGreaterThan(this.util.getCurrentTag())) {
-                console.log(`prov, known`);
                 this.setNetworkPortStatus(portID, PortStatus.KNOWN);
                 return PortStatus.KNOWN;
             }
@@ -1626,15 +1630,9 @@ export class FederatedApp extends App {
 
                 // FIXME: Temporarily disabling PTAG handling until the 
                 // input control reaction is implemented.
-
-                this.updatelastKnownStatusTags(tag);
-
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
-
-
-                // FIXME: Add input control reaction handling.
             }
         });
 
