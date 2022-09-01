@@ -1129,7 +1129,9 @@ export class FederatedApp extends App {
                 if (isReactionWaiting === true) {
                     // Reaction should wait until port status becomes known
                     Log.debug(this, () => {return`React network input control reaction again.`});
-                    this.sendRTINextEventTag(this.util.getCurrentTag());
+                    if (this.util.getCurrentTag().isSimultaneousWith(this.util.getStartTag())) {
+                        this.sendRTINextEventTag(this.util.getCurrentTag());
+                    }
                     return true;
                 } else if (isReactionWaiting === false) {
                     Log.debug(this, () => {return`Escape a network input control reaction.`});
@@ -1233,7 +1235,7 @@ export class FederatedApp extends App {
     protected updatelastKnownStatusTags(tag: Tag) {
         for (let i of this.portInfoByID.keys()) {
             let portInfo = this.portInfoByID.get(i);
-            if (portInfo?.lastKnownStatusTag !== undefined && tag.isGreaterThan(portInfo.lastKnownStatusTag)) {
+            if (portInfo !== undefined && tag.isGreaterThan(portInfo.lastKnownStatusTag)) {
                 Log.debug(this, () => {return `Updating the lastKnownStatusTag of port ${i} to ${tag}`});
                 portInfo.lastKnownStatusTag = tag;
             }
@@ -1256,6 +1258,7 @@ export class FederatedApp extends App {
                 return PortStatus.KNOWN;
             } else if (this._isLastTAGProvisional
                 && this.greatestTimeAdvanceGrant?.isGreaterThan(this.util.getCurrentTag())) {
+                console.log(`prov, known`);
                 this.setNetworkPortStatus(portID, PortStatus.KNOWN);
                 return PortStatus.KNOWN;
             }
