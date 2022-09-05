@@ -2028,6 +2028,54 @@ export class App extends Reactor {
         return false;
     }
 
+    protected _popEvents(nextEvent: TaggedEvent<Present> | undefined): void {
+        // Execute all reactions that are triggered
+        // at the current tag in topological order. After that, if the next
+        // event on the event queue has the same time (but a greater
+        // microstep), repeat. This prevents JS event loop from gaining
+        // control and imposing overhead. Asynchronous activity therefore
+        // might get blocked, but since the results of such activities are
+        // typically reported via physical actions, the tags of the
+        // resulting events would be in the future, anyway.
+        do {
+            // Keep popping the event queue until the next event has a different tag.
+            while (nextEvent != undefined && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
+                var trigger = nextEvent.trigger;
+                this._eventQ.pop();
+                Log.debug(this, () => "Popped off the event queue: " + trigger);
+                // Handle timers.
+                if (trigger instanceof Timer) {
+                    if (!trigger.period.isZero()) {
+                        Log.debug(this, () => "Rescheduling timer " + trigger);
+
+                        this.__runtime.schedule(new TaggedEvent(trigger,
+                            this._currentTag.getLaterTag(trigger.period),
+                            null));
+                    }
+                }
+                // Load reactions onto the reaction queue.
+                trigger.update(nextEvent);
+                
+                // Look at the next event on the queue.
+                nextEvent = this._eventQ.peek();
+            }
+
+            // End of this execution step. Perform cleanup.
+            while (this._reactorsToRemove.length > 0) {
+                let r = this._reactorsToRemove.pop()
+                // FIXME: doing this for the entire model at the end of execution
+                // could be a pretty significant performance hit, so we probably
+                // don't want to do this
+                // r?._unplug() FIXME: visibility
+            }
+
+            // Peek at the event queue to see whether we can process the next event
+            // or should give control back to the JS event loop.
+            nextEvent = this._eventQ.peek();
+
+        } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
+    }
+
     /** 
      *  Enqueue network control reactions
      */
@@ -2056,6 +2104,7 @@ export class App extends Reactor {
     private _next() {
         var nextEvent = this._eventQ.peek();
         if (this._isReactionRemainedAtThisTag) {
+            this._popEvents(nextEvent);
             if (this._react()) {
                 return;
             } else {
@@ -2086,51 +2135,8 @@ export class App extends Reactor {
             // Advance logical time.
             this._advanceTime(nextEvent.tag)
 
-            // Start processing events. Execute all reactions that are triggered
-            // at the current tag in topological order. After that, if the next
-            // event on the event queue has the same time (but a greater
-            // microstep), repeat. This prevents JS event loop from gaining
-            // control and imposing overhead. Asynchronous activity therefore
-            // might get blocked, but since the results of such activities are
-            // typically reported via physical actions, the tags of the
-            // resulting events would be in the future, anyway.
-            do {
-                // Keep popping the event queue until the next event has a different tag.
-                while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
-                    var trigger = nextEvent.trigger;
-                    this._eventQ.pop();
-                    Log.debug(this, () => "Popped off the event queue: " + trigger);
-                    // Handle timers.
-                    if (trigger instanceof Timer) {
-                        if (!trigger.period.isZero()) {
-                            Log.debug(this, () => "Rescheduling timer " + trigger);
-
-                            this.__runtime.schedule(new TaggedEvent(trigger,
-                                this._currentTag.getLaterTag(trigger.period),
-                                null));
-                        }
-                    }
-                    // Load reactions onto the reaction queue.
-                    trigger.update(nextEvent);
-                    
-                    // Look at the next event on the queue.
-                    nextEvent = this._eventQ.peek();
-                }
-
-                // End of this execution step. Perform cleanup.
-                while (this._reactorsToRemove.length > 0) {
-                    let r = this._reactorsToRemove.pop()
-                    // FIXME: doing this for the entire model at the end of execution
-                    // could be a pretty significant performance hit, so we probably
-                    // don't want to do this
-                    // r?._unplug() FIXME: visibility
-                }
-
-                // Peek at the event queue to see whether we can process the next event
-                // or should give control back to the JS event loop.
-                nextEvent = this._eventQ.peek();
-
-            } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
+            // Start processing events. 
+            this._popEvents(nextEvent);
 
             // enqueue networkInputControlReactions
             this.enqueueNetworkControlReactions();
