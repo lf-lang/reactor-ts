@@ -1105,9 +1105,13 @@ export class FederatedApp extends App {
                             return false;
                         }
                 }
-                if (this.stopRequestInfo.state !== StopRequestState.SENT && this.upstreamFedDelays.length === 0) {
-                    Log.debug(this, () => {return`This federate don't have to wait because it doesn't have any upstream.`});
-                    return true;
+                if (this.stopRequestInfo.state !== StopRequestState.SENT) {
+                    if (this.upstreamFedDelays.length === 0) {
+                        Log.debug(this, () => {return`This federate don't have to wait because it doesn't have any upstream.`});
+                        return true;
+                    } else if (tagBarrier !== null && tagBarrier.isSmallerThan(nextEvent.tag)) {
+                        this.sendRTILogicalTimeComplete(tagBarrier);
+                    }
                 }
                 this.sendRTINextEventTag(nextEvent.tag);
                 Log.debug(this, () => "The greatest time advance grant " +
@@ -1617,7 +1621,7 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
-            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThanOrEqualTo(tag)) {
                 this.updatelastKnownStatusTags(tag);
                 // Update the greatest time advance grant and immediately 
                 // wake up _next, in case it was blocked by the old time advance grant
