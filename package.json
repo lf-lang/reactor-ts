@@ -43,7 +43,7 @@
         "check-types": "tsc",
         "install": "npx rimraf lib && npx babel src --out-dir lib --extensions .ts",
         "deploy": "npm run build && npm run doc",
-        "doc": "typedoc --exclude \"**/+(example|benchmark|share)/**/*.ts\" --out docs src && touch docs/.nojekyll",
+        "doc": "typedoc --out docs src/core/index.ts && touch docs/.nojekyll",
         "dtslint": "dtslint __tests__/types",
         "test": "jest --coverage"
     },
