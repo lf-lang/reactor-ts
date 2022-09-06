@@ -1565,7 +1565,7 @@ interface UtilityFunctions {
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
-    sendRTIPortAbsent (additionalDealy: 0 | TimeValue, destFederateID: number, destPortID: number): void;
+    sendRTIPortAbsent (additionalDealy: TimeValue, destFederateID: number, destPortID: number): void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -1688,7 +1688,7 @@ export class App extends Reactor {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         };
 
-        public sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
+        public sendRTIPortAbsent (additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
             return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
         }
     }(this);
@@ -1827,11 +1827,11 @@ export class App extends Reactor {
      * @param additional_delay The offset applied to the timestamp
      *  using after. The additional delay will be greater or equal to zero
      *  if an after is used on the connection. If no after is given in the
-     *  program, -1 is passed.
+     *  program, NEVER is passed.
      * @param destFederatedID The fed ID of the receiving federate.
      * @param destPortID The ID of the receiving port.
      */
-    protected sendRTIPortAbsent (additionalDelay: 0 | TimeValue, destFederateID: number, destPortID: number) {
+    protected sendRTIPortAbsent (additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
     }
 
@@ -2099,7 +2099,7 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
-            // trigger networkOutputControlReactions
+            // enqueue networkOutputControlReactions
             this.enqueueNetworkOutputControlReactions();
 
             // React to all the events loaded onto the reaction queue.
@@ -2363,7 +2363,6 @@ export class App extends Reactor {
 
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
-
 
         // Continue execution by processing the next event.
         this._next()
