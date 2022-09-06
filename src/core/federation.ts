@@ -1106,8 +1106,9 @@ export class FederatedApp extends App {
                             return false;
                         }
                 }
-                if (this.stopRequestInfo.state !== StopRequestState.SENT && this.upstreamFedDelays.length === 0) {
-                    Log.debug(this, () => {return`This federate don't have to wait because it doesn't have any upstream.`});
+                // This is necessary to support input control reactions(federate.c #2632)
+                if (this.stopRequestInfo.state !== StopRequestState.SENT && this.upstreamFedIDs.length === 0) {
+                    Log.debug(this, () => {return`This federate doesn't have to wait because it doesn't have any upstream.`});
                     return true;
                 }
                 this.sendRTINextEventTag(nextEvent.tag);
@@ -1134,7 +1135,8 @@ export class FederatedApp extends App {
                 if (isReactionWaiting === true) {
                     // Reaction should wait until port status becomes known
                     Log.debug(this, () => {return`React network input control reaction again.`});
-                    // When the reaction wait for input port at the startup, should send NET to RTI to grant PTAG. 
+                    // When the reaction waits for input port at the startup, should send NET to RTI to grant PTAG. 
+                    // For example, when 
                     if (this.util.getCurrentTag().isSimultaneousWith(this.util.getStartTag())) {
                         this.sendRTINextEventTag(this.util.getCurrentTag());
                     }
@@ -1618,6 +1620,7 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
+            // FIXME: in C?
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThanOrEqualTo(tag)) {
                 this.updatelastKnownStatusTags(tag);
                 // Update the greatest time advance grant and immediately 
@@ -1631,6 +1634,7 @@ export class FederatedApp extends App {
         this.rtiClient.on('provisionalTimeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Provisional Time Advance Grant received from RTI for ${tag}.`});
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+                // FIXME: Add comments
                 if (this.greatestTimeAdvanceGrant !== null && tag.isGreaterThan(this.util.getCurrentTag())) {
                     this._addDummyEvent(tag);
                 }

@@ -2028,6 +2028,7 @@ export class App extends Reactor {
         return false;
     }
 
+    //FIXME: Add 
     protected _popEvents(nextEvent: TaggedEvent<Present> | undefined): void {
         // Execute all reactions that are triggered
         // at the current tag in topological order. After that, if the next
@@ -2104,6 +2105,7 @@ export class App extends Reactor {
     private _next() {
         var nextEvent = this._eventQ.peek();
         if (this._isReactionRemainedAtThisTag) {
+            //FIXME: Add comments
             this._popEvents(nextEvent);
             if (this._react()) {
                 return;
