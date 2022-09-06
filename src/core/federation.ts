@@ -1086,7 +1086,7 @@ export class FederatedApp extends App {
      * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
      * message to downstream federates if a given network output port is not present.
      */
-     protected triggerNetworkOutputControlReactions(): void {
+     protected enqueueNetworkOutputControlReactions(): void {
         if (this.downstreamFedIDs.length === 0) {
             return;
             // This federate is not connected to any downstream federates via a
@@ -1097,8 +1097,6 @@ export class FederatedApp extends App {
         let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
         Log.debug(this, () => {return`Inserting network output control reaction on reaction queue.`});
         trigger.update(event);
-        this._react();
-        // Maybe we can execute this output control reaction in this function directly.
     }
 
     protected _finish() {
@@ -1424,7 +1422,12 @@ export class FederatedApp extends App {
 
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
-            // TODO: add port status control
+            // FIXME: Temporarily disabling enqueueNetworkOutputControlReactions() until the
+            // input control reaction is implemented.
+            // this.updatelastKnownStatusTag(intendedTag, portID);
+            // if (this._isReactionRemainedAtThisTag === true) {
+            //     this._requestImmediateInvocationOfNext();
+            // }
         });
 
         this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);

@@ -2010,7 +2010,7 @@ export class App extends Reactor {
         Log.global.debug("Finished handling all events at current time.");
     }
 
-    protected triggerNetworkOutputControlReactions(): void {}
+    protected enqueueNetworkOutputControlReactions(): void {}
 
     /**
      * Handle the next events on the event queue.
@@ -2062,7 +2062,6 @@ export class App extends Reactor {
             // typically reported via physical actions, the tags of the
             // resulting events would be in the future, anyway.
             do {
-
                 // Keep popping the event queue until the next event has a different tag.
                 while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
                     var trigger = nextEvent.trigger;
@@ -2100,12 +2099,11 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
+            // trigger networkOutputControlReactions
+            this.enqueueNetworkOutputControlReactions();
 
             // React to all the events loaded onto the reaction queue.
             this._react()
-
-            // trigger networkOutputControlReactions
-            this.triggerNetworkOutputControlReactions();
 
             // Done handling events.
             // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
@@ -2360,12 +2358,12 @@ export class App extends Reactor {
         
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
+        // enqueue networkOutputControlReactions
+        this.enqueueNetworkOutputControlReactions();
 
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
 
-        // trigger networkOutputControlReactions
-        this.triggerNetworkOutputControlReactions();
 
         // Continue execution by processing the next event.
         this._next()
