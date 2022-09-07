@@ -2028,16 +2028,19 @@ export class App extends Reactor {
         return false;
     }
 
-    //FIXME: Add 
+    /**
+     * Execute all reactions that are triggered
+     * at the current tag in topological order. After that, if the next
+     * event on the event queue has the same time (but a greater
+     * microstep), repeat. This prevents JS event loop from gaining
+     * control and imposing overhead. Asynchronous activity therefore
+     * might get blocked, but since the results of such activities are
+     * typically reported via physical actions, the tags of the
+     * resulting events would be in the future, anyway.  
+     *   
+     * @param nextEvent The next event to be processed.
+     */
     protected _popEvents(nextEvent: TaggedEvent<Present> | undefined): void {
-        // Execute all reactions that are triggered
-        // at the current tag in topological order. After that, if the next
-        // event on the event queue has the same time (but a greater
-        // microstep), repeat. This prevents JS event loop from gaining
-        // control and imposing overhead. Asynchronous activity therefore
-        // might get blocked, but since the results of such activities are
-        // typically reported via physical actions, the tags of the
-        // resulting events would be in the future, anyway.
         do {
             // Keep popping the event queue until the next event has a different tag.
             while (nextEvent != undefined && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
@@ -2105,13 +2108,20 @@ export class App extends Reactor {
     private _next() {
         var nextEvent = this._eventQ.peek();
         if (this._isReactionRemainedAtThisTag) {
-            //FIXME: Add comments
+            // This part can be reached only in the federated exection
+
+            // Pop events again to move network message events at the current tag 
+            // from the eventQ to the reactionQ
+            // This code is needed in case receiving tagged message after the other events are already enqueued into the reactionQ.
             this._popEvents(nextEvent);
+
             if (this._react()) {
+                // The reaction is still remained at this tag, just return 
                 return;
             } else {
-                this._isReactionRemainedAtThisTag = false;     
                 // Done handling events.
+                this._isReactionRemainedAtThisTag = false;     
+
                 // _iterationComplete() sends a LTC (Logical Tag Complete) message when federated.
                 // Make sure that a federate sends LTC only after actually handling an event.
                 this._iterationComplete();

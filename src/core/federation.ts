@@ -1106,9 +1106,10 @@ export class FederatedApp extends App {
                             return false;
                         }
                 }
-                // This is necessary to support input control reactions(federate.c #2632)
+                // If the federate doesn't have any upstream federates, it doesn't need to wait for any other federate
+                // For more information, see federate.c#2621
                 if (this.stopRequestInfo.state !== StopRequestState.SENT && this.upstreamFedIDs.length === 0) {
-                    Log.debug(this, () => {return`This federate doesn't have to wait because it doesn't have any upstream.`});
+                    Log.debug(this, () => {return`This federate doesn't have to wait for TAG because it doesn't have any upstream.`});
                     return true;
                 }
                 this.sendRTINextEventTag(nextEvent.tag);
@@ -1136,7 +1137,8 @@ export class FederatedApp extends App {
                     // Reaction should wait until port status becomes known
                     Log.debug(this, () => {return`React network input control reaction again.`});
                     // When the reaction waits for input port at the startup, should send NET to RTI to grant PTAG. 
-                    // For example, when 
+                    // For example, when fedeartes don't have any events at the start tag,
+                    // FIXME: this might be able to addressed at the canProceed() also
                     if (this.util.getCurrentTag().isSimultaneousWith(this.util.getStartTag())) {
                         this.sendRTINextEventTag(this.util.getCurrentTag());
                     }
@@ -1169,8 +1171,6 @@ export class FederatedApp extends App {
     /**
      * Reset the status fields on network input ports 
      * which can't receive the network message at the current Tag.
-     * 
-     * //FIXME: port-absen - The name of function should be adjust
      * 
      * @note This function must be called at the beginning of each
      *  logical time.
@@ -1620,7 +1620,8 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
-            // FIXME: in C?
+            // It is possible for this federate to have received a PTAG
+            // earlier with the same tag as this TAG.
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThanOrEqualTo(tag)) {
                 this.updatelastKnownStatusTags(tag);
                 // Update the greatest time advance grant and immediately 
@@ -1634,7 +1635,9 @@ export class FederatedApp extends App {
         this.rtiClient.on('provisionalTimeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Provisional Time Advance Grant received from RTI for ${tag}.`});
             if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
-                // FIXME: Add comments
+                // Add dummey event at the PTAG if the PTAG > currentTag
+                // If the tag of the next event is greater than greatestTimeAdvanceGrant and the PTAG is greater than current tag
+                // without scheduling dummy event at the PTAG, federate can't inform the RTI that it doesn't send any outputs at the PTAG
                 if (this.greatestTimeAdvanceGrant !== null && tag.isGreaterThan(this.util.getCurrentTag())) {
                     this._addDummyEvent(tag);
                 }
@@ -1675,7 +1678,6 @@ export class FederatedApp extends App {
 
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
-            //FIXME: Schedule a proper port action like tagged message 
             this.updatelastKnownStatusTag(intendedTag, portID);
             if (this._isReactionRemainedAtThisTag === true) {
                 this._requestImmediateInvocationOfNext();
