@@ -110,7 +110,6 @@ export class Triggers {
 /** Interface for passing in configuration options to a federate */
 export interface FederateConfig {
     dependsOn: number[]
-    processDelay: TimeValue[] []
     executionTimeout?: TimeValue
     fast: boolean
     federateID: number
@@ -121,4 +120,5 @@ export interface FederateConfig {
     rtiHost: string
     rtiPort: number
     sendsTo: number[]
+    upstreamConnectionDelays: TimeValue[] []
 }
