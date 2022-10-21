@@ -26,7 +26,7 @@ npm run test
 npm run doc
 ```
 
-## Additional Resources
+## Additional resources
 - [Lingua Franca GitHub repo](https://repo.lf-lang.org)
 - [Lingua Franca website](https://repo.lf-lang.org)
 - [Reactor-ts API Docs](https://lf-lang.github.io/reactor-ts)
