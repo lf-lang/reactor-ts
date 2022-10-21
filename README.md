@@ -4,34 +4,29 @@
 A Reactor-Oriented Programming Framework in TypeScript
 ---
 
-[Documentation](https://lf-lang.github.io/reactor-ts)
+The prime use of this runtime implementation is to support the [TypeScript target of Lingua Franca](https://www.lf-lang.org/docs/handbook/a-first-reactor?target=ts), a coordination language that endows mainstream programming languages with an intuitive concurrency model and abstractions for specifying timed behaviors.
+
+This runtime implementation can also be used standalone. Documentation and examples of such usage will be included in future releases of this module. Automatically generated [API docs](https://lf-lang.github.io/reactor-ts) are already available.
 
 
-## Get Started
+### Quick reference
 
-Make sure you have NodeJS >10.4 installed.
-
-To make sure all Node modules are installed, run:
-
+## Installing Reactor-ts
 ```
 npm install
 ```
 
-To run the tests with [Jest][jest], run:
-
+## Running the tests
 ```
 npm run test
 ```
 
-To generate documentation with [TypeDoc][typedoc], run:
-
+## Generating docs
 ```
 npm run doc
 ```
 
-<!-- links -->
-[travis-image]: https://travis-ci.com/nebgnahz/accessor-flow.svg?token=FtzQss73KSBwcHhSsrGQ&branch=master
-[documentationjs]: https://github.com/documentationjs/documentation
-[typedoc]: https://typedoc.org/
-[jest]: https://facebook.github.io/jest
-[designs]: https://github.com/nebgnahz/accessor-flow/issues?q=is%3Aissue+is%3Aopen+label%3ADesign
+## Additional Resources
+- [Lingua Franca GitHub repo](https://repo.lf-lang.org)
+- [Lingua Franca website](https://repo.lf-lang.org)
+- [Reactor-ts API Docs](https://lf-lang.github.io/reactor-ts)
