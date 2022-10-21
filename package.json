@@ -1,5 +1,5 @@
 {
-    "name": "reactor-ts",
+    "name": "@lf-lang/reactor-ts",
     "version": "0.1.0",
     "description": "Reactor runtime written in TypeScript",
     "main": "lib/core/index.js",
