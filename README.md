@@ -1,7 +1,7 @@
 [![CI](https://github.com/lf-lang/reactor-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/lf-lang/reactor-ts/actions/workflows/ci.yml)
 [![API docs](https://github.com/lf-lang/reactor-ts/actions/workflows/api-docs.yml/badge.svg)](https://github.com/lf-lang/reactor-ts/actions/workflows/api-docs.yml)
 
-A Reactor-Oriented Programming Framework in TypeScript
+A reactor-oriented programming framework in TypeScript
 ---
 
 The prime use of this runtime implementation is to support the [TypeScript target of Lingua Franca (LF)](https://www.lf-lang.org/docs/handbook/a-first-reactor?target=ts). LF is a coordination language that endows mainstream programming languages with an intuitive concurrency model and abstractions for specifying timed behaviors.
