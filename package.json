@@ -1,7 +1,7 @@
 {
     "name": "@lf-lang/reactor-ts",
     "version": "0.1.0",
-    "description": "Reactor runtime written in TypeScript",
+    "description": "A reactor-oriented programming framework in TypeScript",
     "main": "lib/core/index.js",
     "type": "commonjs",
     "types": "src/core",
