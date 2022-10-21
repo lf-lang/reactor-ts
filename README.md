@@ -28,5 +28,5 @@ npm run doc
 
 ## Additional resources
 - [Lingua Franca GitHub repo](https://repo.lf-lang.org)
-- [Lingua Franca website](https://repo.lf-lang.org)
+- [Lingua Franca website](https://www.lf-lang.org)
 - [Reactor-ts API Docs](https://lf-lang.github.io/reactor-ts)
