@@ -9,19 +9,19 @@ The prime use of this runtime implementation is to support the [TypeScript targe
 This runtime implementation can also be used standalone. Documentation and examples of such usage will be included in future releases of this module. Automatically generated [API docs](https://lf-lang.github.io/reactor-ts) are already available.
 
 
-### Quick reference
+## Quick reference
 
-## Installing Reactor-ts
+### Installing Reactor-ts
 ```
 npm install
 ```
 
-## Running the tests
+### Running the tests
 ```
 npm run test
 ```
 
-## Generating docs
+### Generating docs
 ```
 npm run doc
 ```
