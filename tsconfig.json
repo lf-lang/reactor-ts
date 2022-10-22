@@ -13,7 +13,8 @@
         "strictBindCallApply": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
-        "noImplicitThis": true
+        "noImplicitThis": true,
+        "declaration": true
     },
     "include": [
         "src/**/*",
