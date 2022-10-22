@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "allowJs": true,
-        "noEmit": true,
+        "emitDeclarationOnly": true,
         "target": "esnext",
         "esModuleInterop": true,
         "isolatedModules": true,
@@ -14,7 +14,8 @@
         "strictNullChecks": true,
         "strictFunctionTypes": true,
         "noImplicitThis": true,
-        "declaration": true
+        "declaration": true,
+        "declarationDir": "lib",
     },
     "include": [
         "src/**/*",

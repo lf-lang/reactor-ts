@@ -47,7 +47,8 @@
         "install": "npx rimraf lib && npx babel src --out-dir lib --extensions .ts",
         "doc": "typedoc --out docs src/core/index.ts && touch docs/.nojekyll",
         "dtslint": "dtslint __tests__/types",
-        "test": "jest --coverage"
+        "test": "jest --coverage",
+        "prepublish": "npx tsc"
     },
     "jest": {
         "globals": {
