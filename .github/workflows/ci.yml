@@ -41,7 +41,7 @@ jobs:
 
   lf-tests:
     needs: fetch-lf
-    uses: lf-lang/reactor-ts/.github/workflows/lf-tests.yml@master
+    uses: lf-lang/reactor-ts/.github/workflows/lf-tests.yml@test-ci
     with:
       runtime-ref: ${{ github.ref }}
       compiler-ref: ${{ needs.fetch-lf.outputs.ref }}
