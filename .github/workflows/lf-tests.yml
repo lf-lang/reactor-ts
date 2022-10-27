@@ -14,6 +14,8 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    env:
+      PNPM_HOME: /home/runner/.local/share/pnpm
     steps:
       - name: Check out reactor-ts repository
         uses: actions/checkout@v3
@@ -35,7 +37,11 @@ jobs:
           node-version: 18
       - name: Install pnpm
         run: npm i -g pnpm
+      - name: Install reactor-ts globally
+        run: |
+          echo "${PNPM_PATH}" >> $GITHUB_PATH
+          pnpm install -g ./reactor-ts
       - name: Perform Lingua Franca TypeScript tests
         working-directory: lingua-franca
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}"
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.*
