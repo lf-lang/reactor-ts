@@ -37,10 +37,10 @@ jobs:
           node-version: 18
       - name: Install pnpm
         run: npm i -g pnpm
+      - name: Add $PNPM_HOME to PATH
+        run: echo "${PNPM_PATH}" >> $GITHUB_PATH
       - name: Install reactor-ts globally
-        run: |
-          echo "${PNPM_PATH}" >> $GITHUB_PATH
-          pnpm install -g ./reactor-ts
+        run: pnpm install -g ./reactor-ts
       - name: Perform Lingua Franca TypeScript tests
         working-directory: lingua-franca
         run: |
