@@ -2,6 +2,7 @@ name: Lingua Franca tests
 
 on:
   workflow_call:
+    # FIXME: remove these
     inputs:
       compiler-ref:
         required: false
@@ -14,29 +15,26 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v3
+      - name: Read lingua-franca-ref.txt
+        id: lf
+        run: echo ::set-output name=ref::$(cat lingua-franca-ref.txt)
       - name: Check out lingua-franca repository
         uses: actions/checkout@v3
         with:
           repository: lf-lang/lingua-franca
-          submodules: true
-          ref: ${{ inputs.compiler-ref }}
+          path: ./lingua-franca
+          ref: ${{ steps.lf.outputs.ref }}
           fetch-depth: 0
       - name: Prepare build environment
-        uses: ./.github/actions/prepare-build-env
+        uses: ./lingua-franca/.github/actions/prepare-build-env
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
           node-version: 18
       - name: Install pnpm
         run: npm i -g pnpm
-      - name: Check out specific ref of reactor-ts
-        uses: actions/checkout@v3
-        with:
-          repository: lf-lang/reactor-ts
-          path: ./reactor-ts
-          ref: ${{ inputs.runtime-ref }}
-        if: ${{ inputs.runtime-ref }}
-      - name: Perform TypeScript tests with alternative runtime
+      - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}/reactor-ts"
-        if: ${{ inputs.runtime-ref }}
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}"
