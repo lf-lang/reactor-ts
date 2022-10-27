@@ -22,7 +22,7 @@ jobs:
           ref: ${{ inputs.compiler-ref }}
           fetch-depth: 0
       - name: Prepare build environment
-        uses: .github/actions/prepare-build-env
+        uses: ./.github/actions/prepare-build-env
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
