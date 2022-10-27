@@ -1,0 +1,42 @@
+name: Lingua Franca tests
+
+on:
+  workflow_call:
+    inputs:
+      compiler-ref:
+        required: false
+        type: string
+      runtime-ref:
+        required: false
+        type: string
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out lingua-franca repository
+        uses: actions/checkout@v3
+        with:
+          repository: lf-lang/lingua-franca
+          submodules: true
+          ref: ${{ inputs.compiler-ref }}
+          fetch-depth: 0
+      - name: Prepare build environment
+        uses: ./lingua-franca/.github/actions/prepare-build-env
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install pnpm
+        run: npm i -g pnpm
+      - name: Check out specific ref of reactor-ts
+        uses: actions/checkout@v3
+        with:
+          repository: lf-lang/reactor-ts
+          path: ./reactor-ts
+          ref: ${{ inputs.runtime-ref }}
+        if: ${{ inputs.runtime-ref }}
+      - name: Perform TypeScript tests with alternative runtime
+        run: |
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}/reactor-ts"
+        if: ${{ inputs.runtime-ref }}
