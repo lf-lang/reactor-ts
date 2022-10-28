@@ -8,40 +8,48 @@ on:
 
 jobs:
   unit-tests:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out reactor-ts repository
         uses: actions/checkout@v3
-
-
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          # Set this option if you want the action to check for the latest available version that satisfies the version spec
-          #check-latest: # optional
-          # Optional registry to set up for auth. Will set the registry in a project level .npmrc and .yarnrc file, and set up auth to read in from env.NODE_AUTH_TOKEN
-          cache: npm
-          # Used to specify the path to a dependency file: package-lock.json, yarn.lock, etc. Supports wildcards or a list of file names for caching multiple dependencies.
-          cache-dependency-path: package-lock.json
-
-      # Runs a single command using the runners shell
       - name: Run the type checker and then run the tests
         run: |
           npm install
           npm run check-types
           npm run test
 
-  fetch-lf:
-    uses: lf-lang/lingua-franca/.github/workflows/extract-ref.yml@master
-    with:
-      file: 'lingua-franca-ref.txt'
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v3
+        with:
+          path: ./reactor-ts
+      - name: Read lingua-franca-ref.txt
+        id: lf
+        run: echo "ref=$(cat reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_OUTPUT
+      - name: Check out lingua-franca repository
+        uses: actions/checkout@v3
+        with:
+          repository: lf-lang/lingua-franca
+          path: ./lingua-franca
+          ref: ${{ steps.lf.outputs.ref }}
+          fetch-depth: 0
+      - name: Prepare build environment
+        uses: ./lingua-franca/.github/actions/prepare-build-env
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install pnpm
+        run: npm i -g pnpm
+      - name: Perform Lingua Franca TypeScript tests
+        working-directory: lingua-franca
+        run: |
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}/reactor-ts"
 
-  lf-tests:
-    needs: fetch-lf
-    uses: lf-lang/reactor-ts/.github/workflows/lf-tests.yml@test-ci
-    with:
-      runtime-ref: ${{ github.ref }}
-      compiler-ref: ${{ needs.fetch-lf.outputs.ref }}
+  
