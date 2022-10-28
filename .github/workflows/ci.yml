@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  jest-tests:
+  jest:
     runs-on: ubuntu-latest
     steps:
       - name: Check out reactor-ts repository
@@ -22,7 +22,7 @@ jobs:
           npm run check-types
           npm run test
 
-  lf-tests:
+  lingua-franca:
     runs-on: ubuntu-latest
     steps:
       - name: Check out reactor-ts repository
