@@ -23,7 +23,7 @@ jobs:
           path: ./reactor-ts
       - name: Read lingua-franca-ref.txt
         id: lf
-        run: echo "ref=$(cat lingua-franca-ref.txt)" >> $GITHUB_OUTPUT
+        run: echo "ref=$(cat reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_OUTPUT
       - name: Check out lingua-franca repository
         uses: actions/checkout@v3
         with:
