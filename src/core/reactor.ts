@@ -1644,7 +1644,11 @@ export class App extends Reactor {
 
         public reportError(message?: string) {
             this.app._errored = true
-            this.app._errorMessage = message
+            if (this.app._errorMessage === undefined) {
+                this.app._errorMessage = message
+            } else {
+                this.app._errorMessage += " || " + message
+            }
         }
 
         public isLastTAGProvisional(): boolean {
