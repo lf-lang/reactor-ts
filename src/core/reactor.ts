@@ -2212,11 +2212,11 @@ export class App extends Reactor {
         Log.info(this, () => Log.hr);
 
         if (this._errored) {
-            this.failure()
             console.error(">>> Erroneous exit.")
             if (this._errorMessage) {
                 console.error("Reason: " + this._errorMessage)
             }
+            this.failure()
         } else {
             this.success()
         }
