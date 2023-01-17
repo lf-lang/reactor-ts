@@ -2100,7 +2100,8 @@ export class App extends Reactor {
 
             } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
             // enqueue networkOutputControlReactions
-            this.enqueueNetworkOutputControlReactions();
+            // Disable this line until output reaction body is generated correctly
+            //this.enqueueNetworkOutputControlReactions();
 
             // React to all the events loaded onto the reaction queue.
             this._react()
@@ -2359,7 +2360,8 @@ export class App extends Reactor {
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
         // enqueue networkOutputControlReactions
-        this.enqueueNetworkOutputControlReactions();
+        // Disable this line until output reaction body is generated correctly
+        //this.enqueueNetworkOutputControlReactions();
 
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
