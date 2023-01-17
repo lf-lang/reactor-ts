@@ -1,7 +1,7 @@
 {
-    "name": "reactor-ts",
+    "name": "@lf-lang/reactor-ts",
     "version": "0.1.0",
-    "description": "Reactor runtime written in TypeScript",
+    "description": "A reactor-oriented programming framework in TypeScript",
     "main": "lib/core/index.js",
     "type": "commonjs",
     "types": "src/core",
@@ -42,7 +42,6 @@
     "scripts": {
         "check-types": "tsc",
         "install": "npx rimraf lib && npx babel src --out-dir lib --extensions .ts",
-        "deploy": "npm run build && npm run doc",
         "doc": "typedoc --out docs src/core/index.ts && touch docs/.nojekyll",
         "dtslint": "dtslint __tests__/types",
         "test": "jest --coverage"
@@ -71,16 +70,16 @@
         "url": "git@github.com:lf-lang/reactor-ts.git"
     },
     "keywords": [
-        "IoT",
-        "framework",
+        "reactors",
+        "deterministic",
+        "concurrency",
         "timing",
-        "determinism",
-        "actors"
+        "runtime"
     ],
     "author": {
         "name": "Marten Lohstroh",
         "email": "marten@berkeley.edu",
-        "url": "http://people.eecs.berkeley.edu/~marten"
+        "url": "https://marten.fyi"
     },
     "contributors": [
         "Yunsang Cho",

@@ -1996,7 +1996,7 @@ export class App extends Reactor {
     /**
      * Iterate over all reactions in the reaction queue and execute them.
      */
-    protected _react() {
+    private _react() {
         while (this._reactionQ.size() > 0) {
             try {
                 var r = this._reactionQ.pop();
