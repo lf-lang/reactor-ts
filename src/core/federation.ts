@@ -199,7 +199,7 @@ enum RTIMessageTypes {
      * A port absent message, informing the receiver that a given port
      * will not have event for the current logical time.
      * 
-     * The next 2 bytes is the port id.
+     * The next 2 bytes are the port id.
      * The next 2 bytes will be the federate id of the destination federate.
      *  This is needed for the centralized coordination so that the RTI knows where
      *  to forward the message.
@@ -218,8 +218,8 @@ enum RTIMessageTypes {
      * transitively obtain the structure of the federation based on each federate's
      * immediate neighbor information.
      *
-     * The next 4 bytes is the number of upstream federates.
-     * The next 4 bytes is the number of downstream federates.
+     * The next 4 bytes are the number of upstream federates.
+     * The next 4 bytes are the number of downstream federates.
      *
      * Depending on the first four bytes, the next bytes are pairs of (fed ID (2
      * bytes), delay (8 bytes)) for this federate's connection to upstream federates
@@ -865,7 +865,7 @@ class RTIClient extends EventEmitter {
                     break;
                 }
                 case RTIMessageTypes.MSG_TYPE_PORT_ABSENT: {
-                    // Next 2 bytes is the port id.
+                    // The next 2 bytes are the port id.
                     // The next 2 bytes will be the federate id of the destination federate.
                     // The next 8 bytes are the intended time of the absent message
                     // The next 4 bytes are the intended microstep of the absent message

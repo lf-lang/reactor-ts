@@ -1829,11 +1829,11 @@ export class App extends Reactor {
      * @param additional_delay The offset applied to the timestamp
      *  using after. The additional delay will be greater or equal to zero
      *  if an after is used on the connection. If no after is given in the
-     *  program, NEVER is passed.
+     *  program, NEVER is passed. To be overriden by the FederatedApp class.
      * @param destFederatedID The fed ID of the receiving federate.
      * @param destPortID The ID of the receiving port.
      */
-    protected sendRTIPortAbsent (additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
+    protected sendRTIPortAbsent(additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
     }
 
