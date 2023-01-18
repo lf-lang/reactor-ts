@@ -1087,8 +1087,8 @@ export class FederatedApp extends App {
      * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
      * message to downstream federates if a given network output port is not present.
      */
-     protected enqueueNetworkOutputControlReactions(): void {
-        if (this.downstreamFedIDs.length === 0) {
+    protected enqueueNetworkOutputControlReactions(): void {
+        if (this.downstreamFedIDs.length === 0 || this.outputControlReactionTriggers.length === 0) {
             return;
             // This federate is not connected to any downstream federates via a
             // logical connection. No need to trigger network output control
