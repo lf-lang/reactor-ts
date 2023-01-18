@@ -3,7 +3,7 @@ import {Socket, createConnection, SocketConnectOpts} from 'net'
 import {EventEmitter} from 'events';
 import {
     Log, Tag, TimeValue, Origin, getCurrentPhysicalTime, Alarm,
-    Present, App, Action, TaggedEvent
+    Present, App, Action, TaggedEvent, FederateConfig
 } from './internal';
 
 //---------------------------------------------------------------------//
@@ -620,7 +620,6 @@ class RTIClient extends EventEmitter {
     }
 
     /**
-<<<<<<< HEAD
      * Send a port absent message to federate with fed_ID, informing the
      * remote federate that the current federate will not produce an event
      * on this network port at the current logical time.
@@ -980,6 +979,8 @@ export class FederatedApp extends App {
      * The default value, null, indicates there is no output depending on a physical action.
      */
     private minDelayFromPhysicalActionToFederateOutput: TimeValue | null = null;
+    rtiPort: number;
+    rtiHost: string;
 
     public addUpstreamFederate(fedID: number, fedDelay: TimeValue) {
         this.upstreamFedIDs.push(fedID);
@@ -1125,11 +1126,9 @@ export class FederatedApp extends App {
      * @param success Optional argument. Called when the FederatedApp exits with success.
      * @param failure Optional argument. Called when the FederatedApp exits with failure.
      */
-    constructor (federationID: string, federateID: number, private rtiPort: number, private rtiHost: string,
-        executionTimeout?: TimeValue | undefined, keepAlive?: boolean,
-        fast?: boolean, success?: () => void, failure?: () => void) {
+    constructor (config: FederateConfig, success?: () => void, failure?: () => void) {
 
-        super(executionTimeout, keepAlive, fast,
+        super(config.executionTimeout, config.keepAlive, config.fast,
             // Let super class (App) call FederateApp's _shutdown in success and failure.
             () => {
                 success? success(): () => {};
@@ -1139,11 +1138,21 @@ export class FederatedApp extends App {
                 failure? failure(): () => {};
                 this._shutdown();
             });
-        if (this.rtiPort === 0) {
+        if (config.rtiPort === 0) {
             // When given rtiPort is 0, set it to default, 15045.
             this.rtiPort = 15045;
+        } else {
+            this.rtiPort = config.rtiPort
         }
-        this.rtiClient = new RTIClient(federationID, federateID);
+        this.rtiClient = new RTIClient(config.federationID, config.federateID);
+        this.rtiHost = config.rtiHost
+        for (let sendsToFedId of config.sendsTo) {
+            this.addDownstreamFederate(sendsToFedId);
+        }
+        for (let dependsOnFedId of config.dependsOn) {
+            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.zero().
+            this.addUpstreamFederate(dependsOnFedId, TimeValue.zero());
+        }
     }
 
     /**
