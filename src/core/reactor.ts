@@ -1824,10 +1824,8 @@ export class App extends Reactor {
     }
 
     /**
-     * Send a port absent message to federate with fed_ID, informing the
-     * remote federate that the current federate will not produce an event
-     * on this network port at the current logical time.
-     * 
+     * Send a port absent message to the destination port. 
+     * This function throws an error if it isn't called on a FederatedApp.
      * @param additional_delay The offset applied to the timestamp
      *  using after. The additional delay will be greater or equal to zero
      *  if an after is used on the connection. If no after is given in the

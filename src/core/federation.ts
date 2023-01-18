@@ -865,7 +865,7 @@ class RTIClient extends EventEmitter {
                     break;
                 }
                 case RTIMessageTypes.MSG_TYPE_PORT_ABSENT: {
-                    // The next 2 bytes is the port id.
+                    // Next 2 bytes is the port id.
                     // The next 2 bytes will be the federate id of the destination federate.
                     // The next 8 bytes are the intended time of the absent message
                     // The next 4 bytes are the intended microstep of the absent message
@@ -1255,11 +1255,11 @@ export class FederatedApp extends App {
     }
 
     /**
-     * Send a port absent message to federate with fed_ID, informing the
+     * Send a port absent message to the destination port, informing the
      * remote federate that the current federate will not produce an event
      * on this network port at the current logical time.
      * 
-     * @param additional_delay The offset applied to the timestamp
+     * @param additionalDelay The offset applied to the timestamp
      *  using after. The additional delay will be greater or equal to zero
      *  if an after is used on the connection. If no after is given in the
      *  program, NEVER is passed.
