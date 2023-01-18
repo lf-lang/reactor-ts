@@ -1428,7 +1428,7 @@ export class FederatedApp extends App {
 
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {
             Log.debug(this, () => {return `Port Absent received from RTI for ${intendedTag}.`});
-            // FIXME: Temporarily disabling enqueueNetworkOutputControlReactions() until the
+            // FIXME: Temporarily disabling portAbsent until the
             // input control reaction is implemented.
             // this.updatelastKnownStatusTag(intendedTag, portID);
             // if (this._isReactionRemainedAtThisTag === true) {
