@@ -1565,6 +1565,7 @@ interface UtilityFunctions {
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
     sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
+    sendRTIPortAbsent (additionalDealy: TimeValue, destFederateID: number, destPortID: number): void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
@@ -1691,6 +1692,9 @@ export class App extends Reactor {
             return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
         };
 
+        public sendRTIPortAbsent (additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
+            return this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
+        }
     }(this);
 
     /**
@@ -1817,6 +1821,20 @@ export class App extends Reactor {
      */
     protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
+    }
+
+    /**
+     * Send a port absent message to the destination port. 
+     * This function throws an error if it isn't called on a FederatedApp.
+     * @param additional_delay The offset applied to the timestamp
+     *  using after. The additional delay will be greater or equal to zero
+     *  if an after is used on the connection. If no after is given in the
+     *  program, NEVER is passed. To be overriden by the FederatedApp class.
+     * @param destFederatedID The fed ID of the receiving federate.
+     * @param destPortID The ID of the receiving port.
+     */
+    protected sendRTIPortAbsent(additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
+        throw new Error("Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp");
     }
 
     /**
@@ -1994,6 +2012,8 @@ export class App extends Reactor {
         Log.global.debug("Finished handling all events at current time.");
     }
 
+    protected enqueueNetworkOutputControlReactions(): void {}
+
     /**
      * Handle the next events on the event queue.
      * ----
@@ -2032,6 +2052,9 @@ export class App extends Reactor {
                 return;
             }
 
+            // Advance logical time.
+            this._advanceTime(nextEvent.tag)
+
             // Start processing events. Execute all reactions that are triggered
             // at the current tag in topological order. After that, if the next
             // event on the event queue has the same time (but a greater
@@ -2041,9 +2064,6 @@ export class App extends Reactor {
             // typically reported via physical actions, the tags of the
             // resulting events would be in the future, anyway.
             do {
-                // Advance logical time.
-                this._advanceTime(nextEvent.tag)
-
                 // Keep popping the event queue until the next event has a different tag.
                 while (nextEvent != null && nextEvent.tag.isSimultaneousWith(this._currentTag)) {
                     var trigger = nextEvent.trigger;
@@ -2081,6 +2101,8 @@ export class App extends Reactor {
                 nextEvent = this._eventQ.peek();
 
             } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
+            // enqueue networkOutputControlReactions
+            this.enqueueNetworkOutputControlReactions();
 
             // React to all the events loaded onto the reaction queue.
             this._react()
@@ -2339,6 +2361,8 @@ export class App extends Reactor {
 
         Log.info(this, () => ">>> Start of execution: " + this._currentTag);
         Log.info(this, () => Log.hr);
+        // enqueue networkOutputControlReactions
+        this.enqueueNetworkOutputControlReactions();
 
         // Handle the reactions that were loaded onto the reaction queue.
         this._react()
