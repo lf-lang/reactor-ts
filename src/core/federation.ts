@@ -1194,12 +1194,13 @@ export class FederatedApp extends App {
      * @param msg The message encoded as a Buffer.
      * @param destFederateID The ID of the Federate intended to receive the message.
      * @param destPortID The ID of the FederateInPort intended to receive the message.
+     * @param time The offset from the current time that the message should have.
      */
-    public sendRTITimedMessage<T extends Present>(msg: T, destFederateID: number, destPortID: number ) {
-        let time = this.util.getCurrentTag().toBinary();
+    public sendRTITimedMessage<T extends Present>(msg: T, destFederateID: number, destPortID: number, time: number) {
+        let absTime = this.util.getCurrentTag().getLaterTag(TimeValue.nsec(time)).toBinary();
         Log.debug(this, () => {return `Sending RTI timed message to federate ID: ${destFederateID}`
-            + ` port ID: ${destPortID} and time: ${time.toString('hex')}`});
-        this.rtiClient.sendRTITimedMessage(msg, destFederateID, destPortID, time);
+            + ` port ID: ${destPortID} and time: ${absTime.toString('hex')}`});
+        this.rtiClient.sendRTITimedMessage(msg, destFederateID, destPortID, absTime);
     }
 
     /**

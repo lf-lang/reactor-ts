@@ -1564,7 +1564,7 @@ interface UtilityFunctions {
     getElapsedLogicalTime(): TimeValue;
     getElapsedPhysicalTime(): TimeValue;
     sendRTIMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
-    sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number): void;
+    sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, time: number): void;
     sendRTIPortAbsent (additionalDealy: TimeValue, destFederateID: number, destPortID: number): void;
 }
 
@@ -1688,8 +1688,8 @@ export class App extends Reactor {
             return this.app.sendRTIMessage(data, destFederateID, destPortID);
         };
 
-        public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
-            return this.app.sendRTITimedMessage(data, destFederateID, destPortID);
+        public sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, time: number) {
+            return this.app.sendRTITimedMessage(data, destFederateID, destPortID, time);
         };
 
         public sendRTIPortAbsent (additionalDelay: TimeValue, destFederateID: number, destPortID: number) {
@@ -1819,7 +1819,7 @@ export class App extends Reactor {
      * @param destFederateID The federate ID that is the destination of this message.
      * @param destPortID The port ID that is the destination of this message.
      */
-    protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number) {
+    protected sendRTITimedMessage<T extends Present>(data: T, destFederateID: number, destPortID: number, time: number) {
         throw new Error("Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp");
     }
 
