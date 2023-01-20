@@ -107,3 +107,17 @@ export class Triggers {
     // FIXME: it makes sense to be able to check the presence of a (re)schedulable action.
 }
 
+/** Interface for passing in configuration options to a federate */
+export interface FederateConfig {
+    dependsOn: number[]
+    executionTimeout?: TimeValue
+    fast: boolean
+    federateID: number
+    federationID: string
+    keepAlive?: boolean
+    minOutputDelay?: TimeValue
+    networkMessageActions: string[]
+    rtiHost: string
+    rtiPort: number
+    sendsTo: number[]
+}
