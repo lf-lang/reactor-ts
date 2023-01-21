@@ -46,7 +46,9 @@ export class TimeValue {
      */
     constructor(protected seconds: number, protected nanoseconds: number=0) {
         if(!Number.isInteger(seconds) || !Number.isInteger(nanoseconds) || seconds < 0 || nanoseconds < 0) {
-            throw new Error("Cannot instantiate a time interval based on negative or non-integer numbers.");
+            if (seconds != Number.MIN_SAFE_INTEGER) {
+                throw new Error("Cannot instantiate a time interval based on negative or non-integer numbers.");
+            }
         }
     }
     
@@ -54,10 +56,19 @@ export class TimeValue {
         return new TimeValue(0,0)
     }
 
+    static NEVER(): TimeValue {
+        return new TimeValue(Number.MIN_SAFE_INTEGER, 0);
+    }
+
+    static FOREVER(): TimeValue {
+        return new TimeValue(Number.MAX_SAFE_INTEGER, 0);
+    }
+
     static secsAndNs(seconds: number, nanoSeconds:number): TimeValue {
         return new TimeValue(seconds, nanoSeconds)
     }
-    
+
+
     static secs(seconds: number): TimeValue {
         return TimeValue.secsAndNs(seconds, 0)
     }
@@ -171,6 +182,14 @@ export class TimeValue {
      */
     isZero() {
         if(this.seconds == 0 && this.nanoseconds == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    isNever() {
+        if(this.seconds == Number.MIN_SAFE_INTEGER && this.nanoseconds == 0) {
             return true;
         } else {
             return false;
@@ -291,18 +310,23 @@ export class TimeValue {
      * Used by federates.
      */
     public toBinary(): Buffer {
-        const billion = BigInt(TimeUnit.secs);
-        let bigTime =  BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
-
-        // Ensure the TimeValue fits into a 64 unsigned integer.
-        let clampedTime = BigInt.asUintN(64, bigTime);
-        if (clampedTime != bigTime) {
-            throw new Error(`TimeValue ${this.toString()} is too big to fit into `
-                + `a 64 bit unsigned integer`);
-        }
-
         let buff = Buffer.alloc(8);
-        buff.writeBigUInt64LE(bigTime, 0);
+        if (this.seconds === Number.MIN_SAFE_INTEGER) {
+            buff.writeBigUInt64LE(BigInt(0x8000000000000000), 0);
+        } else if (this.seconds === Number.MAX_SAFE_INTEGER) {
+            buff.writeBigUInt64LE(BigInt(0x7fffffffffffffff), 0);
+        } else {
+            const billion = BigInt(TimeUnit.secs);
+            let bigTime =  BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
+
+            // Ensure the TimeValue fits into a 64 unsigned integer.
+            let clampedTime = BigInt.asUintN(64, bigTime);
+            if (clampedTime != bigTime) {
+                throw new Error(`TimeValue ${this.toString()} is too big to fit into `
+                    + `a 64 bit unsigned integer`);
+            }
+            buff.writeBigUInt64LE(bigTime, 0);
+        }
         return buff;
     }
 
@@ -315,6 +339,12 @@ export class TimeValue {
 
         // To avoid overflow and floating point errors, work with BigInts.
         let bigTime = buffer.readBigUInt64LE(0);
+        if (bigTime === BigInt(0x8000000000000000)) {
+            return TimeValue.NEVER();
+        } else if (bigTime === BigInt(0x7fffffffffffffff)) {
+            return TimeValue.FOREVER();
+        }
+
         let bigSeconds = bigTime / billion;
         let bigNSeconds = bigTime % billion;
         
@@ -440,7 +470,7 @@ export class Tag {
      * @param delay The time interval to add to this time instant.
      */
     getLaterTag(delay: TimeValue) : Tag {
-        if (delay.isZero()) {
+        if (delay.isZero() || delay.isNever()) {
             return this;
         } else {
             return new Tag(delay.add(this.time), 0);
