@@ -1,6 +1,6 @@
 {
     "name": "@lf-lang/reactor-ts",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "A reactor-oriented programming framework in TypeScript",
     "main": "lib/core/index.js",
     "types": "lib/core/index.d.ts",
@@ -36,7 +36,7 @@
     "devDependencies": {
         "@types/nanotimer": "^0.3.0",
         "dtslint": "^3.4.2",
-        "jest": "^27.0.6",
+        "jest": "^27.5.1",
         "marked": ">=4.0.10",
         "parsimmon": "1.13.0",
         "ts-jest": "^27.0.3",

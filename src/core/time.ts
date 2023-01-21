@@ -188,6 +188,14 @@ export class TimeValue {
         }
     }
 
+    isNever() {
+        if(this.seconds == Number.MIN_SAFE_INTEGER && this.nanoseconds == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Return true if this time value denotes a time interval of smaller length
      * than the time interval encoded by the time value given as a parameter;
@@ -411,7 +419,7 @@ export class Tag {
      * @param delay The time interval to add to this time instant.
      */
     getLaterTag(delay: TimeValue) : Tag {
-        if (delay.isZero()) {
+        if (delay.isZero() || delay.isNever()) {
             return this;
         } else {
             return new Tag(delay.add(this.time), 0);
