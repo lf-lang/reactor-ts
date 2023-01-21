@@ -16,7 +16,6 @@ import {
 } from "./internal"
 import { v4 as uuidv4 } from 'uuid';
 import { Bank } from "./bank";
-import {PrioritySet} from "./graph"
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
