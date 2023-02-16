@@ -188,16 +188,8 @@ export class TimeValue {
         }
     }
 
-    isNEVER() {
-        if(this.seconds === Number.MIN_SAFE_INTEGER && this.nanoseconds === 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    isFOREVER() {
-        if(this.seconds === Number.MAX_SAFE_INTEGER && this.nanoseconds === 0) {
+    isNever() {
+        if(this.seconds == Number.MIN_SAFE_INTEGER && this.nanoseconds == 0) {
             return true;
         } else {
             return false;
@@ -260,57 +252,6 @@ export class TimeValue {
      */
     public toTimeTuple(): [number, number] {
         return [this.seconds, this.nanoseconds];
-    }
-
-    /**
-     * Get a string representation of this time value that is compatible with
-     * `nanotimer`. Unit specifiers are `s` for seconds, `m` for milliseconds
-     * `u` for microseconds, and `n` for nanoseconds.
-     * @see {@link https://www.npmjs.com/package/nanotimer} for further
-     * information.
-     */
-    public getNanoTime(): string {
-        
-        if (this.nanoseconds == 0) {
-            // Seconds.
-            return this.seconds.toString() + "s";
-        } else if (this.nanoseconds % 1000000 == 0) {
-            // Milliseconds.
-            let msecs = (this.nanoseconds / 1000000).toString();
-            if (this.seconds == 0) {
-                return msecs + "m";
-            } else {
-                let padding = "";
-                for (let i = 0; i < 3 - msecs.length; i++) {
-                    padding += "0";
-                }
-                return this.seconds.toString() + padding + msecs + "m";
-            }
-        } else if (this.nanoseconds % 1000 == 0) {
-            // Microseconds.
-            let usecs = (this.nanoseconds/1000).toString();
-            if (this.seconds == 0) {
-                return usecs + "u";
-            } else {
-                let padding = "";
-                for (let i = 0; i < 6 - usecs.length; i++) {
-                    padding += "0";
-                }
-                return this.seconds.toString() + padding + usecs + "u";
-            }
-        } else {
-            // Nanoseconds.
-            if (this.seconds == 0) {
-                return this.nanoseconds + "n";
-            } else {
-                let nsecs = this.nanoseconds.toString();
-                let padding = "";
-                for (let i = 0; i < 9 - nsecs.length; i++) {
-                    padding += "0";
-                }
-                return this.seconds.toString() + padding + nsecs + "n";
-            }
-        } 
     }
     
     /**
@@ -478,7 +419,7 @@ export class Tag {
      * @param delay The time interval to add to this time instant.
      */
     getLaterTag(delay: TimeValue) : Tag {
-        if (delay.isZero() || delay.isNEVER()) {
+        if (delay.isZero() || delay.isNever()) {
             return this;
         } else {
             return new Tag(delay.add(this.time), 0);
