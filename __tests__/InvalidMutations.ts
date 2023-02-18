@@ -42,24 +42,29 @@ class R1 extends Reactor {
 
         this.addMutation(
             new Triggers(this.in1),
-            new Args(this.in1, this.out2),
-            function(this, __in1, __out2) {
-                test('expect error on mutation creating race condition', () => {
+            new Args(this.in1, this.out1, this.out2),
+            function(this, __in1, __out1, __out2) {
+                test('expect error on creating creating direct feed through', () => {
                     expect(() => {
-                        this.connect(__in1, __out2)
+                        this.connect(__in1, __out1)
                     }).toThrowError("New connection introduces direct feed through.")
                 })
-                test('expect error to be thrown on mutation creating loop', () => { 
+                test('expect error when creating connection outside container', () => { 
                     expect(() => {
                         this.connect(__out2, __in1)
                     }).toThrowError("New connection introduces direct feed through and cycle.")
                 })
+                // Cannot connect out
                 let R2 = new R1(this.getReactor())
+                test('expect error on mutation creating race condition', () => {
+                    expect(() => {
+                        this.connect(R2.out1, __out2)
+                    }).toThrowError("Destination port is already occupied.")
+                })
                 test('expect error on spawning and creating loop within a reactor', () => {
                     expect(() => {
-                        this.connect(__in1, R2.in1)
-                        this.connect(R2.out1, __in1)
-                    }).toThrowError("New connection introduces cycle.")
+                        this.connect(R2.out1, R2.in1)
+                    }).toThrowError("New connection introduces direct feed through and cycle.")
                 })
             }   
         )

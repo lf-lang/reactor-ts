@@ -968,7 +968,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             //     in addReaction)
             var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
             if (deps != undefined && deps.size > 0) {
-                return false;
+                throw Error("Destination port is already occupied.")
             }
 
             return this._isInScope(src, dst)
