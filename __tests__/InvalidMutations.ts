@@ -52,11 +52,10 @@ class R1 extends Reactor {
                 test('expect error when creating connection outside container', () => { 
                     expect(() => {
                         this.connect(__out2, __in1)
-                    }).toThrowError("New connection introduces direct feed through and cycle.")
+                    }).toThrowError("New connection is outside of container.")
                 })
-                // Cannot connect out
                 let R2 = new R1(this.getReactor())
-                test('expect error on mutation creating race condition', () => {
+                test('expect error on mutation creating race condition on an output port', () => {
                     expect(() => {
                         this.connect(R2.out1, __out2)
                     }).toThrowError("Destination port is already occupied.")
@@ -64,7 +63,7 @@ class R1 extends Reactor {
                 test('expect error on spawning and creating loop within a reactor', () => {
                     expect(() => {
                         this.connect(R2.out1, R2.in1)
-                    }).toThrowError("New connection introduces direct feed through and cycle.")
+                    }).toThrowError("New connection introduces cycle.")
                 })
             }   
         )
