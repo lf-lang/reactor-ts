@@ -32,21 +32,14 @@ class R1 extends Reactor {
                 __out.set(4)
             }
         )
-        this.addReaction(
-            new Triggers(this.in2),
-            new Args(this.in2, this.writable(this.out2)),
-            function(this, __in, __out) {
-                __out.set(4)
-            }
-        )
 
         this.addMutation(
             new Triggers(this.in1),
-            new Args(this.in1, this.out1, this.out2),
-            function(this, __in1, __out1, __out2) {
+            new Args(this.in1, this.in2, this.out1, this.out2),
+            function(this, __in1, __in2, __out1, __out2) {
                 test('expect error on creating creating direct feed through', () => {
                     expect(() => {
-                        this.connect(__in1, __out1)
+                        this.connect(__in2, __out2)
                     }).toThrowError("New connection introduces direct feed through.")
                 })
                 test('expect error when creating connection outside container', () => { 
