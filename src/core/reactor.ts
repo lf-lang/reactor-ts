@@ -952,12 +952,20 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             throw Error("Source port and destination port are the same.")
         }
 
+        // Check the race condition
+        //   - between reactors and reactions (NOTE: check also needs to happen
+        //     in addReaction)
+        var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
+        if (deps != undefined && deps.size > 0) {
+            throw Error("Destination port is already occupied.")
+        }
+
         if (this._runtime.isRunning() == false) {
             // console.log("Connecting before running")
             // Validate connections between callers and callees.
             // Additional checks for regular ports.
 
-            console.log("IOPort")
+            // console.log("IOPort")
             // Rule out write conflicts.
             //   - (between reactors)
             if (this._dependencyGraph.getBackEdges(dst).size > 0) {
@@ -966,10 +974,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
             //   - between reactors and reactions (NOTE: check also needs to happen
             //     in addReaction)
-            var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
-            if (deps != undefined && deps.size > 0) {
-                throw Error("Destination port is already occupied.")
-            }
 
             return this._isInScope(src, dst)
 
@@ -978,6 +982,13 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             // Check the local dependency graph to figure out whether this change
             // introduces zero-delay feedback.
             // console.log("Runtime connect.")
+
+            // check if the connection is outside of container
+            if (src instanceof OutPort && dst instanceof InPort 
+                && src._isContainedBy(this) && dst._isContainedBy(this)) {
+                throw Error("New connection is outside of container.")
+            }
+
             // Take the local graph and merge in all the causality interfaces
             // of contained reactors. Then:
             let graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph()
@@ -994,11 +1005,11 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             let hasCycle = graph.hasCycle()
 
             // 2) check for direct feed through.
-            let hasDirectFeedThrough = dst.getContainer() == src.getContainer();
-
-            this._dependencyGraph.removeEdge(dst, src)
-
-            // Throw error three cases: 1. cycle / 2. direct feed through / 3. both
+            let hasDirectFeedThrough = false;
+            if (src instanceof InPort && dst instanceof OutPort) {
+                hasDirectFeedThrough = dst.getContainer() == src.getContainer();
+            }
+            // Throw error cases
             if (hasDirectFeedThrough && hasCycle) {
                 throw Error("New connection introduces direct feed through and cycle.")
             } else if (hasCycle) {
