@@ -2,14 +2,15 @@ import { Reactor, App, Triggers, Args, Timer, OutPort, InPort, TimeUnit, TimeVal
 
 /* Set a port in startup to get thing going */
 class Starter extends Reactor {
+    public in = new InPort<number>(this);
     public out = new OutPort<number>(this);
 
     constructor(parent: Reactor|null) {
         super(parent);
         this.addReaction(
-            new Triggers(this.startup),
-            new Args(this.writable(this.out)),
-            function(this, __out) {
+            new Triggers(this.in),
+            new Args(this.in, this.writable(this.out)),
+            function(this, __in, __out) {
                 __out.set(4);
 
             }
@@ -79,7 +80,7 @@ class testApp extends App {
         // this tests the accuracy of the CausalityGraph used in the connect function 
         test('test if adding cyclic dependency is caught', () => {
             expect(() => {
-                this._connect(this.reactor2.in, this.reactor1.out)
+                this._connect(this.reactor2.out, this.start.in)
             }).toThrowError("New connection introduces cycle.")
         })
     }
