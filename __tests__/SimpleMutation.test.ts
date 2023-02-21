@@ -50,7 +50,7 @@ class R2 extends Reactor {
                 test('expect error to be thrown', () => { 
                     expect(() => {
                         this.connect(__out, __in)
-                    }).toThrowError("Destination InPort is already occupied.")
+                    }).toThrowError("Destination port is already occupied.")
                 })
             }
         )
