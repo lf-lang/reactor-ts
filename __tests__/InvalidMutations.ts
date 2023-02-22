@@ -44,13 +44,13 @@ class R1 extends Reactor {
                 })
                 test('expect error when creating connection outside container', () => { 
                     expect(() => {
-                        this.connect(__out2, __in1)
+                        this.connect(__out2, __in2)
                     }).toThrowError("New connection is outside of container.")
                 })
                 let R2 = new R1(this.getReactor())
                 test('expect error on mutation creating race condition on an output port', () => {
                     expect(() => {
-                        this.connect(R2.out1, __out2)
+                        this.connect(R2.out1, __out1)
                     }).toThrowError("Destination port is already occupied.")
                 })
                 test('expect error on spawning and creating loop within a reactor', () => {
