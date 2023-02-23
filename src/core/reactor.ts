@@ -398,6 +398,14 @@ export abstract class Reactor extends Component {
             }
         }
 
+        public disconnect(src: IOPort<Present>, dst?: IOPort<Present> | undefined): void {
+            if (src instanceof IOPort && dst instanceof IOPort) {
+                return this.reactor._disconnect(src, dst);
+            } else {
+                // FIXME
+            }
+        }
+        
         /**
          * Return the reactor containing the mutation using this sandbox.
          */
@@ -1279,11 +1287,20 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      * @param src
      * @param dst
      */
-    private _disconnect(src: Port<Present>, dst: Port<Present>) {
-        Log.debug(this, () => "disconnecting " + src + " and " + dst);
-        //src.getManager(this.getKey(src)).delReceiver(dst);
-
-
+    protected _disconnect(src: IOPort<Present>, dst: IOPort<Present>) {
+        if (src === undefined || src === null) {
+            throw new Error("Cannot disconnect unspecified source");
+        }
+        if (dst === undefined || dst === null) {
+            throw new Error("Cannot disconnect unspecified destination");
+        }
+        if (this.canDisconnect(src, dst)) {
+            this._uncheckedDisconnect(src, dst);
+        } else {
+            throw new Error("ERROR disconnecting " + src + " to " + dst);
+        }
+        // src.getManager(this._getKey(src)).delReceiver(this.writable(dst));
+        
         // FIXME
 
         // let dests = this._destinationPorts.get(src);
@@ -1291,6 +1308,31 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         //     dests.delete(dst);
         // }
         // this._sourcePort.delete(src);
+    }
+
+    private _uncheckedDisconnect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
+        Log.debug(this, () => "disconnecting " + src + " and " + dst);
+        this._dependencyGraph.removeEdge(dst, src);
+        // Register receiver for value propagation.
+        let writer = dst.asWritable(this._getKey(dst));
+        src.getManager(this._getKey(src)).delReceiver
+            (writer as WritablePort<S>);
+        this._dependencyGraph.removeNode(src);
+        this._dependencyGraph.removeNode(dst);
+        
+    }
+
+    public canDisconnect<R extends Present, S extends R>
+        (src: IOPort<S>, dst: IOPort<R>) {
+        if (src === dst) {
+            throw Error("Source port and destination port are the same.")
+        }
+
+        if (this._runtime.isRunning() == false) {
+            return this._isInScope(src, dst)
+        } else {
+            return true
+        }
     }
 
     // /**
@@ -1573,7 +1615,7 @@ export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
-    //disconnect(src: Port<Present>, dst?: Port<Present>): void;
+    disconnect(src: IOPort<Present>, dst?: IOPort<Present>): void;
 
     delete(reactor: Reactor): void;
 
