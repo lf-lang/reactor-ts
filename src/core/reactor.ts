@@ -1283,7 +1283,8 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
 
     /**
-     *
+     * This function deletes the connection between the source and destination nodes. 
+     * If the destination node is not specified, all connections from the source node to any other node are deleted.
      * @param src
      * @param dst
      */
@@ -1294,27 +1295,16 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         } else {
             throw new Error("ERROR disconnecting " + src + " to " + dst);
         }
-        // src.getManager(this._getKey(src)).delReceiver(this.writable(dst));
-        
-        // FIXME
-
-        // let dests = this._destinationPorts.get(src);
-        // if (dests != null) {
-        //     dests.delete(dst);
-        // }
-        // this._sourcePort.delete(src);
     }
 
     private _uncheckedDisconnect<R extends Present, S extends R>(src: IOPort<S>, dst?:IOPort<R>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
         if (dst instanceof IOPort) {
-            this._dependencyGraph.removeEdge(dst, src);
             // Register receiver for value propagation.
             let writer = dst.asWritable(this._getKey(dst));
             src.getManager(this._getKey(src)).delReceiver
                 (writer as WritablePort<S>);
-            this._dependencyGraph.removeNode(src);
-            this._dependencyGraph.removeNode(dst);
+            this._dependencyGraph.removeEdge(dst, src);
         } else {
             let nodes = this._dependencyGraph.getEdges(src);
             for (let node of nodes) {
@@ -1326,8 +1316,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             }
             this._dependencyGraph.removeEdges(src);
         }
-
-        
     }
 
     // /**
