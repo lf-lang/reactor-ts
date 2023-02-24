@@ -402,7 +402,7 @@ export abstract class Reactor extends Component {
             if (src instanceof IOPort && (dst === undefined || dst instanceof IOPort)) {
                 return this.reactor._disconnect(src, dst);
             } else {
-                // FIXME
+                // ERROR
             }
         }
         
@@ -980,9 +980,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                 return false;
             }
 
-            //   - between reactors and reactions (NOTE: check also needs to happen
-            //     in addReaction)
-
             return this._isInScope(src, dst)
 
         } else {
@@ -1295,7 +1292,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
 
     /**
-     * This function deletes the connection between the source and destination nodes. 
+     * Delete the connection between the source and destination nodes. 
      * If the destination node is not specified, all connections from the source node to any other node are deleted.
      * @param src
      * @param dst
@@ -1309,24 +1306,27 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         }
     }
 
-    private _uncheckedDisconnect<R extends Present, S extends R>(src: IOPort<S>, dst?:IOPort<R>) {
+    private _uncheckedDisconnect<R extends Present, S extends R>(src: IOPort<S>, dst?: IOPort<R>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
         if (dst instanceof IOPort) {
-            // Register receiver for value propagation.
             let writer = dst.asWritable(this._getKey(dst));
             src.getManager(this._getKey(src)).delReceiver
                 (writer as WritablePort<S>);
             this._dependencyGraph.removeEdge(dst, src);
         } else {
-            let nodes = this._dependencyGraph.getEdges(src);
-            for (let node of nodes) {
-                if (node instanceof IOPort) {
-                    let writer = src.asWritable(this._getKey(node));
-                    src.getManager(this._getKey(src)).delReceiver
-                        (writer as WritablePort<S>);
+            let nodes = this._dependencyGraph.getBackEdges(src);
+            if (nodes.size == 0) {
+                throw Error("There are no destinations to disconnect")
+            } else {
+                for (var node of nodes) {
+                    if (node instanceof IOPort) {
+                        let writer = node.asWritable(this._getKey(node));
+                        src.getManager(this._getKey(src)).delReceiver
+                            (writer as WritablePort<S>);
+                        this._dependencyGraph.removeEdge(node, src);
+                    }
                 }
             }
-            this._dependencyGraph.removeEdges(src);
         }
     }
 
