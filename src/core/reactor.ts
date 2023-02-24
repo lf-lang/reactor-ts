@@ -1005,6 +1005,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             let hasCycle = graph.hasCycle()
 
             // 2) check for direct feed through.
+            // FIXME: This doesn't handle while direct feed thorugh cases.
             let hasDirectFeedThrough = false;
             if (src instanceof InPort && dst instanceof OutPort) {
                 hasDirectFeedThrough = dst.getContainer() == src.getContainer();
