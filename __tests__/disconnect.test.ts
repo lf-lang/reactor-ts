@@ -45,6 +45,13 @@ class R1 extends Reactor {
                         this.connect(R2.out2, R2.in2)
                     }).not.toThrow();
                 })
+                test('expect that disconnecting an existing connection will not result in an error being thrown', () => {
+                    expect(() => {
+                        this.connect(R2.out2, R2.in2)
+                        this.disconnect(R2.out2)
+                        this.connect(R2.out2, R2.in2)
+                    }).not.toThrow();
+                })
             }
         )
     }

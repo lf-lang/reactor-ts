@@ -1316,7 +1316,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             this._dependencyGraph.removeNode(src);
             this._dependencyGraph.removeNode(dst);
         } else {
-            let nodes = this._dependencyGraph.getBackEdges(src);
+            let nodes = this._dependencyGraph.getEdges(src);
             for (let node of nodes) {
                 if (node instanceof IOPort) {
                     let writer = src.asWritable(this._getKey(node));
