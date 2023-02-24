@@ -949,7 +949,15 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         (src: IOPort<S>, dst: IOPort<R>) {
         // Immediate rule out trivial self loops.
         if (src === dst) {
-            return false
+            throw Error("Source port and destination port are the same.")
+        }
+
+        // Check the race condition
+        //   - between reactors and reactions (NOTE: check also needs to happen
+        //     in addReaction)
+        var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
+        if (deps != undefined && deps.size > 0) {
+            throw Error("Destination port is already occupied.")
         }
 
         if (this._runtime.isRunning() == false) {
@@ -957,7 +965,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             // Validate connections between callers and callees.
             // Additional checks for regular ports.
 
-            console.log("IOPort")
+            // console.log("IOPort")
             // Rule out write conflicts.
             //   - (between reactors)
             if (this._dependencyGraph.getBackEdges(dst).size > 0) {
@@ -966,10 +974,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
             //   - between reactors and reactions (NOTE: check also needs to happen
             //     in addReaction)
-            var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
-            if (deps != undefined && deps.size > 0) {
-                return false;
-            }
 
             return this._isInScope(src, dst)
 
@@ -978,6 +982,13 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             // Check the local dependency graph to figure out whether this change
             // introduces zero-delay feedback.
             // console.log("Runtime connect.")
+
+            // check if the connection is outside of container
+            if (src instanceof OutPort && dst instanceof InPort 
+                && src._isContainedBy(this) && dst._isContainedBy(this)) {
+                throw Error("New connection is outside of container.")
+            }
+
             // Take the local graph and merge in all the causality interfaces
             // of contained reactors. Then:
             let graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph()
@@ -991,22 +1002,23 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             graph.addEdge(dst, src)
 
             // 1) check for loops
-            if (graph.hasCycle()) {
-                return false
-            }
+            let hasCycle = graph.hasCycle()
 
             // 2) check for direct feed through.
-            let inputs = this._findOwnInputs()
-            for (let output of this._findOwnOutputs()) {
-                let newReachable = graph.reachableOrigins(output, inputs)
-                let oldReachable = this._causalityGraph.reachableOrigins(output, inputs)
-
-                for (let origin of newReachable) {
-                    if (origin instanceof Port && !oldReachable.has(origin)) {
-                        return false
-                    }
-                }
+            // FIXME: This doesn't handle while direct feed thorugh cases.
+            let hasDirectFeedThrough = false;
+            if (src instanceof InPort && dst instanceof OutPort) {
+                hasDirectFeedThrough = dst.getContainer() == src.getContainer();
             }
+            // Throw error cases
+            if (hasDirectFeedThrough && hasCycle) {
+                throw Error("New connection introduces direct feed through and cycle.")
+            } else if (hasCycle) {
+                throw Error("New connection introduces cycle.")
+            }  else if (hasDirectFeedThrough) {
+                throw Error("New connection introduces direct feed through.")
+            }
+
             return true
         }
     }
@@ -1256,7 +1268,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     private _findOwnOutputs() {
         let outputs = new Set<OutPort<Present>>()
         for (let component of this._keyChain.keys()) {
-            if (component instanceof InPort) {
+            if (component instanceof OutPort) {
                 outputs.add(component)
             }
         }
