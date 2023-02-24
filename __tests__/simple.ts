@@ -104,6 +104,8 @@ describe('Test names for contained reactors', () => {
                 expect(this._getPrecedenceGraph().toString()).toBe(
                 StringUtil.dontIndent
                 `digraph G {
+                "myApp.x.a";
+                "myApp.y.b";
                 "myApp.x[M0]"->"myApp[M0]";
                 "myApp.y[M0]"->"myApp[M0]";
                 }`);
