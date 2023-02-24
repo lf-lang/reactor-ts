@@ -1287,15 +1287,18 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      * @param src
      * @param dst
      */
-    protected _disconnect(src: IOPort<Present>, dst: IOPort<Present>) {
+    protected _disconnect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
         if (src === undefined || src === null) {
             throw new Error("Cannot disconnect unspecified source");
         }
         if (dst === undefined || dst === null) {
             throw new Error("Cannot disconnect unspecified destination");
         }
-        if (this.canDisconnect(src, dst)) {
-            this._uncheckedDisconnect(src, dst);
+        if (src == dst) {
+            throw Error ("Source port and destination port are the same.")
+        } else if ((!this._runtime.isRunning() && this._isInScope(src, dst))
+                || (this._runtime.isRunning())) {
+                this._uncheckedDisconnect(src, dst);
         } else {
             throw new Error("ERROR disconnecting " + src + " to " + dst);
         }
@@ -1320,19 +1323,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         this._dependencyGraph.removeNode(src);
         this._dependencyGraph.removeNode(dst);
         
-    }
-
-    public canDisconnect<R extends Present, S extends R>
-        (src: IOPort<S>, dst: IOPort<R>) {
-        if (src === dst) {
-            throw Error("Source port and destination port are the same.")
-        }
-
-        if (this._runtime.isRunning() == false) {
-            return this._isInScope(src, dst)
-        } else {
-            return true
-        }
     }
 
     // /**
