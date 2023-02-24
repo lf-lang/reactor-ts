@@ -301,6 +301,10 @@ export class DependencyGraph<T> {
             this.numberOfEdges--;
         }
     }
+    
+    removeEdges(dependsOn: T) {
+        this.adjacencyMap.get(dependsOn)?.clear();
+    }
 
     size() {
         return [this.adjacencyMap.size, this.numberOfEdges];

@@ -398,8 +398,8 @@ export abstract class Reactor extends Component {
             }
         }
 
-        public disconnect(src: IOPort<Present>, dst?: IOPort<Present> | undefined): void {
-            if (src instanceof IOPort && dst instanceof IOPort) {
+        public disconnect(src: IOPort<Present>, dst?: IOPort<Present>): void {
+            if (src instanceof IOPort && (dst === undefined || dst instanceof IOPort)) {
                 return this.reactor._disconnect(src, dst);
             } else {
                 // FIXME
@@ -1019,7 +1019,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         }
     }
 
-    private _isInScope(src: IOPort<Present>, dst: IOPort<Present>): boolean {
+    private _isInScope(src: IOPort<Present>, dst?: IOPort<Present>): boolean {
         // Assure that the general scoping and connection rules are adhered to.
         if (src instanceof OutPort) {
             if (dst instanceof InPort) {
@@ -1031,7 +1031,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                 }
             } else {
                 // OUT to OUT
-                if (src._isContainedByContainerOf(this) && dst._isContainedBy(this)) {
+                if (src._isContainedByContainerOf(this) && (dst === undefined || dst._isContainedBy(this))) {
                     return true;
                 } else {
                     return false;
@@ -1287,16 +1287,8 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      * @param src
      * @param dst
      */
-    protected _disconnect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
-        if (src === undefined || src === null) {
-            throw new Error("Cannot disconnect unspecified source");
-        }
-        if (dst === undefined || dst === null) {
-            throw new Error("Cannot disconnect unspecified destination");
-        }
-        if (src == dst) {
-            throw Error ("Source port and destination port are the same.")
-        } else if ((!this._runtime.isRunning() && this._isInScope(src, dst))
+    protected _disconnect<R extends Present, S extends R>(src: IOPort<S>, dst?:IOPort<R>) {
+        if ((!this._runtime.isRunning() && this._isInScope(src, dst))
                 || (this._runtime.isRunning())) {
                 this._uncheckedDisconnect(src, dst);
         } else {
@@ -1313,15 +1305,28 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         // this._sourcePort.delete(src);
     }
 
-    private _uncheckedDisconnect<R extends Present, S extends R>(src: IOPort<S>, dst:IOPort<R>) {
+    private _uncheckedDisconnect<R extends Present, S extends R>(src: IOPort<S>, dst?:IOPort<R>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
-        this._dependencyGraph.removeEdge(dst, src);
-        // Register receiver for value propagation.
-        let writer = dst.asWritable(this._getKey(dst));
-        src.getManager(this._getKey(src)).delReceiver
-            (writer as WritablePort<S>);
-        this._dependencyGraph.removeNode(src);
-        this._dependencyGraph.removeNode(dst);
+        if (dst instanceof IOPort) {
+            this._dependencyGraph.removeEdge(dst, src);
+            // Register receiver for value propagation.
+            let writer = dst.asWritable(this._getKey(dst));
+            src.getManager(this._getKey(src)).delReceiver
+                (writer as WritablePort<S>);
+            this._dependencyGraph.removeNode(src);
+            this._dependencyGraph.removeNode(dst);
+        } else {
+            let nodes = this._dependencyGraph.getBackEdges(src);
+            for (let node of nodes) {
+                if (node instanceof IOPort) {
+                    let writer = src.asWritable(this._getKey(node));
+                    src.getManager(this._getKey(src)).delReceiver
+                        (writer as WritablePort<S>);
+                }
+            }
+            this._dependencyGraph.removeEdges(src);
+        }
+
         
     }
 
