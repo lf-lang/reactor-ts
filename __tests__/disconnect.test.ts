@@ -43,9 +43,9 @@ class R1 extends Reactor {
                         this.connect(R2.out2, R2.in2)
                         this.disconnect(R2.out2, R2.in2)
                         this.connect(R2.out2, R2.in2)
-                    }).not.toThrow("Destination port is already occupied.")
+                    }).not.toThrow();
                 })
-            }   
+            }
         )
     }
 
