@@ -98,7 +98,18 @@ describe('Test names for contained reactors', () => {
                 "myApp.y[M0]"->"myApp[M0]";
                 }`);
              });
- 
+             
+            it('graph after disconnect', () => {
+                this._disconnect(this.y.b, this.x.a)
+                expect(this._getPrecedenceGraph().toString()).toBe(
+                StringUtil.dontIndent
+                `digraph G {
+                "myApp.x.a";
+                "myApp.y.b";
+                "myApp.x[M0]"->"myApp[M0]";
+                "myApp.y[M0]"->"myApp[M0]";
+                }`);
+             });
  
 
             // it('graph after disconnect', () => {

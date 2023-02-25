@@ -398,6 +398,14 @@ export abstract class Reactor extends Component {
             }
         }
 
+        public disconnect(src: IOPort<Present>, dst?: IOPort<Present>): void {
+            if (src instanceof IOPort && (dst === undefined || dst instanceof IOPort)) {
+                return this.reactor._disconnect(src, dst);
+            } else {
+                // FIXME: Add an error reporting mechanism such as an exception.
+            }
+        }
+        
         /**
          * Return the reactor containing the mutation using this sandbox.
          */
@@ -949,7 +957,15 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         (src: IOPort<S>, dst: IOPort<R>) {
         // Immediate rule out trivial self loops.
         if (src === dst) {
-            return false
+            throw Error("Source port and destination port are the same.")
+        }
+
+        // Check the race condition
+        //   - between reactors and reactions (NOTE: check also needs to happen
+        //     in addReaction)
+        var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
+        if (deps != undefined && deps.size > 0) {
+            throw Error("Destination port is already occupied.")
         }
 
         if (this._runtime.isRunning() == false) {
@@ -957,17 +973,10 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             // Validate connections between callers and callees.
             // Additional checks for regular ports.
 
-            console.log("IOPort")
+            // console.log("IOPort")
             // Rule out write conflicts.
             //   - (between reactors)
             if (this._dependencyGraph.getBackEdges(dst).size > 0) {
-                return false;
-            }
-
-            //   - between reactors and reactions (NOTE: check also needs to happen
-            //     in addReaction)
-            var deps = this._dependencyGraph.getEdges(dst) // FIXME this will change with multiplex ports
-            if (deps != undefined && deps.size > 0) {
                 return false;
             }
 
@@ -978,6 +987,13 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             // Check the local dependency graph to figure out whether this change
             // introduces zero-delay feedback.
             // console.log("Runtime connect.")
+
+            // check if the connection is outside of container
+            if (src instanceof OutPort && dst instanceof InPort 
+                && src._isContainedBy(this) && dst._isContainedBy(this)) {
+                throw Error("New connection is outside of container.")
+            }
+
             // Take the local graph and merge in all the causality interfaces
             // of contained reactors. Then:
             let graph: DependencyGraph<Port<Present> | Reaction<unknown>> = new DependencyGraph()
@@ -991,27 +1007,28 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             graph.addEdge(dst, src)
 
             // 1) check for loops
-            if (graph.hasCycle()) {
-                return false
-            }
+            let hasCycle = graph.hasCycle()
 
             // 2) check for direct feed through.
-            let inputs = this._findOwnInputs()
-            for (let output of this._findOwnOutputs()) {
-                let newReachable = graph.reachableOrigins(output, inputs)
-                let oldReachable = this._causalityGraph.reachableOrigins(output, inputs)
-
-                for (let origin of newReachable) {
-                    if (origin instanceof Port && !oldReachable.has(origin)) {
-                        return false
-                    }
-                }
+            // FIXME: This doesn't handle while direct feed thorugh cases.
+            let hasDirectFeedThrough = false;
+            if (src instanceof InPort && dst instanceof OutPort) {
+                hasDirectFeedThrough = dst.getContainer() == src.getContainer();
             }
+            // Throw error cases
+            if (hasDirectFeedThrough && hasCycle) {
+                throw Error("New connection introduces direct feed through and cycle.")
+            } else if (hasCycle) {
+                throw Error("New connection introduces cycle.")
+            }  else if (hasDirectFeedThrough) {
+                throw Error("New connection introduces direct feed through.")
+            }
+
             return true
         }
     }
 
-    private _isInScope(src: IOPort<Present>, dst: IOPort<Present>): boolean {
+    private _isInScope(src: IOPort<Present>, dst?: IOPort<Present>): boolean {
         // Assure that the general scoping and connection rules are adhered to.
         if (src instanceof OutPort) {
             if (dst instanceof InPort) {
@@ -1023,7 +1040,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                 }
             } else {
                 // OUT to OUT
-                if (src._isContainedByContainerOf(this) && dst._isContainedBy(this)) {
+                if (src._isContainedByContainerOf(this) && (dst === undefined || dst._isContainedBy(this))) {
                     return true;
                 } else {
                     return false;
@@ -1256,7 +1273,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     private _findOwnOutputs() {
         let outputs = new Set<OutPort<Present>>()
         for (let component of this._keyChain.keys()) {
-            if (component instanceof InPort) {
+            if (component instanceof OutPort) {
                 outputs.add(component)
             }
         }
@@ -1275,22 +1292,38 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
 
     /**
-     *
-     * @param src
-     * @param dst
+     * Delete the connection between the source and destination nodes. 
+     * If the destination node is not specified, all connections from the source node to any other node are deleted.
+     * @param src Source port of connection to be disconnected.
+     * @param dst Destination port of connection to be disconnected. If undefined, disconnect all connections from the source port.
      */
-    private _disconnect(src: Port<Present>, dst: Port<Present>) {
+    protected _disconnect<R extends Present, S extends R>(src: IOPort<S>, dst?:IOPort<R>) {
+        if ((!this._runtime.isRunning() && this._isInScope(src, dst))
+                || (this._runtime.isRunning())) {
+                this._uncheckedDisconnect(src, dst);
+        } else {
+            throw new Error("ERROR disconnecting " + src + " to " + dst);
+        }
+    }
+
+    private _uncheckedDisconnect<R extends Present, S extends R>(src: IOPort<S>, dst?: IOPort<R>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
-        //src.getManager(this.getKey(src)).delReceiver(dst);
-
-
-        // FIXME
-
-        // let dests = this._destinationPorts.get(src);
-        // if (dests != null) {
-        //     dests.delete(dst);
-        // }
-        // this._sourcePort.delete(src);
+        if (dst instanceof IOPort) {
+            let writer = dst.asWritable(this._getKey(dst));
+            src.getManager(this._getKey(src)).delReceiver
+                (writer as WritablePort<S>);
+            this._dependencyGraph.removeEdge(dst, src);
+        } else {
+            let nodes = this._dependencyGraph.getBackEdges(src);
+            for (let node of nodes) {
+                if (node instanceof IOPort) {
+                    let writer = node.asWritable(this._getKey(node));
+                    src.getManager(this._getKey(src)).delReceiver
+                        (writer as WritablePort<S>);
+                    this._dependencyGraph.removeEdge(node, src);
+                }
+            }
+        }
     }
 
     // /**
@@ -1573,7 +1606,7 @@ export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
-    //disconnect(src: Port<Present>, dst?: Port<Present>): void;
+    disconnect(src: IOPort<Present>, dst?: IOPort<Present>): void;
 
     delete(reactor: Reactor): void;
 
