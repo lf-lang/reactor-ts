@@ -56,7 +56,7 @@ describe('Intended tag tests', function () {
     
     it('Intended tag equal to current tag', function() {
         intendedTagDelay = TimeValue.nsec(10)
-        intendedTagMicrostepDelay = 1
+        intendedTagMicrostepDelay = 0
         let app = new ReactorWithFederatePortAction()
         app.setLastTagProvisional(false)
         expect(() => app._start()).toThrowError("Intended tag must be greater than current tag. Intended tag: ")
