@@ -398,6 +398,14 @@ export abstract class Reactor extends Component {
             }
         }
 
+        public disconnect(src: IOPort<Present>, dst?: IOPort<Present>): void {
+            if (src instanceof IOPort && (dst === undefined || dst instanceof IOPort)) {
+                return this.reactor._disconnect(src, dst);
+            } else {
+                // FIXME: Add an error reporting mechanism such as an exception.
+            }
+        }
+        
         /**
          * Return the reactor containing the mutation using this sandbox.
          */
@@ -972,9 +980,6 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                 return false;
             }
 
-            //   - between reactors and reactions (NOTE: check also needs to happen
-            //     in addReaction)
-
             return this._isInScope(src, dst)
 
         } else {
@@ -1023,7 +1028,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
         }
     }
 
-    private _isInScope(src: IOPort<Present>, dst: IOPort<Present>): boolean {
+    private _isInScope(src: IOPort<Present>, dst?: IOPort<Present>): boolean {
         // Assure that the general scoping and connection rules are adhered to.
         if (src instanceof OutPort) {
             if (dst instanceof InPort) {
@@ -1035,7 +1040,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                 }
             } else {
                 // OUT to OUT
-                if (src._isContainedByContainerOf(this) && dst._isContainedBy(this)) {
+                if (src._isContainedByContainerOf(this) && (dst === undefined || dst._isContainedBy(this))) {
                     return true;
                 } else {
                     return false;
@@ -1287,22 +1292,38 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
 
 
     /**
-     *
-     * @param src
-     * @param dst
+     * Delete the connection between the source and destination nodes. 
+     * If the destination node is not specified, all connections from the source node to any other node are deleted.
+     * @param src Source port of connection to be disconnected.
+     * @param dst Destination port of connection to be disconnected. If undefined, disconnect all connections from the source port.
      */
-    private _disconnect(src: Port<Present>, dst: Port<Present>) {
+    protected _disconnect<R extends Present, S extends R>(src: IOPort<S>, dst?:IOPort<R>) {
+        if ((!this._runtime.isRunning() && this._isInScope(src, dst))
+                || (this._runtime.isRunning())) {
+                this._uncheckedDisconnect(src, dst);
+        } else {
+            throw new Error("ERROR disconnecting " + src + " to " + dst);
+        }
+    }
+
+    private _uncheckedDisconnect<R extends Present, S extends R>(src: IOPort<S>, dst?: IOPort<R>) {
         Log.debug(this, () => "disconnecting " + src + " and " + dst);
-        //src.getManager(this.getKey(src)).delReceiver(dst);
-
-
-        // FIXME
-
-        // let dests = this._destinationPorts.get(src);
-        // if (dests != null) {
-        //     dests.delete(dst);
-        // }
-        // this._sourcePort.delete(src);
+        if (dst instanceof IOPort) {
+            let writer = dst.asWritable(this._getKey(dst));
+            src.getManager(this._getKey(src)).delReceiver
+                (writer as WritablePort<S>);
+            this._dependencyGraph.removeEdge(dst, src);
+        } else {
+            let nodes = this._dependencyGraph.getBackEdges(src);
+            for (let node of nodes) {
+                if (node instanceof IOPort) {
+                    let writer = node.asWritable(this._getKey(node));
+                    src.getManager(this._getKey(src)).delReceiver
+                        (writer as WritablePort<S>);
+                    this._dependencyGraph.removeEdge(node, src);
+                }
+            }
+        }
     }
 
     // /**
@@ -1585,7 +1606,7 @@ export interface MutationSandbox extends ReactionSandbox {
     connect<A extends T, R extends Present, T extends Present, S extends R>
             (src: CallerPort<A,R> | IOPort<S>, dst: CalleePort<T,S> | IOPort<R>):void;
 
-    //disconnect(src: Port<Present>, dst?: Port<Present>): void;
+    disconnect(src: IOPort<Present>, dst?: IOPort<Present>): void;
 
     delete(reactor: Reactor): void;
 
