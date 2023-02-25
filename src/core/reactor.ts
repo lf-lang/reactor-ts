@@ -1315,16 +1315,12 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
             this._dependencyGraph.removeEdge(dst, src);
         } else {
             let nodes = this._dependencyGraph.getBackEdges(src);
-            if (nodes.size == 0) {
-                throw Error("There are no destinations to disconnect")
-            } else {
-                for (var node of nodes) {
-                    if (node instanceof IOPort) {
-                        let writer = node.asWritable(this._getKey(node));
-                        src.getManager(this._getKey(src)).delReceiver
-                            (writer as WritablePort<S>);
-                        this._dependencyGraph.removeEdge(node, src);
-                    }
+            for (let node of nodes) {
+                if (node instanceof IOPort) {
+                    let writer = node.asWritable(this._getKey(node));
+                    src.getManager(this._getKey(src)).delReceiver
+                        (writer as WritablePort<S>);
+                    this._dependencyGraph.removeEdge(node, src);
                 }
             }
         }
