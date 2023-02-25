@@ -402,7 +402,7 @@ export abstract class Reactor extends Component {
             if (src instanceof IOPort && (dst === undefined || dst instanceof IOPort)) {
                 return this.reactor._disconnect(src, dst);
             } else {
-                // ERROR
+                // FIXME: Add an error reporting mechanism such as an exception.
             }
         }
         
