@@ -1294,8 +1294,8 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
     /**
      * Delete the connection between the source and destination nodes. 
      * If the destination node is not specified, all connections from the source node to any other node are deleted.
-     * @param src
-     * @param dst
+     * @param src Source port of connection to be disconnected.
+     * @param dst Destination port of connection to be disconnected. If undefined, disconnect all connections from the source port.
      */
     protected _disconnect<R extends Present, S extends R>(src: IOPort<S>, dst?:IOPort<R>) {
         if ((!this._runtime.isRunning() && this._isInScope(src, dst))
