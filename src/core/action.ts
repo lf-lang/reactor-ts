@@ -94,7 +94,7 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
                 Log.debug(this, () => "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
                 intendedTag);
                 tag = intendedTag;
-            } else {
+            } else if (delay.isEqualTo(TimeValue.zero())) {
                 tag = tag.getMicroStepsLater(1);
             } 
               
