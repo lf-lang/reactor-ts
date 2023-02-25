@@ -40,7 +40,7 @@ class ReactorWithFederatePortAction extends App {
 }
 
 describe('Intended tag tests', function () {
-    it('Undefined inteded tag', function() {
+    it('Undefined intended tag', function() {
         intendedTagDelay = undefined
         let app = new ReactorWithFederatePortAction()
         expect(() => app._start()).toThrowError("FederatedPortAction must have an intended tag from RTI.")
