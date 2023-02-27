@@ -278,6 +278,25 @@ describe('time helper functions', function () {
     });
 
     /**
+     * Get a time interval in a format that is understood by nanotimer.
+     */
+    it('support for nanotimer (obsolete)', function() {
+        expect(TimeValue.secsAndNs(0 , 225).getNanoTime()).toEqual("225n");
+        expect(fiveSeconds.getNanoTime()).toEqual("5s");
+        expect(straightZero.getNanoTime()).toEqual("0s");
+        expect(fiveSFiveUS.getNanoTime()).toEqual("5000005u");
+        expect(TimeValue.secsAndNs(5, 5000000).getNanoTime()).toEqual("5005m");
+        expect(TimeValue.secsAndNs(5, 5).getNanoTime()).toEqual("5000000005n");
+        expect(fortyTwoDays.getNanoTime()).toEqual("3628800s");
+        expect(threeHundredUS.getNanoTime()).toEqual("300u");
+        expect(sevenPointFiveBillNS.getNanoTime()).toEqual("7500m");
+        expect(twoHundredFiftyMillMS.getNanoTime()).toEqual("250000s");
+        expect(fiveHundredMilNS.getNanoTime()).toEqual("500m");
+        expect(oneThousandMS.getNanoTime()).toEqual("1s");
+        expect(aboutTenYears.getNanoTime()).toEqual("315360000s");
+    })
+
+    /**
      * Obtain the difference between two time values.
      * Microstep indices are ignored in this operation 
      * (time values don't have a microstep).
