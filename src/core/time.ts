@@ -360,6 +360,14 @@ export class Tag {
         this.time = timeSinceEpoch;
     }
 
+    static NEVERTag() : Tag {
+        return new Tag(TimeValue.NEVER(), 0);
+    }
+
+    static FOREVERTag() : Tag {
+        return new Tag(TimeValue.FOREVER(), 0xffffffff);
+    }
+
     /**
      * Return `true` if this time instant is earlier than the tag given as a
      * parameter, false otherwise. For two tags with an equal `time`, one

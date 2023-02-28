@@ -915,12 +915,12 @@ enum StopRequestState {
  * including the current state and the tag associated with the stop requested or stop granted.
  */
 class StopRequestInfo {
-    constructor(state: StopRequestState, tag: Tag | null) {
+    constructor(state: StopRequestState, tag: Tag) {
         this.state = state;
         this.tag = tag;
     }
     readonly state: StopRequestState;
-    readonly tag: Tag | null;
+    readonly tag: Tag;
 }
 
 /**
@@ -959,7 +959,7 @@ export class FederatedApp extends App {
      * Stop request-related information
      * including the current state and the tag associated with the stop requested or stop granted.
      */
-    private stopRequestInfo: StopRequestInfo = new StopRequestInfo(StopRequestState.NOT_SENT, null);
+    private stopRequestInfo: StopRequestInfo = new StopRequestInfo(StopRequestState.NOT_SENT, Tag.NEVERTag());
 
     /**
      * The largest time advance grant received so far from the RTI,
@@ -967,7 +967,7 @@ export class FederatedApp extends App {
      * An RTI synchronized Federate cannot advance its logical time
      * beyond this value.
      */
-    private greatestTimeAdvanceGrant: Tag | null = null;
+    private greatestTimeAdvanceGrant: Tag  = Tag.NEVERTag();
 
     private upstreamFedIDs: number[] = [];
     private upstreamFedDelays: TimeValue[] = [];
@@ -1047,7 +1047,8 @@ export class FederatedApp extends App {
      * @param nextEvent
      */
     protected _canProceed(nextEvent: TaggedEvent<Present>) {
-        let tagBarrier = null;
+        // FIXME: There might be error to handle NEVERTag(). Need to analyze.
+        let tagBarrier = Tag.FOREVERTag();
         // Set tag barrier using the tag when stop is requested but not granted yet.
         // Otherwise, set the tagBarrier using the greated TAG.
         if (this.stopRequestInfo.state === StopRequestState.SENT) {
@@ -1057,7 +1058,7 @@ export class FederatedApp extends App {
         }
 
         if (this._isRTISynchronized() || tagBarrier !== null) {
-            if (tagBarrier === null || tagBarrier.isSmallerThan(nextEvent.tag)) {
+            if (tagBarrier.isSmallerThan(nextEvent.tag)) {
                 if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
                     this.downstreamFedIDs.length > 0) {
                         let physicalTime = getCurrentPhysicalTime()
@@ -1067,7 +1068,12 @@ export class FederatedApp extends App {
                             return false;
                         }
                 }
+                //FIXME: Should add a if statment that compare lastNET and nextEvent.tag
                 this.sendRTINextEventTag(nextEvent.tag);
+                if (this.upstreamFedIDs.length === 0) {
+                    // this federates always can proceed because there is no upstream federates.
+                    return true;
+                }
                 Log.debug(this, () => "The greatest time advance grant " +
                     "received from the RTI is less than the timestamp of the " +
                     "next event on the event queue");
@@ -1391,7 +1397,8 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
-            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+            if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
+                // FIXME: Need to analyze whether this if statement is correct. This doesn't use null anymore.
                 // Update the greatest time advance grant and immediately
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
@@ -1402,7 +1409,8 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('provisionalTimeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Provisional Time Advance Grant received from RTI for ${tag}.`});
-            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+            if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
+                // FIXME: Need to analyze whether this if statement is correct. This doesn't use null anymore.
                 // Update the greatest time advance grant and immediately
                 // wake up _next, in case it was blocked by the old time advance grant
 
