@@ -1,4 +1,4 @@
-import type {Absent, Present, Read, Sched, Runtime} from "./internal" 
+import type {Absent, Present, Read, Sched} from "./internal" 
 import { 
     Reactor, Log, TaggedEvent, 
     getCurrentPhysicalTime, Origin, Tag, TimeUnit, TimeValue,
@@ -48,8 +48,62 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
         }
         throw Error("Unable to grant access to manager.")
     }
+
+    protected scheduler = new class<T extends Present> extends SchedulableAction<T> {
+        get(): T | undefined {
+            return this.action.get()
+        }
+        constructor(private action: Action<T>) {
+            super()
+        }
+        schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
+            if (!(extraDelay instanceof TimeValue)) {
+                extraDelay = TimeValue.secs(0);
+            }
+            
+            var tag = this.action.runtime.util.getCurrentTag();
+            var delay = this.action.minDelay.add(extraDelay);
+
+            tag = tag.getLaterTag(delay);
+
+            if (this.action.origin == Origin.physical) {
+                // If the resulting timestamp from delay is less than the current physical time
+                // on the platform, then the timestamp becomes the current physical time.
+                // Otherwise the tag is computed like a logical action's tag.
+
+                let physicalTime = getCurrentPhysicalTime();
+                if (tag.time.isEarlierThan(physicalTime)) {
+                    tag = new Tag(getCurrentPhysicalTime(), 0);
+                } else {
+                    tag = tag.getMicroStepsLater(1);
+                }
+            }
+            if (this.action instanceof FederatePortAction) {
+                if (intendedTag === undefined) {
+                    throw new Error("FederatedPortAction must have an intended tag from RTI.");
+                }
+                if (!this.action.runtime.util.isLastTAGProvisional() && !intendedTag.isGreaterThan(this.action.runtime.util.getCurrentTag())) {
+                    throw new Error("Intended tag must be greater than current tag. Intended tag: " +
+                        intendedTag + " Current tag: " + this.action.runtime.util.getCurrentTag());
+                }
+                if (this.action.runtime.util.isLastTAGProvisional() && !intendedTag.isGreaterThanOrEqualTo(this.action.runtime.util.getCurrentTag())) {
+                    throw new Error("Intended tag must be greater than or equal to current tag" +
+                        ", when the last TAG is provisional. Intended tag: " + intendedTag +
+                        " Current tag: " + this.action.runtime.util.getCurrentTag());
+                }
+                Log.debug(this, () => "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
+                intendedTag);
+                tag = intendedTag;
+            } else if (delay.isEqualTo(TimeValue.zero())) {
+                tag = tag.getMicroStepsLater(1);
+            } 
+              
+            Log.debug(this, () => "Scheduling " + this.action.origin +
+                " action " + this.action._getFullyQualifiedName() + " with tag: " + tag);
     
-    protected scheduler;
+            this.action.runtime.schedule(new TaggedEvent(this.action, tag, value));
+        }
+    }(this)
 
     /** 
      * Construct a new action.
@@ -66,16 +120,10 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
         super(__container__);
         this.origin = origin;
         this.minDelay = minDelay;
-        this.scheduler = new ActionScheduler(this)
     }
 
     public toString() {
         return this._getFullyQualifiedName();
-    }
-
-    public _receiveRuntimeObject(runtime: Runtime) {
-        super._receiveRuntimeObject(runtime)
-        this.scheduler._receiveRuntimeObject(runtime)
     }
 }
 
@@ -100,67 +148,5 @@ export class Dummy extends Action<Present> {
 export class FederatePortAction<T extends Present> extends Action<T> {
     constructor(__parent__: Reactor, origin: Origin) {
         super(__parent__, origin)
-    }
-}
-
-class ActionScheduler<T extends Present> extends SchedulableAction<T> {
-    private runtime!: Runtime
-    
-    get(): T | undefined {
-        return this.action.get()
-    }
-    constructor(private action: Action<T>) {
-        super()
-    }
-    schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
-        if (!(extraDelay instanceof TimeValue)) {
-            extraDelay = TimeValue.secs(0);
-        }
-        
-        var tag = this.runtime.util.getCurrentTag();
-        var delay = this.action.minDelay.add(extraDelay);
-
-        tag = tag.getLaterTag(delay);
-
-        if (this.action.origin == Origin.physical) {
-            // If the resulting timestamp from delay is less than the current physical time
-            // on the platform, then the timestamp becomes the current physical time.
-            // Otherwise the tag is computed like a logical action's tag.
-
-            let physicalTime = getCurrentPhysicalTime();
-            if (tag.time.isEarlierThan(physicalTime)) {
-                tag = new Tag(getCurrentPhysicalTime(), 0);
-            } else {
-                tag = tag.getMicroStepsLater(1);
-            }
-        }
-        if (this.action instanceof FederatePortAction) {
-            if (intendedTag === undefined) {
-                throw new Error("FederatedPortAction must have an intended tag from RTI.");
-            }
-            if (!this.runtime.util.isLastTAGProvisional() && !intendedTag.isGreaterThan(this.runtime.util.getCurrentTag())) {
-                throw new Error("Intended tag must be greater than current tag. Intended tag: " +
-                    intendedTag + " Current tag: " + this.runtime.util.getCurrentTag());
-            }
-            if (this.runtime.util.isLastTAGProvisional() && !intendedTag.isGreaterThanOrEqualTo(this.runtime.util.getCurrentTag())) {
-                throw new Error("Intended tag must be greater than or equal to current tag" +
-                    ", when the last TAG is provisional. Intended tag: " + intendedTag +
-                    " Current tag: " + this.runtime.util.getCurrentTag());
-            }
-            Log.debug(this, () => "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
-            intendedTag);
-            tag = intendedTag;
-        } else if (delay.isEqualTo(TimeValue.zero())) {
-            tag = tag.getMicroStepsLater(1);
-        } 
-          
-        Log.debug(this, () => "Scheduling " + this.action.origin +
-            " action " + this.action._getFullyQualifiedName() + " with tag: " + tag);
-
-        this.runtime.schedule(new TaggedEvent(this.action, tag, value));
-    }
-
-    public _receiveRuntimeObject(runtime: Runtime) {
-        this.runtime = runtime
     }
 }
