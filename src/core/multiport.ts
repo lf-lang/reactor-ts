@@ -55,6 +55,8 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
         super(container)
         this._channels = new Array(width)
         this._width = width
+        this.writer = new MultiPortWriter(this.getContainer(), this._channels)
+        this.manager = new MultiPortManager(this, this._key)
     }
 
     /**
@@ -107,34 +109,9 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
     }
 
     /**
-     * Inner class instance to let the container configure this port.
+     * Manager to let the container configure this port.
      */
-     protected manager = new class implements TriggerManager {
-        /** @inheritdoc */
-        constructor(private port: MultiPort<T>) { }
-        
-        /** @inheritdoc */
-        getContainer(): Reactor {
-            return this.port.getContainer()
-        }
-
-        /** @inheritdoc */
-        addReaction(reaction: Reaction<unknown>): void {
-            this.port.channels().forEach(
-                channel => channel.getManager(
-                    this.getContainer()._getKey(channel)
-                ).addReaction(reaction))
-        }
-
-        /** @inheritdoc */
-        delReaction(reaction: Reaction<unknown>): void {
-            this.port.channels().forEach(
-                channel => channel.getManager(
-                    this.port._key
-                ).delReaction(reaction)
-            )
-        }
-    }(this)
+    protected manager: MultiPortManager<T>;
 
     /**
      * Unimplemented method (multiports require not access to the runtime object).
@@ -145,51 +122,9 @@ export abstract class MultiPort<T extends Present> extends Trigger implements Mu
     }
 
     /**
-    * Inner class instance to gain access to MultiWrite<T> interface.
+    * Manager to gain access to MultiWrite<T> interface.
     */
-    protected writer = new class extends WritableMultiPort<T> {
-        
-        getPorts(): IOPort<T>[] {
-            return this.port._channels
-        }
-
-        /**
-         * Storage for obtained writers.
-         */
-        private readonly cache: Array<WritablePort<T>>
-        
-        /** @inheritdoc */
-        constructor(private port: MultiPort<T>) {
-            super()
-            this.cache = new Array();
-        }
-
-        /** @inheritdoc */
-        public get(index: number): T | undefined {
-            return this.port._channels[index].get()
-        }
-
-        /** @inheritdoc */
-        public set(index: number, value: T): void {
-            let writableChannel = this.cache[index]
-            if (writableChannel === undefined) {
-                writableChannel = this.port.getContainer()
-                    .writable(this.port._channels[index])
-                this.cache[index] = writableChannel
-            }
-            writableChannel.set(value)
-        }
-
-        /** @inheritdoc */
-        public width(): number {
-            return this.port.width()
-        }
-        
-        /** @inheritdoc */
-        public values(): Array<T | Absent> {
-            return this.port.values()
-        }
-    }(this)
+    protected writer: MultiPortWriter<T>;
 
     public toString() {
         return this.container.toString() + "." + Component.keyOfMatchingEntry(this, this.container)
@@ -253,5 +188,73 @@ export class OutMultiPort<T extends Present> extends MultiPort<T> {
     /** @inheritdoc */
     public values(): Array<T | Absent> {
         return MultiPort.values(this._channels)
+    }
+}
+
+class MultiPortManager<T extends Present> implements TriggerManager {
+    /** @inheritdoc */
+    constructor(private port: MultiPort<T>, private key: Symbol) { }
+    
+    /** @inheritdoc */
+    getContainer(): Reactor {
+        return this.port.getContainer()
+    }
+
+    /** @inheritdoc */
+    addReaction(reaction: Reaction<unknown>): void {
+        this.port.channels().forEach(
+            channel => channel.getManager(
+                this.getContainer()._getKey(channel)
+            ).addReaction(reaction))
+    }
+
+    /** @inheritdoc */
+    delReaction(reaction: Reaction<unknown>): void {
+        this.port.channels().forEach(
+            channel => channel.getManager(this.key).delReaction(reaction)
+        )
+    }
+}
+
+class MultiPortWriter<T extends Present> extends WritableMultiPort<T> {
+        
+    getPorts(): IOPort<T>[] {
+        return this.channels
+    }
+
+    /**
+     * Storage for obtained writers.
+     */
+    private readonly cache: Array<WritablePort<T>>
+    
+    /** @inheritdoc */
+    constructor(private reactor: Reactor, private channels: Array<IOPort<T>>) {
+        super()
+        this.cache = new Array();
+    }
+
+    /** @inheritdoc */
+    public get(index: number): T | undefined {
+        return this.channels[index].get()
+    }
+
+    /** @inheritdoc */
+    public set(index: number, value: T): void {
+        let writableChannel = this.cache[index]
+        if (writableChannel === undefined) {
+            writableChannel = this.reactor.writable(this.channels[index])
+            this.cache[index] = writableChannel
+        }
+        writableChannel.set(value)
+    }
+
+    /** @inheritdoc */
+    public width(): number {
+        return this.channels.length
+    }
+    
+    /** @inheritdoc */
+    public values(): Array<T | Absent> {
+        return MultiPort.values(this.channels)
     }
 }
