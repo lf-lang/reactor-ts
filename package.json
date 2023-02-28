@@ -3,7 +3,7 @@
     "version": "0.3.0",
     "description": "A reactor-oriented programming framework in TypeScript",
     "main": "lib/core/index.js",
-    "types": "lib/core/index.d.ts",
+    "types": "src/core",
     "type": "commonjs",
     "dependencies": {
         "@babel/cli": "^7.4.3",
