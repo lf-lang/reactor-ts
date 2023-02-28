@@ -1223,13 +1223,31 @@ export class FederatedApp extends App {
     }
 
     /**
-     * Send a next event time message to the RTI. This should be called
-     * when this federated app is unable to advance logical time beause it
-     * has not yet received a sufficiently large time advance grant.
-     * @param nextTag The time to which this federate would like to
-     * advance logical time.
+     * If this federate depends on upstream federates or sends data to downstream
+     * federates, then send to the RTI a NET, which will give the tag of the
+     * earliest event on the event queue, or, if the queue is empty, the timeout
+     * time, or, if there is no timeout, FOREVER.
+     *
+     * If there are network outputs that
+     * depend on physical actions, then insert a dummy event to ensure this federate
+     * advances its tag so that downstream federates can make progress.
+     *
+     * A NET is a promise saying that, absent network inputs, this federate will
+     * not produce an output message with tag earlier than the NET value.
+     *
+     * If there are upstream federates, then after sending a NET, this will block
+     * until either the RTI grants the advance to the requested time or the wait
+     * for the response from the RTI is interrupted by a change in the event queue
+     * (e.g., a physical action triggered or a network message arrived).
+     * If there are no upstream federates, then it will not wait for a TAG
+     * (which won't be forthcoming anyway) and returns the earliest tag on the event queue.
+     *
+     * If the federate has neither upstream nor downstream federates, then this
+     * returns the specified tag immediately without sending anything to the RTI.
+     * @param nextTag The tag to which this federate would like to send.
      */
     public sendRTINextEventTag(nextTag: Tag) {
+        //FIXME: NET messages should be sent from upstreams, too. 
         Log.debug(this, () => {return `Sending RTI next event time with time: ${nextTag}`});
         let tag = nextTag.toBinary();
         this.rtiClient.sendRTINextEventTag(tag);
