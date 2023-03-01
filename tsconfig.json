@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "allowJs": true,
-        "noEmit": true,
         "target": "esnext",
         "esModuleInterop": true,
         "isolatedModules": true,
@@ -13,7 +12,8 @@
         "strictBindCallApply": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
-        "noImplicitThis": true
+        "noImplicitThis": true,
+        "outDir": "lib"
     },
     "include": [
         "src/**/*",

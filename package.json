@@ -6,18 +6,12 @@
     "types": "src/core",
     "type": "commonjs",
     "dependencies": {
-        "@babel/cli": "^7.4.3",
-        "@babel/core": "^7.4.3",
-        "@babel/plugin-proposal-class-properties": "^7.7.4",
-        "@babel/plugin-proposal-object-rest-spread": "^7.7.7",
-        "@babel/plugin-proposal-optional-chaining": "^7.8.0",
-        "@babel/preset-typescript": "^7.7.7",
-        "@babel/preset-env": "^7.4.3",
         "command-line-args": "^5.1.1",
         "command-line-usage": "^6.1.3",
         "microtime": "^3.0.0",
         "nanotimer": "^0.3.15",
         "rimraf": "^3.0.2",
+        "typescript": "^4.9.5",
         "ulog": "^1.1.0",
         "uuid": "^8.3.2"
     },
@@ -29,17 +23,14 @@
         "@types/nanotimer": "^0.3.0",
         "@types/node": "^16.3.3",
         "@types/uuid": "^8.3.4",
-        "dtslint": "^3.4.2",
         "jest": "^27.5.1",
         "ts-jest": "^27.0.3",
-        "typedoc": "0.23.11",
-        "typescript": "~4.8.2"
+        "typedoc": "^0.23.26"
     },
     "scripts": {
         "check-types": "tsc",
-        "install": "npx rimraf lib && npx babel src --out-dir lib --extensions .ts",
+        "install": "npx rimraf lib && tsc",
         "doc": "typedoc --out docs src/core/index.ts && touch docs/.nojekyll",
-        "dtslint": "dtslint __tests__/types",
         "test": "jest --coverage",
         "prepublish": "npx tsc"
     },
