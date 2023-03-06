@@ -77,8 +77,7 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
                 } else {
                     tag = tag.getMicroStepsLater(1);
                 }
-            }
-            if (this.action instanceof FederatePortAction) {
+            } else if (this.action instanceof FederatePortAction) {
                 if (intendedTag === undefined) {
                     throw new Error("FederatedPortAction must have an intended tag from RTI.");
                 }
