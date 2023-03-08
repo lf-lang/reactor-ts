@@ -35,11 +35,6 @@
         "prepublish": "npx tsc"
     },
     "jest": {
-        "globals": {
-            "ts-jest": {
-                "babelConfig": "<rootDir>/.babelrc"
-            }
-        },
         "testPathIgnorePatterns": [
             "node_modules",
             "defunct",
