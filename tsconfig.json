@@ -16,7 +16,6 @@
         "outDir": "lib"
     },
     "include": [
-        "src/**/*",
-        "__tests__"
+        "src/**/*"
     ]
 }
