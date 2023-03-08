@@ -119,5 +119,6 @@ export interface FederateConfig {
     networkMessageActions: string[]
     rtiHost: string
     rtiPort: number
-    sendsTo: number[]
+    sendsTo: number[],
+    upstreamConnectionDelays: TimeValue[] []
 }

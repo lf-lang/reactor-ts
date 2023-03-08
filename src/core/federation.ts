@@ -1150,8 +1150,13 @@ export class FederatedApp extends App {
             this.addDownstreamFederate(sendsToFedId);
         }
         for (let dependsOnFedId of config.dependsOn) {
-            // FIXME: Get delay properly considering the unit instead of hardcoded TimeValue.zero().
-            this.addUpstreamFederate(dependsOnFedId, TimeValue.zero());
+            let minOutputConnectionDelay = TimeValue.FOREVER();
+            for (let candidate of config.upstreamConnectionDelays[dependsOnFedId]) {
+                if (minOutputConnectionDelay.isLaterThan(candidate)) {
+                    minOutputConnectionDelay = candidate;
+                }
+            }
+            this.addUpstreamFederate(dependsOnFedId, minOutputConnectionDelay);
         }
     }
 
