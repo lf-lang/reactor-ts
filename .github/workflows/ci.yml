@@ -50,4 +50,4 @@ jobs:
       - name: Perform Lingua Franca TypeScript tests
         working-directory: lingua-franca
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}"
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}/reactor-ts"
