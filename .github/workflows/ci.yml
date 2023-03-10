@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Read lingua-franca-ref.txt
-        run: echo "wget -qO- https://raw.githubusercontent.com/lf-lang/reactor-ts/${{ github.ref }}/lingua-franca-ref.txt" >> $GITHUB_ENV
+        run: echo "lingua-franca-ref=$(wget -qO- https://raw.githubusercontent.com/lf-lang/reactor-ts/${{ github.head_ref }}/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
         uses: actions/checkout@v3
         with:
