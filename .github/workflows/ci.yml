@@ -27,16 +27,15 @@ jobs:
     steps:
       - name: Read lingua-franca-ref.txt
         id: lf
-        run: echo "ref=$(cat reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_OUTPUT
+        run: echo "lingua-franca-ref=$(cat reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
         uses: actions/checkout@v3
         with:
           repository: lf-lang/lingua-franca
-          path: ./lingua-franca
-          ref: ${{ steps.lf.outputs.ref }}
+          ref: ${{ env.lingua-franca-ref }}
           fetch-depth: 0
       - name: Prepare build environment
-        uses: ./lingua-franca/.github/actions/prepare-build-env
+        uses: ./.github/actions/prepare-build-env
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
@@ -44,6 +43,5 @@ jobs:
       - name: Install pnpm
         run: npm i -g pnpm
       - name: Perform Lingua Franca TypeScript tests
-        working-directory: lingua-franca
         run: |
           ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.ref }}"
