@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Read lingua-franca-ref.txt
-        run: echo "lingua-franca-ref=$(wget -qO- https://raw.githubusercontent.com/lf-lang/reactor-ts/${{ github.ref_name }}/lingua-franca-ref.txt)" >> $GITHUB_ENV
+        run: echo "lingua-franca-ref=$(wget -qO- https://raw.githubusercontent.com/lf-lang/reactor-ts/${{ github.head_ref || github.ref_name }}/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
         uses: actions/checkout@v3
         with:
@@ -43,4 +43,4 @@ jobs:
         run: npm i -g pnpm
       - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.ref_name }}"
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.head_ref || github.ref_name }}"
