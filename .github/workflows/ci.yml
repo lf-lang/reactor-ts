@@ -25,10 +25,6 @@ jobs:
   lingua-franca:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out reactor-ts repository
-        uses: actions/checkout@v3
-        with:
-          path: ./reactor-ts
       - name: Read lingua-franca-ref.txt
         id: lf
         run: echo "ref=$(cat reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_OUTPUT
@@ -50,4 +46,4 @@ jobs:
       - name: Perform Lingua Franca TypeScript tests
         working-directory: lingua-franca
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}/reactor-ts"
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.ref }}"
