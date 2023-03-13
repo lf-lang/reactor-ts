@@ -86,8 +86,8 @@ export abstract class Component {
      */
     public _isContainedBy(reactor: Reactor): boolean {
 
-        if (this instanceof App) return false
-        else if (this._container === reactor) return true
+        if (this instanceof App) {return false}
+        else if (this._container === reactor) {return true}
     
         return false
     }
@@ -99,8 +99,8 @@ export abstract class Component {
      * this component.
      */
     public _isContainedByContainerOf(reactor: Reactor): boolean {
-        if (this instanceof App) return false
-        else if (this._container._isContainedBy(reactor)) return true;
+        if (this instanceof App) {return false}
+        else if (this._container._isContainedBy(reactor)) {return true;}
     
         return false;
     }

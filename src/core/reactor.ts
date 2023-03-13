@@ -9,7 +9,7 @@
 import {
     TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm, PrioritySet,
     SortableDependencyGraph, Log, DependencyGraph, Reaction, Priority,
-    Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present,
+    Mutation, Procedure, Absent, ArgList, Args, Present,
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
     Component, ScheduledTrigger, Trigger, TriggerManager,
     Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown, WritableMultiPort, Dummy
@@ -482,7 +482,7 @@ export abstract class Reactor extends Component {
         if (!(this instanceof App) && this._runtime.isRunning()) {
             let toDependOn = this._getContainer()._getLastMutation()
             if (toDependOn)
-                this._mutations[0].setPriority(toDependOn.getPriority()+1)
+                {this._mutations[0].setPriority(toDependOn.getPriority()+1)}
         }
     }
 
@@ -523,7 +523,7 @@ export abstract class Reactor extends Component {
         }
 
         if (index !== undefined)
-            return index
+            {return index}
 
         throw new Error("Reaction is not listed.");
     }
@@ -1194,7 +1194,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
                     this._dependencyGraph.addEdge(src, dst)
                 }
                 if (last)
-                    calleeManager.setLastCaller(last)
+                    {calleeManager.setLastCaller(last)}
             } else {
                 throw new Error("No procedure linked to callee"
                     + " port `${procedure}`.")
@@ -1370,8 +1370,7 @@ protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
      */
     protected _unsetTimers(): void {
         // Log.global.debug("Getting timers for: " + this)
-        let timers = new Set<Timer>();
-        for (const [k, v] of Object.entries(this)) {
+        for (const [, v] of Object.entries(this)) {
             if (v instanceof Timer) {
                 this._unsetTimer(v);
             }
@@ -1407,7 +1406,7 @@ export class CallerPort<A extends Present, R extends Present> extends Port<R> im
 
     public get(): R | undefined {
         if (this.tag?.isSimultaneousWith(this.runtime.util.getCurrentTag()))
-            return this.remotePort?.retValue
+            {return this.remotePort?.retValue}
     }
 
     public remotePort: CalleePort<A, R> | undefined;

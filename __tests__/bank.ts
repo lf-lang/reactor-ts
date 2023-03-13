@@ -72,7 +72,7 @@ describe('Check bank index', () => {
             });
             
             it('generic bank', () => {
-                this.c.all().forEach(r => expect(typeof r.input == "number"))
+                this.c.all().forEach(r => expect(typeof r.input === "number"))
             });
             var foo = this.b.port((member) => member.o)
             var bar = [this.b.get(0).o, this.b.get(1).o, this.b.get(2).o]

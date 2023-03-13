@@ -47,7 +47,7 @@ class R1 extends Reactor {
                     // // Busy wait
                     // while(util.getCurrentPhysicalTime().isEarlierThan(finishTime));
                     
-                    while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(TimeValue.withUnits(1, TimeUnit.sec))));
+                    while (util.getElapsedPhysicalTime().isEarlierThan(initialElapsedTime.add(TimeValue.withUnits(1, TimeUnit.sec)))){;}
                 
                 } finally {
                     

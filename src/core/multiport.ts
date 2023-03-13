@@ -1,5 +1,5 @@
 import {
-    Absent, InPort, IOPort, MultiRead, MultiReadWrite, OutPort, Present, 
+    Absent, InPort, IOPort, MultiRead, OutPort, Present, 
     Reactor, Runtime, WritablePort, Trigger, TriggerManager, Reaction, Component
 } from "./internal";
 import { WritableMultiPort } from "./port";

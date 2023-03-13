@@ -221,7 +221,7 @@ describe('ReactionQ', () => {
         }
         expect(Object.is(r, nodes[5])).toBe(true);
         if (r)
-            expect(r.getPriority()).toEqual(0);
+            {expect(r.getPriority()).toEqual(0);}
     });
 
     it('second pop', () => {
@@ -234,7 +234,7 @@ describe('ReactionQ', () => {
         }
         expect(Object.is(r, nodes[3])).toBe(true);
         if (r)
-            expect(r.getPriority()).toEqual(100);
+            {expect(r.getPriority()).toEqual(100);}
     });
 
     it('third pop', () => {
@@ -246,7 +246,7 @@ describe('ReactionQ', () => {
         }
         expect(Object.is(r, nodes[4])).toBe(true);
         if (r)
-            expect(r.getPriority()).toEqual(200);
+            {expect(r.getPriority()).toEqual(200);}
     });
 
     it('fourth pop', () => {
@@ -258,7 +258,7 @@ describe('ReactionQ', () => {
         }
         expect(Object.is(r, nodes[2])).toBe(true);
         if (r)
-            expect(r.getPriority()).toEqual(300);
+            {expect(r.getPriority()).toEqual(300);}
 
     });
 
@@ -271,7 +271,7 @@ describe('ReactionQ', () => {
         }
         expect(Object.is(r, nodes[1])).toBe(true);
         if (r)
-            expect(r.getPriority()).toEqual(400);
+            {expect(r.getPriority()).toEqual(400);}
 
     });
     
@@ -284,7 +284,7 @@ describe('ReactionQ', () => {
         }
         expect(Object.is(r, nodes[0])).toBe(true);
         if (r)
-            expect(r.getPriority()).toEqual(500);
+            {expect(r.getPriority()).toEqual(500);}
     });
 
     it('seventh pop', () => {

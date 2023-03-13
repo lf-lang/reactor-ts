@@ -19,7 +19,7 @@ export class Ping extends Reactor {
                     //console.log("Ping!")
                     let ret = __client.invoke(pingsLeft)
                     if (ret)
-                        pingsLeft -= 1;       
+                        {pingsLeft -= 1;}       
                 }
                 let elapsedTime = this.util.getCurrentPhysicalTime().subtract(startTime);
                 console.log("Elapsed time: " + elapsedTime);
@@ -57,7 +57,7 @@ export class Pong extends Reactor {
                 //console.log("Pong!")
                 let msg = __server.get()
                 if (msg)
-                    __server.return(msg)
+                    {__server.return(msg)}
             }
         );
         this.addReaction(

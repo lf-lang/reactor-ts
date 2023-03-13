@@ -1,5 +1,5 @@
 
-import {Reactor, Timer, Write, Triggers, Args, ArgList, ReactionSandbox, Present, Parameter, OutPort} from '../core/internal';
+import {Reactor, Timer, Write, Triggers, Args, ReactionSandbox, Present, Parameter, OutPort} from '../core/internal';
 
 function produceOutput<S>(this: ReactionSandbox, o: Write<S>, payload:Parameter<S>) {
     o.set(payload.get());

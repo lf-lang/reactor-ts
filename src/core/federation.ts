@@ -1429,7 +1429,7 @@ export class FederatedApp extends App {
                 super._shutdown();
             }
             else
-                this._setEndOfExecution(tag);
+                {this._setEndOfExecution(tag);}
         });
 
         this.rtiClient.on(`portAbsent`, (portID: number, intendedTag: Tag) => {

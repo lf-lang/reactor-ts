@@ -185,9 +185,9 @@ export class DependencyGraph<T> {
          */
         function search(current: T) {
             visited.add(current)
-            if (origins.has(current))   reachable.add(current)
+            if (origins.has(current))   {reachable.add(current)}
             for (let next of self.getEdges(current)) {
-                if (!visited.has(next)) search(next)
+                if (!visited.has(next)) {search(next)}
             }
         }
         search(effect)
@@ -231,7 +231,7 @@ export class DependencyGraph<T> {
         if (deps = this.adjacencyMap.get(node)) {
             this.numberOfEdges -= deps.size;
             this.adjacencyMap.delete(node);
-            for (const [v, e] of this.adjacencyMap) {
+            for (const [, e] of this.adjacencyMap) {
                 if (e.has(node)) {
                     e.delete(node);
                     this.numberOfEdges--;

@@ -475,7 +475,6 @@ export class Tag {
         buffer.copy(timeBuffer, 0, 0, 8);
         let time = TimeValue.fromBinary(timeBuffer);
         let microstep = buffer.readUInt32LE(8);
-        const billion = BigInt(TimeUnit.secs);
         
         return new Tag(time, microstep);
     }
