@@ -952,6 +952,7 @@ export class FederatedApp extends App {
      * If this variable is true, logical time in this federate
      * cannot advance beyond the time given in the greatest Time Advance Grant
      * sent from the RTI.
+     * FIXME: This concept is very old and not sure why it is needed.
      */
     private rtiSynchronized: boolean = false;
 
