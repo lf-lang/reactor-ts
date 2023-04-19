@@ -947,15 +947,6 @@ export class FederatedApp extends App {
     private rtiClient: RTIClient;
 
     /**
-     * If a federated app uses logical connections, its execution
-     * with respect to time advancement must be sychronized with the RTI.
-     * If this variable is true, logical time in this federate
-     * cannot advance beyond the time given in the greatest Time Advance Grant
-     * sent from the RTI.
-     */
-    private rtiSynchronized: boolean = false;
-
-    /**
      * Stop request-related information
      * including the current state and the tag associated with the stop requested or stop granted.
      */
@@ -998,13 +989,6 @@ export class FederatedApp extends App {
 
     public registerOutputControlReactionTrigger(outputControlReactionTrigger: Action<Present>) {
         this.outputControlReactionTriggers.push(outputControlReactionTrigger);
-    }
-
-    /**
-     * Getter for rtiSynchronized
-     */
-    public _isRTISynchronized() {
-        return this.rtiSynchronized;
     }
 
     /**
@@ -1056,8 +1040,8 @@ export class FederatedApp extends App {
             tagBarrier = this._getGreatestTimeAdvanceGrant();
         }
 
-        if (this._isRTISynchronized() || tagBarrier !== null) {
-            if (tagBarrier === null || tagBarrier.isSmallerThan(nextEvent.tag)) {
+        if (tagBarrier !== null) {
+            if (tagBarrier.isSmallerThan(nextEvent.tag)) {
                 if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
                     this.downstreamFedIDs.length > 0) {
                         let physicalTime = getCurrentPhysicalTime()
@@ -1165,19 +1149,13 @@ export class FederatedApp extends App {
     /**
      * Register a federate port's action with the federate. It must be registered
      * so it is known by the rtiClient and may be scheduled when a message for the
-     * port has been received via the RTI. If at least one of a federate's actions
-     * is logical, signifying a logical connection to the federate's port,
-     * this FederatedApp must be made RTI synchronized. The advancement of time in
-     * an RTI synchronized FederatedApp is managed by the RTI.
+     * port has been received via the RTI. 
      * @param federatePortID The designated ID for the federate port. For compatability with the
      * C RTI, the ID must be expressable as a 16 bit unsigned short. The ID must be
      * unique among all port IDs on this federate and be a number between 0 and NUMBER_OF_PORTS - 1
      * @param federatePort The federate port's action for registration.
      */
     public registerFederatePortAction<T extends Present>(federatePortID: number, federatePortAction: Action<T>) {
-        if (federatePortAction.origin === Origin.logical) {
-            this.rtiSynchronized = true;
-        }
         this.rtiClient.registerFederatePortAction(federatePortID, federatePortAction);
     }
 
