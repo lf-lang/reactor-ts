@@ -1149,14 +1149,16 @@ export class FederatedApp extends App {
         for (let sendsToFedId of config.sendsTo) {
             this.addDownstreamFederate(sendsToFedId);
         }
+        let upstreamConnectionDelaysIndex = 0;
         for (let dependsOnFedId of config.dependsOn) {
             let minOutputConnectionDelay = TimeValue.FOREVER();
-            for (let candidate of config.upstreamConnectionDelays[dependsOnFedId]) {
+            for (let candidate of config.upstreamConnectionDelays[upstreamConnectionDelaysIndex]) {
                 if (minOutputConnectionDelay.isLaterThan(candidate)) {
                     minOutputConnectionDelay = candidate;
                 }
             }
             this.addUpstreamFederate(dependsOnFedId, minOutputConnectionDelay);
+            upstreamConnectionDelaysIndex++;
         }
     }
 
