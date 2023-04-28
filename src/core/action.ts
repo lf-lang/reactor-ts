@@ -145,7 +145,7 @@ export class Dummy extends Action<Present> {
 }
 
 export class FederatePortAction<T extends Present> extends Action<T> {
-    constructor(__parent__: Reactor, origin: Origin) {
-        super(__parent__, origin)
+    constructor(__parent__: Reactor, origin: Origin, minDelay: TimeValue = TimeValue.secs(0)) {
+        super(__parent__, origin, minDelay)
     }
 }
