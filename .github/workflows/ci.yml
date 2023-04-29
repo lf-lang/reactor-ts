@@ -43,4 +43,4 @@ jobs:
         run: npm i -g pnpm
       - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.head_ref || github.ref_name }}"
+           ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.repositoryUrl }}#${{ github.head_ref || github.ref_name }}"
