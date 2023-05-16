@@ -1135,6 +1135,13 @@ export class FederatedApp extends App {
         }
         let upstreamConnectionDelaysIndex = 0;
         for (let dependsOnFedId of config.dependsOn) {
+            if (upstreamConnectionDelaysIndex >= config.upstreamConnectionDelays.length) {
+                // The length of the array upstreamConnectionDelays is identical 
+                // to the length of the array depensOn.
+                // Also, the number upstreamConnectionDelaysIndex can be increased up to
+                // (length of the array dependsOn - 1).  
+                throw Error("The index is larger than the array");
+            }
             let minOutputConnectionDelay = TimeValue.FOREVER();
             for (let candidate of config.upstreamConnectionDelays[upstreamConnectionDelaysIndex]) {
                 if (minOutputConnectionDelay.isLaterThan(candidate)) {
