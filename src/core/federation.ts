@@ -1133,23 +1133,19 @@ export class FederatedApp extends App {
         for (let sendsToFedId of config.sendsTo) {
             this.addDownstreamFederate(sendsToFedId);
         }
-        let upstreamConnectionDelaysIndex = 0;
-        for (let dependsOnFedId of config.dependsOn) {
-            if (upstreamConnectionDelaysIndex >= config.upstreamConnectionDelays.length) {
-                // The length of the array upstreamConnectionDelays is identical 
-                // to the length of the array depensOn.
-                // Also, the number upstreamConnectionDelaysIndex can be increased up to
-                // (length of the array dependsOn - 1).  
-                throw Error("The index is larger than the array");
-            }
+        if (config.dependsOn.length != config.upstreamConnectionDelays.length) {
+            // The length of the array upstreamConnectionDelays must be the same as
+            // the length of the array depensOn.
+            throw Error("The lengths of dependsOn upstreamConnectionDelays mismatch.");
+        }
+        for (let index = 0; index < config.dependsOn.length; index++) {
             let minOutputConnectionDelay = TimeValue.FOREVER();
-            for (let candidate of config.upstreamConnectionDelays[upstreamConnectionDelaysIndex]) {
+            for (let candidate of config.upstreamConnectionDelays[index]) {
                 if (minOutputConnectionDelay.isLaterThan(candidate)) {
                     minOutputConnectionDelay = candidate;
                 }
             }
-            this.addUpstreamFederate(dependsOnFedId, minOutputConnectionDelay);
-            upstreamConnectionDelaysIndex++;
+            this.addUpstreamFederate(config.dependsOn[index], minOutputConnectionDelay);
         }
     }
 
