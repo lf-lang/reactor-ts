@@ -28,10 +28,11 @@
         "typedoc": "^0.23.26"
     },
     "scripts": {
-        "check-types": "npx tsc",
+        "clean": "npx rimraf lib",
+        "build": "npx tsc",
         "doc": "typedoc --out docs src/core/index.ts && touch docs/.nojekyll",
         "test": "jest --coverage",
-        "prepublish": "npx rimraf lib && npx tsc"
+        "prepublish": "npm run clean && npm run build"
     },
     "jest": {
         "testPathIgnorePatterns": [
