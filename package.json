@@ -32,7 +32,7 @@
         "build": "npx tsc",
         "doc": "typedoc --out docs src/core/index.ts && touch docs/.nojekyll",
         "test": "jest --coverage",
-        "prepublish": "npm run clean && npm run build"
+        "prepublishOnly": "npm run clean && npm run build"
     },
     "jest": {
         "testPathIgnorePatterns": [
