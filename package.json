@@ -2,8 +2,8 @@
     "name": "@lf-lang/reactor-ts",
     "version": "0.3.4",
     "description": "A reactor-oriented programming framework in TypeScript",
-    "main": "lib/core/index.js",
-    "types": "src/core",
+    "main": "lib/index.js",
+    "types": "src",
     "type": "commonjs",
     "dependencies": {
         "@types/command-line-args": "^5.2.0",
