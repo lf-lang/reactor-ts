@@ -1989,6 +1989,7 @@ export class App extends Reactor {
 
         this._fast = fast;
         this._keepAlive = keepAlive;
+        console.log(keepAlive);
         this._executionTimeout = executionTimeout;
 
         // NOTE: these will be reset properly during startup.
