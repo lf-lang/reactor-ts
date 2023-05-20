@@ -1112,6 +1112,7 @@ export class FederatedApp extends App {
      */
     constructor (config: FederateConfig, success?: () => void, failure?: () => void) {
 
+        console.log(config.keepAlive);
         super(config.executionTimeout, config.keepAlive, config.fast,
             // Let super class (App) call FederateApp's _shutdown in success and failure.
             () => {
