@@ -30,7 +30,7 @@
     "scripts": {
         "clean": "npx rimraf lib",
         "build": "npx tsc",
-        "doc": "typedoc --out docs src/core/index.ts && touch docs/.nojekyll",
+        "doc": "typedoc --out docs src/index.ts && touch docs/.nojekyll",
         "test": "jest --coverage",
         "prepublishOnly": "npm run clean && npm run build"
     },
