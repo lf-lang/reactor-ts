@@ -1362,7 +1362,7 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
-            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+            if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
                 // Update the greatest time advance grant and immediately
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
@@ -1373,7 +1373,7 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('provisionalTimeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Provisional Time Advance Grant received from RTI for ${tag}.`});
-            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+            if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
                 // Update the greatest time advance grant and immediately
                 // wake up _next, in case it was blocked by the old time advance grant
 
