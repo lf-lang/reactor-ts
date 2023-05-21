@@ -1040,22 +1040,24 @@ export class FederatedApp extends App {
             tagBarrier = this._getGreatestTimeAdvanceGrant();
         }
 
-        if (tagBarrier.isSmallerThan(nextEvent.tag)) {
-            if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
-                this.downstreamFedIDs.length > 0) {
-                    let physicalTime = getCurrentPhysicalTime()
-                    if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(nextEvent.tag.time)) {
-                        Log.debug(this, () => "Adding dummy event for time: " + physicalTime);
-                        this._addDummyEvent(new Tag(physicalTime));
-                        return false;
-                    }
+        if (this.upstreamFedIDs.length !== 0) {
+            if (tagBarrier.isSmallerThan(nextEvent.tag)) {
+                if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
+                    this.downstreamFedIDs.length > 0) {
+                        let physicalTime = getCurrentPhysicalTime()
+                        if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(nextEvent.tag.time)) {
+                            Log.debug(this, () => "Adding dummy event for time: " + physicalTime);
+                            this._addDummyEvent(new Tag(physicalTime));
+                            return false;
+                        }
+                }
+                this.sendRTINextEventTag(nextEvent.tag);
+                Log.debug(this, () => "The greatest time advance grant " +
+                    "received from the RTI is less than the timestamp of the " +
+                    "next event on the event queue");
+                Log.global.debug("Exiting _next.");
+                return false;
             }
-            this.sendRTINextEventTag(nextEvent.tag);
-            Log.debug(this, () => "The greatest time advance grant " +
-                "received from the RTI is less than the timestamp of the " +
-                "next event on the event queue");
-            Log.global.debug("Exiting _next.");
-            return false;
         }
         return true;
     }
