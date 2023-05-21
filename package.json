@@ -1,9 +1,9 @@
 {
     "name": "@lf-lang/reactor-ts",
-    "version": "0.3.4",
+    "version": "0.3.5",
     "description": "A reactor-oriented programming framework in TypeScript",
-    "main": "lib/core/index.js",
-    "types": "src/core",
+    "main": "lib/index.js",
+    "types": "src",
     "type": "commonjs",
     "dependencies": {
         "@types/command-line-args": "^5.2.0",
@@ -30,7 +30,7 @@
     "scripts": {
         "clean": "npx rimraf lib",
         "build": "npx tsc",
-        "doc": "typedoc --out docs src/core/index.ts && touch docs/.nojekyll",
+        "doc": "typedoc --out docs src/index.ts && touch docs/.nojekyll",
         "test": "jest --coverage",
         "prepublishOnly": "npm run clean && npm run build"
     },
