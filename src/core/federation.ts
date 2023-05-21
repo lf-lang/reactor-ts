@@ -915,12 +915,12 @@ enum StopRequestState {
  * including the current state and the tag associated with the stop requested or stop granted.
  */
 class StopRequestInfo {
-    constructor(state: StopRequestState, tag: Tag | null) {
+    constructor(state: StopRequestState, tag: Tag) {
         this.state = state;
         this.tag = tag;
     }
     readonly state: StopRequestState;
-    readonly tag: Tag | null;
+    readonly tag: Tag;
 }
 
 /**
@@ -950,15 +950,15 @@ export class FederatedApp extends App {
      * Stop request-related information
      * including the current state and the tag associated with the stop requested or stop granted.
      */
-    private stopRequestInfo: StopRequestInfo = new StopRequestInfo(StopRequestState.NOT_SENT, null);
+    private stopRequestInfo: StopRequestInfo = new StopRequestInfo(StopRequestState.NOT_SENT, new Tag(TimeValue.FOREVER(), 0));
 
     /**
      * The largest time advance grant received so far from the RTI,
-     * or null if no time advance grant has been received yet.
+     * or NEVER if no time advance grant has been received yet.
      * An RTI synchronized Federate cannot advance its logical time
      * beyond this value.
      */
-    private greatestTimeAdvanceGrant: Tag | null = null;
+    private greatestTimeAdvanceGrant: Tag = new Tag(TimeValue.NEVER(), 0);
 
     private upstreamFedIDs: number[] = [];
     private upstreamFedDelays: TimeValue[] = [];
@@ -1031,7 +1031,7 @@ export class FederatedApp extends App {
      * @param nextEvent
      */
     protected _canProceed(nextEvent: TaggedEvent<Present>) {
-        let tagBarrier = null;
+        let tagBarrier = new Tag(TimeValue.NEVER());
         // Set tag barrier using the tag when stop is requested but not granted yet.
         // Otherwise, set the tagBarrier using the greated TAG.
         if (this.stopRequestInfo.state === StopRequestState.SENT) {
@@ -1040,24 +1040,22 @@ export class FederatedApp extends App {
             tagBarrier = this._getGreatestTimeAdvanceGrant();
         }
 
-        if (tagBarrier !== null) {
-            if (tagBarrier.isSmallerThan(nextEvent.tag)) {
-                if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
-                    this.downstreamFedIDs.length > 0) {
-                        let physicalTime = getCurrentPhysicalTime()
-                        if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(nextEvent.tag.time)) {
-                            Log.debug(this, () => "Adding dummy event for time: " + physicalTime);
-                            this._addDummyEvent(new Tag(physicalTime));
-                            return false;
-                        }
-                }
-                this.sendRTINextEventTag(nextEvent.tag);
-                Log.debug(this, () => "The greatest time advance grant " +
-                    "received from the RTI is less than the timestamp of the " +
-                    "next event on the event queue");
-                Log.global.debug("Exiting _next.");
-                return false;
+        if (tagBarrier.isSmallerThan(nextEvent.tag)) {
+            if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
+                this.downstreamFedIDs.length > 0) {
+                    let physicalTime = getCurrentPhysicalTime()
+                    if (physicalTime.add(this.minDelayFromPhysicalActionToFederateOutput).isEarlierThan(nextEvent.tag.time)) {
+                        Log.debug(this, () => "Adding dummy event for time: " + physicalTime);
+                        this._addDummyEvent(new Tag(physicalTime));
+                        return false;
+                    }
             }
+            this.sendRTINextEventTag(nextEvent.tag);
+            Log.debug(this, () => "The greatest time advance grant " +
+                "received from the RTI is less than the timestamp of the " +
+                "next event on the event queue");
+            Log.global.debug("Exiting _next.");
+            return false;
         }
         return true;
     }
@@ -1112,6 +1110,7 @@ export class FederatedApp extends App {
      */
     constructor (config: FederateConfig, success?: () => void, failure?: () => void) {
 
+        console.log(config.keepAlive);
         super(config.executionTimeout, config.keepAlive, config.fast,
             // Let super class (App) call FederateApp's _shutdown in success and failure.
             () => {
