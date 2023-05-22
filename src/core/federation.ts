@@ -1040,6 +1040,9 @@ export class FederatedApp extends App {
             tagBarrier = this._getGreatestTimeAdvanceGrant();
         }
 
+        console.log(`tagBarrier: ${tagBarrier}`);
+        console.log(`nextEvent.tag: ${nextEvent.tag}`);
+
         if (tagBarrier !== null) {
             if (tagBarrier.isSmallerThan(nextEvent.tag)) {
                 if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
