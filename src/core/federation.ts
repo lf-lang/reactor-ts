@@ -915,12 +915,12 @@ enum StopRequestState {
  * including the current state and the tag associated with the stop requested or stop granted.
  */
 class StopRequestInfo {
-    constructor(state: StopRequestState, tag: Tag | null) {
+    constructor(state: StopRequestState, tag: Tag) {
         this.state = state;
         this.tag = tag;
     }
     readonly state: StopRequestState;
-    readonly tag: Tag | null;
+    readonly tag: Tag;
 }
 
 /**
@@ -950,15 +950,15 @@ export class FederatedApp extends App {
      * Stop request-related information
      * including the current state and the tag associated with the stop requested or stop granted.
      */
-    private stopRequestInfo: StopRequestInfo = new StopRequestInfo(StopRequestState.NOT_SENT, null);
+    private stopRequestInfo: StopRequestInfo = new StopRequestInfo(StopRequestState.NOT_SENT, new Tag(TimeValue.FOREVER(), 0));
 
     /**
      * The largest time advance grant received so far from the RTI,
-     * or null if no time advance grant has been received yet.
+     * or NEVER if no time advance grant has been received yet.
      * An RTI synchronized Federate cannot advance its logical time
      * beyond this value.
      */
-    private greatestTimeAdvanceGrant: Tag | null = null;
+    private greatestTimeAdvanceGrant: Tag = new Tag(TimeValue.NEVER(), 0);
 
     private upstreamFedIDs: number[] = [];
     private upstreamFedDelays: TimeValue[] = [];
@@ -1031,16 +1031,19 @@ export class FederatedApp extends App {
      * @param nextEvent
      */
     protected _canProceed(nextEvent: TaggedEvent<Present>) {
-        let tagBarrier = null;
+        let tagBarrier = new Tag(TimeValue.NEVER());
         // Set tag barrier using the tag when stop is requested but not granted yet.
         // Otherwise, set the tagBarrier using the greated TAG.
         if (this.stopRequestInfo.state === StopRequestState.SENT) {
             tagBarrier = this.stopRequestInfo.tag;
+            if (this.upstreamFedIDs.length === 0 && tagBarrier.isSmallerThan(nextEvent.tag)) {
+                return false;
+            }
         } else {
             tagBarrier = this._getGreatestTimeAdvanceGrant();
         }
 
-        if (tagBarrier !== null) {
+        if (this.upstreamFedIDs.length !== 0) {
             if (tagBarrier.isSmallerThan(nextEvent.tag)) {
                 if (this.minDelayFromPhysicalActionToFederateOutput !== null &&
                     this.downstreamFedIDs.length > 0) {
@@ -1361,7 +1364,7 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('timeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Time Advance Grant received from RTI for ${tag}.`});
-            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+            if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
                 // Update the greatest time advance grant and immediately
                 // wake up _next, in case it was blocked by the old time advance grant
                 this.greatestTimeAdvanceGrant = tag;
@@ -1372,7 +1375,7 @@ export class FederatedApp extends App {
 
         this.rtiClient.on('provisionalTimeAdvanceGrant', (tag: Tag) => {
             Log.debug(this, () => {return `Provisional Time Advance Grant received from RTI for ${tag}.`});
-            if (this.greatestTimeAdvanceGrant === null || this.greatestTimeAdvanceGrant?.isSmallerThan(tag)) {
+            if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
                 // Update the greatest time advance grant and immediately
                 // wake up _next, in case it was blocked by the old time advance grant
 
