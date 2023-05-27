@@ -1,0 +1,9 @@
+# Configuration for the prettier code formatter.
+# https://prettier.io/docs/en/options.html
+tabWidth: 2
+useTabs: false
+semi: true
+trailingComma: none
+bracketSpacing: false
+arrowParens: always
+endOfLine: lf
