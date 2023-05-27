@@ -9,7 +9,7 @@
 import {
     TimeValue, Tag, Origin, getCurrentPhysicalTime, Alarm, PrioritySet,
     SortableDependencyGraph, Log, DependencyGraph, Reaction, Priority,
-    Mutation, Procedure, Absent, ArgList, Args, MultiReadWrite, Present,
+    Mutation, Procedure, Absent, ArgList, Args, Present,
     Read, Sched, SchedulableAction, Triggers, Variable, Write, TaggedEvent,
     Component, ScheduledTrigger, Trigger, TriggerManager,
     Action, InPort, IOPort, MultiPort, OutPort, Port, WritablePort, Startup, Shutdown, WritableMultiPort, Dummy

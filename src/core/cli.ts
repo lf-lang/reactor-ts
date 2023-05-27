@@ -1,5 +1,3 @@
-import commandLineArgs from 'command-line-args';
-import commandLineUsage from 'command-line-usage';
 import {TimeUnit, TimeValue, LogLevel} from './internal';
 
 //---------------------------------------------------------------------//
