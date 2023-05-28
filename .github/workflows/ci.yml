@@ -28,7 +28,7 @@ jobs:
       - name: Check out reactor-ts repository
         uses: actions/checkout@v3
         with: 
-          path: "ts-reactor"
+          path: "reactor-ts"
           fetch-depth: 0
       - name: Read lingua-franca-ref.txt
         run: echo "lingua-franca-ref=$(cat ./reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
