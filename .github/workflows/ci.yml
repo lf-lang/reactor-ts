@@ -28,10 +28,10 @@ jobs:
       - name: Check out reactor-ts repository
         uses: actions/checkout@v3
         with: 
-          path: "reactor-ts-external"
+          path: "reactor-ts"
           fetch-depth: 0
       - name: Read lingua-franca-ref.txt
-        run: echo "lingua-franca-ref=$(cat ./reactor-ts-external/lingua-franca-ref.txt)" >> $GITHUB_ENV
+        run: echo "lingua-franca-ref=$(cat ./reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
         uses: actions/checkout@v3
         with:
@@ -52,4 +52,4 @@ jobs:
         if: ${{ runner.os == 'macOS' || runner.os == 'Linux' }}
       - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${{ github.workspace }}/reactor-ts-external"
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="file://${{ github.workspace }}/reactor-ts"
