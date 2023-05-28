@@ -39,7 +39,6 @@ jobs:
           ref: ${{ env.lingua-franca-ref }}
           fetch-depth: 0
           submodules: true
-          path: "lingua-franca"
       - name: Prepare build environment
         uses: ./.github/actions/prepare-build-env
       - name: Setup Node.js environment
@@ -52,6 +51,5 @@ jobs:
         uses: ./.github/actions/install-rti
         if: ${{ runner.os == 'macOS' || runner.os == 'Linux' }}
       - name: Perform Lingua Franca TypeScript tests
-        working-directory: "./lingua-franca"
         run: |
           ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime=${{ github.workspace }}/ts-reactor"
