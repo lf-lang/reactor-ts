@@ -47,4 +47,9 @@ jobs:
         if: ${{ runner.os == 'macOS' || runner.os == 'Linux' }}
       - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.head_ref || github.ref_name }}"
+          if [[ ${{ github.event_name }} == "pull_request" ]]; then 
+            repo_url="${{ github.event.pull_request.head.repo.git_url }}"; 
+          else 
+            repo_url="git://github.com/lf-lang/reactor-ts.git"; 
+          fi
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="${repo_url}t#${{ github.head_ref || github.ref_name }}"
