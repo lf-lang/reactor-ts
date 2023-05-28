@@ -25,8 +25,13 @@ jobs:
   lingua-franca:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v3
+        with: 
+          path: "ts-reactor"
+          fetch-depth: 0
       - name: Read lingua-franca-ref.txt
-        run: echo "lingua-franca-ref=$(wget -qO- https://raw.githubusercontent.com/lf-lang/reactor-ts/${{ github.head_ref || github.ref_name }}/lingua-franca-ref.txt)" >> $GITHUB_ENV
+        run: echo echo "lingua-franca-ref=$(cat ./reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
         uses: actions/checkout@v3
         with:
@@ -34,6 +39,7 @@ jobs:
           ref: ${{ env.lingua-franca-ref }}
           fetch-depth: 0
           submodules: true
+          path: "lingua-franca"
       - name: Prepare build environment
         uses: ./.github/actions/prepare-build-env
       - name: Setup Node.js environment
@@ -46,5 +52,6 @@ jobs:
         uses: ./.github/actions/install-rti
         if: ${{ runner.os == 'macOS' || runner.os == 'Linux' }}
       - name: Perform Lingua Franca TypeScript tests
+        working-directory: "./lingua-franca"
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.head_ref || github.ref_name }}"
+          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime=${{ github.workspace }}/ts-reactor"
