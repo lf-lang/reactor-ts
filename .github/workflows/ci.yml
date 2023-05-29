@@ -38,7 +38,13 @@ jobs:
           repository: lf-lang/lingua-franca
           ref: ${{ env.lingua-franca-ref }}
           fetch-depth: 0
+          path: "lingua-franca"
           submodules: true
+      - name: Move Lingua Franca to default pwd
+        run: |
+          shopt -s dotglob
+          mv -- ./lingua-franca/* ${{ github.workspace }}
+          shopt -u dotglob 
       - name: Prepare build environment
         uses: ./.github/actions/prepare-build-env
       - name: Setup Node.js environment
