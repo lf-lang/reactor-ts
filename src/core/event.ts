@@ -3,7 +3,7 @@ import type {
   ScheduledTrigger,
   Present,
   PrioritySetElement
-} from "./internal";
+} from './internal';
 
 /**
  * An event is caused by a timer or a scheduled action. Each event is tagged
@@ -25,7 +25,7 @@ export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
    * @param value The value associated with this event.
    *
    */
-  constructor(
+  constructor (
     public trigger: ScheduledTrigger<T>,
     public tag: Tag,
     public value: T
@@ -36,8 +36,8 @@ export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
    * otherwise.
    * @param node The event to compare this event's tag against.
    */
-  hasPriorityOver(node: PrioritySetElement<Tag> | undefined) {
-    if (node) {
+  hasPriorityOver (node: PrioritySetElement<Tag> | undefined) {
+    if (node != null) {
       return this.getPriority().isSmallerThan(node.getPriority());
     } else {
       return false;
@@ -49,8 +49,8 @@ export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
    * value this event to the given one. Otherwise, return false.
    * @param node The event adopt the value from if it is a duplicate of this one.
    */
-  updateIfDuplicateOf(node: PrioritySetElement<Tag> | undefined) {
-    if (node && node instanceof TaggedEvent) {
+  updateIfDuplicateOf (node: PrioritySetElement<Tag> | undefined) {
+    if ((node != null) && node instanceof TaggedEvent) {
       if (
         this.trigger === node.trigger &&
         this.tag.isSimultaneousWith(node.tag)
@@ -65,7 +65,7 @@ export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
   /**
    * Return the tag associated with this event.
    */
-  getPriority(): Tag {
+  getPriority (): Tag {
     return this.tag;
   }
 }

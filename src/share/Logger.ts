@@ -1,27 +1,27 @@
 import {
   Reactor,
-  Read,
+  type Read,
   Triggers,
   Args,
-  Present,
-  ReactionSandbox,
+  type Present,
+  type ReactionSandbox,
   InPort,
   State
-} from "../core/internal";
+} from '../core/internal';
 
-function print(
+function print (
   this: ReactionSandbox,
   i: Read<unknown>,
   expected: State<unknown>
 ) {
   const received = i.get();
   if (received) {
-    console.log("Logging: " + received);
+    console.log('Logging: ' + received);
     if (received == expected.get()) {
       this.util.requestStop();
     } else {
       this.util.requestErrorStop(
-        "Expected" + expected.get() + " but got " + received
+        'Expected' + expected.get() + ' but got ' + received
       );
     }
   } else {
@@ -34,7 +34,7 @@ function print(
 export class Logger extends Reactor {
   i = new InPort(this);
 
-  constructor(parent: Reactor, expected: Present) {
+  constructor (parent: Reactor, expected: Present) {
     super(parent);
     this.addReaction(
       new Triggers(this.i),

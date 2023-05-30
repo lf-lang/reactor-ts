@@ -1,6 +1,4 @@
-import type {Absent, Present, Read, Sched} from "./internal";
 import {
-  Reactor,
   Log,
   TaggedEvent,
   getCurrentPhysicalTime,
@@ -8,15 +6,19 @@ import {
   Tag,
   TimeUnit,
   TimeValue,
-  ScheduledTrigger,
-  TriggerManager
-} from "./internal";
+  ScheduledTrigger
+} from './internal';
+import type {
+  Absent, Present, Read, Sched,
+  type Reactor,
+  type TriggerManager
+} from './internal';
 
 const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
 
 export abstract class SchedulableAction<T extends Present> implements Sched<T> {
-  abstract get(): T | undefined;
-  abstract schedule(
+  abstract get (): T | undefined;
+  abstract schedule (
     extraDelay: 0 | TimeValue,
     value: T,
     intendedTag?: Tag
@@ -34,13 +36,12 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
  */
 export class Action<T extends Present>
   extends ScheduledTrigger<T>
-  implements Read<T>
-{
+  implements Read<T> {
   readonly origin: Origin;
   readonly minDelay: TimeValue;
   readonly minInterArrival: TimeValue = defaultMIT;
 
-  public get(): T | Absent {
+  public get (): T | Absent {
     if (this.isPresent()) {
       return this.value;
     } else {
@@ -48,36 +49,38 @@ export class Action<T extends Present>
     }
   }
 
-  public asSchedulable(key: Symbol | undefined): Sched<T> {
+  public asSchedulable (key: symbol | undefined): Sched<T> {
     if (this._key === key) {
       return this.scheduler;
     }
-    throw Error("Invalid reference to container.");
+    throw Error('Invalid reference to container.');
   }
 
-  public getManager(key: Symbol | undefined): TriggerManager {
+  public getManager (key: symbol | undefined): TriggerManager {
     if (this._key == key) {
       return this.manager;
     }
-    throw Error("Unable to grant access to manager.");
+    throw Error('Unable to grant access to manager.');
   }
 
-  protected scheduler = new (class<
+  protected scheduler = new (class <
     T extends Present
   > extends SchedulableAction<T> {
-    get(): T | undefined {
+    get (): T | undefined {
       return this.action.get();
     }
-    constructor(private action: Action<T>) {
+
+    constructor (private readonly action: Action<T>) {
       super();
     }
-    schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
+
+    schedule (extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
       if (!(extraDelay instanceof TimeValue)) {
         extraDelay = TimeValue.secs(0);
       }
 
-      var tag = this.action.runtime.util.getCurrentTag();
-      var delay = this.action.minDelay.add(extraDelay);
+      let tag = this.action.runtime.util.getCurrentTag();
+      const delay = this.action.minDelay.add(extraDelay);
 
       tag = tag.getLaterTag(delay);
 
@@ -86,7 +89,7 @@ export class Action<T extends Present>
         // on the platform, then the timestamp becomes the current physical time.
         // Otherwise the tag is computed like a logical action's tag.
 
-        let physicalTime = getCurrentPhysicalTime();
+        const physicalTime = getCurrentPhysicalTime();
         if (tag.time.isEarlierThan(physicalTime)) {
           tag = new Tag(getCurrentPhysicalTime(), 0);
         } else {
@@ -95,7 +98,7 @@ export class Action<T extends Present>
       } else if (this.action instanceof FederatePortAction) {
         if (intendedTag === undefined) {
           throw new Error(
-            "FederatedPortAction must have an intended tag from RTI."
+            'FederatedPortAction must have an intended tag from RTI.'
           );
         }
         if (
@@ -103,9 +106,9 @@ export class Action<T extends Present>
           !intendedTag.isGreaterThan(this.action.runtime.util.getCurrentTag())
         ) {
           throw new Error(
-            "Intended tag must be greater than current tag. Intended tag: " +
+            'Intended tag must be greater than current tag. Intended tag: ' +
               intendedTag +
-              " Current tag: " +
+              ' Current tag: ' +
               this.action.runtime.util.getCurrentTag()
           );
         }
@@ -116,17 +119,17 @@ export class Action<T extends Present>
           )
         ) {
           throw new Error(
-            "Intended tag must be greater than or equal to current tag" +
-              ", when the last TAG is provisional. Intended tag: " +
+            'Intended tag must be greater than or equal to current tag' +
+              ', when the last TAG is provisional. Intended tag: ' +
               intendedTag +
-              " Current tag: " +
+              ' Current tag: ' +
               this.action.runtime.util.getCurrentTag()
           );
         }
         Log.debug(
           this,
           () =>
-            "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
+            'Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: ' +
             intendedTag
         );
         tag = intendedTag;
@@ -137,11 +140,11 @@ export class Action<T extends Present>
       Log.debug(
         this,
         () =>
-          "Scheduling " +
+          'Scheduling ' +
           this.action.origin +
-          " action " +
+          ' action ' +
           this.action._getFullyQualifiedName() +
-          " with tag: " +
+          ' with tag: ' +
           tag
       );
 
@@ -160,7 +163,7 @@ export class Action<T extends Present>
    * @param minInterArrival Optional. Defaults to 1 nsec. Specifies the minimum
    * intrinsic delay between to occurrences of this action.
    */
-  constructor(
+  constructor (
     __container__: Reactor,
     origin: Origin,
     minDelay: TimeValue = TimeValue.secs(0),
@@ -171,32 +174,32 @@ export class Action<T extends Present>
     this.minDelay = minDelay;
   }
 
-  public toString() {
+  public toString () {
     return this._getFullyQualifiedName();
   }
 }
 
 export class Startup extends Action<Present> {
   // FIXME: this should not be a schedulable trigger, just a trigger
-  constructor(__parent__: Reactor) {
+  constructor (__parent__: Reactor) {
     super(__parent__, Origin.logical);
   }
 }
 
 export class Shutdown extends Action<Present> {
-  constructor(__parent__: Reactor) {
+  constructor (__parent__: Reactor) {
     super(__parent__, Origin.logical);
   }
 }
 
 export class Dummy extends Action<Present> {
-  constructor(__parent__: Reactor) {
+  constructor (__parent__: Reactor) {
     super(__parent__, Origin.logical);
   }
 }
 
 export class FederatePortAction<T extends Present> extends Action<T> {
-  constructor(
+  constructor (
     __parent__: Reactor,
     origin: Origin,
     minDelay: TimeValue = TimeValue.secs(0)

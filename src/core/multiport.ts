@@ -1,19 +1,19 @@
 import {
-  Absent,
+  type Absent,
   InPort,
-  IOPort,
-  MultiRead,
+  type IOPort,
+  type MultiRead,
   OutPort,
-  Present,
-  Reactor,
-  Runtime,
-  WritablePort,
+  type Present,
+  type Reactor,
+  type Runtime,
+  type WritablePort,
   Trigger,
-  TriggerManager,
-  Reaction,
+  type TriggerManager,
+  type Reaction,
   Component
-} from "./internal";
-import {WritableMultiPort} from "./port";
+} from './internal';
+import { WritableMultiPort } from './port';
 
 /**
  * A trigger that represents a multiport. All of channels of a multiport can be read.
@@ -24,18 +24,17 @@ import {WritableMultiPort} from "./port";
  */
 export abstract class MultiPort<T extends Present>
   extends Trigger
-  implements MultiRead<T>
-{
+  implements MultiRead<T> {
   /**
    * Return all channels of this multiport.
    */
-  abstract channels(): Array<IOPort<T>>;
+  abstract channels (): Array<IOPort<T>>;
 
   /**
    * Return the channel identified by the given index.
    * @param index the index of the requested channel
    */
-  abstract channel(index: number): IOPort<T>;
+  abstract channel (index: number): IOPort<T>;
 
   /**
    * The channels of this multiport.
@@ -54,7 +53,7 @@ export abstract class MultiPort<T extends Present>
   public static values<T extends Present>(
     ports: Array<IOPort<T>>
   ): Array<T | Absent> {
-    let values = new Array<T | Absent>(ports.length);
+    const values = new Array<T | Absent>(ports.length);
     for (let i = 0; i < values.length; i++) {
       values[i] = ports[i].get();
     }
@@ -66,7 +65,7 @@ export abstract class MultiPort<T extends Present>
    * @param container the reactor that will contain the new instance
    * @param width the number of channels of newly created instance
    */
-  constructor(private container: Reactor, width: number) {
+  constructor (private readonly container: Reactor, width: number) {
     super(container);
     this._channels = new Array(width);
     this._width = width;
@@ -76,33 +75,33 @@ export abstract class MultiPort<T extends Present>
    * Obtain a writable version of this port, provided that the caller holds the required key.
    * @param key
    */
-  public asWritable(key: Symbol | undefined): WritableMultiPort<T> {
+  public asWritable (key: symbol | undefined): WritableMultiPort<T> {
     if (this._key === key) {
       return this.writer;
     }
     throw Error(
-      "Referenced port is out of scope: " + this._getFullyQualifiedName()
+      'Referenced port is out of scope: ' + this._getFullyQualifiedName()
     );
   }
 
   /** @inheritdoc */
-  public get(index: number): T | undefined {
+  public get (index: number): T | undefined {
     return this._channels[index].get();
   }
 
   /** @inheritdoc */
-  getManager(key: Symbol | undefined): TriggerManager {
+  getManager (key: symbol | undefined): TriggerManager {
     if (this._key == key) {
       return this.manager;
     }
-    throw Error("Unable to grant access to manager.");
+    throw Error('Unable to grant access to manager.');
   }
 
   /**
    * Return whether this multiport has any channels that are present.
    * @returns true if there are any present channels
    */
-  isPresent(): boolean {
+  isPresent (): boolean {
     return this.channels().some((channel) => channel.isPresent());
   }
 
@@ -110,7 +109,7 @@ export abstract class MultiPort<T extends Present>
    * Return the number of channels of this multiport.
    * @returns the number of channels
    */
-  public width(): number {
+  public width (): number {
     return this._width;
   }
 
@@ -119,7 +118,7 @@ export abstract class MultiPort<T extends Present>
    * each channel, which may either be present or absent (i.e., undefined).
    * @returns an array of values
    */
-  public values(): Array<T | Absent> {
+  public values (): Array<T | Absent> {
     return MultiPort.values(this._channels);
   }
 
@@ -128,30 +127,30 @@ export abstract class MultiPort<T extends Present>
    */
   protected manager = new (class implements TriggerManager {
     /** @inheritdoc */
-    constructor(private port: MultiPort<T>) {}
+    constructor (private readonly port: MultiPort<T>) {}
 
     /** @inheritdoc */
-    getContainer(): Reactor {
+    getContainer (): Reactor {
       return this.port.getContainer();
     }
 
     /** @inheritdoc */
-    addReaction(reaction: Reaction<unknown>): void {
+    addReaction (reaction: Reaction<unknown>): void {
       this.port
         .channels()
-        .forEach((channel) =>
+        .forEach((channel) => {
           channel
             .getManager(this.getContainer()._getKey(channel))
-            .addReaction(reaction)
+            .addReaction(reaction);
+        }
         );
     }
 
     /** @inheritdoc */
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction (reaction: Reaction<unknown>): void {
       this.port
         .channels()
-        .forEach((channel) =>
-          channel.getManager(this.port._key).delReaction(reaction)
+        .forEach((channel) => { channel.getManager(this.port._key).delReaction(reaction); }
         );
     }
   })(this);
@@ -159,10 +158,10 @@ export abstract class MultiPort<T extends Present>
   /**
    * Unimplemented method (multiports require not access to the runtime object).
    */
-  public _receiveRuntimeObject(runtime: Runtime): void {
+  public _receiveRuntimeObject (runtime: Runtime): void {
     throw new Error(
-      "Multiports do not request to be linked to the" +
-        " runtime object, hence this method shall not be invoked."
+      'Multiports do not request to be linked to the' +
+        ' runtime object, hence this method shall not be invoked.'
     );
   }
 
@@ -170,7 +169,7 @@ export abstract class MultiPort<T extends Present>
    * Inner class instance to gain access to MultiWrite<T> interface.
    */
   protected writer = new (class extends WritableMultiPort<T> {
-    getPorts(): IOPort<T>[] {
+    getPorts (): Array<IOPort<T>> {
       return this.port._channels;
     }
 
@@ -180,18 +179,18 @@ export abstract class MultiPort<T extends Present>
     private readonly cache: Array<WritablePort<T>>;
 
     /** @inheritdoc */
-    constructor(private port: MultiPort<T>) {
+    constructor (private readonly port: MultiPort<T>) {
       super();
-      this.cache = new Array();
+      this.cache = [];
     }
 
     /** @inheritdoc */
-    public get(index: number): T | undefined {
+    public get (index: number): T | undefined {
       return this.port._channels[index].get();
     }
 
     /** @inheritdoc */
-    public set(index: number, value: T): void {
+    public set (index: number, value: T): void {
       let writableChannel = this.cache[index];
       if (writableChannel === undefined) {
         writableChannel = this.port
@@ -203,20 +202,20 @@ export abstract class MultiPort<T extends Present>
     }
 
     /** @inheritdoc */
-    public width(): number {
+    public width (): number {
       return this.port.width();
     }
 
     /** @inheritdoc */
-    public values(): Array<T | Absent> {
+    public values (): Array<T | Absent> {
       return this.port.values();
     }
   })(this);
 
-  public toString() {
+  public toString () {
     return (
       this.container.toString() +
-      "." +
+      '.' +
       Component.keyOfMatchingEntry(this, this.container)
     );
   }
@@ -230,17 +229,17 @@ export abstract class MultiPort<T extends Present>
  */
 export class InMultiPort<T extends Present> extends MultiPort<T> {
   /** @inheritdoc */
-  public channel(index: number): InPort<T> {
+  public channel (index: number): InPort<T> {
     return this._channels[index];
   }
 
   /** @inheritdoc */
-  public channels(): Array<InPort<T>> {
+  public channels (): Array<InPort<T>> {
     return this._channels;
   }
 
   /** @inheritdoc */
-  constructor(container: Reactor, width: number) {
+  constructor (container: Reactor, width: number) {
     super(container, width);
     for (let i = 0; i < width; i++) {
       this._channels[i] = new InPort<T>(container);
@@ -256,7 +255,7 @@ export class InMultiPort<T extends Present> extends MultiPort<T> {
  */
 export class OutMultiPort<T extends Present> extends MultiPort<T> {
   /** @inheritdoc */
-  constructor(container: Reactor, width: number) {
+  constructor (container: Reactor, width: number) {
     super(container, width);
     for (let i = 0; i < width; i++) {
       this._channels[i] = new OutPort<T>(container);
@@ -264,17 +263,17 @@ export class OutMultiPort<T extends Present> extends MultiPort<T> {
   }
 
   /** @inheritdoc */
-  public channel(index: number): OutPort<T> {
+  public channel (index: number): OutPort<T> {
     return this._channels[index];
   }
 
   /** @inheritdoc */
-  public channels(): Array<OutPort<T>> {
+  public channels (): Array<OutPort<T>> {
     return this._channels;
   }
 
   /** @inheritdoc */
-  public values(): Array<T | Absent> {
+  public values (): Array<T | Absent> {
     return MultiPort.values(this._channels);
   }
 }

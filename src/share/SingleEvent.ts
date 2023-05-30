@@ -1,17 +1,17 @@
 import {
   Reactor,
   Timer,
-  Write,
+  type Write,
   Triggers,
   Args,
   ArgList,
-  ReactionSandbox,
-  Present,
-  Parameter,
+  type ReactionSandbox,
+  type Present,
+  type Parameter,
   OutPort
-} from "../core/internal";
+} from '../core/internal';
 
-function produceOutput<S>(
+function produceOutput<S> (
   this: ReactionSandbox,
   o: Write<S>,
   payload: Parameter<S>
@@ -30,7 +30,7 @@ export class SingleEvent<T extends Present> extends Reactor {
   o: OutPort<T> = new OutPort<T>(this);
   t1: Timer = new Timer(this, 0, 0);
 
-  constructor(parent: Reactor, private payload: Parameter<T>) {
+  constructor (parent: Reactor, private readonly payload: Parameter<T>) {
     super(parent);
     this.addReaction(
       new Triggers(this.t1),

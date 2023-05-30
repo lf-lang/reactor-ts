@@ -1,1 +1,1 @@
-export * from "./core/internal";
+export * from './core/internal';

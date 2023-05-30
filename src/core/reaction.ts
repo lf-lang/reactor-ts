@@ -1,18 +1,18 @@
 import {
-  Sortable,
-  PrioritySetElement,
+  type Sortable,
+  type PrioritySetElement,
   Log,
-  ReactionSandbox,
+  type ReactionSandbox,
   Timer,
-  MutationSandbox,
-  Reactor,
-  TimeValue,
+  type MutationSandbox,
+  type Reactor,
+  type TimeValue,
   Tag,
-  ArgList,
-  Args,
-  Triggers,
+  type ArgList,
+  type Args,
+  type Triggers,
   Startup
-} from "./internal";
+} from './internal';
 
 /**
  * A number that indicates a reaction's position with respect to other
@@ -29,14 +29,13 @@ export type Priority = number;
  * @author Marten Lohstroh (marten@berkeley.edu)
  */
 export class Reaction<T>
-  implements Sortable<Priority>, PrioritySetElement<Priority>
-{
+implements Sortable<Priority>, PrioritySetElement<Priority> {
   /**
    * Priority derived from this reaction's location in the dependency graph
    * that spans the entire hierarchy of components inside the top-level reactor
    * that this reaction is also embedded in.
    */
-  private priority: Priority = 0; //Number.MAX_SAFE_INTEGER;
+  private priority: Priority = 0; // Number.MAX_SAFE_INTEGER;
 
   /**
    * Pointer to the next reaction, used by the runtime when this reaction is staged
@@ -62,15 +61,15 @@ export class Reaction<T>
    * physical time when `react` has been triggered and is ready to execute.
    * @param late Function that gets execute when triggered and "late."
    */
-  constructor(
-    private reactor: Reactor,
-    private sandbox: ReactionSandbox,
+  constructor (
+    private readonly reactor: Reactor,
+    private readonly sandbox: ReactionSandbox,
     readonly trigs: Triggers,
     readonly args: Args<ArgList<T>>,
-    private react: (...args: ArgList<T>) => void,
+    private readonly react: (...args: ArgList<T>) => void,
     private deadline?: TimeValue,
-    private late: (...args: ArgList<T>) => void = () => {
-      Log.global.warn("Deadline violation occurred!");
+    private readonly late: (...args: ArgList<T>) => void = () => {
+      Log.global.warn('Deadline violation occurred!');
     }
   ) {}
 
@@ -85,7 +84,7 @@ export class Reaction<T>
    * Return true if this reaction is triggered immediately (by startup or a
    * timer with zero offset).
    */
-  isTriggeredImmediately(): boolean {
+  isTriggeredImmediately (): boolean {
     return (
       this.trigs.list.filter(
         (trig) =>
@@ -99,7 +98,7 @@ export class Reaction<T>
    * Return the priority of this reaction. It determines the execution order among
    * reactions staged for execution at the same logical time.
    */
-  getPriority(): Priority {
+  getPriority (): Priority {
     return this.priority;
   }
 
@@ -107,7 +106,7 @@ export class Reaction<T>
    * Return whether or not this reaction has priority over another.
    * @param another Reaction to compare this reaction's priority against.
    */
-  hasPriorityOver(another: PrioritySetElement<Priority> | undefined): boolean {
+  hasPriorityOver (another: PrioritySetElement<Priority> | undefined): boolean {
     if (another != null && this.getPriority() < another.getPriority()) {
       return true;
     } else {
@@ -121,7 +120,7 @@ export class Reaction<T>
    * Returning true just signals that the scheduler shouldn't stage it twice.
    * @param node
    */
-  updateIfDuplicateOf(node: PrioritySetElement<Priority> | undefined) {
+  updateIfDuplicateOf (node: PrioritySetElement<Priority> | undefined) {
     return Object.is(this, node);
   }
 
@@ -129,13 +128,13 @@ export class Reaction<T>
    * Invoke the react function in the appropriate sandbox and with the argument
    * list that was specified upon the construction of this reaction object.
    */
-  public doReact() {
+  public doReact () {
     Log.debug(
       this,
       () =>
-        ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString()
+        '>>> Reacting >>> ' + this.constructor.name + ' >>> ' + this.toString()
     );
-    Log.debug(this, () => "Reaction deadline: " + this.deadline);
+    Log.debug(this, () => 'Reaction deadline: ' + this.deadline);
 
     // If this reaction was loaded onto the reaction queue but the trigger(s)
     // absorbed by a mutation that routed the value(s) elsewhere, then return
@@ -147,7 +146,7 @@ export class Reaction<T>
     // This is the case if the reaction has a defined timeout and
     // logical time + timeout < physical time
     if (
-      this.deadline &&
+      (this.deadline != null) &&
       this.sandbox.util
         .getCurrentTag()
         .getLaterTag(this.deadline)
@@ -166,7 +165,7 @@ export class Reaction<T>
    * exceeded, the `late` function is executed instead of the `react` function.
    * @param deadline The deadline to set to this reaction.
    */
-  public setDeadline(deadline: TimeValue): this {
+  public setDeadline (deadline: TimeValue): this {
     this.deadline = deadline;
     return this;
   }
@@ -177,19 +176,19 @@ export class Reaction<T>
    * dependencies on other reactions.
    * @param priority The priority for this reaction.
    */
-  public setPriority(priority: number) {
+  public setPriority (priority: number) {
     this.priority = priority;
   }
 
   /**
    * Return string representation of the reaction.
    */
-  public toString(): string {
+  public toString (): string {
     return (
       this.reactor._getFullyQualifiedName() +
-      "[R" +
+      '[R' +
       this.reactor._getReactionIndex(this) +
-      "]"
+      ']'
     );
   }
 }
@@ -199,7 +198,7 @@ export class Procedure<T> extends Reaction<T> {}
 export class Mutation<T> extends Reaction<T> {
   readonly parent: Reactor;
 
-  constructor(
+  constructor (
     __parent__: Reactor,
     sandbox: MutationSandbox,
     trigs: Triggers,
@@ -215,12 +214,12 @@ export class Mutation<T> extends Reaction<T> {
   /**
    * @override
    */
-  public toString(): string {
+  public toString (): string {
     return (
       this.parent._getFullyQualifiedName() +
-      "[M" +
+      '[M' +
       this.parent._getReactionIndex(this) +
-      "]"
+      ']'
     );
   }
 }

@@ -1,4 +1,4 @@
-import {Reactor, App, Runtime, MultiPort, IOPort, Bank} from "./internal";
+import { Reactor, App, type Runtime, MultiPort, IOPort, Bank } from './internal';
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -10,20 +10,20 @@ import {Reactor, App, Runtime, MultiPort, IOPort, Bank} from "./internal";
  * @author Marten Lohstroh (marten@berkeley.edu)
  */
 export abstract class Component {
-  public static pathSeparator = ".";
+  public static pathSeparator = '.';
 
   /**
    * A symbol that identifies this component, and it also used to selectively
    * grant access to its privileged functions.
    */
-  protected _key: Symbol = Symbol();
+  protected _key = Symbol();
 
   /**
    * The container of this component. Each component is contained by a
    * reactor. Only instances of `App`, which denote top-level reactors,
    * are self-contained.
    */
-  private _container: Reactor;
+  private readonly _container: Reactor;
 
   /**
    * Create a new component and register it with the given container.
@@ -36,7 +36,7 @@ export abstract class Component {
    * constructor in order to establish a link with the runtime object.
    * @param alias An optional alias for the component.
    */
-  constructor(container: Reactor | null) {
+  constructor (container: Reactor | null) {
     if (container !== null) {
       // Register.
       container._register(this, this._key);
@@ -47,7 +47,7 @@ export abstract class Component {
         // Apps are self-contained.
         this._container = this;
       } else {
-        throw new Error("Cannot instantiate component without a parent.");
+        throw new Error('Cannot instantiate component without a parent.');
       }
     }
   }
@@ -56,7 +56,7 @@ export abstract class Component {
    * Store a reference to the given runtime object as a private class member.
    * @param runtime
    */
-  public abstract _receiveRuntimeObject(runtime: Runtime): void;
+  public abstract _receiveRuntimeObject (runtime: Runtime): void;
 
   /**
    * Request the container to pass down its runtime object to this component.
@@ -64,7 +64,7 @@ export abstract class Component {
    * of an object that subclasses `Component`. If it is called more than once
    * a runtime error results.
    */
-  protected _linkToRuntimeObject() {
+  protected _linkToRuntimeObject () {
     this._getContainer()._requestRuntimeObject(this);
   }
 
@@ -74,7 +74,7 @@ export abstract class Component {
    * their construction there is a brief period where they are not. This is the
    * only moment that a component is allowed register with its container.
    */
-  public _isRegistered(): boolean {
+  public _isRegistered (): boolean {
     return this._getContainer() !== undefined;
   }
 
@@ -82,7 +82,7 @@ export abstract class Component {
    * Confirm whether or not this component is contained by the given reactor.
    * @param reactor The presumptive container of this component.
    */
-  public _isContainedBy(reactor: Reactor): boolean {
+  public _isContainedBy (reactor: Reactor): boolean {
     if (this instanceof App) return false;
     else if (this._container === reactor) return true;
 
@@ -95,7 +95,7 @@ export abstract class Component {
    * @param reactor The container presumptive container of the container of
    * this component.
    */
-  public _isContainedByContainerOf(reactor: Reactor): boolean {
+  public _isContainedByContainerOf (reactor: Reactor): boolean {
     if (this instanceof App) return false;
     else if (this._container._isContainedBy(reactor)) return true;
 
@@ -106,7 +106,7 @@ export abstract class Component {
    * Return a string that identifies this component.
    * The name is a path constructed as `[App]/[..]/[Container]/[This]`.
    */
-  _getFullyQualifiedName(): string {
+  _getFullyQualifiedName (): string {
     if (!(this instanceof App)) {
       return (
         this._container._getFullyQualifiedName() +
@@ -126,7 +126,7 @@ export abstract class Component {
    * @param object the assumed container of the component
    * @returns the key of the entry that matches the component
    */
-  public static keyOfMatchingEntry(component: Component, object: Object) {
+  public static keyOfMatchingEntry (component: Component, object: Object) {
     for (const [key, value] of Object.entries(object)) {
       if (value === component) {
         return `${key}`;
@@ -143,10 +143,10 @@ export abstract class Component {
    * constituents is the given port
    * @returns an identifier for the port based on its location in a matching multiport
    */
-  public static keyOfMatchingMultiport(port: Component, reactor: Reactor) {
+  public static keyOfMatchingMultiport (port: Component, reactor: Reactor) {
     for (const [key, value] of Object.entries(reactor)) {
       if (value instanceof MultiPort) {
-        let channels = value.channels();
+        const channels = value.channels();
         for (let i = 0; i < channels.length; i++) {
           if (channels[i] === port) {
             return `${key}[${i}]`;
@@ -156,10 +156,10 @@ export abstract class Component {
     }
   }
 
-  public static keyOfMatchingBank(member: Component, reactor: Reactor) {
+  public static keyOfMatchingBank (member: Component, reactor: Reactor) {
     for (const [key, value] of Object.entries(reactor)) {
       if (value instanceof Bank) {
-        let members = value.all();
+        const members = value.all();
         for (let i = 0; i < members.length; i++) {
           if (members[i] === member) {
             return `${key}[${i}]`;
@@ -173,8 +173,8 @@ export abstract class Component {
    * Return a string that identifies this component within its container.
    * If no such string was found, return the name of the constructor.
    */
-  public _getName(): string {
-    var name;
+  public _getName (): string {
+    let name;
 
     if (this instanceof App) {
       name = this._name;
@@ -200,7 +200,7 @@ export abstract class Component {
   /**
    * Return the container of this component.
    */
-  protected _getContainer(): Reactor {
+  protected _getContainer (): Reactor {
     return this._container;
   }
 }
