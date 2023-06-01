@@ -1440,7 +1440,7 @@ export abstract class Reactor extends Component {
     dst?: IOPort<R>
   ): void {
     if (
-      (!this._runtime.isRunning() && this._isInScope(src, dst)) ||
+      (!this._runtime.isRunning() && this._isInScope(src as unknown as IOPort<Present>, dst as unknown as IOPort<Present>)) ||
       this._runtime.isRunning()
     ) {
       this._uncheckedDisconnect(src, dst);
@@ -1457,17 +1457,17 @@ export abstract class Reactor extends Component {
     Log.debug(this, () => `disconnecting ${String(src)} and ${String(dst)}`);
     if (dst instanceof IOPort) {
       const writer = dst.asWritable(this._getKey(dst));
-      src.getManager(this._getKey(src)).delReceiver(writer as WritablePort<S>);
-      this._dependencyGraph.removeEdge(dst, src);
+      src.getManager(this._getKey(src)).delReceiver(writer as unknown as WritablePort<S>);
+      this._dependencyGraph.removeEdge(dst as unknown as IOPort<Present>, src as unknown as IOPort<Present>);
     } else {
-      const nodes = this._dependencyGraph.getBackEdges(src);
+      const nodes = this._dependencyGraph.getBackEdges(src as unknown as IOPort<Present>);
       for (const node of nodes) {
         if (node instanceof IOPort) {
           const writer = node.asWritable(this._getKey(node));
           src
             .getManager(this._getKey(src))
             .delReceiver(writer as WritablePort<S>);
-          this._dependencyGraph.removeEdge(node, src);
+          this._dependencyGraph.removeEdge(node, src as unknown as IOPort<Present>);
         }
       }
     }
@@ -1621,9 +1621,9 @@ export class CalleePort<A extends Present, R extends Present>
 
   public argValue: A | undefined;
 
-  private readonly procedure: Procedure<unknown> | undefined;
+  public procedure: Procedure<unknown> | undefined;
 
-  private readonly lastCaller: Reaction<unknown> | undefined;
+  public lastCaller: Reaction<unknown> | undefined;
 
   public invoke (value: A): R | undefined {
     this.argValue = value;
@@ -1785,8 +1785,8 @@ export interface ReactionSandbox {
 export class App extends Reactor {
   readonly _alarm = new Alarm();
 
-  private readonly _errored = false;
-  private readonly _errorMessage?: string;
+  public _errored = false;
+  public _errorMessage?: string;
   readonly _uuid = uuidv4();
 
   /**
@@ -2122,7 +2122,7 @@ export class App extends Reactor {
    * Indicates whether the program should continue running once the event
    * queue is empty.
    */
-  private readonly _keepAlive = false;
+  _keepAlive = false;
 
   /**
    * Priority set that keeps track of reactions at the current Logical time.
@@ -2343,7 +2343,10 @@ export class App extends Reactor {
           }
 
           // Load reactions onto the reaction queue.
-          trigger?.update(nextEvent);
+          if (nextEvent != null) {
+            // nextEvent should be guaranteed non-null.
+            trigger?.update(nextEvent);
+          }
 
           // Look at the next event on the queue.
           nextEvent = this._eventQ.peek();
