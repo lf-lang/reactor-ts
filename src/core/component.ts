@@ -65,7 +65,7 @@ export abstract class Component {
    * of an object that subclasses `Component`. If it is called more than once
    * a runtime error results.
    */
-  protected _linkToRuntimeObject (): undefined {
+  protected _linkToRuntimeObject (): void {
     this._getContainer()._requestRuntimeObject(this);
   }
 

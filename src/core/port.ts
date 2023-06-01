@@ -28,7 +28,7 @@ export abstract class Port<T extends Present> extends Trigger {
   /** The current value associated with this port. */
   protected value: T | Absent;
 
-  public _receiveRuntimeObject (runtime: Runtime): undefined {
+  public _receiveRuntimeObject (runtime: Runtime): void {
     if (this.runtime != null) {
       this.runtime = runtime;
     } else {

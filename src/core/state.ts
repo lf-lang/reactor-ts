@@ -23,7 +23,7 @@ export class State<T> implements Read<T>, Write<T> {
    * Set the current value of this state variable.
    * @param value
    */
-  set (value: T): undefined {
+  set (value: T): void {
     this.value = value;
   }
 }

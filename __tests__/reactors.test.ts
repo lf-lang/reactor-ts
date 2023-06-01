@@ -123,7 +123,7 @@ describe('Testing deadlines', function () {
   it('Missed reaction deadline on InPort', done => {
     Log.global.level = LogLevel.WARN;
 
-    function fail (): undefined {
+    function fail (): void {
       throw new Error('Test has failed.');
     }
 
@@ -142,7 +142,7 @@ describe('Testing deadlines', function () {
 
     Log.global.level = LogLevel.WARN;
 
-    function fail (): undefined {
+    function fail (): void {
       throw new Error('Test has failed.');
     }
 
@@ -169,7 +169,7 @@ describe('Testing deadlines', function () {
 
     // let deadlineMissed:string = ""
 
-    function fail (): undefined {
+    function fail (): void {
       throw new Error('Test has failed.');
     }
 
@@ -185,7 +185,7 @@ describe('Testing deadlines', function () {
 });
 
 describe('Testing Reactions', function () {
-  function fail (): undefined {
+  function fail (): void {
     throw new Error('Test has failed.');
   }
 
@@ -210,7 +210,7 @@ describe('Testing Actions', function () {
   it('Mismatched logical time', () => {
     Log.global.level = LogLevel.WARN;
 
-    function fail (): undefined {
+    function fail (): void {
       throw new Error('Test has failed.');
     }
 

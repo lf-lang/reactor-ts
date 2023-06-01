@@ -247,7 +247,7 @@ export abstract class Reactor extends Component {
    * runtime error.
    * @param runtime The runtime object handed down from the container.
    */
-  public _receiveRuntimeObject (runtime: Runtime): undefined {
+  public _receiveRuntimeObject (runtime: Runtime): void {
     if (this._runtime == null && runtime != null) {
       this._runtime = runtime;
       // In addition to setting the runtime object, also make its
@@ -266,7 +266,7 @@ export abstract class Reactor extends Component {
    * @param component The component to register.
    * @param key The component's key.
    */
-  public _register (component: Component, key: symbol): undefined {
+  public _register (component: Component, key: symbol): void {
     if (component === undefined || component === null) {
       throw new Error('Unable to register undefined or null component');
     }
@@ -305,7 +305,7 @@ export abstract class Reactor extends Component {
    * still have. This reactor will become defunct and is ready for garbage
    * collection.
    */
-  protected _unplug (): undefined {
+  protected _unplug (): void {
     this._getContainer()._deregister(this, this._key);
   }
 
@@ -315,7 +315,7 @@ export abstract class Reactor extends Component {
    * @param reactor
    * @param key
    */
-  public _deregister (reactor: Reactor, key: symbol): undefined {
+  public _deregister (reactor: Reactor, key: symbol): void {
     let found;
     for (const v of this._keyChain.values()) {
       if (v === key) {
@@ -403,7 +403,7 @@ export abstract class Reactor extends Component {
    * and mutations, and also delete all of the reactors that this reactor
    * contains.
    */
-  private _delete (): undefined {
+  private _delete (): void {
     // console.log("Marking for deletion: " + this._getFullyQualifiedName())
     this._runtime.delete(this);
     this.shutdown.update(
@@ -436,7 +436,7 @@ export abstract class Reactor extends Component {
       R extends Present,
       T extends Present,
       S extends R
-    >(src: CallerPort<A, R> | IOPort<S>, dst: CalleePort<T, S> | IOPort<R>): undefined {
+    >(src: CallerPort<A, R> | IOPort<S>, dst: CalleePort<T, S> | IOPort<R>): void {
       if (src instanceof CallerPort && dst instanceof CalleePort) {
         this.reactor._connectCall(src, dst);
       } else if (src instanceof IOPort && dst instanceof IOPort) {
@@ -469,7 +469,7 @@ export abstract class Reactor extends Component {
      *
      * @param reactor
      */
-    public delete (reactor: Reactor): undefined {
+    public delete (reactor: Reactor): void {
       reactor._delete();
     }
   };
@@ -580,7 +580,7 @@ export abstract class Reactor extends Component {
     return action.asSchedulable(this._getKey(action));
   }
 
-  private _recordDeps (reaction: Reaction<any>): undefined {
+  private _recordDeps (reaction: Reaction<any>): void {
     // Add a dependency on the previous reaction or mutation, if it exists.
     const prev = this._getLastReactionOrMutation();
     if (prev != null) {
@@ -744,7 +744,7 @@ export abstract class Reactor extends Component {
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn('Deadline violation occurred!');
     }
-  ): undefined {
+  ): void {
     const calleePorts = trigs.list.filter((trig) => trig instanceof CalleePort);
 
     if (calleePorts.length > 0) {
@@ -803,7 +803,7 @@ export abstract class Reactor extends Component {
     late: (this: MutationSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn('Deadline violation occurred!');
     }
-  ): undefined {
+  ): void {
     const mutation = new Mutation(
       this,
       this._mutationScope,
@@ -1180,7 +1180,7 @@ export abstract class Reactor extends Component {
   private _uncheckedConnect<R extends Present, S extends R>(
     src: IOPort<S>,
     dst: IOPort<R>
-  ): undefined {
+  ): void {
     Log.debug(this, () => `connecting ${String(src)} and ${String(dst)}`);
     // Add dependency implied by connection to local graph.
     // TODO (axmmisaka): find a better way to do this, or at least make sure this does not break
@@ -1210,7 +1210,7 @@ export abstract class Reactor extends Component {
   protected _connect<R extends Present, S extends R>(
     src: IOPort<S>,
     dst: IOPort<R>
-  ): undefined {
+  ): void {
     if (src === undefined || src === null) {
       throw new Error('Cannot connect unspecified source');
     }
@@ -1228,7 +1228,7 @@ export abstract class Reactor extends Component {
     src: Array<MultiPort<S> | IOPort<S>>,
     dest: Array<MultiPort<R> | IOPort<R>>,
     repeatLeft: boolean
-  ): undefined {
+  ): void {
     const leftPorts = new Array<IOPort<S>>(0);
     const rightPorts = new Array<IOPort<R>>(0);
 
@@ -1294,7 +1294,7 @@ export abstract class Reactor extends Component {
     R extends Present,
     T extends Present,
     S extends R
-  >(src: CallerPort<A, R>, dst: CalleePort<T, S>): undefined {
+  >(src: CallerPort<A, R>, dst: CalleePort<T, S>): void {
     if (this.canConnectCall(src, dst)) {
       Log.debug(this, () => `connecting ${String(src)} and ${String(dst)}`);
       // Treat connections between callers and callees separately.
@@ -1352,7 +1352,7 @@ export abstract class Reactor extends Component {
     function search (
       output: OutPort<Present>,
       nodes: Set<Port<Present> | Reaction<unknown>>
-    ): undefined {
+    ): void {
       for (const node of nodes) {
         if (!visited.has(node)) {
           visited.add(node);
@@ -1438,7 +1438,7 @@ export abstract class Reactor extends Component {
   protected _disconnect<R extends Present, S extends R>(
     src: IOPort<S>,
     dst?: IOPort<R>
-  ): undefined {
+  ): void {
     if (
       (!this._runtime.isRunning() && this._isInScope(src, dst)) ||
       this._runtime.isRunning()
@@ -1452,7 +1452,7 @@ export abstract class Reactor extends Component {
   private _uncheckedDisconnect<R extends Present, S extends R>(
     src: IOPort<S>,
     dst?: IOPort<R>
-  ): undefined {
+  ): void {
     // TODO (axmmisaka): fix all these type gymnastics stuff
     Log.debug(this, () => `disconnecting ${String(src)} and ${String(dst)}`);
     if (dst instanceof IOPort) {
@@ -1503,7 +1503,7 @@ export abstract class Reactor extends Component {
    * Report a timer to the app so that it gets unscheduled.
    * @param timer The timer to report to the app.
    */
-  protected _unsetTimer (timer: Timer): undefined {
+  protected _unsetTimer (timer: Timer): void {
     // FIXME: we could either set the timer to 'inactive' to tell the
     // scheduler to ignore future event and prevent it from rescheduling any.
     // The problem with this approach is that if, for some reason, a timer would get
@@ -1693,7 +1693,7 @@ export class CalleePort<A extends Present, R extends Present>
 }
 
 class EventQueue extends PrioritySet<Tag> {
-  public push (event: TaggedEvent<Present>): undefined {
+  public push (event: TaggedEvent<Present>): void {
     super.push(event);
   }
 
@@ -1707,7 +1707,7 @@ class EventQueue extends PrioritySet<Tag> {
 }
 
 class ReactionQueue extends PrioritySet<Priority> {
-  public push (reaction: Reaction<unknown>): undefined {
+  public push (reaction: Reaction<unknown>): void {
     super.push(reaction);
   }
 
@@ -1820,16 +1820,16 @@ export class App extends Reactor {
   protected util: UtilityFunctions = new (class implements UtilityFunctions {
     constructor (private readonly app: App) {}
 
-    public requestStop (): undefined {
+    public requestStop (): void {
       this.app._shutdown();
     }
 
-    public requestErrorStop (message?: string): undefined {
+    public requestErrorStop (message?: string): void {
       this.reportError(message);
       this.app._shutdown();
     }
 
-    public reportError (message?: string): undefined {
+    public reportError (message?: string): void {
       this.app._errored = true;
       if (this.app._errorMessage === undefined) {
         this.app._errorMessage = message;
@@ -1874,7 +1874,7 @@ export class App extends Reactor {
       data: T,
       destFederateID: number,
       destPortID: number
-    ): undefined {
+    ): void {
       this.app.sendRTIMessage(data, destFederateID, destPortID);
     }
 
@@ -1883,7 +1883,7 @@ export class App extends Reactor {
       destFederateID: number,
       destPortID: number,
       time: number
-    ): undefined {
+    ): void {
       this.app.sendRTITimedMessage(
         data,
         destFederateID,
@@ -1896,7 +1896,7 @@ export class App extends Reactor {
       additionalDelay: TimeValue,
       destFederateID: number,
       destPortID: number
-    ): undefined {
+    ): void {
       this.app.sendRTIPortAbsent(
         additionalDelay,
         destFederateID,
@@ -1987,7 +1987,7 @@ export class App extends Reactor {
      * Push an event onto the event queue.
      * @param e Tagged event to push onto the event queue.
      */
-    public schedule (e: TaggedEvent<any>): undefined {
+    public schedule (e: TaggedEvent<any>): void {
       const head = this.app._eventQ.peek();
 
       // Don't schedule events past the end of execution.
@@ -2039,7 +2039,7 @@ export class App extends Reactor {
     data: T,
     destFederateID: number,
     destPortID: number
-  ): undefined {
+  ): void {
     throw new Error(
       'Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp'
     );
@@ -2057,7 +2057,7 @@ export class App extends Reactor {
     destFederateID: number,
     destPortID: number,
     time: number
-  ): undefined {
+  ): void {
     throw new Error(
       'Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp'
     );
@@ -2077,7 +2077,7 @@ export class App extends Reactor {
     additionalDelay: TimeValue,
     destFederateID: number,
     destPortID: number
-  ): undefined {
+  ): void {
     throw new Error(
       'Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp'
     );
@@ -2145,7 +2145,7 @@ export class App extends Reactor {
    * Interval for snoozing and waking up.
    */
   private _advanceMessageInterval: TimeValue = TimeValue.secs(1);
-  public setAdvanceMessageInterval (advanceMessageInterval: TimeValue): undefined {
+  public setAdvanceMessageInterval (advanceMessageInterval: TimeValue): void {
     this._advanceMessageInterval = advanceMessageInterval;
   }
 
@@ -2227,7 +2227,7 @@ export class App extends Reactor {
    *
    * @param event The tag of the next event to be handled.
    */
-  protected _advanceTime (nextTag: Tag): undefined {
+  protected _advanceTime (nextTag: Tag): void {
     this._currentTag = nextTag;
   }
 
@@ -2249,7 +2249,7 @@ export class App extends Reactor {
   /**
    * Iterate over all reactions in the reaction queue and execute them.
    */
-  private _react (): undefined {
+  private _react (): void {
     let r: Reaction<unknown>;
     while (this._reactionQ.size() > 0) {
       try {
@@ -2289,7 +2289,7 @@ export class App extends Reactor {
    * loop. This prevents the system from being overwhelmed with external
    * stimuli.
    */
-  private _next (): undefined {
+  private _next (): void {
     let nextEvent = this._eventQ.peek();
     if (nextEvent != null) {
       // Check whether the next event can be handled, or not quite yet.
@@ -2410,7 +2410,7 @@ export class App extends Reactor {
   /**
    * Disable the alarm and clear possible immediate next.
    */
-  protected _cancelNext (): undefined {
+  protected _cancelNext (): void {
     this._alarm.unset();
     if (this._immediateRef != null) {
       clearImmediate(this._immediateRef);
@@ -2423,7 +2423,7 @@ export class App extends Reactor {
    *
    * @param tag
    */
-  protected _setAlarmOrYield (tag: Tag): undefined {
+  protected _setAlarmOrYield (tag: Tag): void {
     Log.debug(this, () => {
       return `In setAlarmOrYield for tag: ${String(tag)}`;
     });
@@ -2453,7 +2453,7 @@ export class App extends Reactor {
   /**
    * Request an immediate invocation of `this._next()`.
    */
-  protected _requestImmediateInvocationOfNext (): undefined {
+  protected _requestImmediateInvocationOfNext (): void {
     // Only schedule an immediate if none is already pending.
     if (this._immediateRef == null) {
       this._immediateRef = setImmediate(
@@ -2571,7 +2571,7 @@ export class App extends Reactor {
     function search (
       reaction: Reaction<unknown>,
       nodes: Set<Port<Present> | Reaction<unknown>>
-    ): undefined {
+    ): void {
       for (const node of nodes) {
         if (node instanceof Reaction) {
           collapsed.addEdge(reaction, node);
@@ -2619,7 +2619,7 @@ export class App extends Reactor {
    * execution is determined relative to this TimeValue is a timeout has
    * been set.
    */
-  protected _determineStartAndEndOfExecution (startTime: TimeValue): undefined {
+  protected _determineStartAndEndOfExecution (startTime: TimeValue): void {
     // Let the start of the execution be the current physical time.
     this._startOfExecution = startTime;
     this._currentTag = new Tag(this._startOfExecution, 0);
@@ -2648,14 +2648,14 @@ export class App extends Reactor {
    * Load all reactions that were staged for immediate execution during this
    * app's instantiation onto the reaction queue.
    */
-  protected _loadStartupReactions (): undefined {
+  protected _loadStartupReactions (): void {
     this._reactionsAtStartup.forEach((r) => { this._reactionQ.push(r); });
   }
 
   /**
    * Start executing reactions.
    */
-  protected _startExecuting (): undefined {
+  protected _startExecuting (): void {
     Log.info(this, () => Log.hr);
     Log.info(this, () => Log.hr);
 

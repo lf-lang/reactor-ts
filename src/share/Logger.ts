@@ -13,7 +13,7 @@ function print (
   this: ReactionSandbox,
   i: Read<unknown>,
   expected: State<unknown>
-): undefined {
+): void {
   const received = i.get();
   if (received != null) {
     console.log(`Logging: ${String(received)}`);

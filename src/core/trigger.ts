@@ -107,7 +107,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
     }
   })(this);
 
-  public _receiveRuntimeObject (runtime: Runtime): undefined {
+  public _receiveRuntimeObject (runtime: Runtime): void {
     if (this.runtime != null) {
       this.runtime = runtime;
     } else {

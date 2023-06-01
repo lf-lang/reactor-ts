@@ -321,7 +321,7 @@ class RTIClient extends EventEmitter {
   public registerFederatePortAction<T extends Present>(
     federatePortID: number,
     federatePortAction: Action<T>
-  ): undefined {
+  ): void {
     this.federatePortActionByID.set(federatePortID, federatePortAction);
   }
 
@@ -351,7 +351,7 @@ class RTIClient extends EventEmitter {
    *  @param port The RTI's remote port number.
    *  @param host The RTI's remote host name.
    */
-  public connectToRTI (port: number, host: string): undefined {
+  public connectToRTI (port: number, host: string): void {
     // Create an IPv4 socket for TCP (not UDP) communication over IP (0)
 
     const thiz = this;
@@ -436,7 +436,7 @@ class RTIClient extends EventEmitter {
   /**
    * Destroy the RTI Client's socket connection to the RTI.
    */
-  public closeRTIConnection (): undefined {
+  public closeRTIConnection (): void {
     Log.debug(this, () => {
       return 'Closing RTI connection by destroying and unrefing socket.';
     });
@@ -448,7 +448,7 @@ class RTIClient extends EventEmitter {
     upstreamFedIDs: number[],
     upstreamFedDelays: TimeValue[],
     downstreamFedIDs: number[]
-  ): undefined {
+  ): void {
     const msg = Buffer.alloc(
       9 + upstreamFedIDs.length * 10 + downstreamFedIDs.length * 2
     );
@@ -478,7 +478,7 @@ class RTIClient extends EventEmitter {
     }
   }
 
-  public sendUDPPortNumToRTI (udpPort: number): undefined {
+  public sendUDPPortNumToRTI (udpPort: number): void {
     const msg = Buffer.alloc(3);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_UDP_PORT, 0);
     msg.writeUInt16BE(udpPort, 1);
@@ -501,7 +501,7 @@ class RTIClient extends EventEmitter {
    *  emit a 'startTime' event.
    *  @param myPhysicalTime The physical time at this federate.
    */
-  public requestStartTimeFromRTI (myPhysicalTime: TimeValue): undefined {
+  public requestStartTimeFromRTI (myPhysicalTime: TimeValue): void {
     const msg = Buffer.alloc(9);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TIMESTAMP, 0);
     const time = myPhysicalTime.toBinary();
@@ -531,7 +531,7 @@ class RTIClient extends EventEmitter {
     data: T,
     destFederateID: number,
     destPortID: number
-  ): undefined {
+  ): void {
     const value = Buffer.from(JSON.stringify(data), 'utf-8');
 
     const msg = Buffer.alloc(value.length + 9);
@@ -571,7 +571,7 @@ class RTIClient extends EventEmitter {
     destFederateID: number,
     destPortID: number,
     time: Buffer
-  ): undefined {
+  ): void {
     const value = Buffer.from(JSON.stringify(data), 'utf-8');
 
     const msg = Buffer.alloc(value.length + 21);
@@ -606,7 +606,7 @@ class RTIClient extends EventEmitter {
    * should be encoded as a 64 bit little endian unsigned integer in
    * a Buffer.
    */
-  public sendRTILogicalTimeComplete (completeTime: Buffer): undefined {
+  public sendRTILogicalTimeComplete (completeTime: Buffer): void {
     const msg = Buffer.alloc(13);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_LOGICAL_TAG_COMPLETE, 0);
     completeTime.copy(msg, 1);
@@ -629,7 +629,7 @@ class RTIClient extends EventEmitter {
    * Send the RTI a resign message. This should be called when
    * the federate is shutting down.
    */
-  public sendRTIResign (): undefined {
+  public sendRTIResign (): void {
     const msg = Buffer.alloc(1);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_RESIGN, 0);
     try {
@@ -651,7 +651,7 @@ class RTIClient extends EventEmitter {
    * @param nextTag The time of the message encoded as a 64 bit unsigned
    * integer in a Buffer.
    */
-  public sendRTINextEventTag (nextTag: Buffer): undefined {
+  public sendRTINextEventTag (nextTag: Buffer): void {
     const msg = Buffer.alloc(13);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEXT_EVENT_TAG, 0);
     nextTag.copy(msg, 1);
@@ -670,7 +670,7 @@ class RTIClient extends EventEmitter {
   /**
    * Send the RTI a stop request message.
    */
-  public sendRTIStopRequest (stopTag: Buffer): undefined {
+  public sendRTIStopRequest (stopTag: Buffer): void {
     const msg = Buffer.alloc(13);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_STOP_REQUEST, 0);
     stopTag.copy(msg, 1);
@@ -689,7 +689,7 @@ class RTIClient extends EventEmitter {
   /**
    * Send the RTI a stop request reply message.
    */
-  public sendRTIStopRequestReply (stopTag: Buffer): undefined {
+  public sendRTIStopRequestReply (stopTag: Buffer): void {
     const msg = Buffer.alloc(13);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_STOP_REQUEST_REPLY, 0);
     stopTag.copy(msg, 1);
@@ -718,7 +718,7 @@ class RTIClient extends EventEmitter {
     intendedTag: Tag,
     federateID: number,
     federatePortID: number
-  ): undefined {
+  ): void {
     const msg = Buffer.alloc(17);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
     msg.writeUInt16LE(federatePortID, 1);
@@ -745,7 +745,7 @@ class RTIClient extends EventEmitter {
    * @param assembledData The Buffer of data received by the socket. It may
    * contain 0 or more complete messages.
    */
-  private handleSocketData (data: Buffer): undefined {
+  private handleSocketData (data: Buffer): void {
     const thiz = this;
     if (data.length < 1) {
       throw new Error('Received a message from the RTI with 0 length.');
@@ -1141,23 +1141,23 @@ export class FederatedApp extends App {
   rtiPort: number;
   rtiHost: string;
 
-  public addUpstreamFederate (fedID: number, fedDelay: TimeValue): undefined {
+  public addUpstreamFederate (fedID: number, fedDelay: TimeValue): void {
     this.upstreamFedIDs.push(fedID);
     this.upstreamFedDelays.push(fedDelay);
     this._isLastTAGProvisional = true;
   }
 
-  public addDownstreamFederate (fedID: number): undefined {
+  public addDownstreamFederate (fedID: number): void {
     this.downstreamFedIDs.push(fedID);
   }
 
-  public setMinDelayFromPhysicalActionToFederateOutput (minDelay: TimeValue): undefined {
+  public setMinDelayFromPhysicalActionToFederateOutput (minDelay: TimeValue): void {
     this.minDelayFromPhysicalActionToFederateOutput = minDelay;
   }
 
   public registerOutputControlReactionTrigger (
     outputControlReactionTrigger: Action<Present>
-  ): undefined {
+  ): void {
     this.outputControlReactionTriggers.push(outputControlReactionTrigger);
   }
 
@@ -1286,7 +1286,7 @@ export class FederatedApp extends App {
     trigger.update(event);
   }
 
-  protected _finish (): undefined {
+  protected _finish (): void {
     this.sendRTILogicalTimeComplete(this.util.getCurrentTag());
     this.sendRTIResign();
     this.shutdownRTIClient();
@@ -1375,7 +1375,7 @@ export class FederatedApp extends App {
   public registerFederatePortAction<T extends Present>(
     federatePortID: number,
     federatePortAction: Action<T>
-  ): undefined {
+  ): void {
     this.rtiClient.registerFederatePortAction(
       federatePortID,
       federatePortAction
@@ -1393,7 +1393,7 @@ export class FederatedApp extends App {
     msg: T,
     destFederateID: number,
     destPortID: number
-  ): undefined {
+  ): void {
     Log.debug(this, () => {
       return (
         `Sending RTI message to federate ID: ${String(destFederateID)}` +
@@ -1417,7 +1417,7 @@ export class FederatedApp extends App {
     destFederateID: number,
     destPortID: number,
     time: number
-  ): undefined {
+  ): void {
     const absTime = this.util
       .getCurrentTag()
       .getLaterTag(TimeValue.nsec(time))
@@ -1441,7 +1441,7 @@ export class FederatedApp extends App {
    * this federate is ready to advance beyond the given logical time.
    * @param completeTimeValue The TimeValue that is now complete.
    */
-  public sendRTILogicalTimeComplete (completeTag: Tag): undefined {
+  public sendRTILogicalTimeComplete (completeTag: Tag): void {
     const binaryTag = completeTag.toBinary();
     Log.debug(this, () => {
       return `Sending RTI logical time complete with time: ${String(completeTag)}`;
@@ -1453,7 +1453,7 @@ export class FederatedApp extends App {
    * Send a resign message to the RTI. This message indicates this federated
    * app is shutting down, and should not be directed any new messages.
    */
-  public sendRTIResign (): undefined {
+  public sendRTIResign (): void {
     this.rtiClient.sendRTIResign();
   }
 
@@ -1464,7 +1464,7 @@ export class FederatedApp extends App {
    * @param nextTag The time to which this federate would like to
    * advance logical time.
    */
-  public sendRTINextEventTag (nextTag: Tag): undefined {
+  public sendRTINextEventTag (nextTag: Tag): void {
     Log.debug(this, () => {
       return `Sending RTI next event time with time: ${String(nextTag)}`;
     });
@@ -1475,7 +1475,7 @@ export class FederatedApp extends App {
   /**
    * Send the RTI a stop request message.
    */
-  public sendRTIStopRequest (stopTag: Tag): undefined {
+  public sendRTIStopRequest (stopTag: Tag): void {
     Log.debug(this, () => {
       return `Sending RTI stop request with time: ${String(stopTag)}`;
     });
@@ -1487,7 +1487,7 @@ export class FederatedApp extends App {
   /**
    * Send the RTI a stop request reply message.
    */
-  public sendRTIStopRequestReply (stopTag: Tag): undefined {
+  public sendRTIStopRequestReply (stopTag: Tag): void {
     Log.debug(this, () => {
       return `Sending RTI stop request reply with time: ${String(stopTag)}`;
     });
@@ -1527,7 +1527,7 @@ export class FederatedApp extends App {
    * Shutdown the RTI Client by closing its socket connection to
    * the RTI.
    */
-  public shutdownRTIClient (): undefined {
+  public shutdownRTIClient (): void {
     this.rtiClient.closeRTIConnection();
   }
 
@@ -1539,7 +1539,7 @@ export class FederatedApp extends App {
    * the start of the runtime until the rtiClient has received a start
    * time message from the RTI.
    */
-  _start (): undefined {
+  _start (): void {
     this._analyzeDependencies();
 
     this._loadStartupReactions();

@@ -68,7 +68,7 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static debug (obj: unknown, message: () => string, module?: string): undefined {
+  public static debug (obj: unknown, message: () => string, module?: string): void {
     if (module != null) {
       if (Log.global.level >= LogLevel.DEBUG) {
         Log.getInstance(module).debug(message.call(obj));
@@ -89,7 +89,7 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static error (obj: unknown, message: () => string, module?: string): undefined {
+  public static error (obj: unknown, message: () => string, module?: string): void {
     if (module != null) {
       if (Log.global.level >= LogLevel.ERROR) {
         Log.getInstance(module).error(message.call(obj));
@@ -111,7 +111,7 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static info (obj: unknown, message: () => string, module?: string): undefined {
+  public static info (obj: unknown, message: () => string, module?: string): void {
     if (module != null) {
       if (Log.global.level >= LogLevel.INFO) {
         Log.getInstance(module).info(message.call(obj));
@@ -132,7 +132,7 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static log (obj: unknown, message: () => string, module?: string): undefined {
+  public static log (obj: unknown, message: () => string, module?: string): void {
     if (module != null) {
       if (Log.global.level >= LogLevel.LOG) {
         Log.getInstance(module).log(message.call(obj));
@@ -153,7 +153,7 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static warn (obj: unknown, message: () => string, module?: string): undefined {
+  public static warn (obj: unknown, message: () => string, module?: string): void {
     if (module != null) {
       if (Log.global.level >= LogLevel.WARN) {
         Log.getInstance(module).warn(message.call(obj));

@@ -548,7 +548,7 @@ export class Alarm {
    * Disable any scheduled timeouts or immediate events, and set the timer to
    * inactive.
    */
-  unset (): undefined {
+  unset (): void {
     if (this.deferredRef != null) {
       clearTimeout(this.deferredRef);
       this.deferredRef = undefined;
@@ -568,7 +568,7 @@ export class Alarm {
    * @param task The task to perform.
    * @param callback Optional callback used to report the wait time.
    */
-  private try (task: () => void, callback?: (waitTime: TimeValue) => void): undefined {
+  private try (task: () => void, callback?: (waitTime: TimeValue) => void): void {
     // Record the current time.
     const hiResDif = process.hrtime(this.hiResStart);
 
@@ -640,7 +640,7 @@ export class Alarm {
     task: () => void,
     delay: TimeValue,
     callback?: (waitTime: TimeValue) => void
-  ): undefined {
+  ): void {
     // Reset the alarm if it was already active.
     if (this.active) {
       this.unset();

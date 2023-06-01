@@ -45,7 +45,7 @@ export class PrioritySet<P> {
   private head: PrioritySetElement<P> | undefined;
   private count = 0;
 
-  push (element: PrioritySetElement<P>): undefined {
+  push (element: PrioritySetElement<P>): void {
     // update linked list
     if (this.head === undefined) {
       // create head
@@ -128,7 +128,7 @@ export class DependencyGraph<T> {
 
   protected numberOfEdges = 0;
 
-  merge (apg: this): undefined {
+  merge (apg: this): void {
     for (const [k, v] of apg.adjacencyMap) {
       const nodes = this.adjacencyMap.get(k);
       if (nodes != null) {
@@ -145,7 +145,7 @@ export class DependencyGraph<T> {
     }
   }
 
-  addNode (node: T): undefined {
+  addNode (node: T): void {
     if (!this.adjacencyMap.has(node)) {
       this.adjacencyMap.set(node, new Set());
     }
@@ -188,7 +188,7 @@ export class DependencyGraph<T> {
      * Recursively traverse the graph to collect reachable origins.
      * @param current The current node being visited.
      */
-    function search (current: T): undefined {
+    function search (current: T): void {
       visited.add(current);
       if (origins.has(current)) reachable.add(current);
       for (const next of self.getEdges(current)) {
@@ -231,7 +231,7 @@ export class DependencyGraph<T> {
     return false;
   }
 
-  removeNode (node: T): undefined {
+  removeNode (node: T): void {
     let deps: Set<T> | undefined;
     if (((deps = this.adjacencyMap.get(node)) != null)) {
       this.numberOfEdges -= deps.size;
@@ -246,7 +246,7 @@ export class DependencyGraph<T> {
   }
 
   // node -> deps
-  addEdge (node: T, dependsOn: T): undefined {
+  addEdge (node: T, dependsOn: T): void {
     const deps = this.adjacencyMap.get(node);
     if (deps == null) {
       this.adjacencyMap.set(node, new Set([dependsOn]));
@@ -265,13 +265,13 @@ export class DependencyGraph<T> {
     }
   }
 
-  addBackEdges (node: T, dependentNodes: Set<T>): undefined {
+  addBackEdges (node: T, dependentNodes: Set<T>): void {
     for (const a of dependentNodes) {
       this.addEdge(a, node);
     }
   }
 
-  addEdges (node: T, dependsOn: Set<T>): undefined {
+  addEdges (node: T, dependsOn: Set<T>): void {
     const deps = this.adjacencyMap.get(node);
     if (deps == null) {
       this.adjacencyMap.set(node, new Set(dependsOn));
@@ -289,7 +289,7 @@ export class DependencyGraph<T> {
     }
   }
 
-  removeEdge (node: T, dependsOn: T): undefined {
+  removeEdge (node: T, dependsOn: T): void {
     const deps = this.adjacencyMap.get(node);
     if ((deps?.has(dependsOn)) ?? false) {
       deps?.delete(dependsOn);
@@ -320,7 +320,7 @@ export class DependencyGraph<T> {
      * @param node The node that is currently being visited.
      * @param chain The current chain that is being built.
      */
-    function printChain (node: T, chain: T[]): undefined {
+    function printChain (node: T, chain: T[]): void {
       dot += '\n';
       dot += `"${String(node)}"`;
       // TODO (axmmisaka): check if this is equivalent;
@@ -341,7 +341,7 @@ export class DependencyGraph<T> {
      * @param node The node that is currently being visited.
      * @param chain The current chain that is being built.
      */
-    function buildChain (node: T, chain: T[]): undefined {
+    function buildChain (node: T, chain: T[]): void {
       let match = false;
       for (const [v, e] of graph) {
         if (e.has(node)) {
