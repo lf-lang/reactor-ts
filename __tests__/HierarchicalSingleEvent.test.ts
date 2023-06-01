@@ -1,78 +1,73 @@
-import {Reactor, App, Parameter, OutPort, InPort, TimeValue} from '../src/core/internal';
+import { Reactor, App, Parameter, OutPort, InPort, TimeValue } from '../src/core/internal';
 
-import {SingleEvent} from '../src/share/SingleEvent';
-import {Logger} from '../src/share/Logger';
+import { SingleEvent } from '../src/share/SingleEvent';
+import { Logger } from '../src/share/Logger';
 
-class SEContainer extends Reactor{
-    // Made these public to accommodate the test below.
-    public o: OutPort<any>= new OutPort<any>(this);
-    public child: SingleEvent<string> = new SingleEvent(this, new Parameter("Foo"));
+class SEContainer extends Reactor {
+  // Made these public to accommodate the test below.
+  public o: OutPort<any> = new OutPort<any>(this);
+  public child = new SingleEvent<string>(this, new Parameter('Foo'));
 
-    constructor(parent: Reactor) {
-        super(parent);
-        this._connect(this.child.o, this.o);
-    }
+  constructor (parent: Reactor) {
+    super(parent);
+    this._connect(this.child.o, this.o);
+  }
 }
 
-class LogContainer extends Reactor{
+class LogContainer extends Reactor {
+  // Made these public to accommodate the test below.
+  public i: InPort<any> = new InPort<any>(this);
+  public child: Logger = new Logger(this, 'Foo');
 
-    // Made these public to accommodate the test below.
-    public i: InPort<any>= new InPort<any>(this);
-    public child: Logger = new Logger(this, "Foo");
-
-    constructor(parent: Reactor) {
-        super(parent);
-        this._connect(this.i, this.child.i);
-    }
-
+  constructor (parent: Reactor) {
+    super(parent);
+    this._connect(this.i, this.child.i);
+  }
 }
 
 class SETest extends App {
-    seContainer: SEContainer;
-    logContainer: LogContainer;
+  seContainer: SEContainer;
+  logContainer: LogContainer;
 
-    constructor(timeout: TimeValue, keepAlive: boolean = false, fast: boolean = false, success: ()=> void, fail: ()=>void ){
-        super(timeout, keepAlive, fast, success, fail)
-        this.seContainer = new SEContainer(this);
-        this.logContainer = new LogContainer(this);
+  constructor (timeout: TimeValue, keepAlive = false, fast = false, success: () => void, fail: () => void) {
+    super(timeout, keepAlive, fast, success, fail);
+    this.seContainer = new SEContainer(this);
+    this.logContainer = new LogContainer(this);
 
-        // Connect output of singleEvent to input of logger through hierarchy.
-        this._connect(this.seContainer.o, this.logContainer.i);
-    }
+    // Connect output of singleEvent to input of logger through hierarchy.
+    this._connect(this.seContainer.o, this.logContainer.i);
+  }
 }
 
-//This test is just like SingleEvent.test.ts, only the singleEvent and the logger are
-//contained by other reactors.
+// This test is just like SingleEvent.test.ts, only the singleEvent and the logger are
+// contained by other reactors.
 describe('HierarchicalSingleEvent', function () {
+  // Ensure the test will run for no more than 5 seconds.
+  jest.setTimeout(5000);
 
-    // Ensure the test will run for no more than 5 seconds.
-    jest.setTimeout(5000);
+  it('start runtime with input.connect to output', done => {
+    function failRuntime () {
+      console.log('Runtime has ended.');
+      // throw new Error("Runtime has failed.");
+    }
 
-    it('start runtime with input.connect to output', done => {
+    function failReactor () {
+      throw new Error('Reactor has failed.');
+    }
 
-        function failRuntime(){
-            console.log("Runtime has ended.");
-            // throw new Error("Runtime has failed.");
-        };
+    // Tell the reactor runtime to successfully terminate after 3 seconds.
+    const seTest = new SETest(TimeValue.secs(3), false, false, done, failReactor);
 
-        function failReactor(){
-            throw new Error("Reactor has failed.");
-        };
+    // Normally _setAllParents would be called as part of the initialization
+    // process for starting an app, but we call it directly here to set
+    // parent attributes needed for this test.
+    // seTest._setAllParents(null);
 
-        // Tell the reactor runtime to successfully terminate after 3 seconds.
-        let seTest = new SETest(TimeValue.secs(3), false, false, done, failReactor);
+    expect(expect(seTest.seContainer.child).toBeInstanceOf(SingleEvent));
+    expect(expect(seTest.logContainer.child).toBeInstanceOf(Logger));
 
-        // Normally _setAllParents would be called as part of the initialization
-        // process for starting an app, but we call it directly here to set
-        // parent attributes needed for this test.
-        // seTest._setAllParents(null);
+    expect(seTest.seContainer.canConnect(seTest.seContainer.child.o, seTest.logContainer.child.i)).toBe(false);
 
-        expect(expect(seTest.seContainer.child).toBeInstanceOf(SingleEvent));
-        expect(expect(seTest.logContainer.child).toBeInstanceOf(Logger));
-
-        
-        expect(seTest.seContainer.canConnect(seTest.seContainer.child.o, seTest.logContainer.child.i)).toBe(false);
-
-        seTest._start();
-    });
+    seTest._start();
+  });
 });
