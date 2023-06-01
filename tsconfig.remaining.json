@@ -1,0 +1,10 @@
+// This json is included solely for eslint; it includes all remaining ts files.
+{
+    "include": [
+        "./**/*.ts"
+    ],
+    "exclude": [
+        "src/**/*",
+    ],
+    "extends": "./tsconfig.json",
+}
