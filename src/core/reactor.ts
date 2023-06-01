@@ -1053,7 +1053,7 @@ export abstract class Reactor extends Component {
   ): boolean {
     // Immediate rule out trivial self loops.
     // TODO (axmmisaka): non-grammar fix here; check if things break
-    if (src.get() === dst.get()) {
+    if (src === dst) {
       throw Error('Source port and destination port are the same.');
     }
 
@@ -1061,7 +1061,7 @@ export abstract class Reactor extends Component {
     //   - between reactors and reactions (NOTE: check also needs to happen
     //     in addReaction)
     // TODO (axmmisaka): find a better way to do this, or at least make sure this does not break
-    const deps = this._dependencyGraph.getEdges(dst as unknown as Port<Present>); // FIXME this will change with multiplex ports
+    const deps = this._dependencyGraph.getEdges(dst); // FIXME this will change with multiplex ports
     if (deps !== undefined && deps.size > 0) {
       throw Error('Destination port is already occupied.');
     }
@@ -1075,11 +1075,11 @@ export abstract class Reactor extends Component {
       // Rule out write conflicts.
       //   - (between reactors)
       // TODO (axmmisaka): find a better way to do this, or at least make sure this does not break
-      if (this._dependencyGraph.getBackEdges(dst as unknown as Port<Present>).size > 0) {
+      if (this._dependencyGraph.getBackEdges(dst).size > 0) {
         return false;
       }
       // TODO (axmmisaka): find a better way to do this, or at least make sure this does not break
-      return this._isInScope(src as unknown as IOPort<Present>, dst as unknown as IOPort<Present>);
+      return this._isInScope(src, dst);
     } else {
       // Attempt to make a connection while executing.
       // Check the local dependency graph to figure out whether this change
@@ -1108,7 +1108,7 @@ export abstract class Reactor extends Component {
 
       // Add the new edge.
       // TODO (axmmisaka): find a better way to do this, or at least make sure this does not break
-      graph.addEdge(dst as unknown as Port<Present>, src as unknown as Port<Present>);
+      graph.addEdge(dst, src);
 
       // 1) check for loops
       const hasCycle = graph.hasCycle();
@@ -1184,7 +1184,7 @@ export abstract class Reactor extends Component {
     Log.debug(this, () => `connecting ${String(src)} and ${String(dst)}`);
     // Add dependency implied by connection to local graph.
     // TODO (axmmisaka): find a better way to do this, or at least make sure this does not break
-    this._dependencyGraph.addEdge(dst as unknown as Port<Present>, src as unknown as Port<Present>);
+    this._dependencyGraph.addEdge(dst, src);
     // Register receiver for value propagation.
     const writer = dst.asWritable(this._getKey(dst));
     // TODO (axmmisaka): find a better way to do this, or at least make sure this does not break
@@ -1308,7 +1308,7 @@ export abstract class Reactor extends Component {
       const container = callerManager.getContainer();
       const callers = new Set<Reaction<any>>();
       // TODO (axmmisaka): find a better way to do this, or at least make sure this does not break
-      container._dependencyGraph.getBackEdges(src as unknown as Port<Present>).forEach((dep) => {
+      container._dependencyGraph.getBackEdges(src).forEach((dep) => {
         if (dep instanceof Reaction) {
           callers.add(dep);
         }
@@ -1458,16 +1458,16 @@ export abstract class Reactor extends Component {
     if (dst instanceof IOPort) {
       const writer = dst.asWritable(this._getKey(dst));
       src.getManager(this._getKey(src)).delReceiver(writer as unknown as WritablePort<S>);
-      this._dependencyGraph.removeEdge(dst as unknown as IOPort<Present>, src as unknown as IOPort<Present>);
+      this._dependencyGraph.removeEdge(dst, src);
     } else {
-      const nodes = this._dependencyGraph.getBackEdges(src as unknown as IOPort<Present>);
+      const nodes = this._dependencyGraph.getBackEdges(src);
       for (const node of nodes) {
         if (node instanceof IOPort) {
           const writer = node.asWritable(this._getKey(node));
           src
             .getManager(this._getKey(src))
             .delReceiver(writer as WritablePort<S>);
-          this._dependencyGraph.removeEdge(node, src as unknown as IOPort<Present>);
+          this._dependencyGraph.removeEdge(node, src);
         }
       }
     }

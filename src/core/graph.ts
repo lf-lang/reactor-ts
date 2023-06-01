@@ -331,7 +331,7 @@ export class DependencyGraph<T> {
         );
       }
       while (chain.length > 0) {
-        dot += `->' + '"${String(chain.pop())}"`;
+        dot += `->"${String(chain.pop())}"`;
       }
       dot += ';';
     }

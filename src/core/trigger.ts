@@ -108,7 +108,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
   })(this);
 
   public _receiveRuntimeObject (runtime: Runtime): void {
-    if (this.runtime != null) {
+    if (this.runtime == null) {
       this.runtime = runtime;
     } else {
       throw new Error('Can only establish link to runtime once.');
