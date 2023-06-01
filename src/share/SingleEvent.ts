@@ -4,7 +4,6 @@ import {
   type Write,
   Triggers,
   Args,
-  ArgList,
   type ReactionSandbox,
   type Present,
   type Parameter,
@@ -15,7 +14,7 @@ function produceOutput<S> (
   this: ReactionSandbox,
   o: Write<S>,
   payload: Parameter<S>
-) {
+): undefined {
   o.set(payload.get());
 
   // FIXME: create a test that actually tests double sets.

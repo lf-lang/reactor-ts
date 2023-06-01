@@ -67,7 +67,7 @@ export abstract class MultiPort<T extends Present>
    */
   constructor (private readonly container: Reactor, width: number) {
     super(container);
-    this._channels = new Array(width);
+    this._channels = new Array<IOPort<T>>(width);
     this._width = width;
   }
 
@@ -80,7 +80,7 @@ export abstract class MultiPort<T extends Present>
       return this.writer;
     }
     throw Error(
-      'Referenced port is out of scope: ' + this._getFullyQualifiedName()
+      `Referenced port is out of scope: ${String(this._getFullyQualifiedName())}`
     );
   }
 
@@ -91,7 +91,7 @@ export abstract class MultiPort<T extends Present>
 
   /** @inheritdoc */
   getManager (key: symbol | undefined): TriggerManager {
-    if (this._key == key) {
+    if (this._key === key) {
       return this.manager;
     }
     throw Error('Unable to grant access to manager.');
@@ -212,7 +212,7 @@ export abstract class MultiPort<T extends Present>
     }
   })(this);
 
-  public toString () {
+  public toString (): string {
     return (
       this.container.toString() +
       '.' +

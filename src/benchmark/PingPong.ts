@@ -33,12 +33,12 @@ export class Ping extends Reactor {
         while (pingsLeft > 0) {
           // console.log("Ping!")
           const ret = __client.invoke(pingsLeft);
-          if (ret) pingsLeft -= 1;
+          if (ret != null) pingsLeft -= 1;
         }
         const elapsedTime = this.util
           .getCurrentPhysicalTime()
           .subtract(startTime);
-        console.log('Elapsed time: ' + elapsedTime);
+        console.log(`Elapsed time: ${String(elapsedTime)}`);
         // this.util.requestShutdown();
       }
     );
@@ -65,7 +65,7 @@ export class Pong extends Reactor {
     this.addReaction(
       new Triggers(this.dummy),
       new Args(this.dummy),
-      function (this) {}
+      () => (undefined)
     );
     this.addReaction(
       new Triggers(this.server),
@@ -73,13 +73,13 @@ export class Pong extends Reactor {
       function (this, __server: CalleePort<number, number>) {
         // console.log("Pong!")
         const msg = __server.get();
-        if (msg) __server.return(msg);
+        if (msg != null) __server.return(msg);
       }
     );
     this.addReaction(
       new Triggers(this.dummy), // replace this with `server` and an error is thrown.
       new Args(this.dummy),
-      function (this) {}
+      () => (undefined)
     );
   }
 }

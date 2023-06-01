@@ -84,7 +84,7 @@ class Filter extends Reactor {
           if (!div) {
             if (size < numberOfPrimes) {
               seen.push(p);
-              console.log('Found new prime number ' + p);
+              console.log(`Found new prime number ${String(p)}`);
             } else {
               // Potential prime found.
               if (!hasChild.get()) {

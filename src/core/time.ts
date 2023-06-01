@@ -50,7 +50,7 @@ export class TimeValue {
       seconds < 0 ||
       nanoseconds < 0
     ) {
-      if (seconds != Number.MIN_SAFE_INTEGER) {
+      if (seconds !== Number.MIN_SAFE_INTEGER) {
         throw new Error(
           'Cannot instantiate a time interval based on negative or non-integer numbers.'
         );
@@ -62,11 +62,11 @@ export class TimeValue {
     return new TimeValue(0, 0);
   }
 
-  static NEVER (): TimeValue {
+  static never (): TimeValue {
     return new TimeValue(Number.MIN_SAFE_INTEGER, 0);
   }
 
-  static FOREVER (): TimeValue {
+  static forever (): TimeValue {
     return new TimeValue(Number.MAX_SAFE_INTEGER, 0);
   }
 
@@ -82,27 +82,27 @@ export class TimeValue {
     return TimeValue.secsAndNs(seconds, 0);
   }
 
-  static msecs (microseconds: number) {
+  static msecs (microseconds: number): TimeValue {
     return TimeValue.withUnits(microseconds, TimeUnit.msec);
   }
 
-  static msec (microseconds: number) {
+  static msec (microseconds: number): TimeValue {
     return TimeValue.withUnits(microseconds, TimeUnit.msec);
   }
 
-  static usecs (nanoseconds: number) {
+  static usecs (nanoseconds: number): TimeValue {
     return TimeValue.withUnits(nanoseconds, TimeUnit.usec);
   }
 
-  static usec (nanoseconds: number) {
+  static usec (nanoseconds: number): TimeValue {
     return TimeValue.withUnits(nanoseconds, TimeUnit.usec);
   }
 
-  static nsecs (nanoseconds: number) {
+  static nsecs (nanoseconds: number): TimeValue {
     return TimeValue.withUnits(nanoseconds, TimeUnit.nsec);
   }
 
-  static nsec (nanoseconds: number) {
+  static nsec (nanoseconds: number): TimeValue {
     return TimeValue.withUnits(nanoseconds, TimeUnit.nsec);
   }
 
@@ -176,23 +176,23 @@ export class TimeValue {
    */
   isEqualTo (other: TimeValue): boolean {
     return (
-      this.seconds == other.seconds && this.nanoseconds == other.nanoseconds
+      this.seconds === other.seconds && this.nanoseconds === other.nanoseconds
     );
   }
 
   /**
    * Return true if this denotes a time interval of length zero.
    */
-  isZero () {
-    if (this.seconds == 0 && this.nanoseconds == 0) {
+  isZero (): boolean {
+    if (this.seconds === 0 && this.nanoseconds === 0) {
       return true;
     } else {
       return false;
     }
   }
 
-  isNever () {
-    if (this.seconds == Number.MIN_SAFE_INTEGER && this.nanoseconds == 0) {
+  isNever (): boolean {
+    if (this.seconds === Number.MIN_SAFE_INTEGER && this.nanoseconds === 0) {
       return true;
     } else {
       return false;
@@ -210,11 +210,11 @@ export class TimeValue {
    * @param other The time value to compare to this one.
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt|BigInt} for further information.
    */
-  isEarlierThan (other: TimeValue) {
+  isEarlierThan (other: TimeValue): boolean {
     if (this.seconds < other.seconds) {
       return true;
     }
-    if (this.seconds == other.seconds && this.nanoseconds < other.nanoseconds) {
+    if (this.seconds === other.seconds && this.nanoseconds < other.nanoseconds) {
       return true;
     }
     return false;
@@ -225,11 +225,11 @@ export class TimeValue {
    *
    * @param other The time value to compare to this one.
    */
-  isLaterThan (other: TimeValue) {
+  isLaterThan (other: TimeValue): boolean {
     if (this.seconds > other.seconds) {
       return true;
     }
-    if (this.seconds == other.seconds && this.nanoseconds > other.nanoseconds) {
+    if (this.seconds === other.seconds && this.nanoseconds > other.nanoseconds) {
       return true;
     }
     return false;
@@ -247,7 +247,7 @@ export class TimeValue {
    * by this time value.
    */
   public toString (): string {
-    return '(' + this.seconds + ' secs; ' + this.nanoseconds + ' nsecs)';
+    return `(' + this.seconds + ' secs; ${String(this.nanoseconds)} nsecs)`;
   }
 
   /**
@@ -265,16 +265,16 @@ export class TimeValue {
   public toBinary (): Buffer {
     const buff = Buffer.alloc(8);
     if (this.seconds === Number.MIN_SAFE_INTEGER) {
-      buff.writeBigUInt64LE(BigInt(0x8000000000000000), 0);
+      buff.writeBigUInt64LE(BigInt(0x8000000000000000n), 0);
     } else if (this.seconds === Number.MAX_SAFE_INTEGER) {
-      buff.writeBigUInt64LE(BigInt(0x7fffffffffffffff), 0);
+      buff.writeBigUInt64LE(BigInt(0x7fffffffffffffffn), 0);
     } else {
       const billion = BigInt(TimeUnit.secs);
       const bigTime = BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
 
       // Ensure the TimeValue fits into a 64 unsigned integer.
       const clampedTime = BigInt.asUintN(64, bigTime);
-      if (clampedTime != bigTime) {
+      if (clampedTime !== bigTime) {
         throw new Error(
           `TimeValue ${this.toString()} is too big to fit into ` +
             'a 64 bit unsigned integer'
@@ -289,15 +289,15 @@ export class TimeValue {
    * Create a TimeValue from a 64bit little endian unsigned integer in a buffer.
    * @param buffer A 64 bit unsigned integer. Little endian.
    */
-  public static fromBinary (buffer: Buffer) {
+  public static fromBinary (buffer: Buffer): TimeValue {
     const billion = BigInt(TimeUnit.secs);
 
     // To avoid overflow and floating point errors, work with BigInts.
     const bigTime = buffer.readBigUInt64LE(0);
-    if (bigTime === BigInt(0x8000000000000000)) {
-      return TimeValue.NEVER();
-    } else if (bigTime === BigInt(0x7fffffffffffffff)) {
-      return TimeValue.FOREVER();
+    if (bigTime === BigInt(0x8000000000000000n)) {
+      return TimeValue.never();
+    } else if (bigTime === BigInt(0x7fffffffffffffffn)) {
+      return TimeValue.forever();
     }
 
     const bigSeconds = bigTime / billion;
@@ -317,7 +317,7 @@ export class TimeValue {
    * @param unit The unit of measurement that applies to the given value.
    * @returns
    */
-  public static withUnits (value: number, unit: TimeUnit) {
+  public static withUnits (value: number, unit: TimeUnit): TimeValue {
     if (!Number.isInteger(value)) {
       throw new Error('Non-integer time values are illegal.');
     }
@@ -412,8 +412,8 @@ export class Tag {
    * for two tags to be simultaneous.
    * @param other The time instant to compare against this one.
    */
-  isSimultaneousWith (other: Tag) {
-    return this.time.isEqualTo(other.time) && this.microstep == other.microstep;
+  isSimultaneousWith (other: Tag): boolean {
+    return this.time.isEqualTo(other.time) && this.microstep === other.microstep;
   }
 
   /**
@@ -435,7 +435,7 @@ export class Tag {
   /**
    * Get a new time instant that has the same `time` but n `microsteps` later.
    */
-  getMicroStepsLater (n: number) {
+  getMicroStepsLater (n: number): Tag {
     return new Tag(this.time, this.microstep + n);
   }
 
@@ -457,7 +457,7 @@ export class Tag {
    * Return a human-readable string presentation of this time instant.
    */
   public toString (): string {
-    return '(' + this.time.toString() + ', ' + this.microstep + ')';
+    return `(' + this.time.toString() + ', ${String(this.microstep)})`;
   }
 
   /**
@@ -476,12 +476,11 @@ export class Tag {
    * Create a Tag from 8-byte TimeValue and 4-byte microstep in a buffer.
    * @param buffer A buffer of TimeValue and microstep.
    */
-  public static fromBinary (buffer: Buffer) {
+  public static fromBinary (buffer: Buffer): Tag {
     const timeBuffer = Buffer.alloc(8);
     buffer.copy(timeBuffer, 0, 0, 8);
     const time = TimeValue.fromBinary(timeBuffer);
     const microstep = buffer.readUInt32LE(8);
-    const billion = BigInt(TimeUnit.secs);
 
     return new Tag(time, microstep);
   }
@@ -549,7 +548,7 @@ export class Alarm {
    * Disable any scheduled timeouts or immediate events, and set the timer to
    * inactive.
    */
-  unset () {
+  unset (): undefined {
     if (this.deferredRef != null) {
       clearTimeout(this.deferredRef);
       this.deferredRef = undefined;
@@ -569,7 +568,7 @@ export class Alarm {
    * @param task The task to perform.
    * @param callback Optional callback used to report the wait time.
    */
-  private try (task: () => void, callback?: (waitTime: TimeValue) => void) {
+  private try (task: () => void, callback?: (waitTime: TimeValue) => void): undefined {
     // Record the current time.
     const hiResDif = process.hrtime(this.hiResStart);
 
@@ -579,7 +578,7 @@ export class Alarm {
     // See whether the requested delay has elapsed.
     if (
       this.hiResDelay[0] < hiResDif[0] ||
-      (this.hiResDelay[0] == hiResDif[0] && this.hiResDelay[1] < hiResDif[1])
+      (this.hiResDelay[0] === hiResDif[0] && this.hiResDelay[1] < hiResDif[1])
     ) {
       // No more immediates a scheduled.
       this.immediateRef = undefined;
@@ -641,7 +640,7 @@ export class Alarm {
     task: () => void,
     delay: TimeValue,
     callback?: (waitTime: TimeValue) => void
-  ) {
+  ): undefined {
     // Reset the alarm if it was already active.
     if (this.active) {
       this.unset();

@@ -28,8 +28,8 @@ export abstract class Port<T extends Present> extends Trigger {
   /** The current value associated with this port. */
   protected value: T | Absent;
 
-  public _receiveRuntimeObject (runtime: Runtime) {
-    if (!this.runtime) {
+  public _receiveRuntimeObject (runtime: Runtime): undefined {
+    if (this.runtime != null) {
       this.runtime = runtime;
     } else {
       throw new Error(
@@ -42,11 +42,11 @@ export abstract class Port<T extends Present> extends Trigger {
   /**
    * Returns true if the connected port's value has been set; false otherwise
    */
-  public isPresent () {
+  public isPresent (): boolean {
     Log.debug(this, () => 'In isPresent()...');
-    Log.debug(this, () => 'value: ' + this.value?.toString());
-    Log.debug(this, () => 'tag: ' + this.tag);
-    Log.debug(this, () => 'time: ' + this.runtime.util.getCurrentLogicalTime());
+    Log.debug(this, () => `value: ${String(this.value?.toString())}`);
+    Log.debug(this, () => `tag: ${String(this.tag)}`);
+    Log.debug(this, () => `time: ${String(this.runtime.util.getCurrentLogicalTime())}`);
 
     if (
       this.value !== undefined &&
@@ -111,7 +111,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
       return this.writer;
     }
     throw Error(
-      'Referenced port is out of scope: ' + this._getFullyQualifiedName()
+      `Referenced port is out of scope: ${String(this._getFullyQualifiedName())}`
     ); // FIXME: adjust messages for other methods as well
     // FIXME: we could potentially do this for reads/triggers as well just for scope rule enforcement
   }
@@ -122,7 +122,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * (or the container thereof).
    */
   public getManager (key: symbol | undefined): IOPortManager<T> {
-    if (this._key == key) {
+    if (this._key === key) {
       return this.manager;
     }
     throw Error('Unable to grant access to manager.');

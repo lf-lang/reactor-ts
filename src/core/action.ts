@@ -10,8 +10,8 @@ import {
 } from './internal';
 import type {
   Absent, Present, Read, Sched,
-  type Reactor,
-  type TriggerManager
+  Reactor,
+  TriggerManager
 } from './internal';
 
 const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
@@ -57,7 +57,7 @@ export class Action<T extends Present>
   }
 
   public getManager (key: symbol | undefined): TriggerManager {
-    if (this._key == key) {
+    if (this._key === key) {
       return this.manager;
     }
     throw Error('Unable to grant access to manager.');
@@ -84,7 +84,7 @@ export class Action<T extends Present>
 
       tag = tag.getLaterTag(delay);
 
-      if (this.action.origin == Origin.physical) {
+      if (this.action.origin === Origin.physical) {
         // If the resulting timestamp from delay is less than the current physical time
         // on the platform, then the timestamp becomes the current physical time.
         // Otherwise the tag is computed like a logical action's tag.
@@ -106,10 +106,8 @@ export class Action<T extends Present>
           !intendedTag.isGreaterThan(this.action.runtime.util.getCurrentTag())
         ) {
           throw new Error(
-            'Intended tag must be greater than current tag. Intended tag: ' +
-              intendedTag +
-              ' Current tag: ' +
-              this.action.runtime.util.getCurrentTag()
+            `Intended tag must be greater than current tag. Intended tag: ${String(intendedTag)}` +
+              ` Current tag: ${String(this.action.runtime.util.getCurrentTag())}`
           );
         }
         if (
@@ -120,17 +118,14 @@ export class Action<T extends Present>
         ) {
           throw new Error(
             'Intended tag must be greater than or equal to current tag' +
-              ', when the last TAG is provisional. Intended tag: ' +
-              intendedTag +
-              ' Current tag: ' +
-              this.action.runtime.util.getCurrentTag()
+              `, when the last TAG is provisional. Intended tag: ${String(intendedTag)}` +
+              ` Current tag: ${String(this.action.runtime.util.getCurrentTag())}`
           );
         }
         Log.debug(
           this,
           () =>
-            'Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: ' +
-            intendedTag
+            `Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: ${String(intendedTag)}`
         );
         tag = intendedTag;
       } else if (delay.isEqualTo(TimeValue.zero())) {
@@ -139,13 +134,8 @@ export class Action<T extends Present>
 
       Log.debug(
         this,
-        () =>
-          'Scheduling ' +
-          this.action.origin +
-          ' action ' +
-          this.action._getFullyQualifiedName() +
-          ' with tag: ' +
-          tag
+        () => `Scheduling ${String(this.action.origin)} action 
+        ${String(this.action._getFullyQualifiedName())} with tag: ${String()}`
       );
 
       this.action.runtime.schedule(new TaggedEvent(this.action, tag, value));
@@ -174,7 +164,7 @@ export class Action<T extends Present>
     this.minDelay = minDelay;
   }
 
-  public toString () {
+  public toString (): string {
     return this._getFullyQualifiedName();
   }
 }

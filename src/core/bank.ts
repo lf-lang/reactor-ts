@@ -49,7 +49,8 @@ export class Bank<T extends Reactor, S> {
   ) {
     for (let i = 0; i < width; i++) {
       Bank.initializationMap.set(container, i);
-      console.log('Setting initializing to ' + i);
+      console.log(`Setting initializing to ${String(i)}`);
+      // TODO (axmmisaka): see how to fix this
       this.members.push(Reflect.construct(cls, args, cls));
     }
     Bank.initializationMap.delete(container);
@@ -86,14 +87,14 @@ export class Bank<T extends Reactor, S> {
     );
   }
 
-  public toString () {
-    return 'bank(' + this.members.length + ')';
+  public toString (): string {
+    return `bank(${String(this.members.length)})`;
   }
 
   public allWritable<T extends Present>(
     ports: Array<MultiPort<T>>
   ): Array<WritableMultiPort<T>> {
-    if (ports.length != this.members.length) {
+    if (ports.length !== this.members.length) {
       throw new Error('Length of ports does not match length of reactors.');
     }
     const result = new Array<WritableMultiPort<T>>(ports.length);
@@ -106,7 +107,7 @@ export class Bank<T extends Reactor, S> {
   public writable<T extends Present>(
     ports: Array<IOPort<T>>
   ): Array<WritablePort<T>> {
-    if (ports.length != this.members.length) {
+    if (ports.length !== this.members.length) {
       throw new Error('Length of ports does not match length of reactors.');
     }
     const result = new Array<WritablePort<T>>(ports.length);

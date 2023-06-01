@@ -32,7 +32,7 @@ export function unitBasedTimeValueCLAType (timeout: string): TimeValue | null {
     const unitsPattern = /[a-z]+$/;
 
     const stringDuration = durationPattern.exec(timeout);
-    if (stringDuration !== null) {
+    if (stringDuration != null) {
       duration = parseInt(stringDuration[0]);
     } else {
       // Duration is not well formed.
@@ -41,7 +41,7 @@ export function unitBasedTimeValueCLAType (timeout: string): TimeValue | null {
 
     // Test if the units are a valid TimeUnits
     const stringUnits = unitsPattern.exec(timeout);
-    if (stringUnits !== null && stringUnits[0] in TimeUnit) {
+    if (stringUnits != null && stringUnits[0] in TimeUnit) {
       type TimeUnitString = keyof typeof TimeUnit;
       units = TimeUnit[stringUnits[0] as TimeUnitString];
     } else {

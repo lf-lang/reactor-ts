@@ -693,6 +693,7 @@ export class Quadrant extends Reactor {
         const msg = fromProducer.get();
         switch (msg?.constructor) {
           case CustomerMsg:
+          {
             // Handling CustomerMsg for a new customoer.
             // This message is propagated from root to the leaf facility.
             // console.log(`Quadrant at ${facility.get()} - Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
@@ -727,6 +728,7 @@ export class Quadrant extends Reactor {
               }
             }
             break;
+          }
           case RequestExitMsg:
             if (!hasChildren.get()) {
               // No children, number of facilities will be counted on parent's side.
@@ -745,7 +747,7 @@ export class Quadrant extends Reactor {
             }
             break;
           default:
-            console.log(`Error: Recieved unknown message: ${msg?.constructor}`);
+            console.log(`Error: Recieved unknown message: ${String(msg?.constructor)}`);
             this.util.requestErrorStop();
             break;
         }

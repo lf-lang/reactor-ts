@@ -29,7 +29,7 @@ export abstract class Trigger extends Component {
    */
   abstract isPresent (): boolean;
 
-  public getContainer () {
+  public getContainer (): Reactor {
     return this._getContainer();
   }
 }
@@ -69,7 +69,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
   }
 
   public getManager (key: symbol | undefined): TriggerManager {
-    if (this._key == key) {
+    if (this._key === key) {
       return this.manager;
     }
     throw Error('Unable to grant access to manager.');
@@ -80,7 +80,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
    * logical time. This result is not affected by whether it
    * has a value.
    */
-  public isPresent () {
+  public isPresent (): boolean {
     if (this.tag === undefined) {
       // This action has never been scheduled before.
       return false;
@@ -107,8 +107,8 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
     }
   })(this);
 
-  public _receiveRuntimeObject (runtime: Runtime) {
-    if (!this.runtime) {
+  public _receiveRuntimeObject (runtime: Runtime): undefined {
+    if (this.runtime != null) {
       this.runtime = runtime;
     } else {
       throw new Error('Can only establish link to runtime once.');
