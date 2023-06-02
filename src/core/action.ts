@@ -59,7 +59,7 @@ export class Action<T extends Present>
     }
 
     public getManager (key: symbol | undefined): TriggerManager {
-        if (this._key == key) {
+        if (this._key === key) {
             return this.manager;
         }
         throw Error("Unable to grant access to manager.");
@@ -86,7 +86,7 @@ export class Action<T extends Present>
 
             tag = tag.getLaterTag(delay);
 
-            if (this.action.origin == Origin.physical) {
+            if (this.action.origin === Origin.physical) {
                 // If the resulting timestamp from delay is less than the current physical time
                 // on the platform, then the timestamp becomes the current physical time.
                 // Otherwise the tag is computed like a logical action's tag.

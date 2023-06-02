@@ -124,7 +124,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * (or the container thereof).
    */
     public getManager (key: symbol | undefined): IOPortManager<T> {
-        if (this._key == key) {
+        if (this._key === key) {
             return this.manager;
         }
         throw Error("Unable to grant access to manager.");

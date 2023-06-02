@@ -48,7 +48,7 @@ export class PrioritySet<P> {
 
     push (element: PrioritySetElement<P>) {
     // update linked list
-        if (this.head == undefined) {
+        if (this.head === undefined) {
             // create head
             element.next = undefined;
             this.head = element;
@@ -348,7 +348,7 @@ export class DependencyGraph<T> {
                 if (e.has(node)) {
                     // Found next link in the chain.
                     const deps = graph.get(node);
-                    if (match || (deps == null) || deps.size == 0) {
+                    if (match || (deps == null) || deps.size === 0) {
                         // Start a new line when this is not the first match,
                         // or when the current node is a start node.
                         chain = [];
@@ -383,7 +383,7 @@ export class DependencyGraph<T> {
         const start = new Array<T>();
         // Build a start set of node without dependencies.
         for (const [v, e] of this.adjacencyMap) {
-            if (!e || e.size == 0) {
+            if (!e || e.size === 0) {
                 start.push(v);
             }
         }
@@ -400,7 +400,7 @@ export class DependencyGraph<T> {
         const roots = new Set<T>();
         /* Populate start set */
         for (const [v, e] of this.adjacencyMap) {
-            if (!e || e.size == 0) {
+            if (!e || e.size === 0) {
                 roots.add(v); // leaf nodes have no dependencies
                 // clone.delete(v); // FIXME add a removeNodes function to factor out the duplicate code below
             }
@@ -444,7 +444,7 @@ export class SortableDependencyGraph<
 
         /* Populate start set */
         for (const [v, e] of this.adjacencyMap) {
-            if (!e || e.size == 0) {
+            if (!e || e.size === 0) {
                 start.push(v); // start nodes have no dependencies
                 graph.delete(v);
             }
@@ -458,13 +458,13 @@ export class SortableDependencyGraph<
                     // v depends on n
                     e.delete(n);
                 }
-                if (e.size == 0) {
+                if (e.size === 0) {
                     start.push(v);
                     graph.delete(v);
                 }
             }
         }
-        if (graph.size != 0) {
+        if (graph.size !== 0) {
             return false; // ERROR: cycle detected
         } else {
             return true;

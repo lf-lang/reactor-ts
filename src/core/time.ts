@@ -50,7 +50,7 @@ export class TimeValue {
       seconds < 0 ||
       nanoseconds < 0
         ) {
-            if (seconds != Number.MIN_SAFE_INTEGER) {
+            if (seconds !== Number.MIN_SAFE_INTEGER) {
                 throw new Error(
                     "Cannot instantiate a time interval based on negative or non-integer numbers."
                 );
@@ -176,7 +176,7 @@ export class TimeValue {
    */
     isEqualTo (other: TimeValue): boolean {
         return (
-            this.seconds == other.seconds && this.nanoseconds == other.nanoseconds
+            this.seconds === other.seconds && this.nanoseconds === other.nanoseconds
         );
     }
 
@@ -184,7 +184,7 @@ export class TimeValue {
    * Return true if this denotes a time interval of length zero.
    */
     isZero () {
-        if (this.seconds == 0 && this.nanoseconds == 0) {
+        if (this.seconds === 0 && this.nanoseconds === 0) {
             return true;
         } else {
             return false;
@@ -192,7 +192,7 @@ export class TimeValue {
     }
 
     isNever () {
-        if (this.seconds == Number.MIN_SAFE_INTEGER && this.nanoseconds == 0) {
+        if (this.seconds === Number.MIN_SAFE_INTEGER && this.nanoseconds === 0) {
             return true;
         } else {
             return false;
@@ -214,7 +214,7 @@ export class TimeValue {
         if (this.seconds < other.seconds) {
             return true;
         }
-        if (this.seconds == other.seconds && this.nanoseconds < other.nanoseconds) {
+        if (this.seconds === other.seconds && this.nanoseconds < other.nanoseconds) {
             return true;
         }
         return false;
@@ -229,7 +229,7 @@ export class TimeValue {
         if (this.seconds > other.seconds) {
             return true;
         }
-        if (this.seconds == other.seconds && this.nanoseconds > other.nanoseconds) {
+        if (this.seconds === other.seconds && this.nanoseconds > other.nanoseconds) {
             return true;
         }
         return false;
@@ -274,7 +274,7 @@ export class TimeValue {
 
             // Ensure the TimeValue fits into a 64 unsigned integer.
             const clampedTime = BigInt.asUintN(64, bigTime);
-            if (clampedTime != bigTime) {
+            if (clampedTime !== bigTime) {
                 throw new Error(
                     `TimeValue ${this.toString()} is too big to fit into ` +
             "a 64 bit unsigned integer"
@@ -413,7 +413,7 @@ export class Tag {
    * @param other The time instant to compare against this one.
    */
     isSimultaneousWith (other: Tag) {
-        return this.time.isEqualTo(other.time) && this.microstep == other.microstep;
+        return this.time.isEqualTo(other.time) && this.microstep === other.microstep;
     }
 
     /**
@@ -579,7 +579,7 @@ export class Alarm {
         // See whether the requested delay has elapsed.
         if (
             this.hiResDelay[0] < hiResDif[0] ||
-      (this.hiResDelay[0] == hiResDif[0] && this.hiResDelay[1] < hiResDif[1])
+      (this.hiResDelay[0] === hiResDif[0] && this.hiResDelay[1] < hiResDif[1])
         ) {
             // No more immediates a scheduled.
             this.immediateRef = undefined;

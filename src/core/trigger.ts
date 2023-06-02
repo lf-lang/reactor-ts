@@ -72,7 +72,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
     }
 
     public getManager (key: symbol | undefined): TriggerManager {
-        if (this._key == key) {
+        if (this._key === key) {
             return this.manager;
         }
         throw Error("Unable to grant access to manager.");

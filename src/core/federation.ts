@@ -1353,7 +1353,7 @@ export class FederatedApp extends App {
         for (const sendsToFedId of config.sendsTo) {
             this.addDownstreamFederate(sendsToFedId);
         }
-        if (config.dependsOn.length != config.upstreamConnectionDelays.length) {
+        if (config.dependsOn.length !== config.upstreamConnectionDelays.length) {
             // The length of the array upstreamConnectionDelays must be the same as
             // the length of the array depensOn.
             throw Error(
@@ -1640,7 +1640,7 @@ export class FederatedApp extends App {
                 });
                 const value: T = JSON.parse(messageBuffer.toString());
 
-                if (destPortAction.origin == Origin.logical) {
+                if (destPortAction.origin === Origin.logical) {
                     destPortAction
                         .asSchedulable(this._getKey(destPortAction))
                         .schedule(0, value, tag);

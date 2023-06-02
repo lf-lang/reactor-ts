@@ -93,7 +93,7 @@ export class Bank<T extends Reactor, S> {
     public allWritable<T extends Present>(
         ports: Array<MultiPort<T>>
     ): Array<WritableMultiPort<T>> {
-        if (ports.length != this.members.length) {
+        if (ports.length !== this.members.length) {
             throw new Error("Length of ports does not match length of reactors.");
         }
         const result = new Array<WritableMultiPort<T>>(ports.length);
@@ -106,7 +106,7 @@ export class Bank<T extends Reactor, S> {
     public writable<T extends Present>(
         ports: Array<IOPort<T>>
     ): Array<WritablePort<T>> {
-        if (ports.length != this.members.length) {
+        if (ports.length !== this.members.length) {
             throw new Error("Length of ports does not match length of reactors.");
         }
         const result = new Array<WritablePort<T>>(ports.length);

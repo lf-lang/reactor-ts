@@ -18,7 +18,7 @@ function print (
     const received = i.get();
     if (received) {
         console.log("Logging: " + received);
-        if (received == expected.get()) {
+        if (received === expected.get()) {
             this.util.requestStop();
         } else {
             this.util.requestErrorStop(

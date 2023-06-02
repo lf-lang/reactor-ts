@@ -1072,7 +1072,7 @@ export abstract class Reactor extends Component {
         //   - between reactors and reactions (NOTE: check also needs to happen
         //     in addReaction)
         const deps = this._dependencyGraph.getEdges(dst); // FIXME this will change with multiplex ports
-        if (deps != undefined && deps.size > 0) {
+        if (deps !== undefined && deps.size > 0) {
             throw Error("Destination port is already occupied.");
         }
 
@@ -1125,7 +1125,7 @@ export abstract class Reactor extends Component {
             // FIXME: This doesn't handle while direct feed thorugh cases.
             let hasDirectFeedThrough = false;
             if (src instanceof InPort && dst instanceof OutPort) {
-                hasDirectFeedThrough = dst.getContainer() == src.getContainer();
+                hasDirectFeedThrough = dst.getContainer() === src.getContainer();
             }
             // Throw error cases
             if (hasDirectFeedThrough && hasCycle) {
@@ -1577,7 +1577,7 @@ export class CallerPort<A extends Present, R extends Present>
    * (or the container thereof).
    */
     public getManager (key: symbol | undefined): TriggerManager {
-        if (this._key == key) {
+        if (this._key === key) {
             return this.manager;
         }
         throw Error("Unable to grant access to manager.");
@@ -1652,7 +1652,7 @@ export class CalleePort<A extends Present, R extends Present>
    * @param key
    */
     public getManager (key: symbol | undefined): CalleeManager<A> {
-        if (this._key == key) {
+        if (this._key === key) {
             return this.manager;
         }
         throw Error("Unable to grant access to manager.");
@@ -2022,7 +2022,7 @@ export class App extends Reactor {
 
             // If the scheduled event has an earlier tag than whatever is at the
             // head of the queue, set a new alarm.
-            if (head == undefined || e.tag.isSmallerThan(head.tag)) {
+            if (head === undefined || e.tag.isSmallerThan(head.tag)) {
                 this.app._setAlarmOrYield(e.tag);
             }
         }
@@ -2191,7 +2191,7 @@ export class App extends Reactor {
         super(null);
 
         let name = this.constructor.name;
-        if (name == "") {
+        if (name === "") {
             name = "app";
         } else {
             name = name.charAt(0).toLowerCase() + name.slice(1);
