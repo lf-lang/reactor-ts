@@ -324,10 +324,11 @@ export class DependencyGraph<T> {
         function printChain (node: T, chain: Array<T>) {
             dot += "\n";
             dot += '"' + node + '"';
-            if ((node as Object).toString() == "[object Object]") {
+            // TODO (axmmisaka): check if this is equivalent;
+            // https://stackoverflow.com/a/47903498
+            if (node?.toString === Object.prototype.toString) {
                 console.error(
-                    "Encountered node with no toString() implementation: " +
-            (node as Object).constructor
+                    "Encountered node with no toString() implementation: " + node?.constructor
                 );
             }
             while (chain.length > 0) {
