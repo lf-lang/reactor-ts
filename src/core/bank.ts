@@ -86,7 +86,7 @@ export class Bank<T extends Reactor, S> {
         );
     }
 
-    public toString () {
+    public toString (): string {
         return "bank(" + this.members.length + ")";
     }
 

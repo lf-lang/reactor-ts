@@ -16,7 +16,7 @@ function produceOutput<S> (
     this: ReactionSandbox,
     o: Write<S>,
     payload: Parameter<S>
-) {
+): void {
     o.set(payload.get());
 
     // FIXME: create a test that actually tests double sets.

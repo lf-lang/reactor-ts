@@ -65,7 +65,7 @@ export abstract class Component {
    * of an object that subclasses `Component`. If it is called more than once
    * a runtime error results.
    */
-    protected _linkToRuntimeObject () {
+    protected _linkToRuntimeObject (): void {
         this._getContainer()._requestRuntimeObject(this);
     }
 
@@ -127,12 +127,13 @@ export abstract class Component {
    * @param object the assumed container of the component
    * @returns the key of the entry that matches the component
    */
-    public static keyOfMatchingEntry (component: Component, object: object) {
+    public static keyOfMatchingEntry (component: Component, object: object): string {
         for (const [key, value] of Object.entries(object)) {
             if (value === component) {
                 return `${key}`;
             }
         }
+        return "";
     }
 
     /**
@@ -144,7 +145,7 @@ export abstract class Component {
    * constituents is the given port
    * @returns an identifier for the port based on its location in a matching multiport
    */
-    public static keyOfMatchingMultiport (port: Component, reactor: Reactor) {
+    public static keyOfMatchingMultiport (port: Component, reactor: Reactor): string {
         for (const [key, value] of Object.entries(reactor)) {
             if (value instanceof MultiPort) {
                 const channels = value.channels();
@@ -155,9 +156,10 @@ export abstract class Component {
                 }
             }
         }
+        return "";
     }
 
-    public static keyOfMatchingBank (member: Component, reactor: Reactor) {
+    public static keyOfMatchingBank (member: Component, reactor: Reactor): string {
         for (const [key, value] of Object.entries(reactor)) {
             if (value instanceof Bank) {
                 const members = value.all();
@@ -168,6 +170,7 @@ export abstract class Component {
                 }
             }
         }
+        return "";
     }
 
     /**

@@ -29,7 +29,7 @@ export abstract class Port<T extends Present> extends Trigger {
     /** The current value associated with this port. */
     protected value: T | Absent;
 
-    public _receiveRuntimeObject (runtime: Runtime) {
+    public _receiveRuntimeObject (runtime: Runtime): void {
         if (!this.runtime) {
             this.runtime = runtime;
         } else {
@@ -43,7 +43,7 @@ export abstract class Port<T extends Present> extends Trigger {
     /**
    * Returns true if the connected port's value has been set; false otherwise
    */
-    public isPresent () {
+    public isPresent (): boolean {
         Log.debug(this, () => "In isPresent()...");
         Log.debug(this, () => "value: " + this.value?.toString());
         Log.debug(this, () => "tag: " + this.tag);

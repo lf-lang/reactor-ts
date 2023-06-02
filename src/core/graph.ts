@@ -46,7 +46,7 @@ export class PrioritySet<P> {
 
     private count = 0;
 
-    push (element: PrioritySetElement<P>) {
+    push (element: PrioritySetElement<P>): void {
     // update linked list
         if (this.head === undefined) {
             // create head
@@ -130,7 +130,7 @@ export class DependencyGraph<T> {
 
     protected numberOfEdges = 0;
 
-    merge (apg: this) {
+    merge (apg: this): void {
         for (const [k, v] of apg.adjacencyMap) {
             const nodes = this.adjacencyMap.get(k);
             if (nodes != null) {
@@ -147,7 +147,7 @@ export class DependencyGraph<T> {
         }
     }
 
-    addNode (node: T) {
+    addNode (node: T): void {
         if (!this.adjacencyMap.has(node)) {
             this.adjacencyMap.set(node, new Set());
         }
@@ -189,7 +189,7 @@ export class DependencyGraph<T> {
      * Recursively traverse the graph to collect reachable origins.
      * @param current The current node being visited.
      */
-        function search (current: T) {
+        function search (current: T): void {
             visited.add(current);
             if (origins.has(current)) reachable.add(current);
             for (const next of self.getEdges(current)) {
@@ -232,7 +232,7 @@ export class DependencyGraph<T> {
         return false;
     }
 
-    removeNode (node: T) {
+    removeNode (node: T): void {
         let deps: Set<T> | undefined;
         if (((deps = this.adjacencyMap.get(node)) != null)) {
             this.numberOfEdges -= deps.size;
@@ -247,7 +247,7 @@ export class DependencyGraph<T> {
     }
 
     // node -> deps
-    addEdge (node: T, dependsOn: T) {
+    addEdge (node: T, dependsOn: T): void {
         const deps = this.adjacencyMap.get(node);
         if (deps == null) {
             this.adjacencyMap.set(node, new Set([dependsOn]));
@@ -266,13 +266,13 @@ export class DependencyGraph<T> {
         }
     }
 
-    addBackEdges (node: T, dependentNodes: Set<T>) {
+    addBackEdges (node: T, dependentNodes: Set<T>): void {
         for (const a of dependentNodes) {
             this.addEdge(a, node);
         }
     }
 
-    addEdges (node: T, dependsOn: Set<T>) {
+    addEdges (node: T, dependsOn: Set<T>): void {
         const deps = this.adjacencyMap.get(node);
         if (deps == null) {
             this.adjacencyMap.set(node, new Set(dependsOn));
@@ -290,7 +290,7 @@ export class DependencyGraph<T> {
         }
     }
 
-    removeEdge (node: T, dependsOn: T) {
+    removeEdge (node: T, dependsOn: T): void {
         const deps = this.adjacencyMap.get(node);
         if ((deps != null) && deps.has(dependsOn)) {
             deps.delete(dependsOn);
@@ -298,18 +298,18 @@ export class DependencyGraph<T> {
         }
     }
 
-    size () {
+    size (): [number, number] {
         return [this.adjacencyMap.size, this.numberOfEdges];
     }
 
-    nodes () {
+    nodes (): IterableIterator<T> {
         return this.adjacencyMap.keys();
     }
 
     /**
    * Return a DOT representation of the graph.
    */
-    toString () {
+    toString (): string {
         let dot = "";
         const graph = this.adjacencyMap;
         const visited = new Set<T>();
@@ -321,7 +321,7 @@ export class DependencyGraph<T> {
      * @param node The node that is currently being visited.
      * @param chain The current chain that is being built.
      */
-        function printChain (node: T, chain: T[]) {
+        function printChain (node: T, chain: T[]): void {
             dot += "\n";
             dot += "\"" + node + "\"";
             // TODO (axmmisaka): check if this is equivalent;
@@ -342,7 +342,7 @@ export class DependencyGraph<T> {
      * @param node The node that is currently being visited.
      * @param chain The current chain that is being built.
      */
-        function buildChain (node: T, chain: T[]) {
+        function buildChain (node: T, chain: T[]): void {
             let match = false;
             for (const [v, e] of graph) {
                 if (e.has(node)) {
@@ -428,7 +428,7 @@ export class DependencyGraph<T> {
 export class SortableDependencyGraph<
     T extends Sortable<number>
 > extends DependencyGraph<T> {
-    updatePriorities (destructive: boolean, spacing = 100) {
+    updatePriorities (destructive: boolean, spacing = 100): boolean {
         const start = new Array<T>();
         let graph: Map<T, Set<T>>;
         let count = 0;

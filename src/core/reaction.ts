@@ -122,7 +122,7 @@ implements Sortable<Priority>, PrioritySetElement<Priority>
    * Returning true just signals that the scheduler shouldn't stage it twice.
    * @param node
    */
-    updateIfDuplicateOf (node: PrioritySetElement<Priority> | undefined) {
+    updateIfDuplicateOf (node: PrioritySetElement<Priority> | undefined): boolean {
         return Object.is(this, node);
     }
 
@@ -130,7 +130,7 @@ implements Sortable<Priority>, PrioritySetElement<Priority>
    * Invoke the react function in the appropriate sandbox and with the argument
    * list that was specified upon the construction of this reaction object.
    */
-    public doReact () {
+    public doReact (): void {
         Log.debug(
             this,
             () =>
@@ -178,7 +178,7 @@ implements Sortable<Priority>, PrioritySetElement<Priority>
    * dependencies on other reactions.
    * @param priority The priority for this reaction.
    */
-    public setPriority (priority: number) {
+    public setPriority (priority: number): void {
         this.priority = priority;
     }
 

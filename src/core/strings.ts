@@ -8,7 +8,7 @@ export class StringUtil {
    * @param template Multi-line string whose indentation should be removed.
    * @returns String without indentation.
    */
-    public static dontIndent (template: TemplateStringsArray) {
+    public static dontIndent (template: TemplateStringsArray): string {
         return ("" + template.toString()).replace(/(\n)\s+/g, "$1");
     }
 

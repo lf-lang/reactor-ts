@@ -14,7 +14,7 @@ function print (
     this: ReactionSandbox,
     i: Read<unknown>,
     expected: State<unknown>
-) {
+): void {
     const received = i.get();
     if (received) {
         console.log("Logging: " + received);

@@ -214,7 +214,7 @@ export abstract class MultiPort<T extends Present>
         }
     })(this);
 
-    public toString () {
+    public toString (): string {
         return (
             this.container.toString() +
       "." +

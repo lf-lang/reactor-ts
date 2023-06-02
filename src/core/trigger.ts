@@ -31,7 +31,7 @@ export abstract class Trigger extends Component {
    */
     abstract isPresent (): boolean;
 
-    public getContainer () {
+    public getContainer (): Reactor {
         return this._getContainer();
     }
 }
@@ -83,7 +83,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
    * logical time. This result is not affected by whether it
    * has a value.
    */
-    public isPresent () {
+    public isPresent (): boolean {
         if (this.tag === undefined) {
             // This action has never been scheduled before.
             return false;
@@ -111,7 +111,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
         }
     })(this);
 
-    public _receiveRuntimeObject (runtime: Runtime) {
+    public _receiveRuntimeObject (runtime: Runtime): void {
         if (!this.runtime) {
             this.runtime = runtime;
         } else {

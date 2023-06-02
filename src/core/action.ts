@@ -176,7 +176,7 @@ export class Action<T extends Present>
         this.minDelay = minDelay;
     }
 
-    public toString () {
+    public toString (): string {
         return this._getFullyQualifiedName();
     }
 }
