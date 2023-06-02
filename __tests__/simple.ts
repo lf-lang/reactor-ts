@@ -2,18 +2,18 @@ import {Reactor, App, InPort, OutPort, StringUtil} from "../src/core/internal";
 
 class MyActor extends Reactor {
      
-    a: InPort<{t: number}> = new InPort(this);
+    a = new InPort<{t: number}>(this);
 
-    out: OutPort<any> = new OutPort(this);
+    out = new OutPort<any>(this);
 
 }
  
 
 class MyActor2 extends Reactor {
  
-    a: InPort<{t: number}> = new InPort(this);
+    a = new InPort<{t: number}>(this);
 
-    b: OutPort<{t: number, y: string}> = new OutPort(this);
+    b = new OutPort<{t: number, y: string}>(this);
         
     constructor (parent:Reactor) {
         super(parent)

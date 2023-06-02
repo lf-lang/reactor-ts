@@ -7,7 +7,7 @@ import {SingleEvent} from "../src/share/SingleEvent";
  */
 export class OutputResponder extends Reactor {
 
-    se: SingleEvent<string> = new SingleEvent(this, new Parameter("ContainedSingleEvent"));
+    se = new SingleEvent<string>(this, new Parameter("ContainedSingleEvent"));
     
     constructor (__parent__: Reactor){
         super(__parent__);

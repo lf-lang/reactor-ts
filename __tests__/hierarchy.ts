@@ -1,9 +1,9 @@
 import {Reactor, App, InPort, OutPort} from "../src/core/internal";
 
 class InOut extends Reactor {
-    a: InPort<string> = new InPort(this);
+    a = new InPort<string>(this);
 
-    b: OutPort<string> = new OutPort(this);
+    b = new OutPort<string>(this);
 
     constructor (parent: Reactor) {
         super(parent);

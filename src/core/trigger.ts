@@ -1,6 +1,6 @@
-import {Component, TaggedEvent, Reaction, Tag} from "./internal";
+import {Component} from "./internal";
 
-import type {Reactor, Runtime, Absent, Present} from "./internal";
+import type {Reactor, Runtime, Absent, Present, TaggedEvent, Reaction, Tag} from "./internal";
 
 export interface TriggerManager {
     getContainer(): Reactor;
@@ -15,7 +15,7 @@ export abstract class Trigger extends Component {
     /**
    * Reactions to trigger.
    */
-    protected reactions: Set<Reaction<unknown>> = new Set();
+    protected reactions = new Set<Reaction<unknown>>();
 
     /**
    * Request the manager of this trigger. The request will only be honored
@@ -24,7 +24,7 @@ export abstract class Trigger extends Component {
    * wrong key is supplied, return undefined.
    * @param key The private key embedded in this trigger.
    */
-    abstract getManager (key: Symbol | undefined): TriggerManager;
+    abstract getManager (key: symbol | undefined): TriggerManager;
 
     /**
    * Return whether or not this trigger is present.
@@ -63,7 +63,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
         if (e.trigger === this) {
             this.value = e.value;
             this.tag = e.tag;
-            for (let r of this.reactions) {
+            for (const r of this.reactions) {
                 this.runtime.stage(r);
             }
         } else {
@@ -71,7 +71,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
         }
     }
 
-    public getManager (key: Symbol | undefined): TriggerManager {
+    public getManager (key: symbol | undefined): TriggerManager {
         if (this._key == key) {
             return this.manager;
         }

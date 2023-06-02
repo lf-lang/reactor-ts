@@ -1,5 +1,6 @@
 import {Logger} from "../src/share/Logger"
-import {Reactor, App, Log, LogLevel, loggingCLAType, booleanCLAType, stringCLAType, unitBasedTimeValueCLAType} from "../src/core/internal";
+import type {Reactor} from "../src/core/internal";
+import { App, Log, LogLevel, loggingCLAType, booleanCLAType, stringCLAType, unitBasedTimeValueCLAType} from "../src/core/internal";
 
 const _reactor:Reactor = new App()
 const lg:Logger = new Logger(_reactor , 10)
@@ -69,7 +70,7 @@ describe("Test for Logger", () => {
 });
 
 describe("Command Line Arguments Helper Functions Tests", () => {
-    let testValue = unitBasedTimeValueCLAType("1 sec");
+    const testValue = unitBasedTimeValueCLAType("1 sec");
     test("null if the input is malformed", () => {
         expect(loggingCLAType("")).toBeNull
     });

@@ -1,5 +1,6 @@
-import {Reactor, App, Triggers, Args, InPort, Reaction, Priority,
-    SortableDependencyGraph, Sortable, PrioritySet, Log, StringUtil} from "../src/core/internal";
+import type { Reaction, Priority, Sortable} from "../src/core/internal";
+import {Reactor, App, Triggers, Args, InPort,
+    SortableDependencyGraph, PrioritySet, Log, StringUtil} from "../src/core/internal";
 
 // Log.setGlobalLevel(Log.levels.DEBUG);
 
@@ -59,7 +60,7 @@ class CNode<T> implements Sortable<Priority> {
 
 describe("Manually constructed simple precedence graphs", () => {
 
-    var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
+    var graph = new SortableDependencyGraph<Sortable<Priority>>();
     var reactor = new SR(new App());
 
     var nodes = reactor.getNodes();
@@ -75,7 +76,7 @@ describe("Manually constructed simple precedence graphs", () => {
 
 describe("Test for corner cases", () => {
 
-    var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
+    var graph = new SortableDependencyGraph<Sortable<Priority>>();
     const node: Sortable<Priority> = new CNode<Priority>(); 
     graph.addEdge(node, new CNode<Priority>());
 
@@ -83,7 +84,7 @@ describe("Test for corner cases", () => {
 
 describe("Manually constructed precedence graphs", () => {
 
-    var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
+    var graph = new SortableDependencyGraph<Sortable<Priority>>();
     var reactor = new R(new App());
 
     var nodes = reactor.getNodes();
@@ -187,7 +188,7 @@ describe("Manually constructed precedence graphs", () => {
 
 describe("ReactionQ", () => {
     
-    var graph:SortableDependencyGraph<Reaction<unknown>> = new SortableDependencyGraph();
+    var graph = new SortableDependencyGraph<Reaction<unknown>>();
     var reactor = new R(new App());
 
     var nodes = reactor.getNodes();
@@ -215,7 +216,7 @@ describe("ReactionQ", () => {
     reactionQ.push(nodes[1]);
 
     it("first pop", () => {
-        let r = reactionQ.pop();
+        const r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
                 Log.global.debug("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
@@ -227,7 +228,7 @@ describe("ReactionQ", () => {
     });
 
     it("second pop", () => {
-        let r = reactionQ.pop();
+        const r = reactionQ.pop();
         
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -240,7 +241,7 @@ describe("ReactionQ", () => {
     });
 
     it("third pop", () => {
-        let r = reactionQ.pop();
+        const r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
                 Log.global.debug("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
@@ -252,7 +253,7 @@ describe("ReactionQ", () => {
     });
 
     it("fourth pop", () => {
-        let r = reactionQ.pop();
+        const r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
                 Log.global.debug("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
@@ -265,7 +266,7 @@ describe("ReactionQ", () => {
     });
 
     it("fifth pop", () => {
-        let r = reactionQ.pop();
+        const r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
                 Log.global.debug("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
@@ -278,7 +279,7 @@ describe("ReactionQ", () => {
     });
     
     it("sixth pop", () => {
-        let r = reactionQ.pop();
+        const r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
                 Log.global.debug("Found matching node: " + i + " with prio: " + nodes[i].getPriority());
@@ -290,7 +291,7 @@ describe("ReactionQ", () => {
     });
 
     it("seventh pop", () => {
-        let r = reactionQ.pop();
+        const r = reactionQ.pop();
         expect(r).toBeUndefined();
     });
 

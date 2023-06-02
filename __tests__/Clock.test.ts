@@ -1,6 +1,7 @@
 "use strict";
 
-import {Action,Timer, App, Sched, Triggers, Args,TimeValue, TimeUnit, Origin} from "../src/core/internal";
+import type { Sched} from "../src/core/internal";
+import {Action,Timer, App, Triggers, Args,TimeValue, TimeUnit, Origin} from "../src/core/internal";
 
 /**
  * This app tests simultaneous events.

@@ -30,8 +30,8 @@ class R1 extends Reactor {
             new Triggers(this.in),
             new Args(this.in, this.writable(this.out)),
             function (this, __in, __out) {
-                let tmp = __in.get()
-                let out:number = 0
+                const tmp = __in.get()
+                let out = 0
                 if (tmp) {
                     out = tmp - 1;
                 }
@@ -54,8 +54,8 @@ class R2 extends Reactor {
             new Triggers(this.in),
             new Args(this.in, this.writable(this.out)),
             function (this, __in, __out) {
-                let tmp = __in.get()
-                let out:number = 0;
+                const tmp = __in.get()
+                const out = 0;
                 if(tmp && tmp == 0) {
                     this.util.requestStop
                 } else {

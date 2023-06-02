@@ -7,7 +7,7 @@ class SEContainer extends Reactor{
     // Made these public to accommodate the test below.
     public o: OutPort<any>= new OutPort<any>(this);
 
-    public child: SingleEvent<string> = new SingleEvent(this, new Parameter("Foo"));
+    public child = new SingleEvent<string>(this, new Parameter("Foo"));
 
     constructor (parent: Reactor) {
         super(parent);
@@ -34,7 +34,7 @@ class SETest extends App {
 
     logContainer: LogContainer;
 
-    constructor (timeout: TimeValue, keepAlive: boolean = false, fast: boolean = false, success: ()=> void, fail: ()=>void ){
+    constructor (timeout: TimeValue, keepAlive = false, fast = false, success: ()=> void, fail: ()=>void ){
         super(timeout, keepAlive, fast, success, fail)
         this.seContainer = new SEContainer(this);
         this.logContainer = new LogContainer(this);
@@ -63,7 +63,7 @@ describe("HierarchicalSingleEvent", function () {
         };
 
         // Tell the reactor runtime to successfully terminate after 3 seconds.
-        let seTest = new SETest(TimeValue.secs(3), false, false, done, failReactor);
+        const seTest = new SETest(TimeValue.secs(3), false, false, done, failReactor);
 
         // Normally _setAllParents would be called as part of the initialization
         // process for starting an app, but we call it directly here to set

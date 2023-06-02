@@ -1,14 +1,15 @@
-import {Bank , Reactor, App, Timer, Triggers, Args, Present, OutPort, InPort, TimeValue, OutMultiPort, Port} from "../src/core/internal";
+import type { Present} from "../src/core/internal";
+import {Bank , Reactor, App, Timer, Triggers, Args, OutPort, InPort, TimeValue, OutMultiPort, Port} from "../src/core/internal";
 
 class Periodic extends Reactor {
     
     t: Timer = new Timer(this, 0, TimeValue.sec(1));
 
-    o: OutPort<number> = new OutPort(this)
+    o = new OutPort<number>(this)
 
     constructor (parent: Reactor) {
         super(parent)
-        let writer = this.writable(this.o);
+        const writer = this.writable(this.o);
         this.addReaction(
             new Triggers(this.t),
             new Args(this.t),
@@ -23,7 +24,7 @@ class MultiPeriodic extends Reactor {
     
     t: Timer = new Timer(this, 0, TimeValue.sec(1));
 
-    o: OutMultiPort<number> = new OutMultiPort(this, 2)
+    o = new OutMultiPort<number>(this, 2)
 
     constructor (parent: Reactor) {
         super(parent)
@@ -38,7 +39,7 @@ class MultiPeriodic extends Reactor {
 }
 
 class Generic<T extends Present> extends Reactor {
-    input: InPort<T> = new InPort(this);
+    input = new InPort<T>(this);
 }
 
 describe("Check bank index", () => {
@@ -52,15 +53,15 @@ describe("Check bank index", () => {
 
         constructor () {
             super();
-            let ports = new Array<OutPort<number>>()
-            let multiPorts = new Array<OutMultiPort<number>>()
+            const ports = new Array<OutPort<number>>()
+            const multiPorts = new Array<OutMultiPort<number>>()
             test("throw error on mismatch in lenght of ports", () => {
                 expect(() => this.b.writable(ports)).toThrowError("Length of ports does not match length of reactors.")
                 expect(() => this.b.allWritable(multiPorts)).toThrowError("Length of ports does not match length of reactors.")
             })
 
-            let allWriter = this.d.allWritable(this.d.port((member) => (member.o)));            
-            let writer = this.b.writable(this.b.port((member) => (member.o)));
+            const allWriter = this.d.allWritable(this.d.port((member) => (member.o)));            
+            const writer = this.b.writable(this.b.port((member) => (member.o)));
             test("check multiport width", () => {
                 expect(allWriter[0].width()).toBe(2);
             }) 

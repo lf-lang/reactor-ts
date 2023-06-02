@@ -1,19 +1,20 @@
-import {
+import type {
     Reaction,
     Reactor,
     Runtime,
     Tag,
-    Trigger,
     TriggerManager,
     Absent,
     MultiReadWrite,
     Present,
-    ReadWrite,
+    ReadWrite} from "./internal";
+import {
+    Trigger,
     Log
 } from "./internal";
 
 export abstract class Port<T extends Present> extends Trigger {
-    protected receivers: Set<WritablePort<T>> = new Set();
+    protected receivers = new Set<WritablePort<T>>();
 
     protected runtime!: Runtime;
 
@@ -107,7 +108,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * Only the holder of the key may obtain a writable port.
    * @param key
    */
-    public asWritable (key: Symbol | undefined): WritablePort<T> {
+    public asWritable (key: symbol | undefined): WritablePort<T> {
         if (this._key === key) {
             return this.writer;
         }
@@ -122,7 +123,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * @param container Reference to the container of this port
    * (or the container thereof).
    */
-    public getManager (key: Symbol | undefined): IOPortManager<T> {
+    public getManager (key: symbol | undefined): IOPortManager<T> {
         if (this._key == key) {
             return this.manager;
         }
@@ -141,9 +142,9 @@ export abstract class IOPort<T extends Present> extends Port<T> {
             this.port.value = value;
             this.port.tag = this.port.runtime.util.getCurrentTag();
             // Set values in downstream receivers.
-            this.port.receivers.forEach((p) => p.set(value));
+            this.port.receivers.forEach((p) => { p.set(value); });
             // Stage triggered reactions for execution.
-            this.port.reactions.forEach((r) => this.port.runtime.stage(r));
+            this.port.reactions.forEach((r) => { this.port.runtime.stage(r); });
         }
 
         public get (): T | Absent {
@@ -178,7 +179,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
         addReceiver (port: WritablePort<T>): void {
             this.port.receivers.add(port);
             if (this.port.runtime.isRunning()) {
-                let val = this.port.get();
+                const val = this.port.get();
                 if (val !== undefined) {
                     port.set(val);
                 }

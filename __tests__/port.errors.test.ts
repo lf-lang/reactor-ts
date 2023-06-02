@@ -29,7 +29,7 @@ class R1 extends Reactor {
 
     constructor (parent: Reactor) {
         super(parent)
-        let writer = this.writable(this.inp)
+        const writer = this.writable(this.inp)
         test("check inactive during construction", () => {
             expect(this._active).toBe(false)
         })

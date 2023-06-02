@@ -1,4 +1,5 @@
-import {App, Triggers, Args, Origin, TimeValue, Reactor, Timer, Sched, Action} from "../src/core/internal";
+import type { Sched} from "../src/core/internal";
+import {App, Triggers, Args, Origin, TimeValue, Reactor, Timer, Action} from "../src/core/internal";
 
 // Upon initialization, this reactor should produce an
 // output event

@@ -26,12 +26,12 @@ export function loggingCLAType (logging: string): LogLevel | null {
 export function unitBasedTimeValueCLAType (timeout: string): TimeValue | null {
     let duration: number;
     let units: TimeUnit;
-    let wholeTimeoutPattern = /^[0-9]+\s+[a-z]+$/;
+    const wholeTimeoutPattern = /^[0-9]+\s+[a-z]+$/;
     if (wholeTimeoutPattern.test(timeout)) {
-        let durationPattern = /^[0-9]+/;
-        let unitsPattern = /[a-z]+$/;
+        const durationPattern = /^[0-9]+/;
+        const unitsPattern = /[a-z]+$/;
 
-        let stringDuration = durationPattern.exec(timeout);
+        const stringDuration = durationPattern.exec(timeout);
         if (stringDuration !== null) {
             duration = parseInt(stringDuration[0]);
         } else {
@@ -40,7 +40,7 @@ export function unitBasedTimeValueCLAType (timeout: string): TimeValue | null {
         }
 
         // Test if the units are a valid TimeUnits
-        let stringUnits = unitsPattern.exec(timeout);
+        const stringUnits = unitsPattern.exec(timeout);
         if (stringUnits !== null && stringUnits[0] in TimeUnit) {
       type TimeUnitString = keyof typeof TimeUnit;
       units = TimeUnit[stringUnits[0] as TimeUnitString];

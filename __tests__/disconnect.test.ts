@@ -40,7 +40,7 @@ class R1 extends Reactor {
             new Triggers(this.in1),
             new Args(this.in1, this.in2, this.out2),
             function (this, __in1, __in2, __out2) {
-                let R2 = new R1(this.getReactor())
+                const R2 = new R1(this.getReactor())
                 test("expect that disconnecting an existing connection will not result in an error being thrown", () => {
                     expect(() => {
                         this.connect(R2.out2, R2.in2)

@@ -1,4 +1,4 @@
-import {Tag, TimeValue, Trigger} from "./internal";
+import type {Tag, TimeValue, Trigger} from "./internal";
 
 /**
  * A variable can be read, written to, or scheduled. Variables may be passed to

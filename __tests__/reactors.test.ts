@@ -31,15 +31,15 @@ class R1 extends Reactor {
             new Args(this.in, this.writable(this.out)),
             function (this, __in, __out) {
                 const util = this.util
-                let initialElapsedTime = util.getElapsedPhysicalTime();
-                let tmp = __in.get();
+                const initialElapsedTime = util.getElapsedPhysicalTime();
+                const tmp = __in.get();
                 
                 if(tmp)
                 {
                     console.log("Received "+tmp.toString());
                 }
 
-                let out: number = 0;
+                let out = 0;
 
                 try {                        
                     // let sleep_time =  new UnitBasedTimeValue(2, TimeUnit.sec);
@@ -83,7 +83,7 @@ class R2 extends Reactor {
             new Triggers(this.in),
             new Args(this.in),
             function (this, __in) {
-                let tmp = __in.get();
+                const tmp = __in.get();
                 /* Do Nothing */   
                 try
                 {            
@@ -154,7 +154,7 @@ describe("Testing deadlines", function () {
             throw new Error("Test has failed.");
         };
         
-        let app = new testApp("testApp", TimeValue.withUnits(1,TimeUnit.nsec), done, fail)
+        const app = new testApp("testApp", TimeValue.withUnits(1,TimeUnit.nsec), done, fail)
 
         // spyOn(app, '_start').and.callThrough
 
@@ -174,7 +174,7 @@ describe("Testing deadlines", function () {
             throw new Error("Test has failed.");
         };
         
-        let app = new testApp("testApp", TimeValue.nsecs(1), done, fail, undefined, TimeValue.nsecs(1))
+        const app = new testApp("testApp", TimeValue.nsecs(1), done, fail, undefined, TimeValue.nsecs(1))
 
         // const spy = jest.spyOn(global.console, 'warn').mockImplementation(warn => {
         //         consoleOutput.push(warn); 
@@ -203,7 +203,7 @@ describe("Testing deadlines", function () {
             throw new Error("Test has failed.");
         };
         
-        let app = new testApp("testApp", TimeValue.withUnits(1,TimeUnit.nsec), done , fail, () => {Log.global.warn("Deadline missed!");},  TimeValue.withUnits(1,TimeUnit.nsec))
+        const app = new testApp("testApp", TimeValue.withUnits(1,TimeUnit.nsec), done , fail, () => {Log.global.warn("Deadline missed!");},  TimeValue.withUnits(1,TimeUnit.nsec))
 
 
         app._start();
@@ -225,7 +225,7 @@ describe("Testing Reactions", function () {
     };
 
     it("Manually call reactions", () => {
-        let app = new testApp("testApp", TimeValue.withUnits(5000, TimeUnit.msec), () => {}, fail)
+        const app = new testApp("testApp", TimeValue.withUnits(5000, TimeUnit.msec), () => {}, fail)
 
         /* FIXME: Find a way to manually test reactors */
         /* let reactions = app.reactor1._getReactions();

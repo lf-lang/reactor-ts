@@ -1,10 +1,11 @@
+import type {
+    Read,
+    Present,
+    ReactionSandbox} from "../core/internal";
 import {
     Reactor,
-    Read,
     Triggers,
     Args,
-    Present,
-    ReactionSandbox,
     InPort,
     State
 } from "../core/internal";

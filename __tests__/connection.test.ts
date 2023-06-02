@@ -2,12 +2,12 @@ import {Reactor, App, Triggers, Args, State, OutPort, InPort, TimeUnit, TimeValu
 
 describe("Check canConnect", () => {
     class Source extends Reactor {
-        out: OutPort<number> = new OutPort(this)
+        out = new OutPort<number>(this)
     }
     class Destination extends Reactor {
-        in: InPort<number> = new InPort(this)
+        in = new InPort<number>(this)
 
-        out: InPort<number> = new InPort(this)
+        out = new InPort<number>(this)
     }
 
     class TestApp extends App {
@@ -40,7 +40,7 @@ describe("Check _connect", () => {
     jest.setTimeout(5000);
 
     class Source extends Reactor {
-        out: OutPort<number> = new OutPort(this)
+        out = new OutPort<number>(this)
 
         constructor (container: Reactor) {
             super(container);
@@ -55,9 +55,9 @@ describe("Check _connect", () => {
         }
     }
     class Destination extends Reactor {
-        in: InPort<number> = new InPort(this)
+        in = new InPort<number>(this)
 
-        received: State<number> = new State(0)
+        received = new State<number>(0)
 
         constructor (container: Reactor) {
             super(container)
@@ -65,7 +65,7 @@ describe("Check _connect", () => {
                 new Triggers(this.in),
                 new Args(this.in, this.received),
                 function (this, __in, __received) {
-                    let tmp = __in.get();
+                    const tmp = __in.get();
                     try
                     {            
                         if(tmp)
@@ -98,7 +98,7 @@ describe("Check _connect", () => {
             throw new Error("Test has failed.");
         };
         
-        let testApp = new TestApp(TimeValue.withUnits(1,TimeUnit.nsec), done, fail)
+        const testApp = new TestApp(TimeValue.withUnits(1,TimeUnit.nsec), done, fail)
         testApp._start()
         expect(testApp.destination.received.get()).toBe(100)
     })

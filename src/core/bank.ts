@@ -1,4 +1,4 @@
-import {
+import type {
     IOPort,
     MultiPort,
     Port,
@@ -29,13 +29,13 @@ export class Bank<T extends Reactor, S> {
     /**
    * Array of reactor instances that constitute the bank.
    */
-    private readonly members: Array<T> = new Array();
+    private readonly members = new Array<T>();
 
     /**
    * A mapping from containing reactors to indices corresponding to the member
    * of a contained bank that is currently being initialized (if there is one).
    */
-    public static readonly initializationMap: Map<Reactor, number> = new Map();
+    public static readonly initializationMap = new Map<Reactor, number>();
 
     /**
    * Construct a new bank of given width on the basis of a given reactor class and a list of arguments.
@@ -98,7 +98,7 @@ export class Bank<T extends Reactor, S> {
         if (ports.length != this.members.length) {
             throw new Error("Length of ports does not match length of reactors.");
         }
-        let result = new Array<WritableMultiPort<T>>(ports.length);
+        const result = new Array<WritableMultiPort<T>>(ports.length);
         for (let i = 0; i < ports.length; i++) {
             result[i] = this.members[i].allWritable(ports[i]);
         }
@@ -111,7 +111,7 @@ export class Bank<T extends Reactor, S> {
         if (ports.length != this.members.length) {
             throw new Error("Length of ports does not match length of reactors.");
         }
-        let result = new Array<WritablePort<T>>(ports.length);
+        const result = new Array<WritablePort<T>>(ports.length);
         for (let i = 0; i < ports.length; i++) {
             result[i] = this.members[i].writable(ports[i]);
         }

@@ -32,7 +32,7 @@ class TwoInTwoOut extends Reactor {
 
     constructor (parent: Reactor) {
         super(parent)
-        let writer = this.allWritable(this.inp)
+        const writer = this.allWritable(this.inp)
         test("check inactive during construction", () => {
             expect(this._active).toBe(false)
         })

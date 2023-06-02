@@ -1,3 +1,6 @@
+import type {
+    WritablePort
+} from "../core/internal";
 import {
     Args,
     Parameter,
@@ -10,8 +13,7 @@ import {
     App,
     TimeValue,
     Origin,
-    Log,
-    WritablePort
+    Log
 } from "../core/internal";
 
 Log.global.level = Log.levels.INFO;
@@ -20,9 +22,9 @@ class Ramp extends Reactor {
 
     until: Parameter<number>;
 
-    value: OutPort<number> = new OutPort(this);
+    value = new OutPort<number>(this);
 
-    constructor (parent: Reactor, until: number = 100000, period: TimeValue) {
+    constructor (parent: Reactor, until = 100000, period: TimeValue) {
         super(parent);
         this.until = new Parameter(until);
         this.next = new Action<number>(this, Origin.logical, period);
@@ -34,7 +36,7 @@ class Ramp extends Reactor {
                 this.writable(this.value)
             ),
             function (this, next, until, value) {
-                let n = next.get();
+                const n = next.get();
                 if (n === undefined) {
                     next.schedule(0, 2);
                 } else {
@@ -51,9 +53,9 @@ class Ramp extends Reactor {
 }
 
 class Filter extends Reactor {
-    inp: InPort<number> = new InPort(this);
+    inp = new InPort<number>(this);
 
-    out: OutPort<number> = new OutPort(this);
+    out = new OutPort<number>(this);
 
     startPrime: Parameter<number>;
 
@@ -77,12 +79,12 @@ class Filter extends Reactor {
                 this.localPrimes
             ),
             function (this, inp, out, prime, hasChild, localPrimes) {
-                let p = inp.get();
+                const p = inp.get();
                 if (p !== undefined) {
-                    let seen = localPrimes.get();
-                    let size = seen.length;
+                    const seen = localPrimes.get();
+                    const size = seen.length;
                     let div = false;
-                    for (let q of seen) {
+                    for (const q of seen) {
                         if (Number.isInteger(p / q)) {
                             div = true;
                             break;
@@ -96,7 +98,7 @@ class Filter extends Reactor {
                         } else {
                             // Potential prime found.
                             if (!hasChild.get()) {
-                                let n = new Filter(this.getReactor(), p, numberOfPrimes);
+                                const n = new Filter(this.getReactor(), p, numberOfPrimes);
                                 // this.start(n)
                                 // console.log("CREATING...")
                                 // let x = this.create(Filter, [this.getReactor(), p])
@@ -127,8 +129,8 @@ class Sieve extends App {
     constructor (
         name: string,
         timeout: TimeValue | undefined = undefined,
-        keepAlive: boolean = false,
-        fast: boolean = false,
+        keepAlive = false,
+        fast = false,
         success?: () => void,
         fail?: () => void
     ) {
@@ -139,5 +141,5 @@ class Sieve extends App {
     }
 }
 
-let sieve = new Sieve("Sieve");
+const sieve = new Sieve("Sieve");
 sieve._start();

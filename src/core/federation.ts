@@ -1,5 +1,11 @@
-import {Socket, createConnection, SocketConnectOpts} from "net";
+import type {Socket, SocketConnectOpts} from "net";
+import { createConnection} from "net";
 import {EventEmitter} from "events";
+import type {
+    Present,
+    Action,
+    FederateConfig
+} from "./internal";
 import {
     Log,
     Tag,
@@ -7,11 +13,8 @@ import {
     Origin,
     getCurrentPhysicalTime,
     Alarm,
-    Present,
     App,
-    Action,
-    TaggedEvent,
-    FederateConfig
+    TaggedEvent
 } from "./internal";
 
 // ---------------------------------------------------------------------//
@@ -24,7 +27,7 @@ import {
  *  This is used by both the federates and the rti, so message lengths
  *  should generally match.
  */
-export const BUFFER_SIZE: number = 256;
+export const BUFFER_SIZE = 256;
 
 /**
  *  Number of seconds that elapse between a federate's attempts
@@ -38,7 +41,7 @@ export const CONNECT_RETRY_INTERVAL: TimeValue = TimeValue.secs(2);
  *  this many times before giving up. E.g., 500 retries every
  *  2 seconds results in retrying for about 16 minutes.
  */
-export const CONNECT_NUM_RETRIES: number = 500;
+export const CONNECT_NUM_RETRIES = 500;
 
 /**
  * Message types defined for communication between a federate and the
@@ -356,7 +359,7 @@ class RTIClient extends EventEmitter {
     public connectToRTI (port: number, host: string) {
     // Create an IPv4 socket for TCP (not UDP) communication over IP (0)
 
-        let thiz = this;
+        const thiz = this;
 
         const options: SocketConnectOpts = {
             port: port,
@@ -417,7 +420,7 @@ class RTIClient extends EventEmitter {
                         return `Retrying RTI connection in ${CONNECT_RETRY_INTERVAL}.`;
                     });
                     this.connectionAttempts++;
-                    let a = new Alarm();
+                    const a = new Alarm();
                     a.set(
                         this.connectToRTI.bind(this, port, host),
                         CONNECT_RETRY_INTERVAL
@@ -451,7 +454,7 @@ class RTIClient extends EventEmitter {
         upstreamFedDelays: TimeValue[],
         downstreamFedIDs: number[]
     ) {
-        let msg = Buffer.alloc(
+        const msg = Buffer.alloc(
             9 + upstreamFedIDs.length * 10 + downstreamFedIDs.length * 2
         );
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEIGHBOR_STRUCTURE);
@@ -461,7 +464,7 @@ class RTIClient extends EventEmitter {
         let bufferIndex = 9;
         for (let i = 0; i < upstreamFedIDs.length; i++) {
             msg.writeUInt16LE(upstreamFedIDs[i], bufferIndex);
-            let delay = upstreamFedDelays[i].toBinary();
+            const delay = upstreamFedDelays[i].toBinary();
             delay.copy(msg, bufferIndex + 2);
             bufferIndex += 10;
         }
@@ -481,7 +484,7 @@ class RTIClient extends EventEmitter {
     }
 
     public sendUDPPortNumToRTI (udpPort: number) {
-        let msg = Buffer.alloc(3);
+        const msg = Buffer.alloc(3);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_UDP_PORT, 0);
         msg.writeUInt16BE(udpPort, 1);
         try {
@@ -504,9 +507,9 @@ class RTIClient extends EventEmitter {
    *  @param myPhysicalTime The physical time at this federate.
    */
     public requestStartTimeFromRTI (myPhysicalTime: TimeValue) {
-        let msg = Buffer.alloc(9);
+        const msg = Buffer.alloc(9);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TIMESTAMP, 0);
-        let time = myPhysicalTime.toBinary();
+        const time = myPhysicalTime.toBinary();
         time.copy(msg, 1);
         try {
             Log.debug(this, () => {
@@ -536,7 +539,7 @@ class RTIClient extends EventEmitter {
     ) {
         const value = Buffer.from(JSON.stringify(data), "utf-8");
 
-        let msg = Buffer.alloc(value.length + 9);
+        const msg = Buffer.alloc(value.length + 9);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
         msg.writeUInt16LE(destFederateID, 3);
@@ -576,7 +579,7 @@ class RTIClient extends EventEmitter {
     ) {
         const value = Buffer.from(JSON.stringify(data), "utf-8");
 
-        let msg = Buffer.alloc(value.length + 21);
+        const msg = Buffer.alloc(value.length + 21);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_TAGGED_MESSAGE, 0);
         msg.writeUInt16LE(destPortID, 1);
         msg.writeUInt16LE(destFederateID, 3);
@@ -609,7 +612,7 @@ class RTIClient extends EventEmitter {
    * a Buffer.
    */
     public sendRTILogicalTimeComplete (completeTime: Buffer) {
-        let msg = Buffer.alloc(13);
+        const msg = Buffer.alloc(13);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_LOGICAL_TAG_COMPLETE, 0);
         completeTime.copy(msg, 1);
         // FIXME: Add microstep properly.
@@ -632,7 +635,7 @@ class RTIClient extends EventEmitter {
    * the federate is shutting down.
    */
     public sendRTIResign () {
-        let msg = Buffer.alloc(1);
+        const msg = Buffer.alloc(1);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_RESIGN, 0);
         try {
             Log.debug(this, () => {
@@ -654,7 +657,7 @@ class RTIClient extends EventEmitter {
    * integer in a Buffer.
    */
     public sendRTINextEventTag (nextTag: Buffer) {
-        let msg = Buffer.alloc(13);
+        const msg = Buffer.alloc(13);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_NEXT_EVENT_TAG, 0);
         nextTag.copy(msg, 1);
         try {
@@ -673,7 +676,7 @@ class RTIClient extends EventEmitter {
    * Send the RTI a stop request message.
    */
     public sendRTIStopRequest (stopTag: Buffer) {
-        let msg = Buffer.alloc(13);
+        const msg = Buffer.alloc(13);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_STOP_REQUEST, 0);
         stopTag.copy(msg, 1);
         try {
@@ -692,7 +695,7 @@ class RTIClient extends EventEmitter {
    * Send the RTI a stop request reply message.
    */
     public sendRTIStopRequestReply (stopTag: Buffer) {
-        let msg = Buffer.alloc(13);
+        const msg = Buffer.alloc(13);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_STOP_REQUEST_REPLY, 0);
         stopTag.copy(msg, 1);
         try {
@@ -721,7 +724,7 @@ class RTIClient extends EventEmitter {
         federateID: number,
         federatePortID: number
     ) {
-        let msg = Buffer.alloc(17);
+        const msg = Buffer.alloc(17);
         msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
         msg.writeUInt16LE(federatePortID, 1);
         msg.writeUInt16LE(federateID, 3);
@@ -748,7 +751,7 @@ class RTIClient extends EventEmitter {
    * contain 0 or more complete messages.
    */
     private handleSocketData (data: Buffer) {
-        let thiz = this;
+        const thiz = this;
         if (data.length < 1) {
             throw new Error("Received a message from the RTI with 0 length.");
         }
@@ -773,7 +776,7 @@ class RTIClient extends EventEmitter {
         });
 
         while (bufferIndex < assembledData.length) {
-            let messageTypeByte = assembledData[bufferIndex];
+            const messageTypeByte = assembledData[bufferIndex];
             switch (messageTypeByte) {
                 case RTIMessageTypes.MSG_TYPE_FED_IDS: {
                     // MessageType: 1 byte.
@@ -793,7 +796,7 @@ class RTIClient extends EventEmitter {
                     // MessageType: 1 byte.
                     // Timestamp: 8 bytes.
 
-                    let incomplete = assembledData.length < 9 + bufferIndex;
+                    const incomplete = assembledData.length < 9 + bufferIndex;
 
                     if (incomplete) {
                         thiz.chunkedBuffer = Buffer.alloc(
@@ -801,9 +804,9 @@ class RTIClient extends EventEmitter {
                         );
                         assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
                     } else {
-                        let timeBuffer = Buffer.alloc(8);
+                        const timeBuffer = Buffer.alloc(8);
                         assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9);
-                        let startTime = TimeValue.fromBinary(timeBuffer);
+                        const startTime = TimeValue.fromBinary(timeBuffer);
                         Log.debug(thiz, () => {
                             return (
                                 "Received MSG_TYPE_TIMESTAMP buffer from the RTI " +
@@ -829,7 +832,7 @@ class RTIClient extends EventEmitter {
                     // The next four bytes after that will be the length of the message
                     // The remaining bytes are the message.
 
-                    let incomplete = assembledData.length < 9 + bufferIndex;
+                    const incomplete = assembledData.length < 9 + bufferIndex;
 
                     if (incomplete) {
                         thiz.chunkedBuffer = Buffer.alloc(
@@ -838,12 +841,12 @@ class RTIClient extends EventEmitter {
                         assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
                         bufferIndex += 9;
                     } else {
-                        let destPortID = assembledData.readUInt16LE(bufferIndex + 1);
-                        let messageLength = assembledData.readUInt32LE(bufferIndex + 5);
+                        const destPortID = assembledData.readUInt16LE(bufferIndex + 1);
+                        const messageLength = assembledData.readUInt32LE(bufferIndex + 5);
 
                         // Once the message length is parsed, we can determine whether
                         // the body of the message has been chunked.
-                        let isChunked =
+                        const isChunked =
               messageLength > assembledData.length - (bufferIndex + 9);
 
                         if (isChunked) {
@@ -854,14 +857,14 @@ class RTIClient extends EventEmitter {
                             assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
                         } else {
                             // Finish processing the complete message.
-                            let messageBuffer = Buffer.alloc(messageLength);
+                            const messageBuffer = Buffer.alloc(messageLength);
                             assembledData.copy(
                                 messageBuffer,
                                 0,
                                 bufferIndex + 9,
                                 bufferIndex + 9 + messageLength
                             );
-                            let destPortAction = thiz.federatePortActionByID.get(destPortID);
+                            const destPortAction = thiz.federatePortActionByID.get(destPortID);
                             thiz.emit("message", destPortAction, messageBuffer);
                         }
 
@@ -878,7 +881,7 @@ class RTIClient extends EventEmitter {
                     // The next four bytes will be the microstep of the message.
                     // The remaining bytes are the message.
 
-                    let incomplete = assembledData.length < 21 + bufferIndex;
+                    const incomplete = assembledData.length < 21 + bufferIndex;
 
                     if (incomplete) {
                         thiz.chunkedBuffer = Buffer.alloc(
@@ -887,18 +890,18 @@ class RTIClient extends EventEmitter {
                         assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
                         bufferIndex += 21;
                     } else {
-                        let destPortID = assembledData.readUInt16LE(bufferIndex + 1);
-                        let messageLength = assembledData.readUInt32LE(bufferIndex + 5);
+                        const destPortID = assembledData.readUInt16LE(bufferIndex + 1);
+                        const messageLength = assembledData.readUInt32LE(bufferIndex + 5);
 
-                        let tagBuffer = Buffer.alloc(12);
+                        const tagBuffer = Buffer.alloc(12);
                         assembledData.copy(tagBuffer, 0, bufferIndex + 9, bufferIndex + 21);
-                        let tag = Tag.fromBinary(tagBuffer);
+                        const tag = Tag.fromBinary(tagBuffer);
                         Log.debug(thiz, () => {
                             return `Received an RTI MSG_TYPE_TAGGED_MESSAGE: Tag Buffer: ${tag}`;
                         });
                         // FIXME: Process microstep properly.
 
-                        let isChunked =
+                        const isChunked =
               messageLength > assembledData.length - (bufferIndex + 21);
 
                         if (isChunked) {
@@ -909,14 +912,14 @@ class RTIClient extends EventEmitter {
                             assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
                         } else {
                             // Finish processing the complete message.
-                            let messageBuffer = Buffer.alloc(messageLength);
+                            const messageBuffer = Buffer.alloc(messageLength);
                             assembledData.copy(
                                 messageBuffer,
                                 0,
                                 bufferIndex + 21,
                                 bufferIndex + 21 + messageLength
                             );
-                            let destPort = thiz.federatePortActionByID.get(destPortID);
+                            const destPort = thiz.federatePortActionByID.get(destPortID);
                             thiz.emit("timedMessage", destPort, messageBuffer, tag);
                         }
 
@@ -961,9 +964,9 @@ class RTIClient extends EventEmitter {
                     Log.debug(thiz, () => {
                         return "Received an RTI MSG_TYPE_TAG_ADVANCE_GRANT";
                     });
-                    let tagBuffer = Buffer.alloc(12);
+                    const tagBuffer = Buffer.alloc(12);
                     assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
-                    let tag = Tag.fromBinary(tagBuffer);
+                    const tag = Tag.fromBinary(tagBuffer);
                     thiz.emit("timeAdvanceGrant", tag);
                     bufferIndex += 13;
                     break;
@@ -972,9 +975,9 @@ class RTIClient extends EventEmitter {
                     Log.debug(thiz, () => {
                         return "Received an RTI MSG_TYPE_PROVISIONAL_TAG_ADVANCE_GRANT";
                     });
-                    let tagBuffer = Buffer.alloc(12);
+                    const tagBuffer = Buffer.alloc(12);
                     assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
-                    let tag = Tag.fromBinary(tagBuffer);
+                    const tag = Tag.fromBinary(tagBuffer);
                     Log.debug(thiz, () => {
                         return `PTAG value: ${tag}`;
                     });
@@ -999,9 +1002,9 @@ class RTIClient extends EventEmitter {
                     Log.debug(thiz, () => {
                         return "Received an RTI MSG_TYPE_STOP_REQUEST";
                     });
-                    let tagBuffer = Buffer.alloc(12);
+                    const tagBuffer = Buffer.alloc(12);
                     assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
-                    let tag = Tag.fromBinary(tagBuffer);
+                    const tag = Tag.fromBinary(tagBuffer);
                     thiz.emit("stopRequest", tag);
                     bufferIndex += 13;
                     break;
@@ -1012,9 +1015,9 @@ class RTIClient extends EventEmitter {
                     Log.debug(thiz, () => {
                         return "Received an RTI MSG_TYPE_STOP_GRANTED";
                     });
-                    let tagBuffer = Buffer.alloc(12);
+                    const tagBuffer = Buffer.alloc(12);
                     assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
-                    let tag = Tag.fromBinary(tagBuffer);
+                    const tag = Tag.fromBinary(tagBuffer);
                     thiz.emit("stopRequestGranted", tag);
                     bufferIndex += 13;
                     break;
@@ -1024,12 +1027,12 @@ class RTIClient extends EventEmitter {
                     // The next 2 bytes will be the federate id of the destination federate.
                     // The next 8 bytes are the intended time of the absent message
                     // The next 4 bytes are the intended microstep of the absent message
-                    let portID = assembledData.readUInt16LE(bufferIndex + 1);
+                    const portID = assembledData.readUInt16LE(bufferIndex + 1);
                     // The next part of the message is the federate_id, but we don't need it.
                     // let federateID = assembledData.readUInt16LE(bufferIndex + 3);
-                    let tagBuffer = Buffer.alloc(12);
+                    const tagBuffer = Buffer.alloc(12);
                     assembledData.copy(tagBuffer, 0, bufferIndex + 5, bufferIndex + 17);
-                    let intendedTag = Tag.fromBinary(tagBuffer);
+                    const intendedTag = Tag.fromBinary(tagBuffer);
                     Log.debug(thiz, () => {
                         return `Handling port absent for tag ${intendedTag} for port ${portID}.`;
                     });
@@ -1045,7 +1048,7 @@ class RTIClient extends EventEmitter {
                     break;
                 }
                 case RTIMessageTypes.MSG_TYPE_REJECT: {
-                    let rejectionReason = assembledData.readUInt8(bufferIndex + 1);
+                    const rejectionReason = assembledData.readUInt8(bufferIndex + 1);
                     Log.error(thiz, () => {
                         return (
                             "Received an RTI MSG_TYPE_REJECT. Rejection reason: " +
@@ -1191,7 +1194,7 @@ export class FederatedApp extends App {
             );
             return;
         }
-        let endTag = this._getEndOfExecution();
+        const endTag = this._getEndOfExecution();
         if (
             endTag === undefined ||
       this.util.getCurrentTag().isSmallerThan(endTag)
@@ -1238,7 +1241,7 @@ export class FederatedApp extends App {
                     this.minDelayFromPhysicalActionToFederateOutput !== null &&
           this.downstreamFedIDs.length > 0
                 ) {
-                    let physicalTime = getCurrentPhysicalTime();
+                    const physicalTime = getCurrentPhysicalTime();
                     if (
                         physicalTime
                             .add(this.minDelayFromPhysicalActionToFederateOutput)
@@ -1268,7 +1271,7 @@ export class FederatedApp extends App {
     }
 
     protected _iterationComplete (): void {
-        let currentTime = this.util.getCurrentTag();
+        const currentTime = this.util.getCurrentTag();
         this.sendRTILogicalTimeComplete(currentTime);
     }
 
@@ -1286,8 +1289,8 @@ export class FederatedApp extends App {
             // logical connection. No need to trigger network output control
             // reactions.
         }
-        let trigger = this.outputControlReactionTriggers[0];
-        let event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
+        const trigger = this.outputControlReactionTriggers[0];
+        const event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
         Log.debug(this, () => {
             return "Inserting network output control reaction on reaction queue.";
         });
@@ -1347,7 +1350,7 @@ export class FederatedApp extends App {
         }
         this.rtiClient = new RTIClient(config.federationID, config.federateID);
         this.rtiHost = config.rtiHost;
-        for (let sendsToFedId of config.sendsTo) {
+        for (const sendsToFedId of config.sendsTo) {
             this.addDownstreamFederate(sendsToFedId);
         }
         if (config.dependsOn.length != config.upstreamConnectionDelays.length) {
@@ -1359,7 +1362,7 @@ export class FederatedApp extends App {
         }
         for (let index = 0; index < config.dependsOn.length; index++) {
             let minOutputConnectionDelay = TimeValue.FOREVER();
-            for (let candidate of config.upstreamConnectionDelays[index]) {
+            for (const candidate of config.upstreamConnectionDelays[index]) {
                 if (minOutputConnectionDelay.isLaterThan(candidate)) {
                     minOutputConnectionDelay = candidate;
                 }
@@ -1426,7 +1429,7 @@ export class FederatedApp extends App {
         destPortID: number,
         time: number
     ) {
-        let absTime = this.util
+        const absTime = this.util
             .getCurrentTag()
             .getLaterTag(TimeValue.nsec(time))
             .toBinary();
@@ -1450,7 +1453,7 @@ export class FederatedApp extends App {
    * @param completeTimeValue The TimeValue that is now complete.
    */
     public sendRTILogicalTimeComplete (completeTag: Tag) {
-        let binaryTag = completeTag.toBinary();
+        const binaryTag = completeTag.toBinary();
         Log.debug(this, () => {
             return `Sending RTI logical time complete with time: ${completeTag}`;
         });
@@ -1476,7 +1479,7 @@ export class FederatedApp extends App {
         Log.debug(this, () => {
             return `Sending RTI next event time with time: ${nextTag}`;
         });
-        let tag = nextTag.toBinary();
+        const tag = nextTag.toBinary();
         this.rtiClient.sendRTINextEventTag(tag);
     }
 
@@ -1488,7 +1491,7 @@ export class FederatedApp extends App {
             return `Sending RTI stop request with time: ${stopTag}`;
         });
         this.stopRequestInfo = new StopRequestInfo(StopRequestState.SENT, stopTag);
-        let tag = stopTag.toBinary();
+        const tag = stopTag.toBinary();
         this.rtiClient.sendRTIStopRequest(tag);
     }
 
@@ -1500,7 +1503,7 @@ export class FederatedApp extends App {
             return `Sending RTI stop request reply with time: ${stopTag}`;
         });
         this.stopRequestInfo = new StopRequestInfo(StopRequestState.SENT, stopTag);
-        let tag = stopTag.toBinary();
+        const tag = stopTag.toBinary();
         this.rtiClient.sendRTIStopRequestReply(tag);
     }
 
@@ -1521,7 +1524,7 @@ export class FederatedApp extends App {
         destFederateID: number,
         destPortID: number
     ): void {
-        let intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
+        const intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
         Log.debug(this, () => {
             return (
                 `Sending RTI port absent for tag ${intendedTag} to federate ID: ${destFederateID}` +
@@ -1572,7 +1575,7 @@ export class FederatedApp extends App {
                 Log.info(this, () => Log.hr);
 
                 // Set an alarm to start execution at the designated startTime
-                let currentPhysTime = getCurrentPhysicalTime();
+                const currentPhysTime = getCurrentPhysicalTime();
                 let startDelay: TimeValue;
                 if (startTime.isEarlierThan(currentPhysTime)) {
                     startDelay = TimeValue.secs(0);

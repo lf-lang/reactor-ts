@@ -1,4 +1,5 @@
-import {Reactor, App, Runtime, MultiPort, IOPort, Bank} from "./internal";
+import type { Runtime} from "./internal";
+import {Reactor, App, MultiPort, IOPort, Bank} from "./internal";
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -16,7 +17,7 @@ export abstract class Component {
    * A symbol that identifies this component, and it also used to selectively
    * grant access to its privileged functions.
    */
-    protected _key: Symbol = Symbol();
+    protected _key = Symbol();
 
     /**
    * The container of this component. Each component is contained by a
@@ -146,7 +147,7 @@ export abstract class Component {
     public static keyOfMatchingMultiport (port: Component, reactor: Reactor) {
         for (const [key, value] of Object.entries(reactor)) {
             if (value instanceof MultiPort) {
-                let channels = value.channels();
+                const channels = value.channels();
                 for (let i = 0; i < channels.length; i++) {
                     if (channels[i] === port) {
                         return `${key}[${i}]`;
@@ -159,7 +160,7 @@ export abstract class Component {
     public static keyOfMatchingBank (member: Component, reactor: Reactor) {
         for (const [key, value] of Object.entries(reactor)) {
             if (value instanceof Bank) {
-                let members = value.all();
+                const members = value.all();
                 for (let i = 0; i < members.length; i++) {
                     if (members[i] === member) {
                         return `${key}[${i}]`;

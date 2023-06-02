@@ -1,16 +1,17 @@
-import {
+import type {
     Sortable,
     PrioritySetElement,
-    Log,
     ReactionSandbox,
-    Timer,
     MutationSandbox,
     Reactor,
     TimeValue,
-    Tag,
     ArgList,
     Args,
-    Triggers,
+    Triggers} from "./internal";
+import {
+    Log,
+    Timer,
+    Tag,
     Startup
 } from "./internal";
 

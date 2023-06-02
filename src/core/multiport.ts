@@ -1,16 +1,17 @@
-import {
+import type {
     Absent,
-    InPort,
     IOPort,
     MultiRead,
-    OutPort,
     Present,
     Reactor,
     Runtime,
     WritablePort,
-    Trigger,
     TriggerManager,
-    Reaction,
+    Reaction} from "./internal";
+import {
+    InPort,
+    OutPort,
+    Trigger,
     Component
 } from "./internal";
 import {WritableMultiPort} from "./port";
@@ -54,7 +55,7 @@ export abstract class MultiPort<T extends Present>
     public static values<T extends Present>(
         ports: Array<IOPort<T>>
     ): Array<T | Absent> {
-        let values = new Array<T | Absent>(ports.length);
+        const values = new Array<T | Absent>(ports.length);
         for (let i = 0; i < values.length; i++) {
             values[i] = ports[i].get();
         }
@@ -76,7 +77,7 @@ export abstract class MultiPort<T extends Present>
    * Obtain a writable version of this port, provided that the caller holds the required key.
    * @param key
    */
-    public asWritable (key: Symbol | undefined): WritableMultiPort<T> {
+    public asWritable (key: symbol | undefined): WritableMultiPort<T> {
         if (this._key === key) {
             return this.writer;
         }
@@ -91,7 +92,7 @@ export abstract class MultiPort<T extends Present>
     }
 
     /** @inheritdoc */
-    getManager (key: Symbol | undefined): TriggerManager {
+    getManager (key: symbol | undefined): TriggerManager {
         if (this._key == key) {
             return this.manager;
         }
@@ -140,9 +141,9 @@ export abstract class MultiPort<T extends Present>
             this.port
                 .channels()
                 .forEach((channel) =>
-                    channel
+                    { channel
                         .getManager(this.getContainer()._getKey(channel))
-                        .addReaction(reaction)
+                        .addReaction(reaction); }
                 );
         }
 
@@ -151,7 +152,7 @@ export abstract class MultiPort<T extends Present>
             this.port
                 .channels()
                 .forEach((channel) =>
-                    channel.getManager(this.port._key).delReaction(reaction)
+                    { channel.getManager(this.port._key).delReaction(reaction); }
                 );
         }
     })(this);

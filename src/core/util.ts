@@ -41,7 +41,7 @@ export class Log {
     /**
    * Map that keeps track of active loggers.
    */
-    private static loggers: Map<string, ULog> = new Map();
+    private static loggers = new Map<string, ULog>();
 
     /**
    * Get the logger instance associated with the given module.

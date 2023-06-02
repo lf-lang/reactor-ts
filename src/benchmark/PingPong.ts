@@ -1,5 +1,6 @@
+import type {
+    TimeValue} from "../core/internal";
 import {
-    TimeValue,
     Log,
     Args,
     Parameter,
@@ -18,7 +19,7 @@ export class Ping extends Reactor {
 
     client: CallerPort<number, number>;
 
-    constructor (parent: Reactor, count: number = 100000) {
+    constructor (parent: Reactor, count = 100000) {
         super(parent);
         this.count = new Parameter(count); // Parameter
         this.client = new CallerPort(this);
@@ -34,10 +35,10 @@ export class Ping extends Reactor {
                 var pingsLeft = count.get();
                 while (pingsLeft > 0) {
                     // console.log("Ping!")
-                    let ret = __client.invoke(pingsLeft);
+                    const ret = __client.invoke(pingsLeft);
                     if (ret) pingsLeft -= 1;
                 }
-                let elapsedTime = this.util
+                const elapsedTime = this.util
                     .getCurrentPhysicalTime()
                     .subtract(startTime);
                 console.log("Elapsed time: " + elapsedTime);
@@ -76,7 +77,7 @@ export class Pong extends Reactor {
             new Args(this.server),
             function (this, __server: CalleePort<number, number>) {
                 // console.log("Pong!")
-                let msg = __server.get();
+                const msg = __server.get();
                 if (msg) __server.return(msg);
             }
         );
@@ -96,8 +97,8 @@ export class PingPong extends App {
     constructor (
         name: string,
         timeout: TimeValue | undefined = undefined,
-        keepAlive: boolean = false,
-        fast: boolean = false,
+        keepAlive = false,
+        fast = false,
         success?: () => void,
         fail?: () => void
     ) {
@@ -110,6 +111,6 @@ export class PingPong extends App {
 // =============== END reactor class PingPong
 
 // ************* Instance PingPong of class PingPong
-let _app = new PingPong("PingPong", undefined, false, true);
+const _app = new PingPong("PingPong", undefined, false, true);
 // ************* Starting Runtime for PingPong of class PingPong
 _app._start();

@@ -1,4 +1,5 @@
-import {DependencyGraph, PrioritySet, PrioritySetElement, SortableDependencyGraph, Sortable} from "../src/core/graph";
+import type { PrioritySetElement, Sortable} from "../src/core/graph";
+import {DependencyGraph, PrioritySet, SortableDependencyGraph} from "../src/core/graph";
 /** 
  * The tests below test the functionality of the hasCycle() utility function on various
  * dependency graphs, in combination with various graph manipulation utilities
@@ -6,13 +7,13 @@ import {DependencyGraph, PrioritySet, PrioritySetElement, SortableDependencyGrap
  * @author Matt Chorlian (mattchorlian@berkeley.edu)
  */
 
-let node1:number = 1
-let node2:number = 2
-let node3:number = 3
-let node4:number = 4
-let node5:number = 5
+const node1 = 1
+const node2 = 2
+const node3 = 3
+const node4 = 4
+const node5 = 5
 
-let d0 = new DependencyGraph<number>()
+const d0 = new DependencyGraph<number>()
 d0.addNode(node1)
 d0.addEdge(node1, node1)
 
@@ -20,7 +21,7 @@ test("test if one node cycle is caught", () => {
     expect(d0.hasCycle()).toEqual(true)
 })
  
-let d1 = new DependencyGraph<number>()
+const d1 = new DependencyGraph<number>()
 d1.addNode(node1)
 d1.addNode(node2)
 
@@ -28,7 +29,7 @@ test("test hasCycle utility function on no cycle", () => {
     expect(d1.hasCycle()).toEqual(false)
 })
 
-let d2 = new DependencyGraph<number>()
+const d2 = new DependencyGraph<number>()
 d2.addNode(node1)
 d2.addNode(node2)
 d2.addEdge(node1, node2)
@@ -41,7 +42,7 @@ test("test rootNodes() helper function", () => {
     expect(d2.rootNodes()).toEqual(new Set([node2]))
 })
 
-let d3 = new DependencyGraph<number>()
+const d3 = new DependencyGraph<number>()
 d3.addNode(node1)
 d3.addNode(node2)
 d3.addEdge(node1, node2)
@@ -55,7 +56,7 @@ test("test number of edges", () => {
     expect(d3.size()[1]).toBe(2)
 })
 
-let d4 = new DependencyGraph<number>()
+const d4 = new DependencyGraph<number>()
 d4.addNode(node1)
 d4.addNode(node2)
 d4.addNode(node3)
@@ -69,7 +70,7 @@ test("test hasCycle utility function on a larger cycle", () => {
     expect(d4.hasCycle()).toEqual(true)
 })
 
-let d5 = new DependencyGraph<number>()
+const d5 = new DependencyGraph<number>()
 d5.addNode(node1)
 d5.addNode(node2)
 d5.addNode(node3)
@@ -81,7 +82,7 @@ test("test hasCycle along on mutated graph", () => {
     expect(d5.hasCycle()).toEqual(true)
 })
 
-let d6 = new DependencyGraph<number>()
+const d6 = new DependencyGraph<number>()
 d6.addNode(node1)
 d6.addNode(node2)
 d6.addNode(node3)
@@ -112,7 +113,7 @@ class SimpleElement implements PrioritySetElement<number> {
         return false
     }
 }
-let ps0 = new PrioritySet<number>()
+const ps0 = new PrioritySet<number>()
 test("test priority set", () => {
     ps0.push(new SimpleElement(3))
     ps0.push(new SimpleElement(5))
@@ -128,9 +129,9 @@ test("test priority set", () => {
     expect(ps0.size()).toBe(0)
 
 })
-let d7 = new DependencyGraph<number>()
-let d8 = new DependencyGraph<number>()
-let d9 = new DependencyGraph<number>()
+const d7 = new DependencyGraph<number>()
+const d8 = new DependencyGraph<number>()
+const d9 = new DependencyGraph<number>()
 test("test dependency graph", () => {
     expect(d7.getEdges(node1).size).toBe(0)
     d7.merge(d5)
@@ -146,7 +147,7 @@ test("test dependency graph", () => {
 })
 
 
-let d10 = new DependencyGraph<number>()
+const d10 = new DependencyGraph<number>()
 test("test add/remove Edges", () => {
     d10.addEdge(node1, node2)                   // {(node1 -> node2)}
     expect(d10.size()).toStrictEqual([2, 1])
@@ -165,8 +166,8 @@ test("test add/remove Edges", () => {
 
 })
 
-let d11 = new DependencyGraph<number>()
-let d12 = new DependencyGraph<Object>()
+const d11 = new DependencyGraph<number>()
+const d12 = new DependencyGraph<Object>()
 test("test the DOT representation of the dependency graph", () => {
     expect(d11.toString()).toBe("digraph G {"+"\n}")
 
@@ -177,7 +178,7 @@ test("test the DOT representation of the dependency graph", () => {
     d11.addEdge(node2, node3) // { (node1 -> node2 -> node3) }
     expect(d11.toString()).toBe('digraph G {\n"1"->"2"->"3";\n}')
 
-    let obj = {0:1}
+    const obj = {0:1}
     d12.addNode(obj)
     expect(d12.toString()).toBe('digraph G {\n"[object Object]";\n}')
 
@@ -187,7 +188,7 @@ test("test the DOT representation of the dependency graph", () => {
     expect(d11.toString()).toBe('digraph G {\n"1"->"2"->"1"->"3";\n"2"->"3";\n}')
 })
 
-let d13 = new DependencyGraph<number>()
+const d13 = new DependencyGraph<number>()
 test("test for reachableOrigins function of the dependency graph", () => {
     d13.addEdge(node1, node2)
     d13.addEdge(node1, node3)
@@ -198,8 +199,8 @@ test("test for reachableOrigins function of the dependency graph", () => {
     expect(d13.reachableOrigins(node4, new Set<number>(d13.nodes())).size).toBe(0)
 })
 
-let sd0 = new SortableDependencyGraph<Sortable<number>>()
-let sd1 = new SortableDependencyGraph<Sortable<number>>()
+const sd0 = new SortableDependencyGraph<Sortable<number>>()
+const sd1 = new SortableDependencyGraph<Sortable<number>>()
 
 class SortVariable implements Sortable<number> {
     next: PrioritySetElement<number> | undefined;
@@ -211,8 +212,8 @@ class SortVariable implements Sortable<number> {
     }
 }
 
-let s0 = new SortVariable(0)
-let s1 = new SortVariable(1)
+const s0 = new SortVariable(0)
+const s1 = new SortVariable(1)
 test("test sortable dependency graph", () =>  {
     sd0.addEdge(s0, s1)
     expect(sd0.updatePriorities(false,100)).toBe(true)

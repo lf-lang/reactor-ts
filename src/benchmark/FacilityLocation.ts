@@ -4,6 +4,9 @@
  *
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
+import type {
+    WritablePort
+} from "../core/internal";
 import {
     Log,
     TimeValue,
@@ -16,8 +19,7 @@ import {
     Triggers,
     Action,
     Reactor,
-    App,
-    WritablePort
+    App
 } from "../core/internal";
 
 Log.global.level = Log.levels.INFO;
@@ -37,7 +39,7 @@ class Point {
     }
 
     public static arrayClone (points: Point[]): Point[] {
-        let newPoints = new Array<Point>();
+        const newPoints = new Array<Point>();
         points.forEach((val) => newPoints.push(val.clone()));
         return newPoints;
     }
@@ -47,9 +49,9 @@ class Point {
     }
 
     public getDistance (p: Point): number {
-        let xDiff = p.x - this.x;
-        let yDiff = p.y - this.y;
-        let distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+        const xDiff = p.x - this.x;
+        const yDiff = p.y - this.y;
+        const distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
         return distance;
     }
 
@@ -175,15 +177,15 @@ export class Producer extends Reactor {
 
     gridSize: Parameter<number>;
 
-    toConsumer: OutPort<Msg> = new OutPort(this);
+    toConsumer = new OutPort<Msg>(this);
 
-    itemsProduced: State<number> = new State(0);
+    itemsProduced = new State<number>(0);
 
     // TODO(hokeun): Change default for numPoints to 100000.
     constructor (
         parent: Reactor,
-        numPoints: number = 10,
-        gridSize: number = 500,
+        numPoints = 10,
+        gridSize = 500,
         period: TimeValue
     ) {
         super(parent);
@@ -232,7 +234,7 @@ export class Producer extends Reactor {
 function findCost (point: Point, localFacilities: State<Array<Point>>): number {
     let result = Number.MAX_VALUE;
     localFacilities.get().forEach((loopPoint) => {
-        let distance = loopPoint.getDistance(point);
+        const distance = loopPoint.getDistance(point);
         if (distance < result) {
             result = distance;
         }
@@ -246,13 +248,13 @@ function addCustomer (
     totalCost: State<number>
 ): void {
     supportCustomers.get().push(point.clone());
-    let minCost = findCost(point, localFacilities);
+    const minCost = findCost(point, localFacilities);
     totalCost.set(totalCost.get() + minCost);
     // console.log(`minCost: ${minCost}, totalCost: ${totalCost.get()}`)
 }
 
 export class Summary extends Reactor {
-    fromRootQuadrant: InPort<ConfirmExitMsg> = new InPort(this);
+    fromRootQuadrant = new InPort<ConfirmExitMsg>(this);
 
     constructor (parent: Reactor) {
         super(parent);
@@ -261,7 +263,7 @@ export class Summary extends Reactor {
             new Triggers(this.fromRootQuadrant),
             new Args(this.fromRootQuadrant),
             function (this, fromRootQuadrant) {
-                let msgFromRootQuadrant = fromRootQuadrant.get();
+                const msgFromRootQuadrant = fromRootQuadrant.get();
                 if (msgFromRootQuadrant) {
                     console.log(
                         `Num Facilities: ${msgFromRootQuadrant.facilities}, ` +
@@ -282,15 +284,15 @@ export class Summary extends Reactor {
 
 export class Accumulator extends Reactor {
     // TODO(hokeun): After implementing multiports, change these into a multiport, fromQuadrants.
-    fromFirstQuadrant: InPort<ConfirmExitMsg> = new InPort(this);
+    fromFirstQuadrant = new InPort<ConfirmExitMsg>(this);
 
-    fromSecondQuadrant: InPort<ConfirmExitMsg> = new InPort(this);
+    fromSecondQuadrant = new InPort<ConfirmExitMsg>(this);
 
-    fromThirdQuadrant: InPort<ConfirmExitMsg> = new InPort(this);
+    fromThirdQuadrant = new InPort<ConfirmExitMsg>(this);
 
-    fromFourthQuadrant: InPort<ConfirmExitMsg> = new InPort(this);
+    fromFourthQuadrant = new InPort<ConfirmExitMsg>(this);
 
-    toNextAccumulator: OutPort<ConfirmExitMsg> = new OutPort(this);
+    toNextAccumulator = new OutPort<ConfirmExitMsg>(this);
 
     constructor (parent: Reactor) {
         super(parent);
@@ -327,10 +329,10 @@ export class Accumulator extends Reactor {
                     console.log("Accumulator Error: some inputs are missing.");
                     this.util.requestStop();
                 }
-                let msgFromFirstQuadrant = fromFirstQuadrant.get();
-                let msgFromSecondQuadrant = fromSecondQuadrant.get();
-                let msgFromThirdQuadrant = fromThirdQuadrant.get();
-                let msgFromFourthQuadrant = fromFourthQuadrant.get();
+                const msgFromFirstQuadrant = fromFirstQuadrant.get();
+                const msgFromSecondQuadrant = fromSecondQuadrant.get();
+                const msgFromThirdQuadrant = fromThirdQuadrant.get();
+                const msgFromFourthQuadrant = fromFourthQuadrant.get();
 
                 if (
                     msgFromFirstQuadrant &&
@@ -338,17 +340,17 @@ export class Accumulator extends Reactor {
           msgFromThirdQuadrant &&
           msgFromFourthQuadrant
                 ) {
-                    let numFacilities =
+                    const numFacilities =
             msgFromFirstQuadrant.facilities +
             msgFromSecondQuadrant.facilities +
             msgFromThirdQuadrant.facilities +
             msgFromFourthQuadrant.facilities;
-                    let numCustomers =
+                    const numCustomers =
             msgFromFirstQuadrant.supportCustomers +
             msgFromSecondQuadrant.supportCustomers +
             msgFromThirdQuadrant.supportCustomers +
             msgFromFourthQuadrant.supportCustomers;
-                    let numQuadrantReactors =
+                    const numQuadrantReactors =
             msgFromFirstQuadrant.quadrantReactors +
             msgFromSecondQuadrant.quadrantReactors +
             msgFromThirdQuadrant.quadrantReactors +
@@ -392,41 +394,41 @@ export class Quadrant extends Reactor {
     initCustomers: Parameter<Array<Point>>;
 
     // Input ports.
-    fromProducer: InPort<Msg> = new InPort(this);
+    fromProducer = new InPort<Msg>(this);
 
     // Output ports.
-    toProducer: OutPort<Msg> = new OutPort(this);
+    toProducer = new OutPort<Msg>(this);
 
     // TODO(hokeun): After implementing multiports, change these into a multiport, toChildren.
-    toFirstChild: OutPort<Msg> = new OutPort(this);
+    toFirstChild = new OutPort<Msg>(this);
 
-    toSecondChild: OutPort<Msg> = new OutPort(this);
+    toSecondChild = new OutPort<Msg>(this);
 
-    toThirdChild: OutPort<Msg> = new OutPort(this);
+    toThirdChild = new OutPort<Msg>(this);
 
-    toFourthChild: OutPort<Msg> = new OutPort(this);
+    toFourthChild = new OutPort<Msg>(this);
 
     // Only the ConfirmExitMsg goes through toAccumulator port.
-    toAccumulator: OutPort<ConfirmExitMsg> = new OutPort(this);
+    toAccumulator = new OutPort<ConfirmExitMsg>(this);
 
     // States.
-    facility: State<Point> = new State(new Point(0, 0));
+    facility = new State<Point>(new Point(0, 0));
 
-    localFacilities: State<Array<Point>> = new State(new Array<Point>());
+    localFacilities = new State<Array<Point>>(new Array<Point>());
 
-    knownFacilities: State<number> = new State(0);
+    knownFacilities = new State<number>(0);
 
-    maxDepthOfKnownOpenFacility: State<number> = new State(0);
+    maxDepthOfKnownOpenFacility = new State<number>(0);
 
-    supportCustomers: State<Array<Point>> = new State(new Array<Point>());
+    supportCustomers = new State<Array<Point>>(new Array<Point>());
 
     // hasChildren, firstChild, secondChild, thirdChild, fourthChild are used for
     // children in Akka actor implementation.
-    hasChildren: State<boolean> = new State(false);
+    hasChildren = new State<boolean>(false);
 
-    childrenBoundaries: State<Array<Box>> = new State(new Array<Box>());
+    childrenBoundaries = new State<Array<Box>>(new Array<Box>());
 
-    totalCost: State<number> = new State(0);
+    totalCost = new State<number>(0);
 
     constructor (
         parent: Reactor,
@@ -556,11 +558,11 @@ export class Quadrant extends Reactor {
                 childrenBoundaries,
                 totalCost
             ) {
-                let thisReactor = this.getReactor();
-                let thisMutationSandbox = this;
+                const thisReactor = this.getReactor();
+                const thisMutationSandbox = this;
 
                 // Helper functions for mutation reaction.
-                let notifyParentOfFacility = function (p: Point): void {
+                const notifyParentOfFacility = function (p: Point): void {
                     if (hasQuadrantProducer.get()) {
                         toProducer.set(
                             new FacilityMsg(
@@ -572,7 +574,7 @@ export class Quadrant extends Reactor {
                         );
                     }
                 };
-                let partition = function (): void {
+                const partition = function (): void {
                     // console.log(`Quadrant at ${facility.get()} - Partition is called.`)
                     notifyParentOfFacility(facility.get().clone());
                     maxDepthOfKnownOpenFacility.set(
@@ -621,7 +623,7 @@ export class Quadrant extends Reactor {
                         );
 
                     // console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
-                    let accumulator = new Accumulator(thisReactor);
+                    const accumulator = new Accumulator(thisReactor);
                     var toAccumulatorOfQuadrant = (
                         toAccumulator as unknown as WritablePort<Msg>
                     ).getPort();
@@ -631,7 +633,7 @@ export class Quadrant extends Reactor {
                         toAccumulatorOfQuadrant
                     );
 
-                    let firstChild = new Quadrant(
+                    const firstChild = new Quadrant(
                         thisReactor,
                         true,
                         Position.BOT_LEFT,
@@ -655,7 +657,7 @@ export class Quadrant extends Reactor {
                         accumulator.fromFirstQuadrant
                     );
 
-                    let secondChild = new Quadrant(
+                    const secondChild = new Quadrant(
                         thisReactor,
                         true,
                         Position.TOP_RIGHT,
@@ -679,7 +681,7 @@ export class Quadrant extends Reactor {
                         accumulator.fromSecondQuadrant
                     );
 
-                    let thirdChild = new Quadrant(
+                    const thirdChild = new Quadrant(
                         thisReactor,
                         true,
                         Position.BOT_LEFT,
@@ -703,7 +705,7 @@ export class Quadrant extends Reactor {
                         accumulator.fromThirdQuadrant
                     );
 
-                    let fourthChild = new Quadrant(
+                    const fourthChild = new Quadrant(
                         thisReactor,
                         true,
                         Position.BOT_RIGHT,
@@ -734,13 +736,13 @@ export class Quadrant extends Reactor {
                 };
 
                 // Reaction.
-                let msg = fromProducer.get();
+                const msg = fromProducer.get();
                 switch (msg?.constructor) {
                     case CustomerMsg:
                         // Handling CustomerMsg for a new customoer.
                         // This message is propagated from root to the leaf facility.
                         // console.log(`Quadrant at ${facility.get()} - Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
-                        let point = (<CustomerMsg>msg).point;
+                        const point = (<CustomerMsg>msg).point;
                         if (!hasChildren.get()) {
                             // No open facility, thus, addCustomer(), then partition().
                             addCustomer(point, localFacilities, supportCustomers, totalCost);
@@ -808,17 +810,17 @@ export class FacilityLocation extends App {
     constructor (
         name: string,
         timeout: TimeValue | undefined = undefined,
-        keepAlive: boolean = false,
-        fast: boolean = false,
+        keepAlive = false,
+        fast = false,
         success?: () => void,
         fail?: () => void
     ) {
         super(timeout, keepAlive, fast, success, fail);
         // TODO(hokeun): Change default for numPoints to 100000.
-        let NUM_POINTS = 100000;
-        let GRID_SIZE = 500;
-        let F = Math.sqrt(2) * GRID_SIZE;
-        let ALPHA = 2.0;
+        const NUM_POINTS = 100000;
+        const GRID_SIZE = 500;
+        const F = Math.sqrt(2) * GRID_SIZE;
+        const ALPHA = 2.0;
 
         this.producer = new Producer(
             this,
@@ -851,6 +853,6 @@ export class FacilityLocation extends App {
 }
 
 // ************* Instance FacilityLocation of class FacilityLocation
-let _app = new FacilityLocation("FacilityLocation", undefined, false, true);
+const _app = new FacilityLocation("FacilityLocation", undefined, false, true);
 // ************* Starting Runtime for FacilityLocation of class FacilityLocation
 _app._start();

@@ -1,6 +1,8 @@
-import type {Absent, Present, Read, Sched} from "./internal";
-import {
+import type {Absent, Present, Read, Sched,
     Reactor,
+    TriggerManager
+} from "./internal";
+import {
     Log,
     TaggedEvent,
     getCurrentPhysicalTime,
@@ -8,8 +10,7 @@ import {
     Tag,
     TimeUnit,
     TimeValue,
-    ScheduledTrigger,
-    TriggerManager
+    ScheduledTrigger
 } from "./internal";
 
 const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
@@ -50,14 +51,14 @@ export class Action<T extends Present>
         }
     }
 
-    public asSchedulable (key: Symbol | undefined): Sched<T> {
+    public asSchedulable (key: symbol | undefined): Sched<T> {
         if (this._key === key) {
             return this.scheduler;
         }
         throw Error("Invalid reference to container.");
     }
 
-    public getManager (key: Symbol | undefined): TriggerManager {
+    public getManager (key: symbol | undefined): TriggerManager {
         if (this._key == key) {
             return this.manager;
         }
@@ -90,7 +91,7 @@ export class Action<T extends Present>
                 // on the platform, then the timestamp becomes the current physical time.
                 // Otherwise the tag is computed like a logical action's tag.
 
-                let physicalTime = getCurrentPhysicalTime();
+                const physicalTime = getCurrentPhysicalTime();
                 if (tag.time.isEarlierThan(physicalTime)) {
                     tag = new Tag(getCurrentPhysicalTime(), 0);
                 } else {

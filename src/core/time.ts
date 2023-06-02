@@ -154,7 +154,7 @@ export class TimeValue {
 
         if (nanoseconds >= TimeUnit.sec) {
             // Carry seconds.
-            let carry = Math.floor(nanoseconds / TimeUnit.sec);
+            const carry = Math.floor(nanoseconds / TimeUnit.sec);
             seconds += carry;
             nanoseconds -= carry * TimeUnit.sec;
         }
@@ -263,17 +263,17 @@ export class TimeValue {
    * Used by federates.
    */
     public toBinary (): Buffer {
-        let buff = Buffer.alloc(8);
+        const buff = Buffer.alloc(8);
         if (this.seconds === Number.MIN_SAFE_INTEGER) {
             buff.writeBigUInt64LE(BigInt(0x8000000000000000), 0);
         } else if (this.seconds === Number.MAX_SAFE_INTEGER) {
             buff.writeBigUInt64LE(BigInt(0x7fffffffffffffff), 0);
         } else {
             const billion = BigInt(TimeUnit.secs);
-            let bigTime = BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
+            const bigTime = BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
 
             // Ensure the TimeValue fits into a 64 unsigned integer.
-            let clampedTime = BigInt.asUintN(64, bigTime);
+            const clampedTime = BigInt.asUintN(64, bigTime);
             if (clampedTime != bigTime) {
                 throw new Error(
                     `TimeValue ${this.toString()} is too big to fit into ` +
@@ -293,15 +293,15 @@ export class TimeValue {
         const billion = BigInt(TimeUnit.secs);
 
         // To avoid overflow and floating point errors, work with BigInts.
-        let bigTime = buffer.readBigUInt64LE(0);
+        const bigTime = buffer.readBigUInt64LE(0);
         if (bigTime === BigInt(0x8000000000000000)) {
             return TimeValue.NEVER();
         } else if (bigTime === BigInt(0x7fffffffffffffff)) {
             return TimeValue.FOREVER();
         }
 
-        let bigSeconds = bigTime / billion;
-        let bigNSeconds = bigTime % billion;
+        const bigSeconds = bigTime / billion;
+        const bigNSeconds = bigTime % billion;
 
         return TimeValue.secsAndNs(Number(bigSeconds), Number(bigNSeconds));
     }
@@ -328,8 +328,8 @@ export class TimeValue {
         const billion = BigInt(TimeUnit.secs);
 
         // To avoid overflow and floating point errors, work with BigInts.
-        let bigT = BigInt(value) * BigInt(unit);
-        let bigSeconds = bigT / billion;
+        const bigT = BigInt(value) * BigInt(unit);
+        const bigSeconds = bigT / billion;
 
         if (bigSeconds > Number.MAX_SAFE_INTEGER) {
             throw new Error("Unable to instantiate time value: value too large.");
@@ -465,8 +465,8 @@ export class Tag {
    * Used by federates.
    */
     public toBinary (): Buffer {
-        let timeBuffer = this.time.toBinary();
-        let buf = Buffer.alloc(12);
+        const timeBuffer = this.time.toBinary();
+        const buf = Buffer.alloc(12);
         timeBuffer.copy(buf, 0, 0);
         buf.writeInt32LE(this.microstep, 8);
         return buf;
@@ -477,10 +477,10 @@ export class Tag {
    * @param buffer A buffer of TimeValue and microstep.
    */
     public static fromBinary (buffer: Buffer) {
-        let timeBuffer = Buffer.alloc(8);
+        const timeBuffer = Buffer.alloc(8);
         buffer.copy(timeBuffer, 0, 0, 8);
-        let time = TimeValue.fromBinary(timeBuffer);
-        let microstep = buffer.readUInt32LE(8);
+        const time = TimeValue.fromBinary(timeBuffer);
+        const microstep = buffer.readUInt32LE(8);
         const billion = BigInt(TimeUnit.secs);
 
         return new Tag(time, microstep);
@@ -502,9 +502,9 @@ export enum Origin {
  * by the platform.
  */
 export function getCurrentPhysicalTime (): TimeValue {
-    let t = MicroTime.now();
-    let seconds: number = Math.floor(t / 1000000);
-    let nseconds: number = t * 1000 - seconds * TimeUnit.sec;
+    const t = MicroTime.now();
+    const seconds: number = Math.floor(t / 1000000);
+    const nseconds: number = t * 1000 - seconds * TimeUnit.sec;
     return TimeValue.secsAndNs(seconds, nseconds);
 }
 
@@ -528,7 +528,7 @@ export class Alarm {
     /**
    * Delay in terms of milliseconds, used when deferring to regular timeout.
    */
-    loResDelay: number = 0;
+    loResDelay = 0;
 
     /**
    * Start of the delay interval; tuple of seconds and nanoseconds.
@@ -543,7 +543,7 @@ export class Alarm {
     /**
    * Indicates whether the alarm has been set or not.
    */
-    active: boolean = false;
+    active = false;
 
     /**
    * Disable any scheduled timeouts or immediate events, and set the timer to
@@ -617,15 +617,15 @@ export class Alarm {
             if (this.loResDelay > 25) {
                 if (!this.active) {
                     this.deferredRef = setTimeout(
-                        () => thisTimer.try(task, callback),
+                        () => { thisTimer.try(task, callback); },
                         this.loResDelay - 25
                     );
                 } else {
                     this.deferredRef = undefined;
-                    this.immediateRef = setImmediate(() => thisTimer.try(task, callback));
+                    this.immediateRef = setImmediate(() => { thisTimer.try(task, callback); });
                 }
             } else {
-                this.immediateRef = setImmediate(() => thisTimer.try(task, callback));
+                this.immediateRef = setImmediate(() => { thisTimer.try(task, callback); });
             }
             this.active = true;
         }

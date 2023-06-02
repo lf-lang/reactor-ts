@@ -1,13 +1,14 @@
 
-import {IOPort, App, Reactor, Present, Args, Triggers, InPort, OutPort} from "../src/core/internal";
+import type {IOPort, Present} from "../src/core/internal";
+import { App, Reactor, Args, Triggers, InPort, OutPort} from "../src/core/internal";
 
 export class Adder extends Reactor {    
     
-    in1: InPort<number> = new InPort(this);
+    in1 = new InPort<number>(this);
 
-    in2: InPort<number> = new InPort(this);
+    in2 = new InPort<number>(this);
 
-    out: OutPort<number> = new OutPort(this);
+    out = new OutPort<number>(this);
 
     constructor (parent:Reactor) {
         super(parent);
@@ -25,7 +26,7 @@ export class Adder extends Reactor {
 
 class MyAdder extends Adder {
     public fire () {
-        for (let r of this._getReactions()) {
+        for (const r of this._getReactions()) {
             r.doReact();
         }
     }
