@@ -37,7 +37,7 @@ export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
    * @param node The event to compare this event's tag against.
    */
     hasPriorityOver (node: PrioritySetElement<Tag> | undefined) {
-        if (node) {
+        if (node != null) {
             return this.getPriority().isSmallerThan(node.getPriority());
         } else {
             return false;
@@ -50,7 +50,7 @@ export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
    * @param node The event adopt the value from if it is a duplicate of this one.
    */
     updateIfDuplicateOf (node: PrioritySetElement<Tag> | undefined) {
-        if (node && node instanceof TaggedEvent) {
+        if ((node != null) && node instanceof TaggedEvent) {
             if (
                 this.trigger === node.trigger &&
         this.tag.isSimultaneousWith(node.tag)

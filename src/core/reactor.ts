@@ -229,7 +229,7 @@ export abstract class Reactor extends Component {
     /**
    * The list of reactions this reactor has.
    */
-    private _reactions: Reaction<any>[] = [];
+    private _reactions: Array<Reaction<any>> = [];
 
     /**
    * Sandbox for the execution of reactions.
@@ -239,7 +239,7 @@ export abstract class Reactor extends Component {
     /**
    * The list of mutations this reactor has.
    */
-    private _mutations: Mutation<any>[] = [];
+    private _mutations: Array<Mutation<any>> = [];
 
     /**
    * Sandbox for the execution of mutations.
@@ -444,9 +444,9 @@ export abstract class Reactor extends Component {
             S extends R
         >(src: CallerPort<A, R> | IOPort<S>, dst: CalleePort<T, S> | IOPort<R>) {
             if (src instanceof CallerPort && dst instanceof CalleePort) {
-                this.reactor._connectCall(src, dst); return;
+                this.reactor._connectCall(src, dst); 
             } else if (src instanceof IOPort && dst instanceof IOPort) {
-                this.reactor._connect(src, dst); return;
+                this.reactor._connect(src, dst); 
             } else {
                 // ERROR
             }
@@ -457,7 +457,7 @@ export abstract class Reactor extends Component {
                 src instanceof IOPort &&
         (dst === undefined || dst instanceof IOPort)
             ) {
-                this.reactor._disconnect(src, dst); return;
+                this.reactor._disconnect(src, dst); 
             } else {
                 // FIXME: Add an error reporting mechanism such as an exception.
             }
@@ -538,7 +538,7 @@ export abstract class Reactor extends Component {
         // increased.
         if (!(this instanceof App) && this._runtime.isRunning()) {
             const toDependOn = this._getContainer()._getLastMutation();
-            if (toDependOn)
+            if (toDependOn != null)
                 this._mutations[0].setPriority(toDependOn.getPriority() + 1);
         }
     }
@@ -572,7 +572,7 @@ export abstract class Reactor extends Component {
    * @param reaction The reaction to return the index of.
    */
     public _getReactionIndex (reaction: Reaction<any>): number {
-        var index: number | undefined;
+        let index: number | undefined;
 
         if (reaction instanceof Mutation) {
             index = this._mutations.indexOf(reaction);
@@ -592,7 +592,7 @@ export abstract class Reactor extends Component {
     private _recordDeps<T extends Variable[]>(reaction: Reaction<any>) {
     // Add a dependency on the previous reaction or mutation, if it exists.
         const prev = this._getLastReactionOrMutation();
-        if (prev) {
+        if (prev != null) {
             this._dependencyGraph.addEdge(reaction, prev);
         }
 
@@ -688,7 +688,7 @@ export abstract class Reactor extends Component {
     protected prevReaction (
         reaction: Reaction<unknown>
     ): Reaction<any> | undefined {
-        var index: number | undefined;
+        let index: number | undefined;
 
         if (reaction instanceof Mutation) {
             index = this._mutations.indexOf(reaction);
@@ -716,7 +716,7 @@ export abstract class Reactor extends Component {
     protected nextReaction (
         reaction: Reaction<unknown>
     ): Reaction<any> | undefined {
-        var index: number | undefined;
+        let index: number | undefined;
 
         if (reaction instanceof Mutation) {
             index = this._mutations.indexOf(reaction);
@@ -837,7 +837,7 @@ export abstract class Reactor extends Component {
     private _addHierarchicalDependencies (): void {
         const dependent = this._getFirstReactionOrMutation();
         const toDependOn = this._getContainer()._getLastMutation();
-        if (dependent && toDependOn && this._getContainer() !== this) {
+        if ((dependent != null) && (toDependOn != null) && this._getContainer() !== this) {
             this._dependencyGraph.addEdge(dependent, toDependOn); // FIXME: this assumes there is always at least one mutation.
         }
     }
@@ -854,7 +854,7 @@ export abstract class Reactor extends Component {
         for (const p of calleePorts) {
             const procedure = p.getManager(this._getKey(p)).getProcedure();
             const lastCaller = p.getManager(this._getKey(p)).getLastCaller();
-            if (procedure && lastCaller) {
+            if ((procedure != null) && (lastCaller != null)) {
                 const effects = this._dependencyGraph.getBackEdges(procedure);
                 for (const e of effects) {
                     if (!(e instanceof CalleePort)) {
@@ -887,7 +887,7 @@ export abstract class Reactor extends Component {
     protected _getPrecedenceGraph (
         depth = -1
     ): DependencyGraph<Port<Present> | Reaction<unknown>> {
-        var graph =
+        const graph =
       new DependencyGraph<Port<Present> | Reaction<unknown>>();
 
         this._addHierarchicalDependencies();
@@ -910,17 +910,17 @@ export abstract class Reactor extends Component {
     /**
    * Return the reactors that this reactor owns.
    */
-    private _getOwnReactors (): Array<Reactor> {
+    private _getOwnReactors (): Reactor[] {
         return Array.from(this._keyChain.keys()).filter(
             (it) => it instanceof Reactor
-        ) as Array<Reactor>;
+        ) as Reactor[];
     }
 
     /**
    * Return a list of reactions owned by this reactor.
    */
     protected _getReactions (): Array<Reaction<unknown>> {
-        var arr = new Array<Reaction<any>>();
+        const arr = new Array<Reaction<any>>();
         this._reactions.forEach((it) => arr.push(it));
         return arr;
     }
@@ -929,7 +929,7 @@ export abstract class Reactor extends Component {
    * Return a list of reactions and mutations owned by this reactor.
    */
     protected _getReactionsAndMutations (): Array<Reaction<unknown>> {
-        var arr = new Array<Reaction<any>>();
+        const arr = new Array<Reaction<any>>();
         this._mutations.forEach((it) => arr.push(it));
         this._reactions.forEach((it) => arr.push(it));
         return arr;
@@ -976,7 +976,7 @@ export abstract class Reactor extends Component {
    * so changing it will not affect this reactor.
    */
     protected _getMutations (): Array<Reaction<unknown>> {
-        var arr = new Array<Reaction<any>>();
+        const arr = new Array<Reaction<any>>();
         this._mutations.forEach((it) => arr.push(it));
         return arr;
     }
@@ -1027,7 +1027,7 @@ export abstract class Reactor extends Component {
     >(src: CallerPort<A, R>, dst: CalleePort<T, S>) {
     // FIXME: can we change the inheritance relationship so that we can overload?
 
-        if (this._runtime.isRunning() == false) {
+        if (!this._runtime.isRunning()) {
             // console.log("Connecting before running")
             // Validate connections between callers and callees.
 
@@ -1071,12 +1071,12 @@ export abstract class Reactor extends Component {
         // Check the race condition
         //   - between reactors and reactions (NOTE: check also needs to happen
         //     in addReaction)
-        var deps = this._dependencyGraph.getEdges(dst); // FIXME this will change with multiplex ports
+        const deps = this._dependencyGraph.getEdges(dst); // FIXME this will change with multiplex ports
         if (deps != undefined && deps.size > 0) {
             throw Error("Destination port is already occupied.");
         }
 
-        if (this._runtime.isRunning() == false) {
+        if (!this._runtime.isRunning()) {
             // console.log("Connecting before running")
             // Validate connections between callers and callees.
             // Additional checks for regular ports.
@@ -1329,12 +1329,12 @@ export abstract class Reactor extends Component {
                 // This means the callee port is bound to a reaction and
                 // there may be zero or more callers. We now continue
                 // building a chain of callers.
-                if (first) {
+                if (first != null) {
                     this._dependencyGraph.addEdge(first, lastCaller);
                 } else {
                     this._dependencyGraph.addEdge(src, dst);
                 }
-                if (last) calleeManager.setLastCaller(last);
+                if (last != null) calleeManager.setLastCaller(last);
             } else {
                 throw new Error(
                     "No procedure linked to callee" + " port `${procedure}`."
@@ -1557,7 +1557,7 @@ export class CallerPort<A extends Present, R extends Present>
 
     public set (value: A): void {
     // Invoke downstream reaction directly, and return store the result.
-        if (this.remotePort) {
+        if (this.remotePort != null) {
             this.remotePort.invoke(value);
         }
         this.tag = this.runtime.util.getCurrentTag();
@@ -1965,14 +1965,14 @@ export class App extends Reactor {
                     ">>>>>>>>>Scheduling timer " + timer._getFullyQualifiedName()
                 );
                 // Schedule relative to the current tag.
-                var nextTag;
+                let nextTag;
                 if (!timer.offset.isZero()) {
                     nextTag = this.app._currentTag.getLaterTag(timer.offset);
                 } else if (!timer.period.isZero()) {
                     nextTag = this.app._currentTag.getLaterTag(timer.period);
                 }
 
-                if (nextTag) {
+                if (nextTag != null) {
                     Log.debug(
                         this,
                         () =>
@@ -2000,7 +2000,7 @@ export class App extends Reactor {
 
             // Don't schedule events past the end of execution.
             if (
-                !this.app._endOfExecution ||
+                (this.app._endOfExecution == null) ||
         !this.app._endOfExecution.isSmallerThan(e.tag)
             ) {
                 this.app._eventQ.push(e);
@@ -2296,8 +2296,8 @@ export class App extends Reactor {
    * stimuli.
    */
     private _next () {
-        var nextEvent = this._eventQ.peek();
-        if (nextEvent) {
+        let nextEvent = this._eventQ.peek();
+        if (nextEvent != null) {
             // Check whether the next event can be handled, or not quite yet.
             // A holdup can occur in a federated execution.
             if (!this._canProceed(nextEvent)) {
@@ -2370,7 +2370,7 @@ export class App extends Reactor {
                 // Peek at the event queue to see whether we can process the next event
                 // or should give control back to the JS event loop.
                 nextEvent = this._eventQ.peek();
-            } while (nextEvent && this._currentTag.isSimultaneousWith(nextEvent.tag));
+            } while ((nextEvent != null) && this._currentTag.isSimultaneousWith(nextEvent.tag));
             // enqueue networkOutputControlReactions
             this.enqueueNetworkOutputControlReactions();
 
@@ -2388,7 +2388,7 @@ export class App extends Reactor {
         // next event is at a future time, or there are no more events in the
         // queue.
         if (
-            this._endOfExecution &&
+            (this._endOfExecution != null) &&
       this._currentTag.isSimultaneousWith(this._endOfExecution)
         ) {
             // An end of execution has been specified; a shutdown event must
@@ -2396,7 +2396,7 @@ export class App extends Reactor {
             // consumed because the next tag is
             this._finish();
         } else {
-            if (nextEvent) {
+            if (nextEvent != null) {
                 Log.global.debug("Event queue not empty.");
                 this._setAlarmOrYield(nextEvent.tag);
             } else {
@@ -2421,7 +2421,7 @@ export class App extends Reactor {
    */
     protected _cancelNext () {
         this._alarm.unset();
-        if (this._immediateRef) {
+        if (this._immediateRef != null) {
             clearImmediate(this._immediateRef);
             this._immediateRef = undefined;
         }
@@ -2437,7 +2437,7 @@ export class App extends Reactor {
             return "In setAlarmOrYield for tag: " + tag;
         });
 
-        if (this._endOfExecution && this._endOfExecution.isSmallerThan(tag)) {
+        if ((this._endOfExecution != null) && this._endOfExecution.isSmallerThan(tag)) {
             // Ignore this request if the tag is later than the end of execution.
             return;
         }
@@ -2464,7 +2464,7 @@ export class App extends Reactor {
    */
     protected _requestImmediateInvocationOfNext () {
     // Only schedule an immediate if none is already pending.
-        if (!this._immediateRef) {
+        if (this._immediateRef == null) {
             this._immediateRef = setImmediate(
                 function (this: App) {
                     this._immediateRef = undefined;
@@ -2567,12 +2567,12 @@ export class App extends Reactor {
 
         // Obtain the precedence graph, ensure it has no cycles,
         // and assign a priority to each reaction in the graph.
-        var apg = this._getPrecedenceGraph();
+        const apg = this._getPrecedenceGraph();
 
         console.log(apg.toString());
 
         Log.debug(this, () => "Before collapse: " + apg.toString());
-        var collapsed = new SortableDependencyGraph();
+        const collapsed = new SortableDependencyGraph();
 
         // 1. Collapse dependencies and weed out the ports.
         const leafs = apg.leafNodes();
@@ -2616,7 +2616,7 @@ export class App extends Reactor {
             this,
             () =>
                 ">>> Spent " +
-        getCurrentPhysicalTime().subtract(initStart as TimeValue) +
+        getCurrentPhysicalTime().subtract(initStart ) +
         " checking the precedence graph."
         );
     }

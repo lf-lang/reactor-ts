@@ -12,9 +12,7 @@ import type {
  * Type that describes a class with a constructor of which the arguments
  * are of type `ReactorArgs`.
  */
-export type ReactorClass<T extends Reactor, S> = {
-    new (...args: ReactorArgs<S>): T;
-};
+export type ReactorClass<T extends Reactor, S> = new (...args: ReactorArgs<S>) => T;
 
 /**
  * Type that describes a tuple of arguments passed into the constructor
@@ -61,7 +59,7 @@ export class Bank<T extends Reactor, S> {
    * Return all reactor instances in this bank.
    * @returns all reactor instances in this bank
    */
-    public all (): Array<T> {
+    public all (): T[] {
         return this.members;
     }
 
@@ -81,7 +79,7 @@ export class Bank<T extends Reactor, S> {
    */
     public port<P extends Port<Present> | MultiPort<Present>>(
         selector: (reactor: T) => P
-    ): Array<P> {
+    ): P[] {
         return this.all().reduce(
             (acc, val) => acc.concat(selector(val)),
             new Array<P>(0)

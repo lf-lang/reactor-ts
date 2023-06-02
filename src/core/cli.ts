@@ -89,7 +89,7 @@ export function stringCLAType (arg: string): string {
  * The type returned by the commandLineArguments function. This type must change
  * if the CommandLineOptionDefs changes.
  */
-export type ProcessedCommandLineArgs = {
+export interface ProcessedCommandLineArgs {
     fast: boolean | undefined;
     keepalive: boolean | undefined;
     advanceMessageInterval: TimeValue | undefined;
@@ -97,7 +97,7 @@ export type ProcessedCommandLineArgs = {
     logging: LogLevel | undefined;
     id: string | undefined;
     help: boolean;
-};
+}
 
 export type CommandLineOptionSpec = Array<{
     name: string;

@@ -171,7 +171,7 @@ export abstract class MultiPort<T extends Present>
    * Inner class instance to gain access to MultiWrite<T> interface.
    */
     protected writer = new (class extends WritableMultiPort<T> {
-        getPorts (): IOPort<T>[] {
+        getPorts (): Array<IOPort<T>> {
             return this.port._channels;
         }
 
@@ -183,7 +183,7 @@ export abstract class MultiPort<T extends Present>
         /** @inheritdoc */
         constructor (private port: MultiPort<T>) {
             super();
-            this.cache = new Array();
+            this.cache = [];
         }
 
         /** @inheritdoc */

@@ -148,7 +148,7 @@ implements Sortable<Priority>, PrioritySetElement<Priority>
         // This is the case if the reaction has a defined timeout and
         // logical time + timeout < physical time
         if (
-            this.deadline &&
+            (this.deadline != null) &&
       this.sandbox.util
           .getCurrentTag()
           .getLaterTag(this.deadline)

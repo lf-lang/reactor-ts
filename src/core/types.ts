@@ -100,11 +100,11 @@ export class Args<T extends Variable[]> {
 }
 
 export class Triggers {
-    list: Array<Trigger | Array<Trigger>>;
+    list: Array<Trigger | Trigger[]>;
 
     constructor (
-        trigger: Trigger | Array<Trigger>,
-        ...triggers: Array<Trigger | Array<Trigger>>
+        trigger: Trigger | Trigger[],
+        ...triggers: Array<Trigger | Trigger[]>
     ) {
         this.list = triggers.concat(trigger);
     }

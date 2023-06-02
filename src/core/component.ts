@@ -175,7 +175,7 @@ export abstract class Component {
    * If no such string was found, return the name of the constructor.
    */
     public _getName (): string {
-        var name;
+        let name;
 
         if (this instanceof App) {
             name = this._name;

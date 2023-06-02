@@ -53,12 +53,12 @@ export class PrioritySet<P> {
             element.next = undefined;
             this.head = element;
             this.count++;
-            return;
+            
         } else if (element.updateIfDuplicateOf(this.head)) {
             // updateIfDuplicateOf returned true, i.e.,
             // it has updated the value of this.head to
             // equal that of element.
-            return;
+            
         } else {
             // prepend
             if (element.hasPriorityOver(this.head)) {
@@ -68,10 +68,10 @@ export class PrioritySet<P> {
                 return;
             }
             // seek
-            var curr: PrioritySetElement<P> | undefined = this.head;
+            let curr: PrioritySetElement<P> | undefined = this.head;
             while (curr) {
                 const next: PrioritySetElement<P> | undefined = curr.next;
-                if (next) {
+                if (next != null) {
                     if (element.updateIfDuplicateOf(next)) {
                         // updateIfDuplicateOf returned true, i.e.,
                         // it has updated the value of this.head to
@@ -91,13 +91,13 @@ export class PrioritySet<P> {
                 element.next = curr.next; // undefined if last
                 curr.next = element;
                 this.count++;
-                return;
+                
             }
         }
     }
 
     pop (): PrioritySetElement<P> | undefined {
-        if (this.head) {
+        if (this.head != null) {
             const node = this.head;
             this.head = this.head.next;
             node.next = undefined; // unhook from linked list
@@ -107,7 +107,7 @@ export class PrioritySet<P> {
     }
 
     peek (): PrioritySetElement<P> | undefined {
-        if (this.head) {
+        if (this.head != null) {
             return this.head;
         }
     }
@@ -133,7 +133,7 @@ export class DependencyGraph<T> {
     merge (apg: this) {
         for (const [k, v] of apg.adjacencyMap) {
             const nodes = this.adjacencyMap.get(k);
-            if (nodes) {
+            if (nodes != null) {
                 for (const n of v) {
                     if (!nodes.has(n)) {
                         nodes.add(n);
@@ -234,7 +234,7 @@ export class DependencyGraph<T> {
 
     removeNode (node: T) {
         let deps: Set<T> | undefined;
-        if ((deps = this.adjacencyMap.get(node))) {
+        if (((deps = this.adjacencyMap.get(node)) != null)) {
             this.numberOfEdges -= deps.size;
             this.adjacencyMap.delete(node);
             for (const [v, e] of this.adjacencyMap) {
@@ -249,7 +249,7 @@ export class DependencyGraph<T> {
     // node -> deps
     addEdge (node: T, dependsOn: T) {
         const deps = this.adjacencyMap.get(node);
-        if (!deps) {
+        if (deps == null) {
             this.adjacencyMap.set(node, new Set([dependsOn]));
             this.numberOfEdges++;
         } else {
@@ -274,7 +274,7 @@ export class DependencyGraph<T> {
 
     addEdges (node: T, dependsOn: Set<T>) {
         const deps = this.adjacencyMap.get(node);
-        if (!deps) {
+        if (deps == null) {
             this.adjacencyMap.set(node, new Set(dependsOn));
             this.numberOfEdges += dependsOn.size;
         } else {
@@ -292,7 +292,7 @@ export class DependencyGraph<T> {
 
     removeEdge (node: T, dependsOn: T) {
         const deps = this.adjacencyMap.get(node);
-        if (deps && deps.has(dependsOn)) {
+        if ((deps != null) && deps.has(dependsOn)) {
             deps.delete(dependsOn);
             this.numberOfEdges--;
         }
@@ -310,9 +310,9 @@ export class DependencyGraph<T> {
    * Return a DOT representation of the graph.
    */
     toString () {
-        var dot = "";
-        var graph = this.adjacencyMap;
-        var visited = new Set<T>();
+        let dot = "";
+        const graph = this.adjacencyMap;
+        const visited = new Set<T>();
 
         /**
      * Store the DOT representation of the given chain, which is really
@@ -321,9 +321,9 @@ export class DependencyGraph<T> {
      * @param node The node that is currently being visited.
      * @param chain The current chain that is being built.
      */
-        function printChain (node: T, chain: Array<T>) {
+        function printChain (node: T, chain: T[]) {
             dot += "\n";
-            dot += '"' + node + '"';
+            dot += "\"" + node + "\"";
             // TODO (axmmisaka): check if this is equivalent;
             // https://stackoverflow.com/a/47903498
             if (node?.toString === Object.prototype.toString) {
@@ -332,7 +332,7 @@ export class DependencyGraph<T> {
                 );
             }
             while (chain.length > 0) {
-                dot += "->" + '"' + chain.pop() + '"';
+                dot += "->" + "\"" + chain.pop() + "\"";
             }
             dot += ";";
         }
@@ -342,16 +342,16 @@ export class DependencyGraph<T> {
      * @param node The node that is currently being visited.
      * @param chain The current chain that is being built.
      */
-        function buildChain (node: T, chain: Array<T>) {
+        function buildChain (node: T, chain: T[]) {
             let match = false;
             for (const [v, e] of graph) {
                 if (e.has(node)) {
                     // Found next link in the chain.
                     const deps = graph.get(node);
-                    if (match || !deps || deps.size == 0) {
+                    if (match || (deps == null) || deps.size == 0) {
                         // Start a new line when this is not the first match,
                         // or when the current node is a start node.
-                        chain = new Array();
+                        chain = [];
                         Log.global.debug("Starting new chain.");
                     }
 
@@ -390,14 +390,14 @@ export class DependencyGraph<T> {
 
         // Build the chains.
         for (const s of start) {
-            buildChain(s, new Array());
+            buildChain(s, []);
         }
 
         return "digraph G {" + dot + "\n}";
     }
 
     public rootNodes (): Set<T> {
-        var roots = new Set<T>();
+        const roots = new Set<T>();
         /* Populate start set */
         for (const [v, e] of this.adjacencyMap) {
             if (!e || e.size == 0) {
@@ -415,7 +415,7 @@ export class DependencyGraph<T> {
     // As a result, starting a graph search only from leaf nodes in a
     // cyclic graph, will not necessarily traverse the entire graph.
     public leafNodes (): Set<T> {
-        var leafs = new Set<T>(this.nodes());
+        const leafs = new Set<T>(this.nodes());
         for (const node of this.nodes()) {
             for (const dep of this.getEdges(node)) {
                 leafs.delete(dep);
@@ -429,9 +429,9 @@ export class SortableDependencyGraph<
     T extends Sortable<number>
 > extends DependencyGraph<T> {
     updatePriorities (destructive: boolean, spacing = 100) {
-        var start = new Array<T>();
-        var graph: Map<T, Set<T>>;
-        var count = 0;
+        const start = new Array<T>();
+        let graph: Map<T, Set<T>>;
+        let count = 0;
         if (!destructive) {
             graph = new Map();
             /* duplicate the map */
@@ -450,7 +450,7 @@ export class SortableDependencyGraph<
             }
         }
         /* Sort reactions */
-        for (var n: T | undefined; (n = start.shift()); count += spacing) {
+        for (var n: T | undefined; ((n = start.shift()) != null); count += spacing) {
             n.setPriority(count);
             // for each node v with an edge e from n to v do
             for (const [v, e] of graph) {

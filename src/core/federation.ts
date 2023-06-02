@@ -362,10 +362,10 @@ class RTIClient extends EventEmitter {
         const thiz = this;
 
         const options: SocketConnectOpts = {
-            port: port,
+            port,
             family: 4, // IPv4,
             localAddress: "0.0.0.0", // All interfaces, 0.0.0.0.
-            host: host
+            host
         };
 
         this.socket = createConnection(options, () => {
@@ -763,7 +763,7 @@ class RTIClient extends EventEmitter {
         // The result is assembledData.
         let assembledData: Buffer;
 
-        if (thiz.chunkedBuffer) {
+        if (thiz.chunkedBuffer != null) {
             assembledData = Buffer.alloc(thiz.chunkedBuffer.length + data.length);
             thiz.chunkedBuffer.copy(assembledData, 0, 0, thiz.chunkedBuffer.length);
             data.copy(assembledData, thiz.chunkedBuffer.length);
@@ -1142,7 +1142,7 @@ export class FederatedApp extends App {
 
     private downstreamFedIDs: number[] = [];
 
-    private outputControlReactionTriggers: Action<Present>[] = [];
+    private outputControlReactionTriggers: Array<Action<Present>> = [];
 
     /**
    * The default value, null, indicates there is no output depending on a physical action.
@@ -1334,11 +1334,11 @@ export class FederatedApp extends App {
             config.fast,
             // Let super class (App) call FederateApp's _shutdown in success and failure.
             () => {
-                success ? success() : () => {};
+                (success != null) ? success() : () => {};
                 this._shutdown();
             },
             () => {
-                failure ? failure() : () => {};
+                (failure != null) ? failure() : () => {};
                 this._shutdown();
             }
         );

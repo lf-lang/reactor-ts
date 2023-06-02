@@ -31,8 +31,8 @@ export class Ping extends Reactor {
                 __client: CallerPort<number, number>,
                 count: Parameter<number>
             ) {
-                var startTime = this.util.getCurrentPhysicalTime();
-                var pingsLeft = count.get();
+                const startTime = this.util.getCurrentPhysicalTime();
+                let pingsLeft = count.get();
                 while (pingsLeft > 0) {
                     // console.log("Ping!")
                     const ret = __client.invoke(pingsLeft);

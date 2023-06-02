@@ -59,7 +59,7 @@ class Filter extends Reactor {
 
     startPrime: Parameter<number>;
 
-    localPrimes: State<Array<number>>;
+    localPrimes: State<number[]>;
 
     hasChild: State<boolean>;
 
@@ -104,7 +104,7 @@ class Filter extends Reactor {
                                 // let x = this.create(Filter, [this.getReactor(), p])
                                 // console.log("CREATED: " + x._getFullyQualifiedName())
                                 // FIXME: weird hack. Maybe just accept writable ports as well?
-                                var port = (out as unknown as WritablePort<number>).getPort();
+                                const port = (out as unknown as WritablePort<number>).getPort();
                                 this.connect(port, n.inp);
                                 // FIXME: this updates the dependency graph, but it doesn't redo the topological sort
                                 // For a pipeline like this one, it is not necessary, but in general it is.

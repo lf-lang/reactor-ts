@@ -133,8 +133,8 @@ export class TimeValue {
    * @param other The time value to subtract from this one.
    */
     subtract (other: TimeValue): TimeValue {
-        var s = this.seconds - other.seconds;
-        var ns = this.nanoseconds - other.nanoseconds;
+        let s = this.seconds - other.seconds;
+        let ns = this.nanoseconds - other.nanoseconds;
 
         if (ns < 0) {
             // Borrow a second
@@ -550,12 +550,12 @@ export class Alarm {
    * inactive.
    */
     unset () {
-        if (this.deferredRef) {
+        if (this.deferredRef != null) {
             clearTimeout(this.deferredRef);
             this.deferredRef = undefined;
         }
 
-        if (this.immediateRef) {
+        if (this.immediateRef != null) {
             clearImmediate(this.immediateRef);
             this.immediateRef = undefined;
         }
@@ -571,10 +571,10 @@ export class Alarm {
    */
     private try (task: () => void, callback?: (waitTime: TimeValue) => void) {
     // Record the current time.
-        var hiResDif = process.hrtime(this.hiResStart);
+        const hiResDif = process.hrtime(this.hiResStart);
 
         // Keep reference to the class.
-        var thisTimer = this;
+        const thisTimer = this;
 
         // See whether the requested delay has elapsed.
         if (
@@ -590,7 +590,7 @@ export class Alarm {
                 // the task synchronously.
                 this.active = false;
                 task();
-                if (callback) {
+                if (callback != null) {
                     callback(TimeValue.secsAndNs(...hiResDif));
                 }
             } else {
@@ -605,7 +605,7 @@ export class Alarm {
                     if (thisTimer.active) {
                         thisTimer.active = false;
                         task();
-                        if (callback) {
+                        if (callback != null) {
                             callback(TimeValue.secsAndNs(...hiResDif));
                         }
                     }

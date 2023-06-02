@@ -49,8 +49,8 @@ export class Log {
    * @param module The name associated with the logger
    */
     public static getInstance (module: string): ULog {
-        var logger = Log.loggers.get(module);
-        if (!logger) {
+        let logger = Log.loggers.get(module);
+        if (logger == null) {
             logger = ULog(module);
             Log.loggers.set(module, logger);
         }

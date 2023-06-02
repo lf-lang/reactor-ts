@@ -81,8 +81,8 @@ export class Action<T extends Present>
                 extraDelay = TimeValue.secs(0);
             }
 
-            var tag = this.action.runtime.util.getCurrentTag();
-            var delay = this.action.minDelay.add(extraDelay);
+            let tag = this.action.runtime.util.getCurrentTag();
+            const delay = this.action.minDelay.add(extraDelay);
 
             tag = tag.getLaterTag(delay);
 

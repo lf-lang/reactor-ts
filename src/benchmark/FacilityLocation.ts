@@ -231,7 +231,7 @@ export class Producer extends Reactor {
 }
 
 // Global helper functions used by both the Quadrant reactor's constructor and reaction.
-function findCost (point: Point, localFacilities: State<Array<Point>>): number {
+function findCost (point: Point, localFacilities: State<Point[]>): number {
     let result = Number.MAX_VALUE;
     localFacilities.get().forEach((loopPoint) => {
         const distance = loopPoint.getDistance(point);
@@ -243,8 +243,8 @@ function findCost (point: Point, localFacilities: State<Array<Point>>): number {
 }
 function addCustomer (
     point: Point,
-    localFacilities: State<Array<Point>>,
-    supportCustomers: State<Array<Point>>,
+    localFacilities: State<Point[]>,
+    supportCustomers: State<Point[]>,
     totalCost: State<number>
 ): void {
     supportCustomers.get().push(point.clone());
@@ -264,7 +264,7 @@ export class Summary extends Reactor {
             new Args(this.fromRootQuadrant),
             function (this, fromRootQuadrant) {
                 const msgFromRootQuadrant = fromRootQuadrant.get();
-                if (msgFromRootQuadrant) {
+                if (msgFromRootQuadrant != null) {
                     console.log(
                         `Num Facilities: ${msgFromRootQuadrant.facilities}, ` +
               `Num customers: ${msgFromRootQuadrant.supportCustomers}, ` +
@@ -335,10 +335,10 @@ export class Accumulator extends Reactor {
                 const msgFromFourthQuadrant = fromFourthQuadrant.get();
 
                 if (
-                    msgFromFirstQuadrant &&
-          msgFromSecondQuadrant &&
-          msgFromThirdQuadrant &&
-          msgFromFourthQuadrant
+                    (msgFromFirstQuadrant != null) &&
+          (msgFromSecondQuadrant != null) &&
+          (msgFromThirdQuadrant != null) &&
+          (msgFromFourthQuadrant != null)
                 ) {
                     const numFacilities =
             msgFromFirstQuadrant.facilities +
@@ -385,13 +385,13 @@ export class Quadrant extends Reactor {
 
     depth: Parameter<number>;
 
-    initLocalFacilities: Parameter<Array<Point>>;
+    initLocalFacilities: Parameter<Point[]>;
 
     initKnownFacilities: Parameter<number>;
 
     initMaxDepthOfKnownOpenFacility: Parameter<number>;
 
-    initCustomers: Parameter<Array<Point>>;
+    initCustomers: Parameter<Point[]>;
 
     // Input ports.
     fromProducer = new InPort<Msg>(this);
@@ -414,19 +414,19 @@ export class Quadrant extends Reactor {
     // States.
     facility = new State<Point>(new Point(0, 0));
 
-    localFacilities = new State<Array<Point>>(new Array<Point>());
+    localFacilities = new State<Point[]>(new Array<Point>());
 
     knownFacilities = new State<number>(0);
 
     maxDepthOfKnownOpenFacility = new State<number>(0);
 
-    supportCustomers = new State<Array<Point>>(new Array<Point>());
+    supportCustomers = new State<Point[]>(new Array<Point>());
 
     // hasChildren, firstChild, secondChild, thirdChild, fourthChild are used for
     // children in Akka actor implementation.
     hasChildren = new State<boolean>(false);
 
-    childrenBoundaries = new State<Array<Box>>(new Array<Box>());
+    childrenBoundaries = new State<Box[]>(new Array<Box>());
 
     totalCost = new State<number>(0);
 
@@ -437,10 +437,10 @@ export class Quadrant extends Reactor {
         boundary: Box,
         threshold: number,
         depth: number,
-        initLocalFacilities: Array<Point>,
+        initLocalFacilities: Point[],
         initKnownFacilities: number,
         initMaxDepthOfKnownOpenFacility: number,
-        initCustomers: Array<Point>
+        initCustomers: Point[]
     ) {
         super(parent);
         this.hasQuadrantProducer = new Parameter(hasQuadrantProducer);
@@ -624,7 +624,7 @@ export class Quadrant extends Reactor {
 
                     // console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
                     const accumulator = new Accumulator(thisReactor);
-                    var toAccumulatorOfQuadrant = (
+                    const toAccumulatorOfQuadrant = (
                         toAccumulator as unknown as WritablePort<Msg>
                     ).getPort();
                     // Connect Accumulator's output to Quadrant's output.
@@ -645,7 +645,7 @@ export class Quadrant extends Reactor {
                         maxDepthOfKnownOpenFacility.get(),
                         Point.arrayClone(supportCustomers.get())
                     );
-                    var toFirstChildPort = (
+                    const toFirstChildPort = (
                         toFirstChild as unknown as WritablePort<Msg>
                     ).getPort();
                     thisMutationSandbox.connect(
@@ -669,7 +669,7 @@ export class Quadrant extends Reactor {
                         maxDepthOfKnownOpenFacility.get(),
                         Point.arrayClone(supportCustomers.get())
                     );
-                    var toSecondChildPort = (
+                    const toSecondChildPort = (
                         toSecondChild as unknown as WritablePort<Msg>
                     ).getPort();
                     thisMutationSandbox.connect(
@@ -693,7 +693,7 @@ export class Quadrant extends Reactor {
                         maxDepthOfKnownOpenFacility.get(),
                         Point.arrayClone(supportCustomers.get())
                     );
-                    var toThirdChildPort = (
+                    const toThirdChildPort = (
                         toThirdChild as unknown as WritablePort<Msg>
                     ).getPort();
                     thisMutationSandbox.connect(
@@ -717,7 +717,7 @@ export class Quadrant extends Reactor {
                         maxDepthOfKnownOpenFacility.get(),
                         Point.arrayClone(supportCustomers.get())
                     );
-                    var toFourthChildPort = (
+                    const toFourthChildPort = (
                         toFourthChild as unknown as WritablePort<Msg>
                     ).getPort();
                     thisMutationSandbox.connect(
@@ -742,7 +742,7 @@ export class Quadrant extends Reactor {
                         // Handling CustomerMsg for a new customoer.
                         // This message is propagated from root to the leaf facility.
                         // console.log(`Quadrant at ${facility.get()} - Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
-                        const point = (<CustomerMsg>msg).point;
+                        const point = (msg as CustomerMsg).point;
                         if (!hasChildren.get()) {
                             // No open facility, thus, addCustomer(), then partition().
                             addCustomer(point, localFacilities, supportCustomers, totalCost);
