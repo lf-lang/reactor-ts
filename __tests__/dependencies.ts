@@ -1,24 +1,25 @@
 import {Reactor, App, Triggers, Args, InPort, Reaction, Priority,
-    SortableDependencyGraph, Sortable, PrioritySet, Log, StringUtil} from '../src/core/internal';
+    SortableDependencyGraph, Sortable, PrioritySet, Log, StringUtil} from "../src/core/internal";
 
-//Log.setGlobalLevel(Log.levels.DEBUG);
+// Log.setGlobalLevel(Log.levels.DEBUG);
 
 class R extends Reactor {
     protected in = new InPort(this);
-    constructor(parent: Reactor|null) {
+
+    constructor (parent: Reactor|null) {
         super(parent);
         for (let i = 0; i < 7; i++) {
             this.addReaction(
                 new Triggers(this.in), 
                 new Args(), 
-                function(this) {
+                function (this) {
                     throw new Error("Method not implemented.");
                 }
             );
         }
     }
 
-    getNodes() {
+    getNodes () {
         return this._getReactions();
     }
 }
@@ -26,18 +27,19 @@ class R extends Reactor {
 
 class SR extends Reactor {
     protected in = new InPort(this);
-    constructor(parent: Reactor|null) {
+
+    constructor (parent: Reactor|null) {
         super(parent);
         this.addReaction(
             new Triggers(this.in), 
             new Args(), 
-            function(this) {
+            function (this) {
                 throw new Error("Method not implemented.");
             }
         );
     }
 
-    getNodes() {
+    getNodes () {
         return this._getReactions();
     }
 }
@@ -46,16 +48,16 @@ class CNode<T> implements Sortable<Priority> {
     
     public priority: Priority = Number.MAX_SAFE_INTEGER;
 
-    constructor() {
+    constructor () {
        
     }
 
-    public setPriority(priority: number) {
+    public setPriority (priority: number) {
         this.priority = priority;
     }
 }
 
-describe('Manually constructed simple precedence graphs', () => {
+describe("Manually constructed simple precedence graphs", () => {
 
     var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
     var reactor = new SR(new App());
@@ -64,14 +66,14 @@ describe('Manually constructed simple precedence graphs', () => {
 
     graph.addNode(nodes[0]);
 
-    it('graph equality', () => {
+    it("graph equality", () => {
         expect([ ...graph.nodes()]).toEqual(nodes)
     });
 
     
 });
 
-describe('Test for corner cases', () => {
+describe("Test for corner cases", () => {
 
     var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
     const node: Sortable<Priority> = new CNode<Priority>(); 
@@ -79,7 +81,7 @@ describe('Test for corner cases', () => {
 
 });
 
-describe('Manually constructed precedence graphs', () => {
+describe("Manually constructed precedence graphs", () => {
 
     var graph: SortableDependencyGraph<Sortable<Priority>> = new SortableDependencyGraph();
     var reactor = new R(new App());
@@ -94,11 +96,11 @@ describe('Manually constructed precedence graphs', () => {
     graph.addEdge(nodes[0], nodes[1]);
     graph.addEdge(nodes[0], nodes[4]);
 
-    it('reaction equality',  () => {
+    it("reaction equality",  () => {
         expect(Object.is(nodes[0], nodes[1])).toBeFalsy();
     });
 
-    it('initial graph',  () => {
+    it("initial graph",  () => {
         expect(graph.size()[0]).toEqual(6); // V
         expect(graph.size()[1]).toEqual(7); // E
         expect(graph.toString()).toBe(
@@ -111,7 +113,7 @@ describe('Manually constructed precedence graphs', () => {
         );
     });
 
-    it('initial priorities', () => {
+    it("initial priorities", () => {
         graph.updatePriorities(false);
         expect(nodes[5].getPriority()).toEqual(0);
         expect(nodes[3].getPriority()).toEqual(100);
@@ -121,19 +123,19 @@ describe('Manually constructed precedence graphs', () => {
         expect(nodes[0].getPriority()).toEqual(500);
     });
 
-    it('remove dependency 4 -> 5', () => {
+    it("remove dependency 4 -> 5", () => {
         graph.removeEdge(nodes[4], nodes[3]);
         expect(graph.size()[0]).toEqual(6); // V
         expect(graph.size()[1]).toEqual(6); // E
         expect(graph.toString()).toBe(
-`digraph G {
+            `digraph G {
 "app.R[R0]"->"app.R[R1]"->"app.R[R2]"->"app.R[R3]"->"app.R[R5]";
 "app.R[R1]"->"app.R[R4]";
 "app.R[R0]"->"app.R[R4]";
 }`);
     });
 
-    it('remove node 2', () => {
+    it("remove node 2", () => {
         graph.removeNode(nodes[1]);
         expect(graph.size()[0]).toEqual(5); // V
         expect(graph.size()[1]).toEqual(3); // E
@@ -147,7 +149,7 @@ describe('Manually constructed precedence graphs', () => {
         );
     });
 
-    it('add node 7, make 3 dependent on it', () => {
+    it("add node 7, make 3 dependent on it", () => {
         graph.addNode(nodes[6]);
         graph.addEdges(nodes[2], new Set([nodes[6], nodes[3]]));
         expect(graph.size()[0]).toEqual(6); // V
@@ -163,7 +165,7 @@ describe('Manually constructed precedence graphs', () => {
         );
     });
 
-    it('reassign priorities', () => {
+    it("reassign priorities", () => {
         graph.updatePriorities(false);
         
         expect(nodes[5].getPriority()).toEqual(0);
@@ -175,7 +177,7 @@ describe('Manually constructed precedence graphs', () => {
 
     });
 
-    it('introduce a cycle', () => {
+    it("introduce a cycle", () => {
         graph.addEdge(nodes[5], nodes[2]);
         expect(graph.updatePriorities(false)).toBeFalsy();
         Log.global.debug(graph.toString());
@@ -183,7 +185,7 @@ describe('Manually constructed precedence graphs', () => {
 
 });
 
-describe('ReactionQ', () => {
+describe("ReactionQ", () => {
     
     var graph:SortableDependencyGraph<Reaction<unknown>> = new SortableDependencyGraph();
     var reactor = new R(new App());
@@ -212,7 +214,7 @@ describe('ReactionQ', () => {
     Log.global.debug("Pushing duplicate node with prio: " + nodes[1].getPriority());
     reactionQ.push(nodes[1]);
 
-    it('first pop', () => {
+    it("first pop", () => {
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -224,7 +226,7 @@ describe('ReactionQ', () => {
             expect(r.getPriority()).toEqual(0);
     });
 
-    it('second pop', () => {
+    it("second pop", () => {
         let r = reactionQ.pop();
         
         for (let i = 0; i < 6; i++) {
@@ -237,7 +239,7 @@ describe('ReactionQ', () => {
             expect(r.getPriority()).toEqual(100);
     });
 
-    it('third pop', () => {
+    it("third pop", () => {
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -249,7 +251,7 @@ describe('ReactionQ', () => {
             expect(r.getPriority()).toEqual(200);
     });
 
-    it('fourth pop', () => {
+    it("fourth pop", () => {
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -262,7 +264,7 @@ describe('ReactionQ', () => {
 
     });
 
-    it('fifth pop', () => {
+    it("fifth pop", () => {
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -275,7 +277,7 @@ describe('ReactionQ', () => {
 
     });
     
-    it('sixth pop', () => {
+    it("sixth pop", () => {
         let r = reactionQ.pop();
         for (let i = 0; i < 6; i++) {
             if (Object.is(r, nodes[i])) {
@@ -287,16 +289,16 @@ describe('ReactionQ', () => {
             expect(r.getPriority()).toEqual(500);
     });
 
-    it('seventh pop', () => {
+    it("seventh pop", () => {
         let r = reactionQ.pop();
         expect(r).toBeUndefined();
     });
 
 });
 
-describe('Automatically constructed precedence graphs', () => {
+describe("Automatically constructed precedence graphs", () => {
     var reactor = new R(new App());
-    it('internal dependencies between reactions', () => {
+    it("internal dependencies between reactions", () => {
         // getPrecedenceGraph is not a public interface anymore
         /* expect(reactor.getPrecedenceGraph().toString()).toBe(
 `digraph G {

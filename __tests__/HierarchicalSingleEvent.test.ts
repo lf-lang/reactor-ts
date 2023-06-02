@@ -1,14 +1,15 @@
-import {Reactor, App, Parameter, OutPort, InPort, TimeValue} from '../src/core/internal';
+import {Reactor, App, Parameter, OutPort, InPort, TimeValue} from "../src/core/internal";
 
-import {SingleEvent} from '../src/share/SingleEvent';
-import {Logger} from '../src/share/Logger';
+import {SingleEvent} from "../src/share/SingleEvent";
+import {Logger} from "../src/share/Logger";
 
 class SEContainer extends Reactor{
     // Made these public to accommodate the test below.
     public o: OutPort<any>= new OutPort<any>(this);
+
     public child: SingleEvent<string> = new SingleEvent(this, new Parameter("Foo"));
 
-    constructor(parent: Reactor) {
+    constructor (parent: Reactor) {
         super(parent);
         this._connect(this.child.o, this.o);
     }
@@ -18,9 +19,10 @@ class LogContainer extends Reactor{
 
     // Made these public to accommodate the test below.
     public i: InPort<any>= new InPort<any>(this);
+
     public child: Logger = new Logger(this, "Foo");
 
-    constructor(parent: Reactor) {
+    constructor (parent: Reactor) {
         super(parent);
         this._connect(this.i, this.child.i);
     }
@@ -29,9 +31,10 @@ class LogContainer extends Reactor{
 
 class SETest extends App {
     seContainer: SEContainer;
+
     logContainer: LogContainer;
 
-    constructor(timeout: TimeValue, keepAlive: boolean = false, fast: boolean = false, success: ()=> void, fail: ()=>void ){
+    constructor (timeout: TimeValue, keepAlive: boolean = false, fast: boolean = false, success: ()=> void, fail: ()=>void ){
         super(timeout, keepAlive, fast, success, fail)
         this.seContainer = new SEContainer(this);
         this.logContainer = new LogContainer(this);
@@ -41,21 +44,21 @@ class SETest extends App {
     }
 }
 
-//This test is just like SingleEvent.test.ts, only the singleEvent and the logger are
-//contained by other reactors.
-describe('HierarchicalSingleEvent', function () {
+// This test is just like SingleEvent.test.ts, only the singleEvent and the logger are
+// contained by other reactors.
+describe("HierarchicalSingleEvent", function () {
 
     // Ensure the test will run for no more than 5 seconds.
     jest.setTimeout(5000);
 
-    it('start runtime with input.connect to output', done => {
+    it("start runtime with input.connect to output", done => {
 
-        function failRuntime(){
+        function failRuntime (){
             console.log("Runtime has ended.");
             // throw new Error("Runtime has failed.");
         };
 
-        function failReactor(){
+        function failReactor (){
             throw new Error("Reactor has failed.");
         };
 

@@ -1,15 +1,15 @@
-import { Reactor, App, Triggers, Args, Timer, OutPort, InPort, TimeUnit, TimeValue, Origin, Log, LogLevel, Action } from '../src/core/internal';
+import {Reactor, App, Triggers, Args, Timer, OutPort, InPort, TimeUnit, TimeValue, Origin, Log, LogLevel, Action} from "../src/core/internal";
 
 /* Set a port in startup to get thing going */
 class Starter extends Reactor {
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null) {
+    constructor (parent: Reactor|null) {
         super(parent);
         this.addReaction(
             new Triggers(this.startup),
             new Args(this.writable(this.out)),
-            function(this, __out) {
+            function (this, __out) {
                 __out.set(4);
 
             }
@@ -21,14 +21,15 @@ class Starter extends Reactor {
 /* A reactor with a deadline in its constructor */
 class R1 extends Reactor {
     public in = new InPort<number>(this);
+
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null, deadline: TimeValue, deadlineMiss?: () => void) {
+    constructor (parent: Reactor|null, deadline: TimeValue, deadlineMiss?: () => void) {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
             new Args(this.in, this.writable(this.out)),
-            function(this, __in, __out) {
+            function (this, __in, __out) {
                 const util = this.util
                 let initialElapsedTime = util.getElapsedPhysicalTime();
                 let tmp = __in.get();
@@ -53,7 +54,7 @@ class R1 extends Reactor {
                     
                     if(tmp)
                     {
-                     out = tmp + 4;
+                        out = tmp + 4;
                     }
                     if(out){
                         console.log("Sending "+out.toString())
@@ -76,12 +77,12 @@ class R1 extends Reactor {
 class R2 extends Reactor {
     public in = new InPort<number>(this);
 
-    constructor(parent: Reactor|null, deadline?: TimeValue, deadlineMiss?: () => void) {
+    constructor (parent: Reactor|null, deadline?: TimeValue, deadlineMiss?: () => void) {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
             new Args(this.in),
-            function(this, __in) {
+            function (this, __in) {
                 let tmp = __in.get();
                 /* Do Nothing */   
                 try
@@ -104,7 +105,9 @@ class R2 extends Reactor {
 
 class testApp extends App {
     start: Starter
+
     reactor1: R1;
+
     reactor2: R2;
 
     constructor (name: string, timeout: TimeValue, success?: () => void, fail?: () => void, deadlineMiss?: () => void, secondTimeout?: TimeValue) {
@@ -120,6 +123,7 @@ class testApp extends App {
 
 class ReactorWithAction extends App {
     a = new Action<number>(this, Origin.logical);
+
     t = new Timer(this, TimeValue.withUnits(1, TimeUnit.msec), TimeValue.withUnits(1, TimeUnit.sec))
     
     
@@ -128,7 +132,7 @@ class ReactorWithAction extends App {
         this.addReaction(
             new Triggers(this.t),
             new Args(this.schedulable(this.a)),
-            function(this, a){
+            function (this, a){
                 a.schedule(0, 1);
             }
         );
@@ -146,7 +150,7 @@ describe("Testing deadlines", function () {
     it("Missed reaction deadline on InPort", done => {
         Log.global.level = LogLevel.WARN
 
-        function fail() {
+        function fail () {
             throw new Error("Test has failed.");
         };
         
@@ -166,7 +170,7 @@ describe("Testing deadlines", function () {
 
         Log.global.level = LogLevel.WARN
 
-        function fail() {
+        function fail () {
             throw new Error("Test has failed.");
         };
         
@@ -193,9 +197,9 @@ describe("Testing deadlines", function () {
     it("Missed deadline with custom message", done => {
         Log.global.level = LogLevel.WARN
 
-        //let deadlineMissed:string = ""
+        // let deadlineMissed:string = ""
 
-        function fail() {
+        function fail () {
             throw new Error("Test has failed.");
         };
         
@@ -206,8 +210,8 @@ describe("Testing deadlines", function () {
 
         // expect(deadlineMissed).toEqual("Deadline missed!");
 
-        //expect(consoleOutput).toEqual(expect.arrayContaining(expect.objectContaining('Deadline missed!')));
-        //expect(consoleOutput).toContain('Deadline missed!');
+        // expect(consoleOutput).toEqual(expect.arrayContaining(expect.objectContaining('Deadline missed!')));
+        // expect(consoleOutput).toContain('Deadline missed!');
     });
 
 
@@ -216,7 +220,7 @@ describe("Testing deadlines", function () {
 
 describe("Testing Reactions", function () {
 
-    function fail() {
+    function fail () {
         throw new Error("Test has failed.");
     };
 
@@ -240,22 +244,22 @@ describe("Testing Reactions", function () {
 
 describe("Testing Actions", function () {
 
-        it("Mismatched logical time", () => {
-            Log.global.level = LogLevel.WARN
+    it("Mismatched logical time", () => {
+        Log.global.level = LogLevel.WARN
 
-            function fail() {
-                throw new Error("Test has failed.");
-            };
+        function fail () {
+            throw new Error("Test has failed.");
+        };
             
-            /* FIXME: Deadlines are not working. Jest throws timeout error before LF */
-            // let app = new ReactorWithAction("testApp", TimeValue.secs(1,TimeUnit.sec), done, fail)
+        /* FIXME: Deadlines are not working. Jest throws timeout error before LF */
+        // let app = new ReactorWithAction("testApp", TimeValue.secs(1,TimeUnit.sec), done, fail)
 
             
            
     
-            /* FIXME: Deadlines are not working */
-           // app._start();
-        });
+        /* FIXME: Deadlines are not working */
+        // app._start();
+    });
 
 });
 

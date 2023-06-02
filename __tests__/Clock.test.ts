@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-import { Action,Timer, App, Sched, Triggers, Args,TimeValue, TimeUnit, Origin } from '../src/core/internal';
+import {Action,Timer, App, Sched, Triggers, Args,TimeValue, TimeUnit, Origin} from "../src/core/internal";
 
 /**
  * This app tests simultaneous events.
@@ -15,14 +15,17 @@ import { Action,Timer, App, Sched, Triggers, Args,TimeValue, TimeUnit, Origin } 
 export class Clock extends App {
 
     t1: Timer = new Timer(this, TimeValue.secs(3), TimeValue.secs(1));
+
     t2: Timer = new Timer(this, TimeValue.withUnits(3500, TimeUnit.msec), 
-                                TimeValue.withUnits(1500, TimeUnit.msec));
+        TimeValue.withUnits(1500, TimeUnit.msec));
 
     a1 = new Action<number>(this, Origin.logical);
+
     a2 = new Action<number>(this, Origin.logical);
+
     a3 = new Action<number>(this, Origin.logical);
 
-    constructor(timeout: TimeValue,  success: () => void, fail: () => void) {
+    constructor (timeout: TimeValue,  success: () => void, fail: () => void) {
         super(timeout, false, false, success, fail);
         this.addReaction(
             new Triggers(this.t1),
@@ -30,7 +33,7 @@ export class Clock extends App {
             /**
              * Print tick and schedule a1
              */
-            function(this, a1){
+            function (this, a1){
                 a1.schedule(0, 1);
                 console.log("Tick");
             }
@@ -41,21 +44,21 @@ export class Clock extends App {
             /**
              * Print tock and schedule a2.
              */
-            function(this, a2){
+            function (this, a2){
                 a2.schedule(0, 2);
                 console.log("Tock");
             }
         );
-        //At time 5 seconds, this reaction should be triggered
-        //simultaneosly by both timers, "Cuckoo" should only
-        //print once.
+        // At time 5 seconds, this reaction should be triggered
+        // simultaneosly by both timers, "Cuckoo" should only
+        // print once.
         this.addReaction(
             new Triggers(this.t1, this.t2), 
             new Args(this.schedulable(this.a3)),
             /**
              * Print cuckoo and schedule a3.
              */
-            function(this, a3: Sched<number>) {
+            function (this, a3: Sched<number>) {
                 a3.schedule(0, 3);
                 console.log("Cuckoo");
             }
@@ -66,7 +69,7 @@ export class Clock extends App {
             /**
              * If all the actions are available at logical time 5 seconds from start, the test is successful.
              */
-            function(this, a1: Action<number>, a2: Action<number>, a3: Action<number>) {
+            function (this, a1: Action<number>, a2: Action<number>, a3: Action<number>) {
                 console.log("Before check in test");
                 // console.log("does current logical time: " + globals.currentLogicalTime[0] + " equal " + numericTimeSum( globals.startingWallTime , [5, 0]));
                         
@@ -89,20 +92,20 @@ export class Clock extends App {
     }
 }
 
-describe('clock', function () {
-     //Ensure the test will run for no more than 7 seconds.
+describe("clock", function () {
+    // Ensure the test will run for no more than 7 seconds.
     jest.setTimeout(7000);
 
-    it('start runtime', done => {
+    it("start runtime", done => {
 
-        function fail() {
+        function fail () {
             throw new Error("Test has failed.");
         };
 
-        //Tell the reactor runtime to successfully terminate after 6 seconds.
+        // Tell the reactor runtime to successfully terminate after 6 seconds.
         var clock = new Clock(TimeValue.secs(6), done, fail);
 
-        //Don't give the runtime the done callback because we don't care if it terminates
+        // Don't give the runtime the done callback because we don't care if it terminates
         clock._start();
     })
 });

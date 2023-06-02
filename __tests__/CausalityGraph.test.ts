@@ -1,16 +1,17 @@
-import { Reactor, App, Triggers, Args, Timer, OutPort, InPort, TimeUnit, TimeValue, Origin, Log, LogLevel, Action } from '../src/core/internal';
+import {Reactor, App, Triggers, Args, Timer, OutPort, InPort, TimeUnit, TimeValue, Origin, Log, LogLevel, Action} from "../src/core/internal";
 
 /* Set a port in startup to get thing going */
 class Starter extends Reactor {
     public in = new InPort<number>(this);
+
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null) {
+    constructor (parent: Reactor|null) {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
             new Args(this.in, this.writable(this.out)),
-            function(this, __in, __out) {
+            function (this, __in, __out) {
                 __out.set(4);
 
             }
@@ -20,14 +21,15 @@ class Starter extends Reactor {
 
 class R1 extends Reactor {
     public in = new InPort<number>(this);
+
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null) {
+    constructor (parent: Reactor|null) {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
             new Args(this.in, this.writable(this.out)),
-            function(this, __in, __out) {
+            function (this, __in, __out) {
                 let tmp = __in.get()
                 let out:number = 0
                 if (tmp) {
@@ -43,14 +45,15 @@ class R1 extends Reactor {
 
 class R2 extends Reactor {
     public in = new InPort<number>(this);
+
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null) {
+    constructor (parent: Reactor|null) {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
             new Args(this.in, this.writable(this.out)),
-            function(this, __in, __out) {
+            function (this, __in, __out) {
                 let tmp = __in.get()
                 let out:number = 0;
                 if(tmp && tmp == 0) {
@@ -67,7 +70,9 @@ class R2 extends Reactor {
 
 class testApp extends App {
     start: Starter
+
     reactor1: R1;
+
     reactor2: R2;
 
     constructor () {
@@ -78,7 +83,7 @@ class testApp extends App {
         this._connect(this.start.out, this.reactor1.in)
         this._connect(this.reactor1.out, this.reactor2.in)
         // this tests the accuracy of the CausalityGraph used in the connect function 
-        test('test if adding cyclic dependency is caught', () => {
+        test("test if adding cyclic dependency is caught", () => {
             expect(() => {
                 this._connect(this.reactor2.out, this.start.in)
             }).toThrowError("New connection introduces cycle.")

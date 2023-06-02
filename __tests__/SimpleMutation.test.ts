@@ -1,15 +1,15 @@
-import { Reactor, App, Triggers, Args, Timer, OutPort, InPort, TimeUnit, TimeValue, Origin, Log, LogLevel, Action } from '../src/core/internal';
+import {Reactor, App, Triggers, Args, Timer, OutPort, InPort, TimeUnit, TimeValue, Origin, Log, LogLevel, Action} from "../src/core/internal";
 
 /* Set a port in startup to get thing going */
 class Starter extends Reactor {
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null) {
+    constructor (parent: Reactor|null) {
         super(parent);
         this.addReaction(
             new Triggers(this.startup),
             new Args(this.writable(this.out)),
-            function(this, __out) {
+            function (this, __out) {
                 __out.set(4);
 
             }
@@ -20,14 +20,15 @@ class Starter extends Reactor {
 
 class R1 extends Reactor {
     public in = new InPort<number>(this);
+
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null) {
+    constructor (parent: Reactor|null) {
         super(parent);
         this.addReaction(
             new Triggers(this.in),
             new Args(this.in, this.writable(this.out)),
-            function(this, __in, __out) {
+            function (this, __in, __out) {
                 __out.set(4)
             }
         )
@@ -39,15 +40,16 @@ class R1 extends Reactor {
 
 class R2 extends Reactor {
     public in = new InPort<number>(this);
+
     public out = new OutPort<number>(this);
 
-    constructor(parent: Reactor|null) {
+    constructor (parent: Reactor|null) {
         super(parent);
         this.addMutation(
             new Triggers(this.in),
             new Args(this.in, this.out),
-            function(this, __in, __out) {
-                test('expect error to be thrown', () => { 
+            function (this, __in, __out) {
+                test("expect error to be thrown", () => { 
                     expect(() => {
                         this.connect(__out, __in)
                     }).toThrowError("New connection is outside of container.")
@@ -61,7 +63,9 @@ class R2 extends Reactor {
 
 class testApp extends App {
     start: Starter
+
     reactor1: R1;
+
     reactor2: R2;
 
     constructor () {

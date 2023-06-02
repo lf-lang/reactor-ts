@@ -1,7 +1,7 @@
-import {App, Triggers, Args, Origin, TimeValue, Reactor, Timer, Sched, Action} from '../src/core/internal';
+import {App, Triggers, Args, Origin, TimeValue, Reactor, Timer, Sched, Action} from "../src/core/internal";
 
-//Upon initialization, this reactor should produce an
-//output event
+// Upon initialization, this reactor should produce an
+// output event
 export class ActionTrigger extends Reactor {
 
     t1: Timer = new Timer(this, 0,0);
@@ -12,27 +12,27 @@ export class ActionTrigger extends Reactor {
     // This action is never scheduled. It should never be present.
     a2: Action<string> = new Action<string>(this, Origin.logical);
 
-    constructor(parent:Reactor|null) {
+    constructor (parent:Reactor|null) {
         super(parent);
-        //Reaction priorities matter here. The overridden reaction must go first.
+        // Reaction priorities matter here. The overridden reaction must go first.
         this.addReaction(
             new Triggers(this.t1), new Args(this.schedulable(this.a1)),
             /**
              * Schedule the incorrect payload for action a1.
              */
-            function(this, a1: Sched<string>) {
+            function (this, a1: Sched<string>) {
                 a1.schedule(0, "goodbye");
                 console.log("Scheduling the overridden action in ScheduleOverriddenAction to trigger RespondToAction");
             }
         );
         
         this.addReaction(
-           new Triggers(this.t1), 
-           new Args(this.schedulable(this.a1), this.a2),
-           /**
+            new Triggers(this.t1), 
+            new Args(this.schedulable(this.a1), this.a2),
+            /**
              * Schedule the correct payload for action a1.
              */
-            function(this, a1){
+            function (this, a1){
                 a1.schedule(0, "hello");
                 console.log("Scheduling the final action in ScheduleAction to trigger RespondToAction");
             }
@@ -47,7 +47,7 @@ export class ActionTrigger extends Reactor {
              * Since a2 was not scheduled it should return null on a call to get() and
              * should return false for isPresent().
              */
-            function(this, a1: Action<string>, a2: Action<string>){
+            function (this, a1: Action<string>, a2: Action<string>){
                 const msg = a1.get();
                 const absent = !a2.get();
                 if(msg == "hello" && absent) {
@@ -65,26 +65,26 @@ export class ActionTrigger extends Reactor {
 class ActionTriggerTest extends App {
     aTrigger: ActionTrigger;
 
-    constructor(timeout: TimeValue, success?: ()=> void, fail?: ()=>void){
+    constructor (timeout: TimeValue, success?: ()=> void, fail?: ()=>void){
         super(timeout, false, false, success, fail);
         this.aTrigger = new ActionTrigger(this);
     }
 }
 
-describe('ActionTrigger', function () {
+describe("ActionTrigger", function () {
 
     // Ensure the test will run for no more than 5 seconds.
     jest.setTimeout(5000);
 
-    it('start runtime', done => {
+    it("start runtime", done => {
 
-        function failure() {
+        function failure () {
             throw new Error("Reactor has failed.");
         };
 
-        //Tell the reactor runtime to successfully terminate after 3 seconds.
+        // Tell the reactor runtime to successfully terminate after 3 seconds.
         var aTriggerTest = new ActionTriggerTest(TimeValue.secs(3), done, failure);
-        //Don't give the runtime the done callback because we don't care if it terminates
+        // Don't give the runtime the done callback because we don't care if it terminates
         aTriggerTest._start();
 
     })

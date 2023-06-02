@@ -3,7 +3,7 @@ import {TimeValue, TimeUnit, Tag} from "../src/core/time";
 /**
  * Test of helper functions for time in reactors
  */
-describe('time helper functions', function () {
+describe("time helper functions", function () {
     
     // Zero time intervals.
     const straightZero: TimeValue = TimeValue.secs(0);
@@ -57,7 +57,7 @@ describe('time helper functions', function () {
     /**
      * Test if "borrowing a second" functionality works
      */
-    it('borrow a second', function() {
+    it("borrow a second", function () {
         expect(TimeValue.secsAndNs(2, 200000).subtract(TimeValue.secsAndNs(1, 300000))).toEqual(TimeValue.secsAndNs(0, (200000 - 300000) + 1000000000));
         expect(TimeValue.secsAndNs(7, 3000).subtract(fiveSFiveUS)).toEqual(TimeValue.secsAndNs((7-5)-1, (3000 - 5000) + 1000000000));
         expect(TimeValue.secsAndNs(7, 6000).subtract(fiveSFiveUS)).toEqual(TimeValue.secsAndNs((7-5), (6000 - 5000)));
@@ -67,7 +67,7 @@ describe('time helper functions', function () {
     /**
      * Test if "multiply" functionality works
      */
-     it('multiply time value', function() {
+    it("multiply time value", function () {
         expect(TimeValue.secs(1).multiply(2)).toEqual(TimeValue.secs(2));
         expect(TimeValue.secsAndNs(1, 500000000).multiply(2)).toEqual(TimeValue.secs(3));
     });
@@ -75,7 +75,7 @@ describe('time helper functions', function () {
     /**
      * Test conversion to string
      */
-    it('converting to string', function() {
+    it("converting to string", function () {
         expect(straightZero.toString()).toEqual("(0 secs; 0 nsecs)");
         expect(TimeValue.secsAndNs(5, 5000).toString()).toEqual("(5 secs; 5000 nsecs)");
         expect(TimeValue.secsAndNs(250000, 0).toString()).toEqual("(250000 secs; 0 nsecs)");
@@ -89,7 +89,7 @@ describe('time helper functions', function () {
      * Test to see if the zero representations for time intervals 
      * are correctly identified by the timeIntervalIsZero function.
      */
-    it('zero test', function () {
+    it("zero test", function () {
         
         expect( straightZero.isZero()).toBe(true);
         expect( zeroSeconds.isZero()).toBe(true);
@@ -108,7 +108,7 @@ describe('time helper functions', function () {
     /**
      * Test whether time intervals are equal.
      */
-    it('time value equality', function () {
+    it("time value equality", function () {
 
         // Creating time intervals with a non-integer 
         // time value results in an error.
@@ -162,7 +162,7 @@ describe('time helper functions', function () {
     /**
      * Test the Tag constructor
      */
-    it('create tags', function () {
+    it("create tags", function () {
         const tg = new Tag(straightZero, 0);
         expect(tg.time).toStrictEqual(TimeValue.zero());
         const tg2 = new Tag(straightZero);
@@ -179,7 +179,7 @@ describe('time helper functions', function () {
      * Report whether one tag is earlier than another one.
      * Microstep indices are taken into consideration.
      */
-    it('compare tags', function () {
+    it("compare tags", function () {
         // isSmallerThan
         expect(tiZero.isSmallerThan(tiZero)).toBeFalsy();
         expect(tiZero.isSmallerThan(tiZero1)).toBeTruthy();
@@ -260,7 +260,7 @@ describe('time helper functions', function () {
     /**
      * Test simultaneity of tags.
      */
-    it('tag equality', function() {
+    it("tag equality", function () {
         expect(tiZero.isSimultaneousWith(tiZero1)).toBeFalsy();
         expect(tiZero1.isSimultaneousWith(tiZero1)).toBeTruthy();
         expect(tiOne1.isSimultaneousWith(tiZero1)).toBeFalsy();
@@ -270,7 +270,7 @@ describe('time helper functions', function () {
     /**
      * Add a time interval to a tag and obtain a new time instant.
      */
-    it('get a later tag' , function () {
+    it("get a later tag" , function () {
         expect(new Tag(fiveHundredMilNS, 0).getLaterTag(fortyTwoDays).isSimultaneousWith(new Tag(TimeValue.secsAndNs(42 * 24 * 60 * 60, 500000000), 0))).toBeTruthy();
         expect(new Tag(fiveHundredMilNS, 0).getLaterTag(fiveHundredMilNS).isSimultaneousWith(new Tag(TimeValue.secs(1), 0))).toBeTruthy();
         expect(new Tag(oneThousandMS, 0).getLaterTag(straightZero).isSimultaneousWith(new Tag(oneThousandMS, 0))).toBeTruthy();
@@ -282,7 +282,7 @@ describe('time helper functions', function () {
      * Microstep indices are ignored in this operation 
      * (time values don't have a microstep).
      */
-    it('compare tags', function() {
+    it("compare tags", function () {
         expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds0)).toEqual(TimeValue.secs(0));
         expect(tiFiveSeconds0.getTimeDifference(tiFiveSeconds1)).toEqual(TimeValue.secs(0));
         expect(tiFiveSeconds0.getTimeDifference(tiOne1)).toEqual(TimeValue.secs(4));
@@ -292,7 +292,7 @@ describe('time helper functions', function () {
     /**
      * Compare two time values and find out which one is earlier.
      */
-    it('compare time values', function() {
+    it("compare time values", function () {
         expect(TimeValue.secsAndNs(10, 10).isEarlierThan(TimeValue.secsAndNs(11, 1))).toEqual(true)
         expect(TimeValue.secsAndNs(0, 999999998).isEarlierThan(TimeValue.secsAndNs(0, 999999999))).toEqual(true)
 
@@ -304,7 +304,7 @@ describe('time helper functions', function () {
     /**
      * See if expected errors happen.
      */
-    it('errors', function () {
+    it("errors", function () {
         expect(() => {
             expect(TimeValue.secsAndNs(4.3, 2.1));
         }).toThrowError()
@@ -328,7 +328,7 @@ describe('time helper functions', function () {
     /**
      * Test conversion to Binary
      */
-    it('convert to binary', function() {
+    it("convert to binary", function () {
 
         expect(TimeValue.fromBinary(straightZero.toBinary())).toEqual(straightZero);
         expect(TimeValue.fromBinary(zeroSeconds.toBinary())).toEqual(zeroSeconds);
@@ -344,7 +344,7 @@ describe('time helper functions', function () {
 
     });
 
-    it('convert to/from binary with Tag methods', function() {
+    it("convert to/from binary with Tag methods", function () {
 
         // some example tags with various microsteps
         const straightZeroTag = new Tag(straightZero, 0)

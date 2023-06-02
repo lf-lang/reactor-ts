@@ -1,12 +1,15 @@
 
-import { IOPort, App, Reactor, Present, Args, Triggers, InPort, OutPort} from '../src/core/internal';
+import {IOPort, App, Reactor, Present, Args, Triggers, InPort, OutPort} from "../src/core/internal";
 
 export class Adder extends Reactor {    
     
     in1: InPort<number> = new InPort(this);
+
     in2: InPort<number> = new InPort(this);
+
     out: OutPort<number> = new OutPort(this);
-    constructor(parent:Reactor) {
+
+    constructor (parent:Reactor) {
         super(parent);
         
         this.addReaction(
@@ -21,24 +24,24 @@ export class Adder extends Reactor {
 }
 
 class MyAdder extends Adder {
-    public fire() {
+    public fire () {
         for (let r of this._getReactions()) {
             r.doReact();
         }
     }
 
-    public getProxy(port: IOPort<Present>) {
+    public getProxy (port: IOPort<Present>) {
         return this.writable(port);
     }
 }
 
 var app = new App();
 
-describe('adder', function () {
+describe("adder", function () {
     
     var adder = new MyAdder(app);
 
-    it('2 + 1 = 3', function () {
+    it("2 + 1 = 3", function () {
 
         expect(adder).toBeInstanceOf(Adder);
         adder.getProxy(adder.in1).set(2);

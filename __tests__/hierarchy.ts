@@ -1,10 +1,11 @@
-import {Reactor, App, InPort, OutPort} from '../src/core/internal';
+import {Reactor, App, InPort, OutPort} from "../src/core/internal";
 
 class InOut extends Reactor {
     a: InPort<string> = new InPort(this);
+
     b: OutPort<string> = new OutPort(this);
 
-    constructor(parent: Reactor) {
+    constructor (parent: Reactor) {
         super(parent);
     }
 }
@@ -15,25 +16,26 @@ var app = new class extends App {
             containedAgain = new InOut(this)
         }(this)
     }(this)
+
     foo = new InOut(this)
 }()
 
-describe('Container to Contained', () => {
+describe("Container to Contained", () => {
     
-    it('app name', () => {
+    it("app name", () => {
         expect(app.toString()).toBe("app");
     });
 
-    it('contained reactor name', () => {
+    it("contained reactor name", () => {
         expect(app.container.contained.toString()).toBe("app.container.contained");
     });
 
-    it('container reactor name', () =>{
+    it("container reactor name", () =>{
         expect(app.container.toString()).toBe("app.container");
 
     })
 
-    it('testing canConnect', () => {
+    it("testing canConnect", () => {
         expect(app.container.canConnect(app.container.a, app.container.contained.a)).toBe(true);
         expect(app.container.canConnect(app.container.contained.a, app.container.a)).toBe(false);
         expect(app.container.canConnect(app.container.contained.a, app.container.contained.b)).toBe(false);
@@ -59,15 +61,15 @@ describe('Container to Contained', () => {
         // expect(app.container.contained).toBeDefined();
         
         // if (container.child) {
-            expect(app.container.contained.canConnect(app.container.contained.containedAgain.a, app.container.contained.a)).toBe(false);
-            expect(app.container.contained.canConnect(app.container.contained.containedAgain.b, app.container.contained.b)).toBe(true);
-            expect(app.container.contained.canConnect(app.container.contained.containedAgain.a, app.container.a)).toBe(false);
-            expect(app.container.contained.canConnect(app.container.contained.containedAgain.b, app.container.b)).toBe(false);
-            expect(app.container.contained.canConnect(app.container.contained.containedAgain.a, app.foo.a)).toBe(false);
-            expect(app.container.contained.canConnect(app.container.contained.containedAgain.b, app.foo.b)).toBe(false);
-            expect(app.container.contained.canConnect(app.container.contained.containedAgain.a, app.foo.a)).toBe(false);
-            expect(app.container.contained.canConnect(app.container.contained.containedAgain.b, app.foo.b)).toBe(false);
-        //}
+        expect(app.container.contained.canConnect(app.container.contained.containedAgain.a, app.container.contained.a)).toBe(false);
+        expect(app.container.contained.canConnect(app.container.contained.containedAgain.b, app.container.contained.b)).toBe(true);
+        expect(app.container.contained.canConnect(app.container.contained.containedAgain.a, app.container.a)).toBe(false);
+        expect(app.container.contained.canConnect(app.container.contained.containedAgain.b, app.container.b)).toBe(false);
+        expect(app.container.contained.canConnect(app.container.contained.containedAgain.a, app.foo.a)).toBe(false);
+        expect(app.container.contained.canConnect(app.container.contained.containedAgain.b, app.foo.b)).toBe(false);
+        expect(app.container.contained.canConnect(app.container.contained.containedAgain.a, app.foo.a)).toBe(false);
+        expect(app.container.contained.canConnect(app.container.contained.containedAgain.b, app.foo.b)).toBe(false);
+        // }
                 
     });
 });

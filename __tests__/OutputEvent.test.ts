@@ -1,5 +1,5 @@
-import {App, Reactor, Parameter, Args, Triggers, TimeValue} from '../src/core/internal';
-import {SingleEvent} from '../src/share/SingleEvent';
+import {App, Reactor, Parameter, Args, Triggers, TimeValue} from "../src/core/internal";
+import {SingleEvent} from "../src/share/SingleEvent";
 
 /**
  * This reactor calls the success callback if it triggers a reaction in response
@@ -9,7 +9,7 @@ export class OutputResponder extends Reactor {
 
     se: SingleEvent<string> = new SingleEvent(this, new Parameter("ContainedSingleEvent"));
     
-    constructor(__parent__: Reactor){
+    constructor (__parent__: Reactor){
         super(__parent__);
         this.addReaction(
             new Triggers(this.se.o),
@@ -31,15 +31,15 @@ class OutputEventTest extends App {
 
 // This test shows the OutputEvent reactor is able to trigger a reaction on
 // a contained reactor's output.
-describe('OutputEventTest', function () {
+describe("OutputEventTest", function () {
 
-    //Ensure the test will run for 5 seconds.
+    // Ensure the test will run for 5 seconds.
     jest.setTimeout(5000);
 
-    it('start runtime', done => {
+    it("start runtime", done => {
         console.log("starting test");
 
-        function fail() {
+        function fail () {
             throw new Error("Test has failed.");
         };
 

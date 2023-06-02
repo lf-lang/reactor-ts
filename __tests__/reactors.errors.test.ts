@@ -1,21 +1,23 @@
 import {
     Reactor, App, Triggers, Args, CalleePort, CallerPort, Present, InPort,
     TimeUnit, TimeValue, Log, LogLevel
-} from '../src/core/internal';
+} from "../src/core/internal";
 
 class R extends Reactor {
 
     public inp = new InPort(this)
+
     public calleep = new CalleePort(this)
+
     public callerp = new CallerPort(this);
 
-    constructor(parent: Reactor|null) {
+    constructor (parent: Reactor|null) {
         super(parent);
         this.callerp.remotePort = this.calleep;
         this.addReaction(
             new Triggers(this.calleep),
             new Args(), 
-            function(this) {
+            function (this) {
                 throw new Error("Method not implemented.");
             },
             TimeValue.withUnits(10,TimeUnit.msec),
@@ -24,7 +26,7 @@ class R extends Reactor {
         this.addReaction(
             new Triggers(this.inp),
             new Args(this.callerp), 
-            function(this) {
+            function (this) {
                 throw new Error("Method not implemented.");
             },
             TimeValue.withUnits(10,TimeUnit.msec),
@@ -33,11 +35,11 @@ class R extends Reactor {
         
     }
 
-    start() {
+    start () {
         this.callerp.set(4)
     }
 
-    getNodes() {
+    getNodes () {
         return this._getReactions();
     }
 }
@@ -70,13 +72,13 @@ describe("Testing Error Cases", function () {
 
     
     
-    it("Multiple triggers", function(){
+    it("Multiple triggers", function (){
 
         var parent = new App();
         var reactor1 = new R(parent);
         var trigger = new Triggers(reactor1.calleep, new CalleePort(reactor1));
 
-       /* expect( () => { reactor1.addReaction(
+        /* expect( () => { reactor1.addReaction(
             trigger,
             new Args(),
             function(this) {
@@ -88,7 +90,7 @@ describe("Testing Error Cases", function () {
     });
 
 
-    it("Bad Parents", function(){
+    it("Bad Parents", function (){
 
         var parent = new App();
 

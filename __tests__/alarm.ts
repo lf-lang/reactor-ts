@@ -1,13 +1,13 @@
-import { TimeValue, TimeUnit, Alarm } from '../src/core/internal';
-import NanoTimer from 'nanotimer';
+import {TimeValue, TimeUnit, Alarm} from "../src/core/internal";
+import NanoTimer from "nanotimer";
 
 var timerA = new NanoTimer();
 var alarm = new Alarm();
 var delay = TimeValue.withUnits(100, TimeUnit.msec);
 
-describe('Timer tests', () => {
+describe("Timer tests", () => {
     
-    it('Nanotimer: sync, wait 0.1 seconds, 20 samples\n\n', function(done) {
+    it("Nanotimer: sync, wait 0.1 seconds, 20 samples\n\n", function (done) {
         var i = 0;
         var j = 0;
         var numSamples = 20;
@@ -18,7 +18,7 @@ describe('Timer tests', () => {
         var avgError = 0;
         
         
-        var task = function(){
+        var task = function (){
             var count = 0;
             for(i=0;i<1000000;i++){
                 count++;
@@ -26,13 +26,13 @@ describe('Timer tests', () => {
         };
         
         for(j=0;j<numSamples;j++){
-            timerA.setTimeout(task, [], '0.1s', function(data) {
+            timerA.setTimeout(task, [], "0.1s", function (data) {
                 var waitTime = data.waitTime;
-                console.log('\t\t - Sample #' + (doneCount+1));
-                console.log('\t\t\t - Expected wait: 0.1 seconds');
-                console.log('\t\t\t - Actual wait: ' + waitTime/1000000000 + ' seconds');
+                console.log("\t\t - Sample #" + (doneCount+1));
+                console.log("\t\t\t - Expected wait: 0.1 seconds");
+                console.log("\t\t\t - Actual wait: " + waitTime/1000000000 + " seconds");
                 var error = (((waitTime - 100000000) / (100000000)) * 100);
-                console.log('\t\t\t - Error: ' + error + '%');
+                console.log("\t\t\t - Error: " + error + "%");
                 errors.push(error);
                 var waitedLongEnough = (waitTime >= 100000000);
                 expect(waitedLongEnough).toBeTruthy();
@@ -52,9 +52,9 @@ describe('Timer tests', () => {
                         avgError += errors[i];
                     }
                     avgError = avgError / numSamples;
-                    console.log('\t\t - Min. Error: ' + minError + '%');
-                    console.log('\t\t - Max. Error: ' + maxError + '%');
-                    console.log('\t\t - Avg. Error: ' + avgError + '%');
+                    console.log("\t\t - Min. Error: " + minError + "%");
+                    console.log("\t\t - Max. Error: " + maxError + "%");
+                    console.log("\t\t - Avg. Error: " + avgError + "%");
                     done();
                 }
             });
@@ -196,7 +196,7 @@ describe('Timer tests', () => {
     //     alarm.set(task, timeRequested.add(delay));
     // });
 
-    it('Our own: sync, wait 0.1 seconds, 20 samples\n\n', function(done) {
+    it("Our own: sync, wait 0.1 seconds, 20 samples\n\n", function (done) {
         var i = 0;
         var j = 0;
         var numSamples = 20;
@@ -206,21 +206,21 @@ describe('Timer tests', () => {
         var maxError = 0;
         var avgError = 0;
         
-        var task = function(){
+        var task = function (){
             var count = 0;
             for(i=0;i<1000000;i++){
                 count++;
             }; 
         };
         
-        var schedule = function(tv: TimeValue) {
+        var schedule = function (tv: TimeValue) {
             var tuple = tv.toTimeTuple()
             var waitTime = (tuple[0] * 1000000000) + tuple[1];
-            console.log('\t\t - Sample #' + (doneCount+1));
-            console.log('\t\t\t - Expected wait: 0.1 seconds');
-            console.log('\t\t\t - Actual wait: ' + waitTime/1000000000 + ' seconds');
+            console.log("\t\t - Sample #" + (doneCount+1));
+            console.log("\t\t\t - Expected wait: 0.1 seconds");
+            console.log("\t\t\t - Actual wait: " + waitTime/1000000000 + " seconds");
             var error = (((waitTime - 100000000) / (100000000)) * 100);
-            console.log('\t\t\t - Error: ' + error + '%');
+            console.log("\t\t\t - Error: " + error + "%");
             errors.push(error);
             var waitedLongEnough = (waitTime >= 100000000);
             expect(waitedLongEnough).toBeTruthy();
@@ -240,9 +240,9 @@ describe('Timer tests', () => {
                     avgError += errors[i];
                 }
                 avgError = avgError / numSamples;
-                console.log('\t\t - Min. Error: ' + minError + '%');
-                console.log('\t\t - Max. Error: ' + maxError + '%');
-                console.log('\t\t - Avg. Error: ' + avgError + '%');
+                console.log("\t\t - Min. Error: " + minError + "%");
+                console.log("\t\t - Max. Error: " + maxError + "%");
+                console.log("\t\t - Avg. Error: " + avgError + "%");
                 done();
             } else {
                 alarm.set(task, delay, schedule);        
@@ -258,7 +258,7 @@ describe('Timer tests', () => {
      * Test with immmidiateRef when delay = 0
      */
 
-    it('Our own: sync, wait 0 seconds, 20 samples\n\n', function(done) {
+    it("Our own: sync, wait 0 seconds, 20 samples\n\n", function (done) {
         var i = 0;
         var j = 0;
         var numSamples = 20;
@@ -272,21 +272,21 @@ describe('Timer tests', () => {
         var delay0 = TimeValue.zero();
 
 
-        var task = function(){
+        var task = function (){
             var count = 0;
             for(i=0;i<1000000;i++){
                 count++;
             }; 
         };
         
-        var schedule = function(tv: TimeValue) {
+        var schedule = function (tv: TimeValue) {
             var tuple = tv.toTimeTuple()
             var waitTime = (tuple[0] * 1000000000) + tuple[1];
-            console.log('\t\t - Sample #' + (doneCount+1));
-            console.log('\t\t\t - Expected wait: 0 seconds');
-            console.log('\t\t\t - Actual wait: ' + waitTime/1000000000 + ' seconds');
+            console.log("\t\t - Sample #" + (doneCount+1));
+            console.log("\t\t\t - Expected wait: 0 seconds");
+            console.log("\t\t\t - Actual wait: " + waitTime/1000000000 + " seconds");
             var error = (((waitTime) / (100000000)) * 100);
-            console.log('\t\t\t - Error: ' + error + '%');
+            console.log("\t\t\t - Error: " + error + "%");
             errors.push(error);
             var waitedLongEnough = (waitTime >= 0);
             expect(waitedLongEnough).toBeTruthy();
@@ -306,9 +306,9 @@ describe('Timer tests', () => {
                     avgError += errors[i];
                 }
                 avgError = avgError / numSamples;
-                console.log('\t\t - Min. Error: ' + minError + '%');
-                console.log('\t\t - Max. Error: ' + maxError + '%');
-                console.log('\t\t - Avg. Error: ' + avgError + '%');
+                console.log("\t\t - Min. Error: " + minError + "%");
+                console.log("\t\t - Max. Error: " + maxError + "%");
+                console.log("\t\t - Avg. Error: " + avgError + "%");
                 done();
             } else {
                 alarm.set(task, delay0, schedule);        
@@ -324,7 +324,7 @@ describe('Timer tests', () => {
      * Test with immmidiateRef when 0 < delay < 25ms
      */
 
-     it('Our own: sync, wait 10 miliseconds, 20 samples\n\n', function(done) {
+    it("Our own: sync, wait 10 miliseconds, 20 samples\n\n", function (done) {
         var i = 0;
         var j = 0;
         var numSamples = 20;
@@ -338,21 +338,21 @@ describe('Timer tests', () => {
         var delay10Msec = TimeValue.msec(10);
 
 
-        var task = function(){
+        var task = function (){
             var count = 0;
             for(i=0;i<1000000;i++){
                 count++;
             }; 
         };
         
-        var schedule = function(tv: TimeValue) {
+        var schedule = function (tv: TimeValue) {
             var tuple = tv.toTimeTuple()
             var waitTime = (tuple[0] * 1000000000) + tuple[1];
-            console.log('\t\t - Sample #' + (doneCount+1));
-            console.log('\t\t\t - Expected wait: 0 seconds');
-            console.log('\t\t\t - Actual wait: ' + waitTime/1000000000 + ' seconds');
+            console.log("\t\t - Sample #" + (doneCount+1));
+            console.log("\t\t\t - Expected wait: 0 seconds");
+            console.log("\t\t\t - Actual wait: " + waitTime/1000000000 + " seconds");
             var error = (((waitTime) / (100000000)) * 100);
-            console.log('\t\t\t - Error: ' + error + '%');
+            console.log("\t\t\t - Error: " + error + "%");
             errors.push(error);
             var waitedLongEnough = (waitTime >= 0);
             expect(waitedLongEnough).toBeTruthy();
@@ -372,9 +372,9 @@ describe('Timer tests', () => {
                     avgError += errors[i];
                 }
                 avgError = avgError / numSamples;
-                console.log('\t\t - Min. Error: ' + minError + '%');
-                console.log('\t\t - Max. Error: ' + maxError + '%');
-                console.log('\t\t - Avg. Error: ' + avgError + '%');
+                console.log("\t\t - Min. Error: " + minError + "%");
+                console.log("\t\t - Max. Error: " + maxError + "%");
+                console.log("\t\t - Avg. Error: " + avgError + "%");
                 done();
             } else {
                 alarm.set(task, delay10Msec, schedule);        
