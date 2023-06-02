@@ -4,11 +4,12 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
     'standard-with-typescript',
+    'prettier',
   ],
   plugins: ['@typescript-eslint'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: './tsconfig.json'
+    project: ['./tsconfig.json', "./tsconfig.remaining.json"]
   },
   ignorePatterns: ['.eslintrc.js'],
   root: true,
@@ -17,5 +18,6 @@ module.exports = {
     '@typescript-eslint/semi': ['error', 'always'],
     'no-extra-semi': 'off',
     "@typescript-eslint/no-extra-semi": "error",
+    "@typescript-eslint/quotes": ["error", "double"],
   },
 };
