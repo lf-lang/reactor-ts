@@ -247,7 +247,7 @@ export class TimeValue {
    * by this time value.
    */
     public toString (): string {
-        return "(" + this.seconds + " secs; " + this.nanoseconds + " nsecs)";
+        return `(${this.seconds} secs; ${this.nanoseconds} nsecs)`;
     }
 
     /**
@@ -457,7 +457,7 @@ export class Tag {
    * Return a human-readable string presentation of this time instant.
    */
     public toString (): string {
-        return "(" + this.time.toString() + ", " + this.microstep + ")";
+        return `(${this.time.toString()}, ${this.microstep})`;
     }
 
     /**

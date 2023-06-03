@@ -323,16 +323,16 @@ export class DependencyGraph<T> {
      */
         function printChain (node: T, chain: T[]): void {
             dot += "\n";
-            dot += "\"" + node + "\"";
+            dot += `"${String(node)}"`;
             // TODO (axmmisaka): check if this is equivalent;
             // https://stackoverflow.com/a/47903498
             if (node?.toString === Object.prototype.toString) {
                 console.error(
-                    "Encountered node with no toString() implementation: " + node?.constructor
+                    `Encountered node with no toString() implementation: ${String(node?.constructor)}`
                 );
             }
             while (chain.length > 0) {
-                dot += "->" + "\"" + chain.pop() + "\"";
+                dot += `->"${String(chain.pop())}"`;
             }
             dot += ";";
         }

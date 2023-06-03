@@ -49,7 +49,7 @@ export class Bank<T extends Reactor, S> {
     ) {
         for (let i = 0; i < width; i++) {
             Bank.initializationMap.set(container, i);
-            console.log("Setting initializing to " + i);
+            console.log(`Setting initializing to ${i}`);
             this.members.push(Reflect.construct(cls, args, cls));
         }
         Bank.initializationMap.delete(container);
@@ -87,7 +87,7 @@ export class Bank<T extends Reactor, S> {
     }
 
     public toString (): string {
-        return "bank(" + this.members.length + ")";
+        return `bank(${this.members.length})`;
     }
 
     public allWritable<T extends Present>(

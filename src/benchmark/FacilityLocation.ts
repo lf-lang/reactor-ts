@@ -790,7 +790,7 @@ export class Quadrant extends Reactor {
                         }
                         break;
                     default:
-                        console.log(`Error: Recieved unknown message: ${msg?.constructor}`);
+                        console.log(`Error: Recieved unknown message: ${String(msg?.constructor)}`);
                         this.util.requestErrorStop();
                         break;
                 }

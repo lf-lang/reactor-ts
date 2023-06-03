@@ -136,7 +136,7 @@ implements Sortable<Priority>, PrioritySetElement<Priority>
             () =>
                 ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString()
         );
-        Log.debug(this, () => "Reaction deadline: " + this.deadline);
+        Log.debug(this, () => `Reaction deadline: ${String(this.deadline)}`);
 
         // If this reaction was loaded onto the reaction queue but the trigger(s)
         // absorbed by a mutation that routed the value(s) elsewhere, then return
@@ -186,12 +186,7 @@ implements Sortable<Priority>, PrioritySetElement<Priority>
    * Return string representation of the reaction.
    */
     public toString (): string {
-        return (
-            this.reactor._getFullyQualifiedName() +
-      "[R" +
-      this.reactor._getReactionIndex(this) +
-      "]"
-        );
+        return `${this.reactor._getFullyQualifiedName()}[R${this.reactor._getReactionIndex(this)}]`;
     }
 }
 
@@ -217,11 +212,6 @@ export class Mutation<T> extends Reaction<T> {
    * @override
    */
     public toString (): string {
-        return (
-            this.parent._getFullyQualifiedName() +
-      "[M" +
-      this.parent._getReactionIndex(this) +
-      "]"
-        );
+        return `${this.parent._getFullyQualifiedName()}[M${this.parent._getReactionIndex(this)}]`;
     }
 }
