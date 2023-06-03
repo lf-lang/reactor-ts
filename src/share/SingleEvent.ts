@@ -8,7 +8,6 @@ import {
     Timer,
     Triggers,
     Args,
-    ArgList,
     OutPort
 } from "../core/internal";
 

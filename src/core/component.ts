@@ -17,6 +17,8 @@ export abstract class Component {
    * A symbol that identifies this component, and it also used to selectively
    * grant access to its privileged functions.
    */
+    // TODO (axmmisaka): Is instantiating in abstract class a good idea...?
+    // eslint-disable-next-line symbol-description
     protected _key = Symbol();
 
     /**
