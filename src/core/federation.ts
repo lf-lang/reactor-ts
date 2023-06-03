@@ -790,6 +790,7 @@ class RTIClient extends EventEmitter {
                         "Received a MSG_TYPE_FED_IDS message from the RTI. " +
               "MSG_TYPE_FED_IDS messages may only be sent by federates"
                     );
+                    break;
                 }
                 case RTIMessageTypes.MSG_TYPE_TIMESTAMP: {
                     // MessageType: 1 byte.
@@ -925,8 +926,6 @@ class RTIClient extends EventEmitter {
                         bufferIndex += messageLength + 21;
                         break;
                     }
-                    // TODO (axmmisaka): was this intended to be a fallthrough?
-                    break;
                 }
                 // FIXME: It's unclear what should happen if a federate gets this
                 // message.
@@ -1125,7 +1124,7 @@ export class FederatedApp extends App {
    */
     private stopRequestInfo: StopRequestInfo = new StopRequestInfo(
         StopRequestState.NOT_SENT,
-        new Tag(TimeValue.forever(), 0)
+        new Tag(TimeValue.FOREVER(), 0)
     );
 
     /**
@@ -1134,7 +1133,7 @@ export class FederatedApp extends App {
    * An RTI synchronized Federate cannot advance its logical time
    * beyond this value.
    */
-    private greatestTimeAdvanceGrant: Tag = new Tag(TimeValue.never(), 0);
+    private greatestTimeAdvanceGrant: Tag = new Tag(TimeValue.NEVER(), 0);
 
     private upstreamFedIDs: number[] = [];
 
@@ -1220,7 +1219,7 @@ export class FederatedApp extends App {
    * @param nextEvent
    */
     protected _canProceed (nextEvent: TaggedEvent<Present>): boolean {
-        let tagBarrier = new Tag(TimeValue.never());
+        let tagBarrier = new Tag(TimeValue.NEVER());
         // Set tag barrier using the tag when stop is requested but not granted yet.
         // Otherwise, set the tagBarrier using the greated TAG.
         if (this.stopRequestInfo.state === StopRequestState.SENT) {
@@ -1334,11 +1333,11 @@ export class FederatedApp extends App {
             config.fast,
             // Let super class (App) call FederateApp's _shutdown in success and failure.
             () => {
-                success?.();
+                (success != null) ? success() : () => {};
                 this._shutdown();
             },
             () => {
-                failure?.();
+                (failure != null) ? failure() : () => {};
                 this._shutdown();
             }
         );
@@ -1361,7 +1360,7 @@ export class FederatedApp extends App {
             );
         }
         for (let index = 0; index < config.dependsOn.length; index++) {
-            let minOutputConnectionDelay = TimeValue.forever();
+            let minOutputConnectionDelay = TimeValue.FOREVER();
             for (const candidate of config.upstreamConnectionDelays[index]) {
                 if (minOutputConnectionDelay.isLaterThan(candidate)) {
                     minOutputConnectionDelay = candidate;
@@ -1599,8 +1598,6 @@ export class FederatedApp extends App {
                 Log.debug(this, () => {
                     return "(Untimed) Message received from RTI.";
                 });
-                // TODO (axmmisaka): use a type-safe interface, like io.ts?
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const value: T = JSON.parse(messageBuffer.toString());
 
                 destPortAction
@@ -1640,8 +1637,6 @@ export class FederatedApp extends App {
                 Log.debug(this, () => {
                     return `Timed Message received from RTI with tag ${String(tag)}.`;
                 });
-                // TODO (axmmisaka): use a type-safe interface, like io.ts?
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const value: T = JSON.parse(messageBuffer.toString());
 
                 if (destPortAction.origin === Origin.logical) {

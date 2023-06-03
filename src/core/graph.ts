@@ -237,7 +237,7 @@ export class DependencyGraph<T> {
         if (((deps = this.adjacencyMap.get(node)) != null)) {
             this.numberOfEdges -= deps.size;
             this.adjacencyMap.delete(node);
-            for (const [, e] of this.adjacencyMap) {
+            for (const [v, e] of this.adjacencyMap) {
                 if (e.has(node)) {
                     e.delete(node);
                     this.numberOfEdges--;
@@ -292,8 +292,8 @@ export class DependencyGraph<T> {
 
     removeEdge (node: T, dependsOn: T): void {
         const deps = this.adjacencyMap.get(node);
-        if ((deps?.has(dependsOn)) ?? false) {
-            deps?.delete(dependsOn);
+        if ((deps != null) && deps.has(dependsOn)) {
+            deps.delete(dependsOn);
             this.numberOfEdges--;
         }
     }
@@ -450,7 +450,7 @@ export class SortableDependencyGraph<
             }
         }
         /* Sort reactions */
-        for (let n: T | undefined; ((n = start.shift()) != null); count += spacing) {
+        for (var n: T | undefined; ((n = start.shift()) != null); count += spacing) {
             n.setPriority(count);
             // for each node v with an edge e from n to v do
             for (const [v, e] of graph) {
