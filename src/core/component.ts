@@ -186,15 +186,15 @@ export abstract class Component {
             name = Component.keyOfMatchingEntry(this, this._container);
         }
 
-        if (!name && this instanceof IOPort) {
+        if (name === "" && this instanceof IOPort) {
             name = Component.keyOfMatchingMultiport(this, this._container);
         }
 
-        if (!name && this instanceof Reactor) {
+        if (name === "" && this instanceof Reactor) {
             name = Component.keyOfMatchingBank(this, this._container);
         }
 
-        if (name) {
+        if (name !== "") {
             return name;
         } else {
             return this.constructor.name;

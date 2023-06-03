@@ -69,7 +69,7 @@ export class PrioritySet<P> {
             }
             // seek
             let curr: PrioritySetElement<P> | undefined = this.head;
-            while (curr) {
+            while (curr != null) {
                 const next: PrioritySetElement<P> | undefined = curr.next;
                 if (next != null) {
                     if (element.updateIfDuplicateOf(next)) {
@@ -86,7 +86,7 @@ export class PrioritySet<P> {
                     break;
                 }
             }
-            if (curr) {
+            if (curr != null) {
                 // insert
                 element.next = curr.next; // undefined if last
                 curr.next = element;
@@ -383,7 +383,7 @@ export class DependencyGraph<T> {
         const start = new Array<T>();
         // Build a start set of node without dependencies.
         for (const [v, e] of this.adjacencyMap) {
-            if (!e || e.size === 0) {
+            if (e == null || e.size === 0) {
                 start.push(v);
             }
         }
@@ -400,7 +400,7 @@ export class DependencyGraph<T> {
         const roots = new Set<T>();
         /* Populate start set */
         for (const [v, e] of this.adjacencyMap) {
-            if (!e || e.size === 0) {
+            if (e == null || e.size === 0) {
                 roots.add(v); // leaf nodes have no dependencies
                 // clone.delete(v); // FIXME add a removeNodes function to factor out the duplicate code below
             }
@@ -444,7 +444,7 @@ export class SortableDependencyGraph<
 
         /* Populate start set */
         for (const [v, e] of this.adjacencyMap) {
-            if (!e || e.size === 0) {
+            if (e == null || e.size === 0) {
                 start.push(v); // start nodes have no dependencies
                 graph.delete(v);
             }

@@ -36,7 +36,7 @@ export class Ping extends Reactor {
                 while (pingsLeft > 0) {
                     // console.log("Ping!")
                     const ret = __client.invoke(pingsLeft);
-                    if (ret) pingsLeft -= 1;
+                    if (ret !== 0) pingsLeft -= 1;
                 }
                 const elapsedTime = this.util
                     .getCurrentPhysicalTime()
@@ -78,7 +78,8 @@ export class Pong extends Reactor {
             function (this, __server: CalleePort<number, number>) {
                 // console.log("Pong!")
                 const msg = __server.get();
-                if (msg) __server.return(msg);
+                // TODO (axmmisaka): the old behaviour is if msg is falsy; i.e. undefined or 0.
+                if (msg !== undefined) __server.return(msg);
             }
         );
         this.addReaction(

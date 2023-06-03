@@ -253,7 +253,7 @@ export abstract class Reactor extends Component {
    * @param runtime The runtime object handed down from the container.
    */
     public _receiveRuntimeObject (runtime: Runtime): void {
-        if (!this._runtime && runtime) {
+        if (this._runtime == null && runtime != null) {
             this._runtime = runtime;
             // In addition to setting the runtime object, also make its
             // utility functions available as a protected member.
@@ -328,7 +328,7 @@ export abstract class Reactor extends Component {
                 break;
             }
         }
-        if (found) {
+        if (found ?? false) {
             this._keyChain.delete(reactor);
             this._deleteConnections(reactor);
         } else {
@@ -2542,7 +2542,7 @@ export class App extends Reactor {
 
         if (this._errored) {
             console.error(">>> Erroneous exit.");
-            if (this._errorMessage) {
+            if (this._errorMessage != null) {
                 console.error("Reason: " + this._errorMessage);
             }
             this.failure();

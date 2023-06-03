@@ -1566,7 +1566,7 @@ export class FederatedApp extends App {
         });
 
         this.rtiClient.on("startTime", (startTime: TimeValue) => {
-            if (startTime) {
+            if (startTime != null) {
                 Log.info(this, () => Log.hr);
                 Log.info(this, () => Log.hr);
                 Log.info(this, () => {

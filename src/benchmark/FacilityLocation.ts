@@ -320,8 +320,7 @@ export class Accumulator extends Reactor {
                 toNextAccumulator
             ) {
                 // Reaction.
-                if (
-                    !fromFirstQuadrant.isPresent() ||
+                if (!fromFirstQuadrant.isPresent() ||
           !fromSecondQuadrant.isPresent() ||
           !fromThirdQuadrant.isPresent() ||
           !fromFourthQuadrant.isPresent()
