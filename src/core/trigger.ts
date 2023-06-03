@@ -96,7 +96,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
     }
 
     protected manager = new (class implements TriggerManager {
-        constructor (private trigger: ScheduledTrigger<T>) {}
+        constructor (private readonly trigger: ScheduledTrigger<T>) {}
 
         getContainer (): Reactor {
             return this.trigger._getContainer();

@@ -64,13 +64,13 @@ implements Sortable<Priority>, PrioritySetElement<Priority>
    * @param late Function that gets execute when triggered and "late."
    */
     constructor (
-        private reactor: Reactor,
-        private sandbox: ReactionSandbox,
+        private readonly reactor: Reactor,
+        private readonly sandbox: ReactionSandbox,
         readonly trigs: Triggers,
         readonly args: Args<ArgList<T>>,
-        private react: (...args: ArgList<T>) => void,
+        private readonly react: (...args: ArgList<T>) => void,
         private deadline?: TimeValue,
-        private late: (...args: ArgList<T>) => void = () => {
+        private readonly late: (...args: ArgList<T>) => void = () => {
             Log.global.warn("Deadline violation occurred!");
         }
     ) {}

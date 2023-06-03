@@ -76,7 +76,7 @@ export interface Call<A, R> extends Write<A>, Read<R> {
 // --------------------------------------------------------------------------//
 
 export class Parameter<T> implements Read<T> {
-    constructor (private value: T) {}
+    constructor (private readonly value: T) {}
 
     get (): T {
         return this.value;
@@ -157,7 +157,7 @@ export abstract class Reactor extends Component {
    * Note: declare this class member before any other ones as they may
    * attempt to access it.
    */
-    private _keyChain = new Map<Component, symbol>();
+    private readonly _keyChain = new Map<Component, symbol>();
 
     /**
    * This graph has in it all the dependencies implied by this container's
@@ -176,7 +176,7 @@ export abstract class Reactor extends Component {
    * Index that specifies the location of the reactor instance in a bank,
    * if it is a member of one.
    */
-    private _bankIndex: number;
+    private readonly _bankIndex: number;
 
     /**
    * Return the location of the reactor instance in a bank,
@@ -198,7 +198,7 @@ export abstract class Reactor extends Component {
    * connection at runtime could result in a cyclic dependency, _without_
    * having to consult other reactors.
    */
-    private _causalityGraph =
+    private readonly _causalityGraph =
         new DependencyGraph<Port<Present>>();
 
     /**
@@ -226,7 +226,7 @@ export abstract class Reactor extends Component {
     /**
    * The list of reactions this reactor has.
    */
-    private _reactions: Array<Reaction<any>> = [];
+    private readonly _reactions: Array<Reaction<any>> = [];
 
     /**
    * Sandbox for the execution of reactions.
@@ -236,7 +236,7 @@ export abstract class Reactor extends Component {
     /**
    * The list of mutations this reactor has.
    */
-    private _mutations: Array<Mutation<any>> = [];
+    private readonly _mutations: Array<Mutation<any>> = [];
 
     /**
    * Sandbox for the execution of mutations.
@@ -418,10 +418,10 @@ export abstract class Reactor extends Component {
    * Inner class intended to provide access to methods that should be
    * accessible to mutations, not to reactions.
    */
-    private _MutationSandbox = class implements MutationSandbox {
+    private readonly _MutationSandbox = class implements MutationSandbox {
         public util: UtilityFunctions;
 
-        constructor (private reactor: Reactor) {
+        constructor (private readonly reactor: Reactor) {
             this.reactor = reactor;
             this.util = reactor.util;
             this.getBankIndex = () => reactor.getBankIndex();
@@ -480,7 +480,7 @@ export abstract class Reactor extends Component {
     /**
    * Inner class that furnishes an execution environment for reactions.
    */
-    private _ReactionSandbox = class implements ReactionSandbox {
+    private readonly _ReactionSandbox = class implements ReactionSandbox {
         public util: UtilityFunctions;
 
         public getBankIndex: () => number;
@@ -1578,7 +1578,7 @@ export class CallerPort<A extends Present, R extends Present>
     }
 
     protected manager: TriggerManager = new (class implements TriggerManager {
-        constructor (private port: CallerPort<A, R>) {}
+        constructor (private readonly port: CallerPort<A, R>) {}
 
         addReaction (reaction: Reaction<unknown>): void {
             throw new Error("A Caller port cannot use used as a trigger.");
@@ -1620,9 +1620,9 @@ export class CalleePort<A extends Present, R extends Present>
 
     public argValue: A | undefined;
 
-    private procedure: Procedure<unknown> | undefined;
+    protected procedure: Procedure<unknown> | undefined;
 
-    private lastCaller: Reaction<unknown> | undefined;
+    protected lastCaller: Reaction<unknown> | undefined;
 
     public invoke (value: A): R | undefined {
         this.argValue = value;
@@ -1653,7 +1653,7 @@ export class CalleePort<A extends Present, R extends Present>
     }
 
     protected manager: CalleeManager<A> = new (class implements CalleeManager<A> {
-        constructor (private port: CalleePort<A, Present>) {}
+        constructor (private readonly port: CalleePort<A, Present>) {}
 
         getContainer (): Reactor {
             return this.port._getContainer();
@@ -1785,28 +1785,28 @@ export interface ReactionSandbox {
 export class App extends Reactor {
     readonly _alarm = new Alarm();
 
-    private _errored = false;
+    protected _errored = false;
 
-    private _errorMessage?: string;
+    protected _errorMessage?: string;
 
     readonly _uuid = uuidv4();
 
     /**
    * Set of reactions to stage when this app starts executing.
    */
-    private _reactionsAtStartup = new Set<Reaction<unknown>>();
+    private readonly _reactionsAtStartup = new Set<Reaction<unknown>>();
 
     /**
    * Set of timers to schedule when this app starts executing.
    */
-    private _timersToSchedule = new Set<Timer>();
+    private readonly _timersToSchedule = new Set<Timer>();
 
     /**
    * Set of reactors that gets populated during each execution step,
    * identifying all the terminated reactors that are to be removed
    * at the end of that execution step.
    */
-    private _reactorsToRemove = new Array<Reactor>();
+    private readonly _reactorsToRemove = new Array<Reactor>();
 
     /**
    * Stores whether the last received TAG (Tag Advance Grant) was provisional.
@@ -1820,7 +1820,7 @@ export class App extends Reactor {
    * reaction code.
    */
     protected util: UtilityFunctions = new (class implements UtilityFunctions {
-        constructor (private app: App) {}
+        constructor (private readonly app: App) {}
 
         public requestStop (): void {
             this.app._shutdown();
@@ -1910,10 +1910,10 @@ export class App extends Reactor {
     /**
    * Inner class that provides access to the Runtime object.
    */
-    private __runtime: Runtime = new (class implements Runtime {
+    private readonly __runtime: Runtime = new (class implements Runtime {
         util: UtilityFunctions;
 
-        constructor (private app: App) {
+        constructor (private readonly app: App) {
             this.util = app.util;
         }
 
@@ -2096,13 +2096,13 @@ export class App extends Reactor {
     /**
    * Priority set that keeps track of scheduled events.
    */
-    private _eventQ = new EventQueue();
+    private readonly _eventQ = new EventQueue();
 
     /**
    * If not null, finish execution with success, this time interval after the
    * start of execution.
    */
-    private _executionTimeout: TimeValue | undefined;
+    private readonly _executionTimeout: TimeValue | undefined;
 
     /**
    * The time at which normal execution should terminate. When this time is
@@ -2116,18 +2116,18 @@ export class App extends Reactor {
    * to logical time. If true, don't wait for physical time to match logical
    * time.
    */
-    private _fast: boolean;
+    private readonly _fast: boolean;
 
     /**
    * Indicates whether the program should continue running once the event
    * queue is empty.
    */
-    private _keepAlive = false;
+    protected _keepAlive = false;
 
     /**
    * Priority set that keeps track of reactions at the current Logical time.
    */
-    private _reactionQ = new ReactionQueue();
+    private readonly _reactionQ = new ReactionQueue();
 
     /**
    * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
@@ -2159,7 +2159,7 @@ export class App extends Reactor {
             .forEach((it) => { this._unsetTimer(it[1]); });
     }
 
-    private snooze: Action<Tag>;
+    private readonly snooze: Action<Tag>;
 
     readonly _name: string;
 

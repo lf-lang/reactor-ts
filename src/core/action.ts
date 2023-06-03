@@ -72,7 +72,7 @@ export class Action<T extends Present>
             return this.action.get();
         }
 
-        constructor (private action: Action<T>) {
+        constructor (private readonly action: Action<T>) {
             super();
         }
 

@@ -297,10 +297,10 @@ function isANodeJSCodedError (e: Error): e is NodeJSCodedError {
  */
 class RTIClient extends EventEmitter {
     // ID of federation that this federate will join.
-    private federationID: string;
+    private readonly federationID: string;
 
     // ID of this federate.
-    private id: number;
+    private readonly id: number;
 
     // The socket descriptor for communicating with this federate.
     private socket: Socket | null = null;
@@ -313,7 +313,7 @@ class RTIClient extends EventEmitter {
    * meaning that the type checker cannot check whether uses of the action are type safe.
    * In an alternative design, type information might be preserved. TODO(marten): Look into this.
    */
-    private federatePortActionByID: Map<number, Action<any>> = new Map<
+    private readonly federatePortActionByID: Map<number, Action<any>> = new Map<
     number,
     Action<any>
     >();
@@ -1116,7 +1116,7 @@ export class FederatedApp extends App {
    * the rtiClient processes socket-level data into events it emits at the
    * Federate's level of abstraction.
    */
-    private rtiClient: RTIClient;
+    private readonly rtiClient: RTIClient;
 
     /**
    * Stop request-related information
@@ -1135,13 +1135,13 @@ export class FederatedApp extends App {
    */
     private greatestTimeAdvanceGrant: Tag = new Tag(TimeValue.NEVER(), 0);
 
-    private upstreamFedIDs: number[] = [];
+    private readonly upstreamFedIDs: number[] = [];
 
-    private upstreamFedDelays: TimeValue[] = [];
+    private readonly upstreamFedDelays: TimeValue[] = [];
 
-    private downstreamFedIDs: number[] = [];
+    private readonly downstreamFedIDs: number[] = [];
 
-    private outputControlReactionTriggers: Array<Action<Present>> = [];
+    private readonly outputControlReactionTriggers: Array<Action<Present>> = [];
 
     /**
    * The default value, null, indicates there is no output depending on a physical action.

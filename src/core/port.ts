@@ -134,7 +134,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * Inner class instance to gain access to Write<T> interface.
    */
     protected writer = new (class extends WritablePort<T> {
-        constructor (private port: IOPort<T>) {
+        constructor (private readonly port: IOPort<T>) {
             super();
         }
 
@@ -164,7 +164,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * Inner class instance to let the container configure this port.
    */
     protected manager: IOPortManager<T> = new (class implements IOPortManager<T> {
-        constructor (private port: IOPort<T>) {}
+        constructor (private readonly port: IOPort<T>) {}
 
         getContainer (): Reactor {
             return this.port._getContainer();

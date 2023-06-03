@@ -24,7 +24,7 @@ export abstract class Component {
    * reactor. Only instances of `App`, which denote top-level reactors,
    * are self-contained.
    */
-    private _container: Reactor;
+    private readonly _container: Reactor;
 
     /**
    * Create a new component and register it with the given container.

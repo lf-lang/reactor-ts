@@ -32,7 +32,7 @@ export class SingleEvent<T extends Present> extends Reactor {
 
     t1: Timer = new Timer(this, 0, 0);
 
-    constructor (parent: Reactor, private payload: Parameter<T>) {
+    constructor (parent: Reactor, private readonly payload: Parameter<T>) {
         super(parent);
         this.addReaction(
             new Triggers(this.t1),

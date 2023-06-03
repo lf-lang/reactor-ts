@@ -67,7 +67,7 @@ export abstract class MultiPort<T extends Present>
    * @param container the reactor that will contain the new instance
    * @param width the number of channels of newly created instance
    */
-    constructor (private container: Reactor, width: number) {
+    constructor (private readonly container: Reactor, width: number) {
         super(container);
         this._channels = new Array(width);
         this._width = width;
@@ -129,7 +129,7 @@ export abstract class MultiPort<T extends Present>
    */
     protected manager = new (class implements TriggerManager {
     /** @inheritdoc */
-        constructor (private port: MultiPort<T>) {}
+        constructor (private readonly port: MultiPort<T>) {}
 
         /** @inheritdoc */
         getContainer (): Reactor {
@@ -181,7 +181,7 @@ export abstract class MultiPort<T extends Present>
         private readonly cache: Array<WritablePort<T>>;
 
         /** @inheritdoc */
-        constructor (private port: MultiPort<T>) {
+        constructor (private readonly port: MultiPort<T>) {
             super();
             this.cache = [];
         }
