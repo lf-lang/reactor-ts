@@ -30,14 +30,14 @@ export type MultiReadWrite<T> = MultiRead<T> & MultiWrite<T>;
  * Interface for readable variables.
  */
 export interface Read<T> {
-    get(): T | Absent;
+    get: () => T | Absent;
 }
 
 export interface MultiRead<T> {
     /**
    * Return the number of channels.
    */
-    width(): number;
+    width: () => number;
 
     /**
    * Given an index that identifies a particular channel, return the current
@@ -45,18 +45,18 @@ export interface MultiRead<T> {
    * @param index the index that identifies the channel to return the value of
    * @returns the value that corresponds to the identified channel
    */
-    get(index: number): T | Absent;
+    get: (index: number) => T | Absent;
 }
 
 export interface MultiWrite<T> {
     /**
    * Return the number of channels.
    */
-    width(): number;
+    width: () => number;
 
     set: (index: number, value: T) => void;
 
-    values(): Array<T | Absent>;
+    values: () => Array<T | Absent>;
 }
 
 // --------------------------------------------------------------------------//

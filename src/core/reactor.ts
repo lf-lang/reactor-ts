@@ -62,7 +62,7 @@ Log.global.level = Log.levels.ERROR;
  * Interface for the invocation of remote procedures.
  */
 export interface Call<A, R> extends Write<A>, Read<R> {
-    invoke(args: A): R | undefined;
+    invoke: (args: A) => R | undefined;
 }
 
 /**
@@ -1602,10 +1602,10 @@ export class CallerPort<A extends Present, R extends Present>
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface CalleeManager<T extends Present> extends TriggerManager {
-    setLastCaller(reaction: Reaction<unknown> | undefined): void;
-    getLastCaller(): Reaction<unknown> | undefined;
-    addReaction(procedure: Procedure<unknown>): void;
-    getProcedure(): Procedure<any> | undefined;
+    setLastCaller: (reaction: Reaction<unknown> | undefined) => void;
+    getLastCaller: () => Reaction<unknown> | undefined;
+    addReaction: (procedure: Procedure<unknown>) => void;
+    getProcedure: () => Procedure<any> | undefined;
 }
 
 /**
@@ -1725,53 +1725,53 @@ class ReactionQueue extends PrioritySet<Priority> {
 
 export interface Runtime {
     util: UtilityFunctions;
-    stage(reaction: Reaction<unknown>): void;
-    initialize(timer: Timer): void;
-    schedule(e: TaggedEvent<any>): void;
-    delete(r: Reactor): void;
-    isRunning(): boolean;
+    stage: (reaction: Reaction<unknown>) => void;
+    initialize: (timer: Timer) => void;
+    schedule: (e: TaggedEvent<any>) => void;
+    delete: (r: Reactor) => void;
+    isRunning: () => boolean;
 }
 interface UtilityFunctions {
-    requestStop(): void;
-    reportError(message?: string): void;
-    requestErrorStop(message?: string): void;
-    isLastTAGProvisional(): boolean;
-    getCurrentTag(): Tag;
-    getCurrentLogicalTime(): TimeValue;
-    getCurrentPhysicalTime(): TimeValue;
-    getStartTag(): Tag;
-    getStartTime(): TimeValue;
-    getElapsedLogicalTime(): TimeValue;
-    getElapsedPhysicalTime(): TimeValue;
-    sendRTIMessage<T extends Present>(
+    requestStop: () => void;
+    reportError: (message?: string) => void;
+    requestErrorStop: (message?: string) => void;
+    isLastTAGProvisional: () => boolean;
+    getCurrentTag: () => Tag;
+    getCurrentLogicalTime: () => TimeValue;
+    getCurrentPhysicalTime: () => TimeValue;
+    getStartTag: () => Tag;
+    getStartTime: () => TimeValue;
+    getElapsedLogicalTime: () => TimeValue;
+    getElapsedPhysicalTime: () => TimeValue;
+    sendRTIMessage: <T extends Present>(
         data: T,
         destFederateID: number,
         destPortID: number
-    ): void;
-    sendRTITimedMessage<T extends Present>(
+    ) => void;
+    sendRTITimedMessage: <T extends Present>(
         data: T,
         destFederateID: number,
         destPortID: number,
         time: number
-    ): void;
-    sendRTIPortAbsent(
+    ) => void;
+    sendRTIPortAbsent: (
         additionalDealy: TimeValue,
         destFederateID: number,
         destPortID: number
-    ): void;
+    ) => void;
 }
 
 export interface MutationSandbox extends ReactionSandbox {
-    connect<A extends T, R extends Present, T extends Present, S extends R>(
+    connect: <A extends T, R extends Present, T extends Present, S extends R>(
         src: CallerPort<A, R> | IOPort<S>,
         dst: CalleePort<T, S> | IOPort<R>
-    ): void;
+    ) => void;
 
-    disconnect(src: IOPort<Present>, dst?: IOPort<Present>): void;
+    disconnect: (src: IOPort<Present>, dst?: IOPort<Present>) => void;
 
-    delete(reactor: Reactor): void;
+    delete: (reactor: Reactor) => void;
 
-    getReactor(): Reactor; // Container
+    getReactor: () => Reactor; // Container
 
     // FIXME:
     // forkJoin(constructor: new () => Reactor, ): void;

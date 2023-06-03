@@ -3,9 +3,9 @@ import {Component} from "./internal";
 import type {Reactor, Runtime, Absent, Present, TaggedEvent, Reaction, Tag} from "./internal";
 
 export interface TriggerManager {
-    getContainer(): Reactor;
-    addReaction(reaction: Reaction<unknown>): void;
-    delReaction(reaction: Reaction<unknown>): void;
+    getContainer: () => Reactor;
+    addReaction: (reaction: Reaction<unknown>) => void;
+    delReaction: (reaction: Reaction<unknown>) => void;
 }
 
 /**

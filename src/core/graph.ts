@@ -15,7 +15,7 @@ export interface PrioritySetElement<P> {
     /**
    * Return the priority of this node.
    */
-    getPriority(): P;
+    getPriority: () => P;
 
     /**
    * Determine whether this node has priority over the given node or not.
@@ -32,7 +32,7 @@ export interface PrioritySetElement<P> {
 }
 
 export interface Sortable<P> {
-    setPriority(priority: P): void;
+    setPriority: (priority: P) => void;
 
     // getSTPUntil(): TimeInstant
     // setSTPUntil(): TimeInstant
