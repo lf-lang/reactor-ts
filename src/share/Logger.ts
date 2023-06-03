@@ -16,13 +16,13 @@ function print (
     expected: State<unknown>
 ): void {
     const received = i.get();
-    if (received) {
-        console.log("Logging: " + received);
+    if (received != null) {
+        console.log(`Logging: ${String(received)}`);
         if (received === expected.get()) {
             this.util.requestStop();
         } else {
             this.util.requestErrorStop(
-                "Expected" + expected.get() + " but got " + received
+                `Expected${String(expected.get())} but got ${String(received)}`
             );
         }
     } else {
