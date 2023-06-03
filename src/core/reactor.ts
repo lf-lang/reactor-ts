@@ -418,7 +418,7 @@ export abstract class Reactor extends Component {
    * Inner class intended to provide access to methods that should be
    * accessible to mutations, not to reactions.
    */
-    private _MutationSandbox = class implements MutationSandbox {
+    private _mutationSandbox = class implements MutationSandbox {
         public util: UtilityFunctions;
 
         constructor (private reactor: Reactor) {
@@ -480,7 +480,7 @@ export abstract class Reactor extends Component {
     /**
    * Inner class that furnishes an execution environment for reactions.
    */
-    private _ReactionSandbox = class implements ReactionSandbox {
+    private _reactionSandbox = class implements ReactionSandbox {
         public util: UtilityFunctions;
 
         public getBankIndex: () => number;
@@ -516,8 +516,8 @@ export abstract class Reactor extends Component {
         // this.util = this._getContainer().util
 
         // Create sandboxes for the reactions and mutations to execute in.
-        this._reactionScope = new this._ReactionSandbox(this);
-        this._mutationScope = new this._MutationSandbox(this);
+        this._reactionScope = new this._reactionSandbox(this);
+        this._mutationScope = new this._mutationSandbox(this);
 
         // Pass in a reference to the reactor because the runtime object
         // is inaccessible for the top-level reactor (it is created after this constructor returns).
@@ -541,11 +541,11 @@ export abstract class Reactor extends Component {
     }
 
     protected _initializeReactionScope (): void {
-        this._reactionScope = new this._ReactionSandbox(this);
+        this._reactionScope = new this._reactionSandbox(this);
     }
 
     protected _initializeMutationScope (): void {
-        this._mutationScope = new this._MutationSandbox(this);
+        this._mutationScope = new this._mutationSandbox(this);
     }
 
     // protected _isActive(): boolean {
@@ -586,6 +586,7 @@ export abstract class Reactor extends Component {
         return action.asSchedulable(this._getKey(action));
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private _recordDeps<T extends Variable[]>(reaction: Reaction<any>): void {
     // Add a dependency on the previous reaction or mutation, if it exists.
         const prev = this._getLastReactionOrMutation();
@@ -673,7 +674,7 @@ export abstract class Reactor extends Component {
         }
         // Make effects dependent on sources.
         for (const effect of effects) {
-            this._causalityGraph.addEdges(effect, sources);
+            this._causalityGraph.addEdges(effect as Port<Present>, sources as Set<Port<Present>>);
         }
     }
 
@@ -1331,7 +1332,7 @@ export abstract class Reactor extends Component {
                 if (last != null) calleeManager.setLastCaller(last);
             } else {
                 throw new Error(
-                    "No procedure linked to callee port `${String(procedure)}\`."
+                    "No procedure linked to callee port"
                 );
             }
         } else {
@@ -1359,7 +1360,7 @@ export abstract class Reactor extends Component {
             for (const node of nodes) {
                 if (!visited.has(node)) {
                     visited.add(node);
-                    if (node instanceof InPort && inputs.has(node)) {
+                    if (node instanceof InPort && inputs.has(node as InPort<Present>)) {
                         ifGraph.addEdge(output, node);
                     } else {
                         search(output, self._dependencyGraph.getEdges(output));
@@ -1382,7 +1383,7 @@ export abstract class Reactor extends Component {
         const ports = new Set<CalleePort<Present, Present>>();
         for (const component of this._keyChain.keys()) {
             if (component instanceof CalleePort) {
-                ports.add(component);
+                ports.add(component as CalleePort<Present, Present>);
             }
         }
         return ports;
@@ -1392,7 +1393,7 @@ export abstract class Reactor extends Component {
         const ports = new Set<Port<Present>>();
         for (const component of this._keyChain.keys()) {
             if (component instanceof Port) {
-                ports.add(component);
+                ports.add(component as Port<Present>);
             }
         }
         return ports;
@@ -1402,7 +1403,7 @@ export abstract class Reactor extends Component {
         const inputs = new Set<InPort<Present>>();
         for (const component of this._keyChain.keys()) {
             if (component instanceof InPort) {
-                inputs.add(component);
+                inputs.add(component as InPort<Present>);
             }
         }
         return inputs;
@@ -1412,7 +1413,7 @@ export abstract class Reactor extends Component {
         const outputs = new Set<OutPort<Present>>();
         for (const component of this._keyChain.keys()) {
             if (component instanceof OutPort) {
-                outputs.add(component);
+                outputs.add(component as OutPort<Present>);
             }
         }
         return outputs;
@@ -1515,8 +1516,7 @@ export abstract class Reactor extends Component {
    */
     protected _unsetTimers (): void {
     // Log.global.debug("Getting timers for: " + this)
-        const timers = new Set<Timer>();
-        for (const [k, v] of Object.entries(this)) {
+        for (const [, v] of Object.entries(this)) {
             if (v instanceof Timer) {
                 this._unsetTimer(v);
             }
@@ -1531,9 +1531,11 @@ export abstract class Reactor extends Component {
     }
 }
 
+/*
 interface ComponentManager {
     getOwner(): Reactor;
 }
+*/
 
 /**
  * A caller port sends arguments of type T and receives a response of type R.
@@ -1543,7 +1545,7 @@ export class CallerPort<A extends Present, R extends Present>
     implements Write<A>, Read<R>
 {
     public get (): R | undefined {
-        if (this.tag?.isSimultaneousWith(this.runtime.util.getCurrentTag()))
+        if ((this.tag?.isSimultaneousWith(this.runtime.util.getCurrentTag())) ?? false)
             return this.remotePort?.retValue;
     }
 
@@ -1598,6 +1600,7 @@ export class CallerPort<A extends Present, R extends Present>
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface CalleeManager<T extends Present> extends TriggerManager {
     setLastCaller(reaction: Reaction<unknown> | undefined): void;
     getLastCaller(): Reaction<unknown> | undefined;
@@ -1997,7 +2000,7 @@ export class App extends Reactor {
                 (this.app._endOfExecution == null) ||
         !this.app._endOfExecution.isSmallerThan(e.tag)
             ) {
-                this.app._eventQ.push(e);
+                this.app._eventQ.push(e as TaggedEvent<Present>);
             }
 
             Log.debug(this, () => `Scheduling with trigger: ${String(e.trigger)}`);
@@ -2156,7 +2159,7 @@ export class App extends Reactor {
     protected _unsetTimers (): void {
         Object.entries(this)
             .filter((it) => it[1] instanceof Timer)
-            .forEach((it) => { this._unsetTimer(it[1]); });
+            .forEach((it) => { this._unsetTimer(it[1] as Timer); });
     }
 
     private snooze: Action<Tag>;
@@ -2175,8 +2178,8 @@ export class App extends Reactor {
         executionTimeout: TimeValue | undefined = undefined,
         keepAlive = false,
         fast = false,
-        public success: () => void = () => {},
-        public failure: () => void = () => {}
+        public success: () => void = () => (undefined),
+        public failure: () => void = () => (undefined)
     ) {
         super(null);
 
@@ -2232,7 +2235,7 @@ export class App extends Reactor {
         this._currentTag = nextTag;
     }
 
-    protected _iterationComplete (): void {}
+    protected _iterationComplete (): void { return undefined; }
 
     /**
    * Add a dummy event to the event queue.
@@ -2249,9 +2252,10 @@ export class App extends Reactor {
    * Iterate over all reactions in the reaction queue and execute them.
    */
     private _react (): void {
+        let r: Reaction<unknown>;
         while (this._reactionQ.size() > 0) {
             try {
-                var r = this._reactionQ.pop();
+                r = this._reactionQ.pop();
                 r.doReact();
             } catch (e) {
                 Log.error(
@@ -2265,7 +2269,7 @@ export class App extends Reactor {
         Log.global.debug("Finished handling all events at current time.");
     }
 
-    protected enqueueNetworkOutputControlReactions (): void {}
+    protected enqueueNetworkOutputControlReactions (): void { return undefined; }
 
     /**
    * Handle the next events on the event queue.
@@ -2319,11 +2323,8 @@ export class App extends Reactor {
             // resulting events would be in the future, anyway.
             do {
                 // Keep popping the event queue until the next event has a different tag.
-                while (
-                    nextEvent != null &&
-          nextEvent.tag.isSimultaneousWith(this._currentTag)
-                ) {
-                    var trigger = nextEvent.trigger;
+                while ((nextEvent?.tag.isSimultaneousWith(this._currentTag)) ?? false) {
+                    const trigger = nextEvent?.trigger;
                     this._eventQ.pop();
                     Log.debug(this, () => `Popped off the event queue: ${String(trigger)}`);
                     // Handle timers.
@@ -2342,7 +2343,9 @@ export class App extends Reactor {
                     }
 
                     // Load reactions onto the reaction queue.
-                    trigger.update(nextEvent);
+                    if (nextEvent != null) {
+                        trigger?.update(nextEvent);
+                    }
 
                     // Look at the next event on the queue.
                     nextEvent = this._eventQ.peek();
@@ -2350,7 +2353,7 @@ export class App extends Reactor {
 
                 // End of this execution step. Perform cleanup.
                 while (this._reactorsToRemove.length > 0) {
-                    const r = this._reactorsToRemove.pop();
+                    // const r = this._reactorsToRemove.pop();
                     // FIXME: doing this for the entire model at the end of execution
                     // could be a pretty significant performance hit, so we probably
                     // don't want to do this
@@ -2427,7 +2430,7 @@ export class App extends Reactor {
             return `In setAlarmOrYield for tag: ${String(tag)}`;
         });
 
-        if ((this._endOfExecution != null) && this._endOfExecution.isSmallerThan(tag)) {
+        if ((this._endOfExecution?.isSmallerThan(tag)) ?? false) {
             // Ignore this request if the tag is later than the end of execution.
             return;
         }

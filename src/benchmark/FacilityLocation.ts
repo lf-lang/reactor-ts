@@ -102,6 +102,9 @@ enum Position {
     BOT_RIGHT = 3
 }
 
+// TODO (axmmisaka): delete this, or at least investigate what this is for? 
+// This looks very java-like and doesn't do anything in ts I guess......
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 abstract class Msg {}
 
 class FacilityMsg extends Msg {
@@ -738,6 +741,7 @@ export class Quadrant extends Reactor {
                 const msg = fromProducer.get();
                 switch (msg?.constructor) {
                     case CustomerMsg:
+                    {
                         // Handling CustomerMsg for a new customoer.
                         // This message is propagated from root to the leaf facility.
                         // console.log(`Quadrant at ${facility.get()} - Received CustomerMsg: ${(<CustomerMsg>msg).point}`)
@@ -772,6 +776,7 @@ export class Quadrant extends Reactor {
                             }
                         }
                         break;
+                    }
                     case RequestExitMsg:
                         if (!hasChildren.get()) {
                             // No children, number of facilities will be counted on parent's side.

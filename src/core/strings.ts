@@ -1,3 +1,7 @@
+// TODO (axmmisaka): find a way to address these issues
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * Utility class for handling strings, for example, to format diagraph
  * string representation.
@@ -14,7 +18,7 @@ export class StringUtil {
 
     public static toRegex (template: TemplateStringsArray, ...keys: any[]) {
         return function (...values: any[]) {
-            const dict = values[values.length - 1] || {};
+            const dict = values[values.length - 1] ?? {};
             const result = [template[0]];
             keys.forEach(function (key, i) {
                 const value = Number.isInteger(key) ? values[key] : dict[key];

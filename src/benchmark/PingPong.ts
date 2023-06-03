@@ -70,7 +70,7 @@ export class Pong extends Reactor {
         this.addReaction(
             new Triggers(this.dummy),
             new Args(this.dummy),
-            function (this) {}
+            function (this) { return undefined; }
         );
         this.addReaction(
             new Triggers(this.server),
@@ -85,7 +85,7 @@ export class Pong extends Reactor {
         this.addReaction(
             new Triggers(this.dummy), // replace this with `server` and an error is thrown.
             new Args(this.dummy),
-            function (this) {}
+            function (this) { return undefined; }
         );
     }
 }

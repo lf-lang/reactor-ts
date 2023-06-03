@@ -69,7 +69,7 @@ export abstract class MultiPort<T extends Present>
    */
     constructor (private container: Reactor, width: number) {
         super(container);
-        this._channels = new Array(width);
+        this._channels = new Array<IOPort<T>>(width);
         this._width = width;
     }
 

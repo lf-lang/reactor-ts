@@ -62,11 +62,11 @@ export class TimeValue {
         return new TimeValue(0, 0);
     }
 
-    static NEVER (): TimeValue {
+    static never (): TimeValue {
         return new TimeValue(Number.MIN_SAFE_INTEGER, 0);
     }
 
-    static FOREVER (): TimeValue {
+    static forever (): TimeValue {
         return new TimeValue(Number.MAX_SAFE_INTEGER, 0);
     }
 
@@ -265,9 +265,9 @@ export class TimeValue {
     public toBinary (): Buffer {
         const buff = Buffer.alloc(8);
         if (this.seconds === Number.MIN_SAFE_INTEGER) {
-            buff.writeBigUInt64LE(BigInt(0x8000000000000000), 0);
+            buff.writeBigUInt64LE(BigInt(0x8000000000000000n), 0);
         } else if (this.seconds === Number.MAX_SAFE_INTEGER) {
-            buff.writeBigUInt64LE(BigInt(0x7fffffffffffffff), 0);
+            buff.writeBigUInt64LE(BigInt(0x7fffffffffffffffn), 0);
         } else {
             const billion = BigInt(TimeUnit.secs);
             const bigTime = BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
@@ -294,10 +294,10 @@ export class TimeValue {
 
         // To avoid overflow and floating point errors, work with BigInts.
         const bigTime = buffer.readBigUInt64LE(0);
-        if (bigTime === BigInt(0x8000000000000000)) {
-            return TimeValue.NEVER();
-        } else if (bigTime === BigInt(0x7fffffffffffffff)) {
-            return TimeValue.FOREVER();
+        if (bigTime === BigInt(0x8000000000000000n)) {
+            return TimeValue.never();
+        } else if (bigTime === BigInt(0x7fffffffffffffffn)) {
+            return TimeValue.forever();
         }
 
         const bigSeconds = bigTime / billion;
@@ -481,7 +481,6 @@ export class Tag {
         buffer.copy(timeBuffer, 0, 0, 8);
         const time = TimeValue.fromBinary(timeBuffer);
         const microstep = buffer.readUInt32LE(8);
-        const billion = BigInt(TimeUnit.secs);
 
         return new Tag(time, microstep);
     }
