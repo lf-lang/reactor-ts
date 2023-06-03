@@ -62,11 +62,11 @@ export class TimeValue {
         return new TimeValue(0, 0);
     }
 
-    static never (): TimeValue {
+    static NEVER (): TimeValue {
         return new TimeValue(Number.MIN_SAFE_INTEGER, 0);
     }
 
-    static forever (): TimeValue {
+    static FOREVER (): TimeValue {
         return new TimeValue(Number.MAX_SAFE_INTEGER, 0);
     }
 
@@ -295,9 +295,9 @@ export class TimeValue {
         // To avoid overflow and floating point errors, work with BigInts.
         const bigTime = buffer.readBigUInt64LE(0);
         if (bigTime === BigInt(0x8000000000000000n)) {
-            return TimeValue.never();
+            return TimeValue.NEVER();
         } else if (bigTime === BigInt(0x7fffffffffffffffn)) {
-            return TimeValue.forever();
+            return TimeValue.FOREVER();
         }
 
         const bigSeconds = bigTime / billion;
