@@ -2,6 +2,7 @@
  * Utility class for handling strings, for example, to format diagraph
  * string representation.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StringUtil {
     /**
    * Remove indentation in the multi-line string.

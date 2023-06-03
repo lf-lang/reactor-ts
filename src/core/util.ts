@@ -21,6 +21,7 @@ export enum LogLevel {
 /**
  * Global logging facility that has multiple levels of severity.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Log {
     /**
    * Available log levels.
