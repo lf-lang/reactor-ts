@@ -62,10 +62,14 @@ export class TimeValue {
         return new TimeValue(0, 0);
     }
 
+    // The symbles "NEVER" and "FOREVER" are used in `lingua-franca` main codebase,
+    // so it does not make much sense to lint them or warn against.
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     static NEVER (): TimeValue {
         return new TimeValue(Number.MIN_SAFE_INTEGER, 0);
     }
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     static FOREVER (): TimeValue {
         return new TimeValue(Number.MAX_SAFE_INTEGER, 0);
     }

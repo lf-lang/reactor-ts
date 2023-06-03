@@ -3,6 +3,7 @@
  * @see {@link https://www.npmjs.com/package/ulog}
  */
 declare module "ulog" {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     export default function ULog (module: string): ULog;
 }
 
