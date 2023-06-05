@@ -150,10 +150,10 @@ export class Action<T extends Present>
 
       Log.debug(
         this,
-        () => `Scheduling ${String(this.action.origin)} action 
+        () => `Scheduling ${this.action.origin} action 
                 ${String(
                   this.action._getFullyQualifiedName()
-                )} with tag: ${String()}`
+                )} with tag: ${tag}`
       );
 
       this.action.runtime.schedule(new TaggedEvent(this.action, tag, value));

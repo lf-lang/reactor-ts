@@ -132,7 +132,7 @@ export class Reaction<T>
       () =>
         ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString()
     );
-    Log.debug(this, () => `Reaction deadline: ${String(this.deadline)}`);
+    Log.debug(this, () => `Reaction deadline: ${this.deadline}`);
 
     // If this reaction was loaded onto the reaction queue but the trigger(s)
     // absorbed by a mutation that routed the value(s) elsewhere, then return

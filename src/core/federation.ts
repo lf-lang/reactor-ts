@@ -394,7 +394,7 @@ class RTIClient extends EventEmitter {
         this.socket?.write(this.federationID);
       } catch (e) {
         Log.error(this, () => {
-          return `${String(e)}`;
+          return `${e}`;
         });
       }
 
@@ -409,7 +409,7 @@ class RTIClient extends EventEmitter {
     this.socket?.on("error", (err: Error) => {
       if (isANodeJSCodedError(err) && err.code === "ECONNREFUSED") {
         Log.info(this, () => {
-          return `Failed to connect to RTI with error: ${String(err)}.`;
+          return `Failed to connect to RTI with error: ${err}.`;
         });
         if (this.connectionAttempts < CONNECT_NUM_RETRIES) {
           Log.info(this, () => {
@@ -476,7 +476,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -489,7 +489,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -511,12 +511,12 @@ class RTIClient extends EventEmitter {
     time.copy(msg, 1);
     try {
       Log.debug(this, () => {
-        return `Sending RTI start time: ${String(myPhysicalTime)}`;
+        return `Sending RTI start time: ${myPhysicalTime}`;
       });
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -553,7 +553,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -596,7 +596,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -623,7 +623,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -642,7 +642,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -665,7 +665,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -684,7 +684,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -703,7 +703,7 @@ class RTIClient extends EventEmitter {
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -729,12 +729,12 @@ class RTIClient extends EventEmitter {
     intendedTag.toBinary().copy(msg, 5);
     try {
       Log.debug(this, () => {
-        return `Sending RTI Port Absent message, tag: ${String(intendedTag)}`;
+        return `Sending RTI Port Absent message, tag: ${intendedTag}`;
       });
       this.socket?.write(msg);
     } catch (e) {
       Log.error(this, () => {
-        return `${String(e)}`;
+        return `${e}`;
       });
     }
   }
@@ -813,7 +813,7 @@ class RTIClient extends EventEmitter {
             Log.debug(thiz, () => {
               return (
                 "Received MSG_TYPE_TIMESTAMP message from the RTI " +
-                `with startTime: ${String(startTime)}`
+                `with startTime: ${startTime}`
               );
             });
             thiz.emit("startTime", startTime);
@@ -981,7 +981,7 @@ class RTIClient extends EventEmitter {
           assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
           const tag = Tag.fromBinary(tagBuffer);
           Log.debug(thiz, () => {
-            return `PTAG value: ${String(tag)}`;
+            return `PTAG value: ${tag}`;
           });
           thiz.emit("provisionalTimeAdvanceGrant", tag);
           bufferIndex += 13;
@@ -1206,7 +1206,7 @@ export class FederatedApp extends App {
     } else {
       Log.global.debug(
         "Ignoring FederatedApp._shutdown() since EndOfExecution is already set earlier than current tag." +
-          `currentTag: ${String(this.util.getCurrentTag())} endTag: ${String(
+          `currentTag: ${this.util.getCurrentTag()} endTag: ${String(
             endTag
           )}`
       );
@@ -1254,7 +1254,7 @@ export class FederatedApp extends App {
           ) {
             Log.debug(
               this,
-              () => `Adding dummy event for time: ${String(physicalTime)}`
+              () => `Adding dummy event for time: ${physicalTime}`
             );
             this._addDummyEvent(new Tag(physicalTime));
             return false;
@@ -1484,7 +1484,7 @@ export class FederatedApp extends App {
    */
   public sendRTINextEventTag(nextTag: Tag): void {
     Log.debug(this, () => {
-      return `Sending RTI next event time with time: ${String(nextTag)}`;
+      return `Sending RTI next event time with time: ${nextTag}`;
     });
     const tag = nextTag.toBinary();
     this.rtiClient.sendRTINextEventTag(tag);
@@ -1495,7 +1495,7 @@ export class FederatedApp extends App {
    */
   public sendRTIStopRequest(stopTag: Tag): void {
     Log.debug(this, () => {
-      return `Sending RTI stop request with time: ${String(stopTag)}`;
+      return `Sending RTI stop request with time: ${stopTag}`;
     });
     this.stopRequestInfo = new StopRequestInfo(StopRequestState.SENT, stopTag);
     const tag = stopTag.toBinary();
@@ -1507,7 +1507,7 @@ export class FederatedApp extends App {
    */
   public sendRTIStopRequestReply(stopTag: Tag): void {
     Log.debug(this, () => {
-      return `Sending RTI stop request reply with time: ${String(stopTag)}`;
+      return `Sending RTI stop request reply with time: ${stopTag}`;
     });
     this.stopRequestInfo = new StopRequestInfo(StopRequestState.SENT, stopTag);
     const tag = stopTag.toBinary();
@@ -1578,7 +1578,7 @@ export class FederatedApp extends App {
         Log.info(this, () => Log.hr);
         Log.info(this, () => Log.hr);
         Log.info(this, () => {
-          return `Scheduling federate start for ${String(startTime)}`;
+          return `Scheduling federate start for ${startTime}`;
         });
         Log.info(this, () => Log.hr);
 
@@ -1646,7 +1646,7 @@ export class FederatedApp extends App {
         // FIXME: implement decentralized control.
 
         Log.debug(this, () => {
-          return `Timed Message received from RTI with tag ${String(tag)}.`;
+          return `Timed Message received from RTI with tag ${tag}.`;
         });
         // TODO (axmmisaka): use a type-safe interface, like io.ts?
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -1668,7 +1668,7 @@ export class FederatedApp extends App {
 
     this.rtiClient.on("timeAdvanceGrant", (tag: Tag) => {
       Log.debug(this, () => {
-        return `Time Advance Grant received from RTI for ${String(tag)}.`;
+        return `Time Advance Grant received from RTI for ${tag}.`;
       });
       if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
         // Update the greatest time advance grant and immediately
@@ -1701,7 +1701,7 @@ export class FederatedApp extends App {
 
     this.rtiClient.on("stopRequest", (tag: Tag) => {
       Log.debug(this, () => {
-        return `Stop Request received from RTI for ${String(tag)}.`;
+        return `Stop Request received from RTI for ${tag}.`;
       });
 
       if (this.util.getCurrentTag().isSmallerThan(tag)) {
@@ -1717,7 +1717,7 @@ export class FederatedApp extends App {
       // Note that this should not update the greatest TAG.
       // Instead this only updates the endOfExecution.
       Log.debug(this, () => {
-        return `Stop Request Granted received from RTI for ${String(tag)}.`;
+        return `Stop Request Granted received from RTI for ${tag}.`;
       });
       this.stopRequestInfo = new StopRequestInfo(StopRequestState.GRANTED, tag);
 
@@ -1735,7 +1735,7 @@ export class FederatedApp extends App {
 
     this.rtiClient.on("portAbsent", (portID: number, intendedTag: Tag) => {
       Log.debug(this, () => {
-        return `Port Absent received from RTI for ${String(intendedTag)}.`;
+        return `Port Absent received from RTI for ${intendedTag}.`;
       });
       // FIXME: Temporarily disabling portAbsent until the
       // input control reaction is implemented.

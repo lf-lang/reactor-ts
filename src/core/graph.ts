@@ -320,7 +320,7 @@ export class DependencyGraph<T> {
      */
     function printChain(node: T, chain: T[]): void {
       dot += "\n";
-      dot += `"${String(node)}"`;
+      dot += `"${node}"`;
       // TODO (axmmisaka): check if this is equivalent;
       // https://stackoverflow.com/a/47903498
       if (node?.toString === Object.prototype.toString) {
@@ -331,7 +331,7 @@ export class DependencyGraph<T> {
         );
       }
       while (chain.length > 0) {
-        dot += `->"${String(chain.pop())}"`;
+        dot += `->"${chain.pop()}"`;
       }
       dot += ";";
     }

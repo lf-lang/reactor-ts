@@ -40,7 +40,7 @@ export class Ping extends Reactor {
         const elapsedTime = this.util
           .getCurrentPhysicalTime()
           .subtract(startTime);
-        console.log(`Elapsed time: ${String(elapsedTime)}`);
+        console.log(`Elapsed time: ${elapsedTime}`);
         // this.util.requestShutdown();
       }
     );

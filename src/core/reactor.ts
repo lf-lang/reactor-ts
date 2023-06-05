@@ -130,8 +130,8 @@ export class Timer extends ScheduledTrigger<Tag> implements Read<Tag> {
 
   public toString(): string {
     return `Timer from ${this._getContainer()._getFullyQualifiedName()} 
-            with period: ${String(this.period)} 
-            offset: ${String(this.offset)}`;
+            with period: ${this.period} 
+            offset: ${this.offset}`;
   }
 
   public get(): Tag | Absent {
@@ -638,7 +638,7 @@ export abstract class Reactor extends Component {
           }
         });
       } else {
-        Log.debug(this, () => `>>>>>>>> not a dependency: ${String(t)}`);
+        Log.debug(this, () => `>>>>>>>> not a dependency: ${t}`);
       }
     }
 
@@ -777,7 +777,7 @@ export abstract class Reactor extends Component {
       if (trigs.list.length > 1) {
         // A procedure can only have a single trigger.
         throw new Error(
-          `Procedure "${String(procedure)}" has multiple triggers.`
+          `Procedure "${procedure}" has multiple triggers.`
         );
       }
       procedure.active = true;
@@ -1197,7 +1197,7 @@ export abstract class Reactor extends Component {
     src: IOPort<S>,
     dst: IOPort<R>
   ): void {
-    Log.debug(this, () => `connecting ${String(src)} and ${String(dst)}`);
+    Log.debug(this, () => `connecting ${src} and ${dst}`);
     // Add dependency implied by connection to local graph.
     this._dependencyGraph.addEdge(dst, src);
     // Register receiver for value propagation.
@@ -1234,7 +1234,7 @@ export abstract class Reactor extends Component {
     if (this.canConnect(src, dst)) {
       this._uncheckedConnect(src, dst);
     } else {
-      throw new Error(`ERROR connecting ${String(src)} to ${String(dst)}`);
+      throw new Error(`ERROR connecting ${src} to ${dst}`);
     }
   }
 
@@ -1291,10 +1291,10 @@ export abstract class Reactor extends Component {
     for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
       if (!this.canConnect(leftPorts[i], rightPorts[i])) {
         throw new Error(
-          `ERROR connecting ${String(leftPorts[i])} 
-                    to ${String(rightPorts[i])} 
-                    in multiple connections from ${String(src)} 
-                    to ${String(dest)}`
+          `ERROR connecting ${leftPorts[i]} 
+                    to ${rightPorts[i]} 
+                    in multiple connections from ${src} 
+                    to ${dest}`
         );
       }
     }
@@ -1310,7 +1310,7 @@ export abstract class Reactor extends Component {
     S extends R
   >(src: CallerPort<A, R>, dst: CalleePort<T, S>): void {
     if (this.canConnectCall(src, dst)) {
-      Log.debug(this, () => `connecting ${String(src)} and ${String(dst)}`);
+      Log.debug(this, () => `connecting ${src} and ${dst}`);
       // Treat connections between callers and callees separately.
       // Note that because A extends T and S extends R, we can safely
       // cast CalleePort<T,S> to CalleePort<A,R>.
@@ -1343,7 +1343,7 @@ export abstract class Reactor extends Component {
         throw new Error("No procedure linked to callee port");
       }
     } else {
-      throw new Error(`ERROR connecting ${String(src)} to ${String(dst)}`);
+      throw new Error(`ERROR connecting ${src} to ${dst}`);
     }
   }
 
@@ -1452,7 +1452,7 @@ export abstract class Reactor extends Component {
     ) {
       this._uncheckedDisconnect(src, dst);
     } else {
-      throw new Error(`ERROR disconnecting ${String(src)} to ${String(dst)}`);
+      throw new Error(`ERROR disconnecting ${src} to ${dst}`);
     }
   }
 
@@ -1460,7 +1460,7 @@ export abstract class Reactor extends Component {
     src: IOPort<S>,
     dst?: IOPort<R>
   ): void {
-    Log.debug(this, () => `disconnecting ${String(src)} and ${String(dst)}`);
+    Log.debug(this, () => `disconnecting ${src} and ${dst}`);
     if (dst instanceof IOPort) {
       const writer = dst.asWritable(this._getKey(dst));
       src.getManager(this._getKey(src)).delReceiver(writer as WritablePort<S>);
@@ -2004,7 +2004,7 @@ export class App extends Reactor {
         this.app._eventQ.push(e as TaggedEvent<Present>);
       }
 
-      Log.debug(this, () => `Scheduling with trigger: ${String(e.trigger)}`);
+      Log.debug(this, () => `Scheduling with trigger: ${e.trigger}`);
       Log.debug(
         this,
         () =>
@@ -2271,7 +2271,7 @@ export class App extends Reactor {
       } catch (e) {
         Log.error(
           this,
-          () => `Exception occurred in reaction: ${String(r)}: ${String(e)}`
+          () => `Exception occurred in reaction: ${r}: ${e}`
         );
         // Allow errors in reactions to kill execution.
         throw e;
@@ -2341,12 +2341,12 @@ export class App extends Reactor {
           this._eventQ.pop();
           Log.debug(
             this,
-            () => `Popped off the event queue: ${String(trigger)}`
+            () => `Popped off the event queue: ${trigger}`
           );
           // Handle timers.
           if (trigger instanceof Timer) {
             if (!trigger.period.isZero()) {
-              Log.debug(this, () => `Rescheduling timer ${String(trigger)}`);
+              Log.debug(this, () => `Rescheduling timer ${trigger}`);
 
               this.__runtime.schedule(
                 new TaggedEvent(
@@ -2446,7 +2446,7 @@ export class App extends Reactor {
    */
   protected _setAlarmOrYield(tag: Tag): void {
     Log.debug(this, () => {
-      return `In setAlarmOrYield for tag: ${String(tag)}`;
+      return `In setAlarmOrYield for tag: ${tag}`;
     });
 
     if (this._endOfExecution?.isSmallerThan(tag) ?? false) {
@@ -2501,7 +2501,7 @@ export class App extends Reactor {
       Log.debug(this, () => "Stop requested.");
       Log.debug(
         this,
-        () => `Setting end of execution to: ${String(this._endOfExecution)}`
+        () => `Setting end of execution to: ${this._endOfExecution}`
       );
 
       this.schedulable(this.shutdown).schedule(0, null);
@@ -2667,7 +2667,7 @@ export class App extends Reactor {
       );
       Log.debug(
         this,
-        () => `Execution timeout: ${String(this._executionTimeout)}`
+        () => `Execution timeout: ${this._executionTimeout}`
       );
 
       // If there is a known end of execution, schedule a shutdown reaction to that effect.
@@ -2694,7 +2694,7 @@ export class App extends Reactor {
     Log.info(this, () => Log.hr);
     Log.info(this, () => Log.hr);
 
-    Log.info(this, () => `>>> Start of execution: ${String(this._currentTag)}`);
+    Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
     // enqueue networkOutputControlReactions
     this.enqueueNetworkOutputControlReactions();

@@ -8,12 +8,12 @@ function print(
 ): void {
   const received = i.get();
   if (received != null) {
-    console.log(`Logging: ${String(received)}`);
+    console.log(`Logging: ${received}`);
     if (received === expected.get()) {
       this.util.requestStop();
     } else {
       this.util.requestErrorStop(
-        `Expected${String(expected.get())} but got ${String(received)}`
+        `Expected${expected.get()} but got ${received}`
       );
     }
   } else {
