@@ -21,6 +21,7 @@ export enum LogLevel {
 /**
  * Global logging facility that has multiple levels of severity.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Log {
   /**
    * Available log levels.
@@ -41,7 +42,7 @@ export class Log {
   /**
    * Map that keeps track of active loggers.
    */
-  private static loggers: Map<string, ULog> = new Map();
+  private static readonly loggers = new Map<string, ULog>();
 
   /**
    * Get the logger instance associated with the given module.
@@ -49,8 +50,8 @@ export class Log {
    * @param module The name associated with the logger
    */
   public static getInstance(module: string): ULog {
-    var logger = Log.loggers.get(module);
-    if (!logger) {
+    let logger = Log.loggers.get(module);
+    if (logger == null) {
       logger = ULog(module);
       Log.loggers.set(module, logger);
     }
@@ -66,8 +67,12 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static debug(obj: unknown, message: () => string, module?: string) {
-    if (module) {
+  public static debug(
+    obj: unknown,
+    message: () => string,
+    module?: string
+  ): void {
+    if (module != null) {
       if (Log.global.level >= LogLevel.DEBUG) {
         Log.getInstance(module).debug(message.call(obj));
       }
@@ -87,14 +92,18 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static error(obj: unknown, message: () => string, module?: string) {
-    if (module) {
+  public static error(
+    obj: unknown,
+    message: () => string,
+    module?: string
+  ): void {
+    if (module != null) {
       if (Log.global.level >= LogLevel.ERROR) {
         Log.getInstance(module).error(message.call(obj));
       }
     } else {
       if (Log.global.level >= LogLevel.ERROR) {
-        //Log.global.error(message.call(obj));
+        // Log.global.error(message.call(obj));
         console.error(message.call(obj));
       }
     }
@@ -109,8 +118,12 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static info(obj: unknown, message: () => string, module?: string) {
-    if (module) {
+  public static info(
+    obj: unknown,
+    message: () => string,
+    module?: string
+  ): void {
+    if (module != null) {
       if (Log.global.level >= LogLevel.INFO) {
         Log.getInstance(module).info(message.call(obj));
       }
@@ -130,8 +143,12 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static log(obj: unknown, message: () => string, module?: string) {
-    if (module) {
+  public static log(
+    obj: unknown,
+    message: () => string,
+    module?: string
+  ): void {
+    if (module != null) {
       if (Log.global.level >= LogLevel.LOG) {
         Log.getInstance(module).log(message.call(obj));
       }
@@ -151,8 +168,12 @@ export class Log {
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static warn(obj: unknown, message: () => string, module?: string) {
-    if (module) {
+  public static warn(
+    obj: unknown,
+    message: () => string,
+    module?: string
+  ): void {
+    if (module != null) {
       if (Log.global.level >= LogLevel.WARN) {
         Log.getInstance(module).warn(message.call(obj));
       }

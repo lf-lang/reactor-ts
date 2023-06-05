@@ -1,18 +1,15 @@
-import {
+import type {
   Sortable,
   PrioritySetElement,
-  Log,
   ReactionSandbox,
-  Timer,
   MutationSandbox,
   Reactor,
   TimeValue,
-  Tag,
   ArgList,
   Args,
-  Triggers,
-  Startup
+  Triggers
 } from "./internal";
+import {Log, Timer, Tag, Startup} from "./internal";
 
 /**
  * A number that indicates a reaction's position with respect to other
@@ -36,7 +33,7 @@ export class Reaction<T>
    * that spans the entire hierarchy of components inside the top-level reactor
    * that this reaction is also embedded in.
    */
-  private priority: Priority = 0; //Number.MAX_SAFE_INTEGER;
+  private priority: Priority = 0; // Number.MAX_SAFE_INTEGER;
 
   /**
    * Pointer to the next reaction, used by the runtime when this reaction is staged
@@ -63,13 +60,13 @@ export class Reaction<T>
    * @param late Function that gets execute when triggered and "late."
    */
   constructor(
-    private reactor: Reactor,
-    private sandbox: ReactionSandbox,
+    private readonly reactor: Reactor,
+    private readonly sandbox: ReactionSandbox,
     readonly trigs: Triggers,
     readonly args: Args<ArgList<T>>,
-    private react: (...args: ArgList<T>) => void,
+    private readonly react: (...args: ArgList<T>) => void,
     private deadline?: TimeValue,
-    private late: (...args: ArgList<T>) => void = () => {
+    private readonly late: (...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
     }
   ) {}
@@ -121,7 +118,7 @@ export class Reaction<T>
    * Returning true just signals that the scheduler shouldn't stage it twice.
    * @param node
    */
-  updateIfDuplicateOf(node: PrioritySetElement<Priority> | undefined) {
+  updateIfDuplicateOf(node: PrioritySetElement<Priority> | undefined): boolean {
     return Object.is(this, node);
   }
 
@@ -129,13 +126,13 @@ export class Reaction<T>
    * Invoke the react function in the appropriate sandbox and with the argument
    * list that was specified upon the construction of this reaction object.
    */
-  public doReact() {
+  public doReact(): void {
     Log.debug(
       this,
       () =>
         ">>> Reacting >>> " + this.constructor.name + " >>> " + this.toString()
     );
-    Log.debug(this, () => "Reaction deadline: " + this.deadline);
+    Log.debug(this, () => `Reaction deadline: ${this.deadline}`);
 
     // If this reaction was loaded onto the reaction queue but the trigger(s)
     // absorbed by a mutation that routed the value(s) elsewhere, then return
@@ -147,7 +144,7 @@ export class Reaction<T>
     // This is the case if the reaction has a defined timeout and
     // logical time + timeout < physical time
     if (
-      this.deadline &&
+      this.deadline != null &&
       this.sandbox.util
         .getCurrentTag()
         .getLaterTag(this.deadline)
@@ -177,7 +174,7 @@ export class Reaction<T>
    * dependencies on other reactions.
    * @param priority The priority for this reaction.
    */
-  public setPriority(priority: number) {
+  public setPriority(priority: number): void {
     this.priority = priority;
   }
 
@@ -185,12 +182,9 @@ export class Reaction<T>
    * Return string representation of the reaction.
    */
   public toString(): string {
-    return (
-      this.reactor._getFullyQualifiedName() +
-      "[R" +
-      this.reactor._getReactionIndex(this) +
-      "]"
-    );
+    return `${this.reactor._getFullyQualifiedName()}[R${this.reactor._getReactionIndex(
+      this
+    )}]`;
   }
 }
 
@@ -216,11 +210,8 @@ export class Mutation<T> extends Reaction<T> {
    * @override
    */
   public toString(): string {
-    return (
-      this.parent._getFullyQualifiedName() +
-      "[M" +
-      this.parent._getReactionIndex(this) +
-      "]"
-    );
+    return `${this.parent._getFullyQualifiedName()}[M${this.parent._getReactionIndex(
+      this
+    )}]`;
   }
 }

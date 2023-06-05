@@ -1,18 +1,15 @@
-import {
+import type {
   Absent,
-  InPort,
   IOPort,
   MultiRead,
-  OutPort,
   Present,
   Reactor,
   Runtime,
   WritablePort,
-  Trigger,
   TriggerManager,
-  Reaction,
-  Component
+  Reaction
 } from "./internal";
+import {InPort, OutPort, Trigger, Component} from "./internal";
 import {WritableMultiPort} from "./port";
 
 /**
@@ -54,7 +51,7 @@ export abstract class MultiPort<T extends Present>
   public static values<T extends Present>(
     ports: Array<IOPort<T>>
   ): Array<T | Absent> {
-    let values = new Array<T | Absent>(ports.length);
+    const values = new Array<T | Absent>(ports.length);
     for (let i = 0; i < values.length; i++) {
       values[i] = ports[i].get();
     }
@@ -66,9 +63,9 @@ export abstract class MultiPort<T extends Present>
    * @param container the reactor that will contain the new instance
    * @param width the number of channels of newly created instance
    */
-  constructor(private container: Reactor, width: number) {
+  constructor(private readonly container: Reactor, width: number) {
     super(container);
-    this._channels = new Array(width);
+    this._channels = new Array<IOPort<T>>(width);
     this._width = width;
   }
 
@@ -76,7 +73,7 @@ export abstract class MultiPort<T extends Present>
    * Obtain a writable version of this port, provided that the caller holds the required key.
    * @param key
    */
-  public asWritable(key: Symbol | undefined): WritableMultiPort<T> {
+  public asWritable(key: symbol | undefined): WritableMultiPort<T> {
     if (this._key === key) {
       return this.writer;
     }
@@ -91,8 +88,8 @@ export abstract class MultiPort<T extends Present>
   }
 
   /** @inheritdoc */
-  getManager(key: Symbol | undefined): TriggerManager {
-    if (this._key == key) {
+  getManager(key: symbol | undefined): TriggerManager {
+    if (this._key === key) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");
@@ -128,7 +125,7 @@ export abstract class MultiPort<T extends Present>
    */
   protected manager = new (class implements TriggerManager {
     /** @inheritdoc */
-    constructor(private port: MultiPort<T>) {}
+    constructor(private readonly port: MultiPort<T>) {}
 
     /** @inheritdoc */
     getContainer(): Reactor {
@@ -137,22 +134,18 @@ export abstract class MultiPort<T extends Present>
 
     /** @inheritdoc */
     addReaction(reaction: Reaction<unknown>): void {
-      this.port
-        .channels()
-        .forEach((channel) =>
-          channel
-            .getManager(this.getContainer()._getKey(channel))
-            .addReaction(reaction)
-        );
+      this.port.channels().forEach((channel) => {
+        channel
+          .getManager(this.getContainer()._getKey(channel))
+          .addReaction(reaction);
+      });
     }
 
     /** @inheritdoc */
     delReaction(reaction: Reaction<unknown>): void {
-      this.port
-        .channels()
-        .forEach((channel) =>
-          channel.getManager(this.port._key).delReaction(reaction)
-        );
+      this.port.channels().forEach((channel) => {
+        channel.getManager(this.port._key).delReaction(reaction);
+      });
     }
   })(this);
 
@@ -170,7 +163,7 @@ export abstract class MultiPort<T extends Present>
    * Inner class instance to gain access to MultiWrite<T> interface.
    */
   protected writer = new (class extends WritableMultiPort<T> {
-    getPorts(): IOPort<T>[] {
+    getPorts(): Array<IOPort<T>> {
       return this.port._channels;
     }
 
@@ -180,9 +173,9 @@ export abstract class MultiPort<T extends Present>
     private readonly cache: Array<WritablePort<T>>;
 
     /** @inheritdoc */
-    constructor(private port: MultiPort<T>) {
+    constructor(private readonly port: MultiPort<T>) {
       super();
-      this.cache = new Array();
+      this.cache = [];
     }
 
     /** @inheritdoc */
@@ -213,7 +206,7 @@ export abstract class MultiPort<T extends Present>
     }
   })(this);
 
-  public toString() {
+  public toString(): string {
     return (
       this.container.toString() +
       "." +

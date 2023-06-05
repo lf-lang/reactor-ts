@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - master
   pull_request:
   # Also allow running this workflow manually from the Actions tab.
   workflow_dispatch:
@@ -58,4 +60,4 @@ jobs:
         if: ${{ runner.os == 'macOS' || runner.os == 'Linux' }}
       - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew test --tests org.lflang.tests.runtime.TypeScriptTest.* -Druntime="file://${{ github.workspace }}/reactor-ts"
+          ./gradlew targetTest -Ptarget=TypeScript -Druntime="file://${{ github.workspace }}/reactor-ts"

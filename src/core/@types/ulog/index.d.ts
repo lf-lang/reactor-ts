@@ -3,6 +3,7 @@
  * @see {@link https://www.npmjs.com/package/ulog}
  */
 declare module "ulog" {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   export default function ULog(module: string): ULog;
 }
 
@@ -19,52 +20,52 @@ interface ULog {
    * This logs a DEBUG message.
    * @param message
    */
-  debug(message: string): void;
+  debug: (message: string) => void;
 
   /**
    * Enables debug mode for the loggers listed in str.
    * @param str
    */
-  enable(str: string): void;
+  enable: (str: string) => void;
 
   /**
    * Tests whether the logger is currently in debug mode.
    * @param module
    */
-  enabled(module: string): boolean;
+  enabled: (module: string) => boolean;
 
   /**
    * Disables debug mode for all loggers.
    */
-  disable(): void;
+  disable: () => void;
 
   /**
    * This logs an ERROR message.
    * @param message
    */
-  error(message: string): void;
+  error: (message: string) => void;
 
   /**
    * This logs an INFO message.
    * @param message
    */
-  info(message: string): void;
+  info: (message: string) => void;
 
   /**
    * This logs a LOG message.
    * @param message
    */
-  log(message: string): void;
+  log: (message: string) => void;
 
   /**
    * This logs a TRACE message.
    * @param message
    */
-  trace(message: string): void;
+  trace: (message: string) => void;
 
   /**
    * This logs a WARN message.
    * @param message
    */
-  warn(message: string): void;
+  warn: (message: string) => void;
 }

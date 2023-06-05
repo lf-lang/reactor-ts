@@ -1,3 +1,4 @@
+import type {WritablePort} from "../core/internal";
 import {
   Args,
   Parameter,
@@ -10,16 +11,18 @@ import {
   App,
   TimeValue,
   Origin,
-  Log,
-  WritablePort
+  Log
 } from "../core/internal";
 
 Log.global.level = Log.levels.INFO;
 class Ramp extends Reactor {
   next: Action<number>;
+
   until: Parameter<number>;
-  value: OutPort<number> = new OutPort(this);
-  constructor(parent: Reactor, until: number = 100000, period: TimeValue) {
+
+  value = new OutPort<number>(this);
+
+  constructor(parent: Reactor, until = 100000, period: TimeValue) {
     super(parent);
     this.until = new Parameter(until);
     this.next = new Action<number>(this, Origin.logical, period);
@@ -31,7 +34,7 @@ class Ramp extends Reactor {
         this.writable(this.value)
       ),
       function (this, next, until, value) {
-        let n = next.get();
+        const n = next.get();
         if (n === undefined) {
           next.schedule(0, 2);
         } else {
@@ -48,14 +51,19 @@ class Ramp extends Reactor {
 }
 
 class Filter extends Reactor {
-  inp: InPort<number> = new InPort(this);
-  out: OutPort<number> = new OutPort(this);
+  inp = new InPort<number>(this);
+
+  out = new OutPort<number>(this);
+
   startPrime: Parameter<number>;
-  localPrimes: State<Array<number>>;
+
+  localPrimes: State<number[]>;
+
   hasChild: State<boolean>;
+
   constructor(parent: Reactor, startPrime: number, numberOfPrimes: number) {
     super(parent);
-    //console.log("Created filter with prime: " + prime)
+    // console.log("Created filter with prime: " + prime)
     this.startPrime = new Parameter(startPrime);
     this.localPrimes = new State(new Array<number>());
     this.hasChild = new State(false);
@@ -69,12 +77,12 @@ class Filter extends Reactor {
         this.localPrimes
       ),
       function (this, inp, out, prime, hasChild, localPrimes) {
-        let p = inp.get();
+        const p = inp.get();
         if (p !== undefined) {
-          let seen = localPrimes.get();
-          let size = seen.length;
+          const seen = localPrimes.get();
+          const size = seen.length;
           let div = false;
-          for (let q of seen) {
+          for (const q of seen) {
             if (Number.isInteger(p / q)) {
               div = true;
               break;
@@ -84,17 +92,17 @@ class Filter extends Reactor {
           if (!div) {
             if (size < numberOfPrimes) {
               seen.push(p);
-              console.log("Found new prime number " + p);
+              console.log(`Found new prime number ${p}`);
             } else {
               // Potential prime found.
               if (!hasChild.get()) {
-                let n = new Filter(this.getReactor(), p, numberOfPrimes);
-                //this.start(n)
+                const n = new Filter(this.getReactor(), p, numberOfPrimes);
+                // this.start(n)
                 // console.log("CREATING...")
                 // let x = this.create(Filter, [this.getReactor(), p])
                 // console.log("CREATED: " + x._getFullyQualifiedName())
                 // FIXME: weird hack. Maybe just accept writable ports as well?
-                var port = (out as unknown as WritablePort<number>).getPort();
+                const port = (out as unknown as WritablePort<number>).getPort();
                 this.connect(port, n.inp);
                 // FIXME: this updates the dependency graph, but it doesn't redo the topological sort
                 // For a pipeline like this one, it is not necessary, but in general it is.
@@ -113,12 +121,14 @@ class Filter extends Reactor {
 
 class Sieve extends App {
   source: Ramp;
+
   filter: Filter;
+
   constructor(
     name: string,
     timeout: TimeValue | undefined = undefined,
-    keepAlive: boolean = false,
-    fast: boolean = false,
+    keepAlive = false,
+    fast = false,
     success?: () => void,
     fail?: () => void
   ) {
@@ -129,5 +139,5 @@ class Sieve extends App {
   }
 }
 
-let sieve = new Sieve("Sieve");
+const sieve = new Sieve("Sieve");
 sieve._start();

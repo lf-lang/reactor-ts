@@ -1,4 +1,5 @@
-import {Reactor, App, Runtime, MultiPort, IOPort, Bank} from "./internal";
+import type {Runtime} from "./internal";
+import {Reactor, App, MultiPort, IOPort, Bank} from "./internal";
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -16,14 +17,16 @@ export abstract class Component {
    * A symbol that identifies this component, and it also used to selectively
    * grant access to its privileged functions.
    */
-  protected _key: Symbol = Symbol();
+  // TODO (axmmisaka): Is instantiating in abstract class a good idea...?
+  // eslint-disable-next-line symbol-description
+  protected _key = Symbol();
 
   /**
    * The container of this component. Each component is contained by a
    * reactor. Only instances of `App`, which denote top-level reactors,
    * are self-contained.
    */
-  private _container: Reactor;
+  private readonly _container: Reactor;
 
   /**
    * Create a new component and register it with the given container.
@@ -64,7 +67,7 @@ export abstract class Component {
    * of an object that subclasses `Component`. If it is called more than once
    * a runtime error results.
    */
-  protected _linkToRuntimeObject() {
+  protected _linkToRuntimeObject(): void {
     this._getContainer()._requestRuntimeObject(this);
   }
 
@@ -126,12 +129,16 @@ export abstract class Component {
    * @param object the assumed container of the component
    * @returns the key of the entry that matches the component
    */
-  public static keyOfMatchingEntry(component: Component, object: Object) {
+  public static keyOfMatchingEntry(
+    component: Component,
+    object: object
+  ): string {
     for (const [key, value] of Object.entries(object)) {
       if (value === component) {
         return `${key}`;
       }
     }
+    return "";
   }
 
   /**
@@ -143,10 +150,13 @@ export abstract class Component {
    * constituents is the given port
    * @returns an identifier for the port based on its location in a matching multiport
    */
-  public static keyOfMatchingMultiport(port: Component, reactor: Reactor) {
+  public static keyOfMatchingMultiport(
+    port: Component,
+    reactor: Reactor
+  ): string {
     for (const [key, value] of Object.entries(reactor)) {
       if (value instanceof MultiPort) {
-        let channels = value.channels();
+        const channels = value.channels();
         for (let i = 0; i < channels.length; i++) {
           if (channels[i] === port) {
             return `${key}[${i}]`;
@@ -154,12 +164,13 @@ export abstract class Component {
         }
       }
     }
+    return "";
   }
 
-  public static keyOfMatchingBank(member: Component, reactor: Reactor) {
+  public static keyOfMatchingBank(member: Component, reactor: Reactor): string {
     for (const [key, value] of Object.entries(reactor)) {
       if (value instanceof Bank) {
-        let members = value.all();
+        const members = value.all();
         for (let i = 0; i < members.length; i++) {
           if (members[i] === member) {
             return `${key}[${i}]`;
@@ -167,6 +178,7 @@ export abstract class Component {
         }
       }
     }
+    return "";
   }
 
   /**
@@ -174,7 +186,7 @@ export abstract class Component {
    * If no such string was found, return the name of the constructor.
    */
   public _getName(): string {
-    var name;
+    let name;
 
     if (this instanceof App) {
       name = this._name;
@@ -182,15 +194,15 @@ export abstract class Component {
       name = Component.keyOfMatchingEntry(this, this._container);
     }
 
-    if (!name && this instanceof IOPort) {
+    if (name === "" && this instanceof IOPort) {
       name = Component.keyOfMatchingMultiport(this, this._container);
     }
 
-    if (!name && this instanceof Reactor) {
+    if (name === "" && this instanceof Reactor) {
       name = Component.keyOfMatchingBank(this, this._container);
     }
 
-    if (name) {
+    if (name !== "") {
       return name;
     } else {
       return this.constructor.name;

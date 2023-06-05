@@ -1,6 +1,12 @@
-import type {Absent, Present, Read, Sched} from "./internal";
-import {
+import type {
+  Absent,
+  Present,
+  Read,
+  Sched,
   Reactor,
+  TriggerManager
+} from "./internal";
+import {
   Log,
   TaggedEvent,
   getCurrentPhysicalTime,
@@ -8,8 +14,7 @@ import {
   Tag,
   TimeUnit,
   TimeValue,
-  ScheduledTrigger,
-  TriggerManager
+  ScheduledTrigger
 } from "./internal";
 
 const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
@@ -37,7 +42,9 @@ export class Action<T extends Present>
   implements Read<T>
 {
   readonly origin: Origin;
+
   readonly minDelay: TimeValue;
+
   readonly minInterArrival: TimeValue = defaultMIT;
 
   public get(): T | Absent {
@@ -48,15 +55,15 @@ export class Action<T extends Present>
     }
   }
 
-  public asSchedulable(key: Symbol | undefined): Sched<T> {
+  public asSchedulable(key: symbol | undefined): Sched<T> {
     if (this._key === key) {
       return this.scheduler;
     }
     throw Error("Invalid reference to container.");
   }
 
-  public getManager(key: Symbol | undefined): TriggerManager {
-    if (this._key == key) {
+  public getManager(key: symbol | undefined): TriggerManager {
+    if (this._key === key) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");
@@ -68,25 +75,27 @@ export class Action<T extends Present>
     get(): T | undefined {
       return this.action.get();
     }
-    constructor(private action: Action<T>) {
+
+    constructor(private readonly action: Action<T>) {
       super();
     }
+
     schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
       if (!(extraDelay instanceof TimeValue)) {
         extraDelay = TimeValue.secs(0);
       }
 
-      var tag = this.action.runtime.util.getCurrentTag();
-      var delay = this.action.minDelay.add(extraDelay);
+      let tag = this.action.runtime.util.getCurrentTag();
+      const delay = this.action.minDelay.add(extraDelay);
 
       tag = tag.getLaterTag(delay);
 
-      if (this.action.origin == Origin.physical) {
+      if (this.action.origin === Origin.physical) {
         // If the resulting timestamp from delay is less than the current physical time
         // on the platform, then the timestamp becomes the current physical time.
         // Otherwise the tag is computed like a logical action's tag.
 
-        let physicalTime = getCurrentPhysicalTime();
+        const physicalTime = getCurrentPhysicalTime();
         if (tag.time.isEarlierThan(physicalTime)) {
           tag = new Tag(getCurrentPhysicalTime(), 0);
         } else {
@@ -103,10 +112,12 @@ export class Action<T extends Present>
           !intendedTag.isGreaterThan(this.action.runtime.util.getCurrentTag())
         ) {
           throw new Error(
-            "Intended tag must be greater than current tag. Intended tag: " +
-              intendedTag +
-              " Current tag: " +
-              this.action.runtime.util.getCurrentTag()
+            `Intended tag must be greater than current tag. Intended tag: ${String(
+              intendedTag
+            )}` +
+              ` Current tag: ${String(
+                this.action.runtime.util.getCurrentTag()
+              )}`
           );
         }
         if (
@@ -117,17 +128,20 @@ export class Action<T extends Present>
         ) {
           throw new Error(
             "Intended tag must be greater than or equal to current tag" +
-              ", when the last TAG is provisional. Intended tag: " +
-              intendedTag +
-              " Current tag: " +
-              this.action.runtime.util.getCurrentTag()
+              `, when the last TAG is provisional. Intended tag: ${String(
+                intendedTag
+              )}` +
+              ` Current tag: ${String(
+                this.action.runtime.util.getCurrentTag()
+              )}`
           );
         }
         Log.debug(
           this,
           () =>
-            "Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: " +
-            intendedTag
+            `Using intended tag from RTI, similar to schedule_at_tag(tag) with an intended tag: ${String(
+              intendedTag
+            )}`
         );
         tag = intendedTag;
       } else if (delay.isEqualTo(TimeValue.zero())) {
@@ -136,13 +150,10 @@ export class Action<T extends Present>
 
       Log.debug(
         this,
-        () =>
-          "Scheduling " +
-          this.action.origin +
-          " action " +
-          this.action._getFullyQualifiedName() +
-          " with tag: " +
-          tag
+        () => `Scheduling ${this.action.origin} action 
+                ${String(
+                  this.action._getFullyQualifiedName()
+                )} with tag: ${tag}`
       );
 
       this.action.runtime.schedule(new TaggedEvent(this.action, tag, value));
@@ -171,7 +182,7 @@ export class Action<T extends Present>
     this.minDelay = minDelay;
   }
 
-  public toString() {
+  public toString(): string {
     return this._getFullyQualifiedName();
   }
 }
