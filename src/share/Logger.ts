@@ -1,27 +1,19 @@
-import {
-  Reactor,
-  Read,
-  Triggers,
-  Args,
-  Present,
-  ReactionSandbox,
-  InPort,
-  State
-} from "../core/internal";
+import type {Read, Present, ReactionSandbox} from "../core/internal";
+import {Reactor, Triggers, Args, InPort, State} from "../core/internal";
 
 function print(
   this: ReactionSandbox,
   i: Read<unknown>,
   expected: State<unknown>
-) {
+): void {
   const received = i.get();
-  if (received) {
-    console.log("Logging: " + received);
-    if (received == expected.get()) {
+  if (received != null) {
+    console.log(`Logging: ${received}`);
+    if (received === expected.get()) {
       this.util.requestStop();
     } else {
       this.util.requestErrorStop(
-        "Expected" + expected.get() + " but got " + received
+        `Expected${expected.get()} but got ${received}`
       );
     }
   } else {

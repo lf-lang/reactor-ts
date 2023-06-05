@@ -1,4 +1,4 @@
-import {Read, Write} from "./internal";
+import type {Read, Write} from "./internal";
 
 /**
  * A state variable. This class refines the Read interface by letting `get`
@@ -23,7 +23,7 @@ export class State<T> implements Read<T>, Write<T> {
    * Set the current value of this state variable.
    * @param value
    */
-  set(value: T) {
+  set(value: T): void {
     this.value = value;
   }
 }

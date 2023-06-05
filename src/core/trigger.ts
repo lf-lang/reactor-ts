@@ -1,11 +1,19 @@
-import {Component, TaggedEvent, Reaction, Tag} from "./internal";
+import {Component} from "./internal";
 
-import type {Reactor, Runtime, Absent, Present} from "./internal";
+import type {
+  Reactor,
+  Runtime,
+  Absent,
+  Present,
+  TaggedEvent,
+  Reaction,
+  Tag
+} from "./internal";
 
 export interface TriggerManager {
-  getContainer(): Reactor;
-  addReaction(reaction: Reaction<unknown>): void;
-  delReaction(reaction: Reaction<unknown>): void;
+  getContainer: () => Reactor;
+  addReaction: (reaction: Reaction<unknown>) => void;
+  delReaction: (reaction: Reaction<unknown>) => void;
 }
 
 /**
@@ -15,7 +23,7 @@ export abstract class Trigger extends Component {
   /**
    * Reactions to trigger.
    */
-  protected reactions: Set<Reaction<unknown>> = new Set();
+  protected reactions = new Set<Reaction<unknown>>();
 
   /**
    * Request the manager of this trigger. The request will only be honored
@@ -24,14 +32,14 @@ export abstract class Trigger extends Component {
    * wrong key is supplied, return undefined.
    * @param key The private key embedded in this trigger.
    */
-  abstract getManager(key: Symbol | undefined): TriggerManager;
+  abstract getManager(key: symbol | undefined): TriggerManager;
 
   /**
    * Return whether or not this trigger is present.
    */
   abstract isPresent(): boolean;
 
-  public getContainer() {
+  public getContainer(): Reactor {
     return this._getContainer();
   }
 }
@@ -41,6 +49,7 @@ export abstract class Trigger extends Component {
  */
 export abstract class ScheduledTrigger<T extends Present> extends Trigger {
   protected value: T | Absent = undefined;
+
   protected tag: Tag | undefined;
 
   protected runtime!: Runtime;
@@ -62,7 +71,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
     if (e.trigger === this) {
       this.value = e.value;
       this.tag = e.tag;
-      for (let r of this.reactions) {
+      for (const r of this.reactions) {
         this.runtime.stage(r);
       }
     } else {
@@ -70,8 +79,8 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
     }
   }
 
-  public getManager(key: Symbol | undefined): TriggerManager {
-    if (this._key == key) {
+  public getManager(key: symbol | undefined): TriggerManager {
+    if (this._key === key) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");
@@ -82,7 +91,7 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
    * logical time. This result is not affected by whether it
    * has a value.
    */
-  public isPresent() {
+  public isPresent(): boolean {
     if (this.tag === undefined) {
       // This action has never been scheduled before.
       return false;
@@ -95,20 +104,23 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
   }
 
   protected manager = new (class implements TriggerManager {
-    constructor(private trigger: ScheduledTrigger<T>) {}
+    constructor(private readonly trigger: ScheduledTrigger<T>) {}
+
     getContainer(): Reactor {
       return this.trigger._getContainer();
     }
+
     addReaction(reaction: Reaction<unknown>): void {
       this.trigger.reactions.add(reaction);
     }
+
     delReaction(reaction: Reaction<unknown>): void {
       this.trigger.reactions.delete(reaction);
     }
   })(this);
 
-  public _receiveRuntimeObject(runtime: Runtime) {
-    if (!this.runtime) {
+  public _receiveRuntimeObject(runtime: Runtime): void {
+    if (this.runtime == null) {
       this.runtime = runtime;
     } else {
       throw new Error("Can only establish link to runtime once.");

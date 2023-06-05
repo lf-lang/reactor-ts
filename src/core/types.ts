@@ -1,4 +1,4 @@
-import {Tag, TimeValue, Trigger} from "./internal";
+import type {Tag, TimeValue, Trigger} from "./internal";
 
 /**
  * A variable can be read, written to, or scheduled. Variables may be passed to
@@ -30,14 +30,14 @@ export type MultiReadWrite<T> = MultiRead<T> & MultiWrite<T>;
  * Interface for readable variables.
  */
 export interface Read<T> {
-  get(): T | Absent;
+  get: () => T | Absent;
 }
 
 export interface MultiRead<T> {
   /**
    * Return the number of channels.
    */
-  width(): number;
+  width: () => number;
 
   /**
    * Given an index that identifies a particular channel, return the current
@@ -45,23 +45,23 @@ export interface MultiRead<T> {
    * @param index the index that identifies the channel to return the value of
    * @returns the value that corresponds to the identified channel
    */
-  get(index: number): T | Absent;
+  get: (index: number) => T | Absent;
 }
 
 export interface MultiWrite<T> {
   /**
    * Return the number of channels.
    */
-  width(): number;
+  width: () => number;
 
   set: (index: number, value: T) => void;
 
-  values(): Array<T | Absent>;
+  values: () => Array<T | Absent>;
 }
 
-//--------------------------------------------------------------------------//
+// --------------------------------------------------------------------------//
 // Types                                                                    //
-//--------------------------------------------------------------------------//
+// --------------------------------------------------------------------------//
 
 /**
  * Type that denotes the absence of a value.
@@ -93,16 +93,18 @@ export type Present =
 
 export class Args<T extends Variable[]> {
   tuple: T;
+
   constructor(...args: T) {
     this.tuple = args;
   }
 }
 
 export class Triggers {
-  list: Array<Trigger | Array<Trigger>>;
+  list: Array<Trigger | Trigger[]>;
+
   constructor(
-    trigger: Trigger | Array<Trigger>,
-    ...triggers: Array<Trigger | Array<Trigger>>
+    trigger: Trigger | Trigger[],
+    ...triggers: Array<Trigger | Trigger[]>
   ) {
     this.list = triggers.concat(trigger);
   }

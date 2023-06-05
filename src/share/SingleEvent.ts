@@ -1,21 +1,16 @@
-import {
-  Reactor,
-  Timer,
+import type {
   Write,
-  Triggers,
-  Args,
-  ArgList,
   ReactionSandbox,
   Present,
-  Parameter,
-  OutPort
+  Parameter
 } from "../core/internal";
+import {Reactor, Timer, Triggers, Args, OutPort} from "../core/internal";
 
 function produceOutput<S>(
   this: ReactionSandbox,
   o: Write<S>,
   payload: Parameter<S>
-) {
+): void {
   o.set(payload.get());
 
   // FIXME: create a test that actually tests double sets.
@@ -28,9 +23,10 @@ function produceOutput<S>(
 
 export class SingleEvent<T extends Present> extends Reactor {
   o: OutPort<T> = new OutPort<T>(this);
+
   t1: Timer = new Timer(this, 0, 0);
 
-  constructor(parent: Reactor, private payload: Parameter<T>) {
+  constructor(parent: Reactor, private readonly payload: Parameter<T>) {
     super(parent);
     this.addReaction(
       new Triggers(this.t1),

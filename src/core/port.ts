@@ -1,19 +1,18 @@
-import {
+import type {
   Reaction,
   Reactor,
   Runtime,
   Tag,
-  Trigger,
   TriggerManager,
   Absent,
   MultiReadWrite,
   Present,
-  ReadWrite,
-  Log
+  ReadWrite
 } from "./internal";
+import {Trigger, Log} from "./internal";
 
 export abstract class Port<T extends Present> extends Trigger {
-  protected receivers: Set<WritablePort<T>> = new Set();
+  protected receivers = new Set<WritablePort<T>>();
 
   protected runtime!: Runtime;
 
@@ -28,8 +27,8 @@ export abstract class Port<T extends Present> extends Trigger {
   /** The current value associated with this port. */
   protected value: T | Absent;
 
-  public _receiveRuntimeObject(runtime: Runtime) {
-    if (!this.runtime) {
+  public _receiveRuntimeObject(runtime: Runtime): void {
+    if (this.runtime == null) {
       this.runtime = runtime;
     } else {
       throw new Error(
@@ -42,11 +41,14 @@ export abstract class Port<T extends Present> extends Trigger {
   /**
    * Returns true if the connected port's value has been set; false otherwise
    */
-  public isPresent() {
+  public isPresent(): boolean {
     Log.debug(this, () => "In isPresent()...");
-    Log.debug(this, () => "value: " + this.value?.toString());
-    Log.debug(this, () => "tag: " + this.tag);
-    Log.debug(this, () => "time: " + this.runtime.util.getCurrentLogicalTime());
+    Log.debug(this, () => `value: ${this.value?.toString()}`);
+    Log.debug(this, () => `tag: ${this.tag}`);
+    Log.debug(
+      this,
+      () => `time: ${this.runtime.util.getCurrentLogicalTime()}`
+    );
 
     if (
       this.value !== undefined &&
@@ -86,7 +88,13 @@ export abstract class WritableMultiPort<T extends Present>
  * Interface for a writable multi port, intended as a wrapper for a multi port.
  */
 interface IOPortManager<T extends Present> extends TriggerManager {
+  // TODO (axmmisaka): Function property is better in terms of type checking
+  // as tsc will check additional info; yet that additional check will cause massive issues
+  // and therefore this linter rule is disabled and method signature is used.
+  // However, this indicates that there are typing issues and needs to be addressed.
+  // eslint-disable-next-line @typescript-eslint/method-signature-style
   addReceiver(port: WritablePort<T>): void;
+  // eslint-disable-next-line @typescript-eslint/method-signature-style
   delReceiver(port: WritablePort<T>): void;
 }
 
@@ -107,7 +115,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * Only the holder of the key may obtain a writable port.
    * @param key
    */
-  public asWritable(key: Symbol | undefined): WritablePort<T> {
+  public asWritable(key: symbol | undefined): WritablePort<T> {
     if (this._key === key) {
       return this.writer;
     }
@@ -122,8 +130,8 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * @param container Reference to the container of this port
    * (or the container thereof).
    */
-  public getManager(key: Symbol | undefined): IOPortManager<T> {
-    if (this._key == key) {
+  public getManager(key: symbol | undefined): IOPortManager<T> {
+    if (this._key === key) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");
@@ -133,7 +141,7 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * Inner class instance to gain access to Write<T> interface.
    */
   protected writer = new (class extends WritablePort<T> {
-    constructor(private port: IOPort<T>) {
+    constructor(private readonly port: IOPort<T>) {
       super();
     }
 
@@ -141,9 +149,13 @@ export abstract class IOPort<T extends Present> extends Port<T> {
       this.port.value = value;
       this.port.tag = this.port.runtime.util.getCurrentTag();
       // Set values in downstream receivers.
-      this.port.receivers.forEach((p) => p.set(value));
+      this.port.receivers.forEach((p) => {
+        p.set(value);
+      });
       // Stage triggered reactions for execution.
-      this.port.reactions.forEach((r) => this.port.runtime.stage(r));
+      this.port.reactions.forEach((r) => {
+        this.port.runtime.stage(r);
+      });
     }
 
     public get(): T | Absent {
@@ -163,7 +175,8 @@ export abstract class IOPort<T extends Present> extends Port<T> {
    * Inner class instance to let the container configure this port.
    */
   protected manager: IOPortManager<T> = new (class implements IOPortManager<T> {
-    constructor(private port: IOPort<T>) {}
+    constructor(private readonly port: IOPort<T>) {}
+
     getContainer(): Reactor {
       return this.port._getContainer();
     }
@@ -177,18 +190,21 @@ export abstract class IOPort<T extends Present> extends Port<T> {
     addReceiver(port: WritablePort<T>): void {
       this.port.receivers.add(port);
       if (this.port.runtime.isRunning()) {
-        let val = this.port.get();
+        const val = this.port.get();
         if (val !== undefined) {
           port.set(val);
         }
       }
     }
+
     delReceiver(port: WritablePort<T>): void {
       this.port.receivers.delete(port);
     }
+
     addReaction(reaction: Reaction<unknown>): void {
       this.port.reactions.add(reaction);
     }
+
     delReaction(reaction: Reaction<unknown>): void {
       this.port.reactions.delete(reaction);
     }
