@@ -776,9 +776,7 @@ export abstract class Reactor extends Component {
       );
       if (trigs.list.length > 1) {
         // A procedure can only have a single trigger.
-        throw new Error(
-          `Procedure "${procedure}" has multiple triggers.`
-        );
+        throw new Error(`Procedure "${procedure}" has multiple triggers.`);
       }
       procedure.active = true;
       this._recordDeps(procedure);
@@ -2269,10 +2267,7 @@ export class App extends Reactor {
         r = this._reactionQ.pop();
         r.doReact();
       } catch (e) {
-        Log.error(
-          this,
-          () => `Exception occurred in reaction: ${r}: ${e}`
-        );
+        Log.error(this, () => `Exception occurred in reaction: ${r}: ${e}`);
         // Allow errors in reactions to kill execution.
         throw e;
       }
@@ -2339,10 +2334,7 @@ export class App extends Reactor {
         while (nextEvent?.tag.isSimultaneousWith(this._currentTag) ?? false) {
           const trigger = nextEvent?.trigger;
           this._eventQ.pop();
-          Log.debug(
-            this,
-            () => `Popped off the event queue: ${trigger}`
-          );
+          Log.debug(this, () => `Popped off the event queue: ${trigger}`);
           // Handle timers.
           if (trigger instanceof Timer) {
             if (!trigger.period.isZero()) {
@@ -2665,10 +2657,7 @@ export class App extends Reactor {
         this._startOfExecution.add(this._executionTimeout),
         0
       );
-      Log.debug(
-        this,
-        () => `Execution timeout: ${this._executionTimeout}`
-      );
+      Log.debug(this, () => `Execution timeout: ${this._executionTimeout}`);
 
       // If there is a known end of execution, schedule a shutdown reaction to that effect.
       this.__runtime.schedule(

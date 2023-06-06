@@ -17,7 +17,9 @@ module.exports = {
     "@typescript-eslint/quotes": ["error", "double"],
     // This is to be addressed separately later
     "@typescript-eslint/no-this-alias": "off",
+    // This two might cause redundant String() or .toString() calls
     "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/no-base-to-string": "off",
     "@typescript-eslint/naming-convention": [
       "warn",
       {
