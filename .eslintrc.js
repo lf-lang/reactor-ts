@@ -15,8 +15,6 @@ module.exports = {
   root: true,
   rules: {
     "@typescript-eslint/quotes": ["error", "double"],
-    // This is to be addressed separately later
-    "@typescript-eslint/no-this-alias": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/naming-convention": [
       "warn",
