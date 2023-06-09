@@ -560,7 +560,6 @@ export class Quadrant extends Reactor {
         totalCost
       ) {
         const thisReactor = this.getReactor();
-        const thisMutationSandbox = this;
 
         // Helper functions for mutation reaction.
         const notifyParentOfFacility = function (p: Point): void {
@@ -575,7 +574,7 @@ export class Quadrant extends Reactor {
             );
           }
         };
-        const partition = function (): void {
+        const partition =  (): void => {
           // console.log(`Quadrant at ${facility.get()} - Partition is called.`)
           notifyParentOfFacility(facility.get().clone());
           maxDepthOfKnownOpenFacility.set(
@@ -629,7 +628,7 @@ export class Quadrant extends Reactor {
             toAccumulator as unknown as WritablePort<Msg>
           ).getPort();
           // Connect Accumulator's output to Quadrant's output.
-          thisMutationSandbox.connect(
+          this.connect(
             accumulator.toNextAccumulator,
             toAccumulatorOfQuadrant
           );
@@ -649,11 +648,11 @@ export class Quadrant extends Reactor {
           const toFirstChildPort = (
             toFirstChild as unknown as WritablePort<Msg>
           ).getPort();
-          thisMutationSandbox.connect(
+          this.connect(
             toFirstChildPort,
             firstChild.fromProducer
           );
-          thisMutationSandbox.connect(
+          this.connect(
             firstChild.toAccumulator,
             accumulator.fromFirstQuadrant
           );
@@ -673,11 +672,11 @@ export class Quadrant extends Reactor {
           const toSecondChildPort = (
             toSecondChild as unknown as WritablePort<Msg>
           ).getPort();
-          thisMutationSandbox.connect(
+          this.connect(
             toSecondChildPort,
             secondChild.fromProducer
           );
-          thisMutationSandbox.connect(
+          this.connect(
             secondChild.toAccumulator,
             accumulator.fromSecondQuadrant
           );
@@ -697,11 +696,11 @@ export class Quadrant extends Reactor {
           const toThirdChildPort = (
             toThirdChild as unknown as WritablePort<Msg>
           ).getPort();
-          thisMutationSandbox.connect(
+          this.connect(
             toThirdChildPort,
             thirdChild.fromProducer
           );
-          thisMutationSandbox.connect(
+          this.connect(
             thirdChild.toAccumulator,
             accumulator.fromThirdQuadrant
           );
@@ -721,11 +720,11 @@ export class Quadrant extends Reactor {
           const toFourthChildPort = (
             toFourthChild as unknown as WritablePort<Msg>
           ).getPort();
-          thisMutationSandbox.connect(
+          this.connect(
             toFourthChildPort,
             fourthChild.fromProducer
           );
-          thisMutationSandbox.connect(
+          this.connect(
             fourthChild.toAccumulator,
             accumulator.fromFourthQuadrant
           );
