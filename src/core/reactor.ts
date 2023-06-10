@@ -1356,19 +1356,18 @@ export abstract class Reactor extends Component {
     const inputs = this._findOwnInputs();
     const outputs = this._findOwnOutputs();
     const visited = new Set();
-    const self = this;
 
-    function search(
+    const search = (
       output: OutPort<Present>,
       nodes: Set<Port<Present> | Reaction<unknown>>
-    ): void {
+    ): void => {
       for (const node of nodes) {
         if (!visited.has(node)) {
           visited.add(node);
           if (node instanceof InPort && inputs.has(node as InPort<Present>)) {
             ifGraph.addEdge(output, node);
           } else {
-            search(output, self._dependencyGraph.getEdges(output));
+            search(output, this._dependencyGraph.getEdges(output));
           }
         }
       }

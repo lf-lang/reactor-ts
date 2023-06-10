@@ -587,9 +587,6 @@ export class Alarm {
     // Record the current time.
     const hiResDif = process.hrtime(this.hiResStart);
 
-    // Keep reference to the class.
-    const thisTimer = this;
-
     // See whether the requested delay has elapsed.
     if (
       this.hiResDelay[0] < hiResDif[0] ||
@@ -599,7 +596,7 @@ export class Alarm {
       this.immediateRef = undefined;
 
       // The delay has elapsed; perform the task.
-      if (thisTimer.active) {
+      if (this.active) {
         // If this attempt is the result of a deferred request, perform
         // the task synchronously.
         this.active = false;
@@ -615,9 +612,9 @@ export class Alarm {
         // will not cause the call stack to exceed its maximum size, but
         // it will starve I/O.
         this.active = true;
-        process.nextTick(function () {
-          if (thisTimer.active) {
-            thisTimer.active = false;
+        process.nextTick(() => {
+          if (this.active) {
+            this.active = false;
             task();
             if (callback != null) {
               callback(TimeValue.secsAndNs(...hiResDif));
@@ -631,17 +628,17 @@ export class Alarm {
       if (this.loResDelay > 25) {
         if (!this.active) {
           this.deferredRef = setTimeout(() => {
-            thisTimer.try(task, callback);
+            this.try(task, callback);
           }, this.loResDelay - 25);
         } else {
           this.deferredRef = undefined;
           this.immediateRef = setImmediate(() => {
-            thisTimer.try(task, callback);
+            this.try(task, callback);
           });
         }
       } else {
         this.immediateRef = setImmediate(() => {
-          thisTimer.try(task, callback);
+          this.try(task, callback);
         });
       }
       this.active = true;

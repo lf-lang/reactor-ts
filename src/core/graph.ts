@@ -180,16 +180,14 @@ export class DependencyGraph<T> {
   reachableOrigins(effect: T, origins: Set<T>): Set<T> {
     const visited = new Set<T>();
     const reachable = new Set<T>();
-    const self = this;
-
     /**
      * Recursively traverse the graph to collect reachable origins.
      * @param current The current node being visited.
      */
-    function search(current: T): void {
+    const search = (current: T): void => {
       visited.add(current);
       if (origins.has(current)) reachable.add(current);
-      for (const next of self.getEdges(current)) {
+      for (const next of this.getEdges(current)) {
         if (!visited.has(next)) search(next);
       }
     }
@@ -202,13 +200,12 @@ export class DependencyGraph<T> {
   hasCycle(): boolean {
     const toVisit = new Set(this.nodes());
     const inPath = new Set<T>();
-    const self = this;
 
-    function cycleFound(current: T): boolean {
+    const cycleFound = (current: T): boolean => {
       if (toVisit.has(current)) {
         toVisit.delete(current);
         inPath.add(current);
-        for (const node of self.getEdges(current)) {
+        for (const node of this.getEdges(current)) {
           if (toVisit.has(node) && cycleFound(node)) {
             return true;
           } else if (inPath.has(node)) {
