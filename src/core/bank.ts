@@ -2,7 +2,6 @@ import type {
   IOPort,
   MultiPort,
   Port,
-  Present,
   Reactor,
   WritableMultiPort,
   WritablePort

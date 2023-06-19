@@ -4,7 +4,6 @@ import type {
   Reactor,
   Runtime,
   Absent,
-  Present,
   TaggedEvent,
   Reaction,
   Tag

@@ -10,7 +10,6 @@ import type {
   Priority,
   Absent,
   ArgList,
-  Present,
   Read,
   Sched,
   Variable,
@@ -764,7 +763,7 @@ export abstract class Reactor extends Component {
 
     if (calleePorts.length > 0) {
       // This is a procedure.
-      const port = calleePorts[0] as CalleePort<Present, Present>;
+      const port = calleePorts[0] as CalleePort<unknown, unknown>;
       const procedure = new Procedure(
         this,
         this._reactionScope,
@@ -1385,11 +1384,11 @@ export abstract class Reactor extends Component {
     return ifGraph;
   }
 
-  private _findOwnCalleePorts(): Set<CalleePort<Present, Present>> {
-    const ports = new Set<CalleePort<Present, Present>>();
+  private _findOwnCalleePorts(): Set<CalleePort<unknown, unknown>> {
+    const ports = new Set<CalleePort<unknown, unknown>>();
     for (const component of this._keyChain.keys()) {
       if (component instanceof CalleePort) {
-        ports.add(component as CalleePort<Present, Present>);
+        ports.add(component as CalleePort<unknown, unknown>);
       }
     }
     return ports;

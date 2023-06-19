@@ -1,7 +1,6 @@
 import type {
   Tag,
   ScheduledTrigger,
-  Present,
   PrioritySetElement
 } from "./internal";
 

@@ -2,7 +2,6 @@ import type {
   Absent,
   IOPort,
   MultiRead,
-  Present,
   Reactor,
   Runtime,
   WritablePort,

@@ -1,7 +1,7 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {Present, Action, FederateConfig} from "./internal";
+import type {Action, FederateConfig} from "./internal";
 import {
   Log,
   Tag,

@@ -1,7 +1,6 @@
 import type {
   Write,
   ReactionSandbox,
-  Present,
   Parameter
 } from "../core/internal";
 import {Reactor, Timer, Triggers, Args, OutPort} from "../core/internal";

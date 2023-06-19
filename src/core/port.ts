@@ -6,7 +6,6 @@ import type {
   TriggerManager,
   Absent,
   MultiReadWrite,
-  Present,
   ReadWrite
 } from "./internal";
 import {Trigger, Log} from "./internal";
