@@ -163,7 +163,7 @@ export abstract class Reactor extends Component {
    * ports, reactions, and connections.
    */
   protected _dependencyGraph = new DependencyGraph<
-    Port<Present> | Reaction<any>
+    Port<unknown> | Reaction<any>
   >();
 
   /**
@@ -198,7 +198,7 @@ export abstract class Reactor extends Component {
    * connection at runtime could result in a cyclic dependency, _without_
    * having to consult other reactors.
    */
-  private readonly _causalityGraph = new DependencyGraph<Port<Present>>();
+  private readonly _causalityGraph = new DependencyGraph<Port<unknown>>();
 
   /**
    * Indicates whether this reactor is active (meaning it has reacted to a
@@ -435,8 +435,8 @@ export abstract class Reactor extends Component {
      */
     public connect<
       A extends T,
-      R extends Present,
-      T extends Present,
+      R,
+      T,
       S extends R
     >(
       src: CallerPort<A, R> | IOPort<S>,
@@ -451,7 +451,7 @@ export abstract class Reactor extends Component {
       }
     }
 
-    public disconnect(src: IOPort<Present>, dst?: IOPort<Present>): void {
+    public disconnect(src: IOPort<unknown>, dst?: IOPort<unknown>): void {
       if (
         src instanceof IOPort &&
         (dst === undefined || dst instanceof IOPort)
@@ -558,13 +558,13 @@ export abstract class Reactor extends Component {
 
   //
 
-  public allWritable<T extends Present>(
+  public allWritable<T>(
     port: MultiPort<T>
   ): WritableMultiPort<T> {
     return port.asWritable(this._getKey(port));
   }
 
-  public writable<T extends Present>(port: IOPort<T>): WritablePort<T> {
+  public writable<T>(port: IOPort<T>): WritablePort<T> {
     return port.asWritable(this._getKey(port));
   }
 
@@ -586,7 +586,7 @@ export abstract class Reactor extends Component {
     throw new Error("Reaction is not listed.");
   }
 
-  protected schedulable<T extends Present>(action: Action<T>): Sched<T> {
+  protected schedulable<T>(action: Action<T>): Sched<T> {
     return action.asSchedulable(this._getKey(action));
   }
 
@@ -677,8 +677,8 @@ export abstract class Reactor extends Component {
     // Make effects dependent on sources.
     for (const effect of effects) {
       this._causalityGraph.addEdges(
-        effect as Port<Present>,
-        sources as Set<Port<Present>>
+        effect as Port<unknown>,
+        sources as Set<Port<unknown>>
       );
     }
   }
@@ -895,8 +895,8 @@ export abstract class Reactor extends Component {
    */
   protected _getPrecedenceGraph(
     depth = -1
-  ): DependencyGraph<Port<Present> | Reaction<unknown>> {
-    const graph = new DependencyGraph<Port<Present> | Reaction<unknown>>();
+  ): DependencyGraph<Port<unknown> | Reaction<unknown>> {
+    const graph = new DependencyGraph<Port<unknown> | Reaction<unknown>>();
 
     this._addHierarchicalDependencies();
     this._addRPCDependencies();
@@ -994,7 +994,7 @@ export abstract class Reactor extends Component {
    * given port can be connected to with an output port of this reactor.
    * @param port
    */
-  public _isDownstream(port: Port<Present>): boolean {
+  public _isDownstream(port: Port<unknown>): boolean {
     if (port instanceof InPort) {
       if (port._isContainedByContainerOf(this)) {
         return true;
@@ -1013,7 +1013,7 @@ export abstract class Reactor extends Component {
    * given port can be connected to an input port of this reactor.
    * @param port
    */
-  public _isUpstream(port: Port<Present>): boolean {
+  public _isUpstream(port: Port<unknown>): boolean {
     if (port instanceof OutPort) {
       if (port._isContainedByContainerOf(this)) {
         return true;
@@ -1029,8 +1029,8 @@ export abstract class Reactor extends Component {
 
   public canConnectCall<
     A extends T,
-    R extends Present,
-    T extends Present,
+    R,
+    T,
     S extends R
   >(src: CallerPort<A, R>, dst: CalleePort<T, S>): boolean {
     // FIXME: can we change the inheritance relationship so that we can overload?
@@ -1068,7 +1068,7 @@ export abstract class Reactor extends Component {
    * @param src The start point of a new connection.
    * @param dst The end point of a new connection.
    */
-  public canConnect<R extends Present, S extends R>(
+  public canConnect<R, S extends R>(
     src: IOPort<S>,
     dst: IOPort<R>
   ): boolean {
@@ -1116,7 +1116,7 @@ export abstract class Reactor extends Component {
 
       // Take the local graph and merge in all the causality interfaces
       // of contained reactors. Then:
-      const graph = new DependencyGraph<Port<Present> | Reaction<unknown>>();
+      const graph = new DependencyGraph<Port<unknown> | Reaction<unknown>>();
       graph.merge(this._dependencyGraph);
 
       for (const r of this._getOwnReactors()) {
@@ -1148,7 +1148,7 @@ export abstract class Reactor extends Component {
     }
   }
 
-  private _isInScope(src: IOPort<Present>, dst?: IOPort<Present>): boolean {
+  private _isInScope(src: IOPort<unknown>, dst?: IOPort<unknown>): boolean {
     // Assure that the general scoping and connection rules are adhered to.
     if (src instanceof OutPort) {
       if (dst instanceof InPort) {
@@ -1193,7 +1193,7 @@ export abstract class Reactor extends Component {
    * @param src The source port to connect.
    * @param dst The destination port to connect.
    */
-  private _uncheckedConnect<R extends Present, S extends R>(
+  private _uncheckedConnect<R, S extends R>(
     src: IOPort<S>,
     dst: IOPort<R>
   ): void {
@@ -1221,7 +1221,7 @@ export abstract class Reactor extends Component {
    * @param src The source port to connect.
    * @param dst The destination port to connect.
    */
-  protected _connect<R extends Present, S extends R>(
+  protected _connect<R, S extends R>(
     src: IOPort<S>,
     dst: IOPort<R>
   ): void {
@@ -1238,7 +1238,7 @@ export abstract class Reactor extends Component {
     }
   }
 
-  protected _connectMulti<R extends Present, S extends R>(
+  protected _connectMulti<R, S extends R>(
     src: Array<MultiPort<S> | IOPort<S>>,
     dest: Array<MultiPort<R> | IOPort<R>>,
     repeatLeft: boolean
@@ -1305,8 +1305,8 @@ export abstract class Reactor extends Component {
 
   protected _connectCall<
     A extends T,
-    R extends Present,
-    T extends Present,
+    R,
+    T,
     S extends R
   >(src: CallerPort<A, R>, dst: CalleePort<T, S>): void {
     if (this.canConnectCall(src, dst)) {
@@ -1351,7 +1351,7 @@ export abstract class Reactor extends Component {
    * Return a dependency graph consisting of only this reactor's own ports
    * and the dependencies between them.
    */
-  protected _getCausalityInterface(): DependencyGraph<Port<Present>> {
+  protected _getCausalityInterface(): DependencyGraph<Port<unknown>> {
     const ifGraph = this._causalityGraph;
     // Find all the input and output ports that this reactor owns.
 
@@ -1360,13 +1360,13 @@ export abstract class Reactor extends Component {
     const visited = new Set();
 
     const search = (
-      output: OutPort<Present>,
-      nodes: Set<Port<Present> | Reaction<unknown>>
+      output: OutPort<unknown>,
+      nodes: Set<Port<unknown> | Reaction<unknown>>
     ): void => {
       for (const node of nodes) {
         if (!visited.has(node)) {
           visited.add(node);
-          if (node instanceof InPort && inputs.has(node as InPort<Present>)) {
+          if (node instanceof InPort && inputs.has(node as InPort<unknown>)) {
             ifGraph.addEdge(output, node);
           } else {
             search(output, this._dependencyGraph.getEdges(output));
@@ -1395,31 +1395,31 @@ export abstract class Reactor extends Component {
     return ports;
   }
 
-  private _findOwnPorts(): Set<Port<Present>> {
-    const ports = new Set<Port<Present>>();
+  private _findOwnPorts(): Set<Port<unknown>> {
+    const ports = new Set<Port<unknown>>();
     for (const component of this._keyChain.keys()) {
       if (component instanceof Port) {
-        ports.add(component as Port<Present>);
+        ports.add(component as Port<unknown>);
       }
     }
     return ports;
   }
 
-  private _findOwnInputs(): Set<InPort<Present>> {
-    const inputs = new Set<InPort<Present>>();
+  private _findOwnInputs(): Set<InPort<unknown>> {
+    const inputs = new Set<InPort<unknown>>();
     for (const component of this._keyChain.keys()) {
       if (component instanceof InPort) {
-        inputs.add(component as InPort<Present>);
+        inputs.add(component as InPort<unknown>);
       }
     }
     return inputs;
   }
 
-  private _findOwnOutputs(): Set<OutPort<Present>> {
-    const outputs = new Set<OutPort<Present>>();
+  private _findOwnOutputs(): Set<OutPort<unknown>> {
+    const outputs = new Set<OutPort<unknown>>();
     for (const component of this._keyChain.keys()) {
       if (component instanceof OutPort) {
-        outputs.add(component as OutPort<Present>);
+        outputs.add(component as OutPort<unknown>);
       }
     }
     return outputs;
@@ -1441,7 +1441,7 @@ export abstract class Reactor extends Component {
    * @param src Source port of connection to be disconnected.
    * @param dst Destination port of connection to be disconnected. If undefined, disconnect all connections from the source port.
    */
-  protected _disconnect<R extends Present, S extends R>(
+  protected _disconnect<R, S extends R>(
     src: IOPort<S>,
     dst?: IOPort<R>
   ): void {
@@ -1455,7 +1455,7 @@ export abstract class Reactor extends Component {
     }
   }
 
-  private _uncheckedDisconnect<R extends Present, S extends R>(
+  private _uncheckedDisconnect<R, S extends R>(
     src: IOPort<S>,
     dst?: IOPort<R>
   ): void {
@@ -1546,7 +1546,7 @@ interface ComponentManager {
 /**
  * A caller port sends arguments of type T and receives a response of type R.
  */
-export class CallerPort<A extends Present, R extends Present>
+export class CallerPort<A, R>
   extends Port<R>
   implements Write<A>, Read<R>
 {
@@ -1610,7 +1610,7 @@ export class CallerPort<A extends Present, R extends Present>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface CalleeManager<T extends Present> extends TriggerManager {
+interface CalleeManager<T> extends TriggerManager {
   setLastCaller: (reaction: Reaction<unknown> | undefined) => void;
   getLastCaller: () => Reaction<unknown> | undefined;
   addReaction: (procedure: Procedure<unknown>) => void;
@@ -1620,7 +1620,7 @@ interface CalleeManager<T extends Present> extends TriggerManager {
 /**
  * A callee port receives arguments of type A and send a response of type R.
  */
-export class CalleePort<A extends Present, R extends Present>
+export class CalleePort<A, R>
   extends Port<A>
   implements Read<A>, Write<R>
 {
@@ -1665,7 +1665,7 @@ export class CalleePort<A extends Present, R extends Present>
   }
 
   protected manager: CalleeManager<A> = new (class implements CalleeManager<A> {
-    constructor(private readonly port: CalleePort<A, Present>) {}
+    constructor(private readonly port: CalleePort<A, unknown>) {}
 
     getContainer(): Reactor {
       return this.port._getContainer();
@@ -1705,16 +1705,16 @@ export class CalleePort<A extends Present, R extends Present>
 }
 
 class EventQueue extends PrioritySet<Tag> {
-  public push(event: TaggedEvent<Present>): void {
+  public push(event: TaggedEvent<unknown>): void {
     super.push(event);
   }
 
-  public pop(): TaggedEvent<Present> | undefined {
-    return super.pop() as TaggedEvent<Present>;
+  public pop(): TaggedEvent<unknown> | undefined {
+    return super.pop() as TaggedEvent<unknown>;
   }
 
-  public peek(): TaggedEvent<Present> | undefined {
-    return super.peek() as TaggedEvent<Present>;
+  public peek(): TaggedEvent<unknown> | undefined {
+    return super.peek() as TaggedEvent<unknown>;
   }
 }
 
@@ -1752,12 +1752,12 @@ interface UtilityFunctions {
   getStartTime: () => TimeValue;
   getElapsedLogicalTime: () => TimeValue;
   getElapsedPhysicalTime: () => TimeValue;
-  sendRTIMessage: <T extends Present>(
+  sendRTIMessage: <T>(
     data: T,
     destFederateID: number,
     destPortID: number
   ) => void;
-  sendRTITimedMessage: <T extends Present>(
+  sendRTITimedMessage: <T>(
     data: T,
     destFederateID: number,
     destPortID: number,
@@ -1771,12 +1771,12 @@ interface UtilityFunctions {
 }
 
 export interface MutationSandbox extends ReactionSandbox {
-  connect: <A extends T, R extends Present, T extends Present, S extends R>(
+  connect: <A extends T, R, T, S extends R>(
     src: CallerPort<A, R> | IOPort<S>,
     dst: CalleePort<T, S> | IOPort<R>
   ) => void;
 
-  disconnect: (src: IOPort<Present>, dst?: IOPort<Present>) => void;
+  disconnect: (src: IOPort<unknown>, dst?: IOPort<unknown>) => void;
 
   delete: (reactor: Reactor) => void;
 
@@ -1884,7 +1884,7 @@ export class App extends Reactor {
       return getCurrentPhysicalTime().subtract(this.app._startOfExecution);
     }
 
-    public sendRTIMessage<T extends Present>(
+    public sendRTIMessage<T>(
       data: T,
       destFederateID: number,
       destPortID: number
@@ -1892,7 +1892,7 @@ export class App extends Reactor {
       this.app.sendRTIMessage(data, destFederateID, destPortID);
     }
 
-    public sendRTITimedMessage<T extends Present>(
+    public sendRTITimedMessage<T>(
       data: T,
       destFederateID: number,
       destPortID: number,
@@ -2000,7 +2000,7 @@ export class App extends Reactor {
         this.app._endOfExecution == null ||
         !this.app._endOfExecution.isSmallerThan(e.tag)
       ) {
-        this.app._eventQ.push(e as TaggedEvent<Present>);
+        this.app._eventQ.push(e as TaggedEvent<unknown>);
       }
 
       Log.debug(this, () => `Scheduling with trigger: ${e.trigger}`);
@@ -2044,7 +2044,7 @@ export class App extends Reactor {
    * @param destFederateID The federate ID that is the destination of this message.
    * @param destPortID The port ID that is the destination of this message.
    */
-  protected sendRTIMessage<T extends Present>(
+  protected sendRTIMessage<T>(
     data: T,
     destFederateID: number,
     destPortID: number
@@ -2061,7 +2061,7 @@ export class App extends Reactor {
    * @param destFederateID The federate ID that is the destination of this message.
    * @param destPortID The port ID that is the destination of this message.
    */
-  protected sendRTITimedMessage<T extends Present>(
+  protected sendRTITimedMessage<T>(
     data: T,
     destFederateID: number,
     destPortID: number,
@@ -2230,7 +2230,7 @@ export class App extends Reactor {
    * In a non-federated context this method always returns true.
    * @param event The next event to be processed.
    */
-  protected _canProceed(event: TaggedEvent<Present>): boolean {
+  protected _canProceed(event: TaggedEvent<unknown>): boolean {
     return true;
   }
 
@@ -2595,7 +2595,7 @@ export class App extends Reactor {
 
     function search(
       reaction: Reaction<unknown>,
-      nodes: Set<Port<Present> | Reaction<unknown>>
+      nodes: Set<Port<unknown> | Reaction<unknown>>
     ): void {
       for (const node of nodes) {
         if (node instanceof Reaction) {

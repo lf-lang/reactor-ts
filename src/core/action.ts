@@ -19,7 +19,7 @@ import {
 
 const defaultMIT = TimeValue.withUnits(1, TimeUnit.nsec); // FIXME
 
-export abstract class SchedulableAction<T extends Present> implements Sched<T> {
+export abstract class SchedulableAction<T> implements Sched<T> {
   abstract get(): T | undefined;
   abstract schedule(
     extraDelay: 0 | TimeValue,
@@ -37,7 +37,7 @@ export abstract class SchedulableAction<T extends Present> implements Sched<T> {
  * scheduled by a reactor by invoking the schedule function in a reaction
  * or in an asynchronous callback that has been set up in a reaction.
  */
-export class Action<T extends Present>
+export class Action<T>
   extends ScheduledTrigger<T>
   implements Read<T>
 {
@@ -70,7 +70,7 @@ export class Action<T extends Present>
   }
 
   protected scheduler = new (class<
-    T extends Present
+    T
   > extends SchedulableAction<T> {
     get(): T | undefined {
       return this.action.get();
@@ -187,26 +187,26 @@ export class Action<T extends Present>
   }
 }
 
-export class Startup extends Action<Present> {
+export class Startup extends Action<unknown> {
   // FIXME: this should not be a schedulable trigger, just a trigger
   constructor(__parent__: Reactor) {
     super(__parent__, Origin.logical);
   }
 }
 
-export class Shutdown extends Action<Present> {
+export class Shutdown extends Action<unknown> {
   constructor(__parent__: Reactor) {
     super(__parent__, Origin.logical);
   }
 }
 
-export class Dummy extends Action<Present> {
+export class Dummy extends Action<unknown> {
   constructor(__parent__: Reactor) {
     super(__parent__, Origin.logical);
   }
 }
 
-export class FederatePortAction<T extends Present> extends Action<T> {
+export class FederatePortAction<T> extends Action<T> {
   constructor(
     __parent__: Reactor,
     origin: Origin,

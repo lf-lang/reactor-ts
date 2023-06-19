@@ -21,7 +21,7 @@ function produceOutput<S>(
   console.log("Writing payload to SingleEvent's output.");
 }
 
-export class SingleEvent<T extends Present> extends Reactor {
+export class SingleEvent<T> extends Reactor {
   o: OutPort<T> = new OutPort<T>(this);
 
   t1: Timer = new Timer(this, 0, 0);

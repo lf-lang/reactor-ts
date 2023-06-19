@@ -47,7 +47,7 @@ export abstract class Trigger extends Component {
 /**
  *
  */
-export abstract class ScheduledTrigger<T extends Present> extends Trigger {
+export abstract class ScheduledTrigger<T> extends Trigger {
   protected value: T | Absent = undefined;
 
   protected tag: Tag | undefined;

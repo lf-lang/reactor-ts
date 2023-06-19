@@ -19,7 +19,7 @@ import {WritableMultiPort} from "./port";
  * @author Marten Lohstroh <marten@berkeley.edu>
  * @author Hokeun Kim <hokeun@berkeley.edu>
  */
-export abstract class MultiPort<T extends Present>
+export abstract class MultiPort<T>
   extends Trigger
   implements MultiRead<T>
 {
@@ -48,7 +48,7 @@ export abstract class MultiPort<T extends Present>
    * @param ports the ports to return the values of
    * @returns the current values of the given ports
    */
-  public static values<T extends Present>(
+  public static values<T>(
     ports: Array<IOPort<T>>
   ): Array<T | Absent> {
     const values = new Array<T | Absent>(ports.length);
@@ -221,7 +221,7 @@ export abstract class MultiPort<T extends Present>
  * @author Marten Lohstroh <marten@berkeley.edu>
  * @author Hokeun Kim <hokeun@berkeley.edu>
  */
-export class InMultiPort<T extends Present> extends MultiPort<T> {
+export class InMultiPort<T> extends MultiPort<T> {
   /** @inheritdoc */
   public channel(index: number): InPort<T> {
     return this._channels[index];
@@ -247,7 +247,7 @@ export class InMultiPort<T extends Present> extends MultiPort<T> {
  * @author Marten Lohstroh <marten@berkeley.edu>
  * @author Hokeun Kim <hokeun@berkeley.edu>
  */
-export class OutMultiPort<T extends Present> extends MultiPort<T> {
+export class OutMultiPort<T> extends MultiPort<T> {
   /** @inheritdoc */
   constructor(container: Reactor, width: number) {
     super(container, width);

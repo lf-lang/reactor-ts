@@ -79,18 +79,6 @@ export type ArgList<T> = T extends Variable[] ? T : never;
 
 export type ParmList<T> = T extends any[] ? T : never;
 
-/**
- * Type for data exchanged between ports.
- */
-export type Present =
-  | number
-  | bigint
-  | string
-  | boolean
-  | symbol
-  | object
-  | null;
-
 export class Args<T extends Variable[]> {
   tuple: T;
 
