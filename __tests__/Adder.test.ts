@@ -1,4 +1,4 @@
-import type {IOPort, Present} from "../src/core/internal";
+import type {IOPort} from "../src/core/internal";
 import {
   App,
   Reactor,
@@ -36,7 +36,7 @@ class MyAdder extends Adder {
     }
   }
 
-  public getProxy(port: IOPort<Present>) {
+  public getProxy(port: IOPort<unknown>) {
     return this.writable(port);
   }
 }

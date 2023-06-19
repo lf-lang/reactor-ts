@@ -1,4 +1,3 @@
-import type {Present} from "../src/core/internal";
 import {
   Bank,
   Reactor,
@@ -40,7 +39,7 @@ class MultiPeriodic extends Reactor {
   }
 }
 
-class Generic<T extends Present> extends Reactor {
+class Generic<T> extends Reactor {
   input = new InPort<T>(this);
 }
 
