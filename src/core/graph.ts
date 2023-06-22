@@ -151,7 +151,6 @@ export class DependencyGraph<T> {
   }
 
   getOriginsOfEffect(node: T): Set<T> {
-    // FIXME: use different terminology: origins/effects
     const nodes = this.adjacencyMap.get(node);
     if (nodes !== undefined) {
       return nodes;
@@ -260,30 +259,6 @@ export class DependencyGraph<T> {
     // nodes in the graph.
     if (!this.adjacencyMap.has(origin)) {
       this.adjacencyMap.set(origin, new Set());
-    }
-  }
-
-  addBackEdges(node: T, dependentNodes: Set<T>): void {
-    for (const a of dependentNodes) {
-      this.addEdge(a, node);
-    }
-  }
-
-  addEdges(node: T, dependsOn: Set<T>): void {
-    const deps = this.adjacencyMap.get(node);
-    if (deps == null) {
-      this.adjacencyMap.set(node, new Set(dependsOn));
-      this.numberOfEdges += dependsOn.size;
-    } else {
-      for (const dependency of dependsOn) {
-        if (!deps.has(dependency)) {
-          deps.add(dependency);
-          this.numberOfEdges++;
-        }
-        if (!this.adjacencyMap.has(dependency)) {
-          this.adjacencyMap.set(dependency, new Set());
-        }
-      }
     }
   }
 

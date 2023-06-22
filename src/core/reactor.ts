@@ -676,10 +676,9 @@ export abstract class Reactor extends Component {
     }
     // Make effects dependent on sources.
     for (const effect of effects) {
-      this._causalityGraph.addEdges(
-        effect as Port<Present>,
-        sources as Set<Port<Present>>
-      );
+      for (const source of sources) {
+        this._causalityGraph.addEdge(effect as Port<Present>, source as Port<Present>);
+      }
     }
   }
 
