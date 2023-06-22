@@ -151,12 +151,7 @@ export class DependencyGraph<T> {
   }
 
   getOriginsOfEffect(node: T): Set<T> {
-    const nodes = this.adjacencyMap.get(node);
-    if (nodes !== undefined) {
-      return nodes;
-    } else {
-      return new Set<T>();
-    }
+    return this.adjacencyMap.get(node) ?? new Set<T>();
   }
 
   getEffectsOfOrigin(node: T): Set<T> {
@@ -196,30 +191,37 @@ export class DependencyGraph<T> {
     return reachable;
   }
 
+  /**
+   * This uses DFS with iteration to check for back edges in the graph.
+   * Iteration is used because TS does not have tail recursion.
+   * Refer to https://stackoverflow.com/a/56317289
+   */
   hasCycle(): boolean {
-    const toVisit = new Set(this.getNodes());
-    const inPath = new Set<T>();
+    const stack = new Array<T>;
+    const visited = new Set<T>;
+    const currentDirectAncestors = new Set<T>;
 
-    const cycleFound = (current: T): boolean => {
-      if (toVisit.has(current)) {
-        toVisit.delete(current);
-        inPath.add(current);
-        for (const node of this.getOriginsOfEffect(current)) {
-          if (toVisit.has(node) && cycleFound(node)) {
-            return true;
-          } else if (inPath.has(node)) {
-            return true;
-          }
-        }
+    for (const v of this.getNodes()) {
+      if (visited.has(v)) {
+        continue;
       }
-      inPath.delete(current);
-      return false;
-    }
+      stack.push(v);
 
-    while (toVisit.size > 0) {
-      const [node] = toVisit;
-      if (cycleFound(node)) {
-        return true;
+      while (stack.length !== 0) {
+        const top = stack[stack.length - 1];
+
+        if (visited.has(top)) {
+          currentDirectAncestors.delete(top);
+          stack.pop();
+        } else {
+          visited.add(top);
+          currentDirectAncestors.add(top);
+        }
+
+        for (const child of this.getOriginsOfEffect(top)) {
+          if (currentDirectAncestors.has(child)) return true;
+          if (!visited.has(child)) stack.push(child);
+        }
       }
     }
     return false;
@@ -239,7 +241,7 @@ export class DependencyGraph<T> {
     }
   }
 
-    /**
+  /**
    * Add an edge that denotes origin effect relationship,
    * which, in the underlying dependency graph, has direction effect->origin.
    */
