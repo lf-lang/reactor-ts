@@ -864,7 +864,7 @@ export abstract class Reactor extends Component {
       const procedure = p.getManager(this._getKey(p)).getProcedure();
       const lastCaller = p.getManager(this._getKey(p)).getLastCaller();
       if (procedure != null && lastCaller != null) {
-        const effects = this._dependencyGraph.getBackEdges(procedure);
+        const effects = this._dependencyGraph.getEffectsOfOrigin(procedure);
         for (const e of effects) {
           if (!(e instanceof CalleePort)) {
             // Also add edge to the local graph.
@@ -1080,7 +1080,7 @@ export abstract class Reactor extends Component {
     // Check the race condition
     //   - between reactors and reactions (NOTE: check also needs to happen
     //     in addReaction)
-    const deps = this._dependencyGraph.getEdges(dst); // FIXME this will change with multiplex ports
+    const deps = this._dependencyGraph.getOriginsOfEffect(dst); // FIXME this will change with multiplex ports
     if (deps !== undefined && deps.size > 0) {
       throw Error("Destination port is already occupied.");
     }
@@ -1093,7 +1093,7 @@ export abstract class Reactor extends Component {
       // console.log("IOPort")
       // Rule out write conflicts.
       //   - (between reactors)
-      if (this._dependencyGraph.getBackEdges(dst).size > 0) {
+      if (this._dependencyGraph.getEffectsOfOrigin(dst).size > 0) {
         return false;
       }
 
@@ -1321,7 +1321,7 @@ export abstract class Reactor extends Component {
       const callerManager = src.getManager(this._getKey(src));
       const container = callerManager.getContainer();
       const callers = new Set<Reaction<any>>();
-      container._dependencyGraph.getBackEdges(src).forEach((dep) => {
+      container._dependencyGraph.getEffectsOfOrigin(src).forEach((dep) => {
         if (dep instanceof Reaction) {
           callers.add(dep);
         }
@@ -1369,7 +1369,7 @@ export abstract class Reactor extends Component {
           if (node instanceof InPort && inputs.has(node as InPort<Present>)) {
             ifGraph.addEdge(output, node);
           } else {
-            search(output, this._dependencyGraph.getEdges(output));
+            search(output, this._dependencyGraph.getOriginsOfEffect(output));
           }
         }
       }
@@ -1378,7 +1378,7 @@ export abstract class Reactor extends Component {
     // For each output, walk the graph and add dependencies to
     // the inputs that are reachable.
     for (const output of outputs) {
-      search(output, this._dependencyGraph.getEdges(output));
+      search(output, this._dependencyGraph.getOriginsOfEffect(output));
       visited.clear();
     }
 
@@ -1465,7 +1465,7 @@ export abstract class Reactor extends Component {
       src.getManager(this._getKey(src)).delReceiver(writer as WritablePort<S>);
       this._dependencyGraph.removeEdge(dst, src);
     } else {
-      const nodes = this._dependencyGraph.getBackEdges(src);
+      const nodes = this._dependencyGraph.getEffectsOfOrigin(src);
       for (const node of nodes) {
         if (node instanceof IOPort) {
           const writer = node.asWritable(this._getKey(node));
@@ -2590,7 +2590,7 @@ export class App extends Reactor {
     const collapsed = new SortableDependencyGraph();
 
     // 1. Collapse dependencies and weed out the ports.
-    const leafs = apg.leafNodes();
+    const leafs = apg.pureEffectNodes();
     const visited = new Set();
 
     function search(
@@ -2602,10 +2602,10 @@ export class App extends Reactor {
           collapsed.addEdge(reaction, node);
           if (!visited.has(node)) {
             visited.add(node);
-            search(node, apg.getEdges(node));
+            search(node, apg.getOriginsOfEffect(node));
           }
         } else {
-          search(reaction, apg.getEdges(node));
+          search(reaction, apg.getOriginsOfEffect(node));
         }
       }
     }
@@ -2613,7 +2613,7 @@ export class App extends Reactor {
     for (const leaf of leafs) {
       if (leaf instanceof Reaction) {
         collapsed.addNode(leaf);
-        search(leaf, apg.getEdges(leaf));
+        search(leaf, apg.getOriginsOfEffect(leaf));
         visited.clear();
       }
     }

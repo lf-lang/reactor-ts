@@ -150,7 +150,7 @@ export class DependencyGraph<T> {
     }
   }
 
-  getEdges(node: T): Set<T> {
+  getOriginsOfEffect(node: T): Set<T> {
     // FIXME: use different terminology: origins/effects
     const nodes = this.adjacencyMap.get(node);
     if (nodes !== undefined) {
@@ -160,7 +160,7 @@ export class DependencyGraph<T> {
     }
   }
 
-  getBackEdges(node: T): Set<T> {
+  getEffectsOfOrigin(node: T): Set<T> {
     const backEdges = new Set<T>();
     this.adjacencyMap.forEach((edges, dep) => {
       edges.forEach((edge) => {
@@ -187,7 +187,7 @@ export class DependencyGraph<T> {
     const search = (current: T): void => {
       visited.add(current);
       if (origins.has(current)) reachable.add(current);
-      for (const next of this.getEdges(current)) {
+      for (const next of this.getOriginsOfEffect(current)) {
         if (!visited.has(next)) search(next);
       }
     }
@@ -198,14 +198,14 @@ export class DependencyGraph<T> {
   }
 
   hasCycle(): boolean {
-    const toVisit = new Set(this.nodes());
+    const toVisit = new Set(this.getNodes());
     const inPath = new Set<T>();
 
     const cycleFound = (current: T): boolean => {
       if (toVisit.has(current)) {
         toVisit.delete(current);
         inPath.add(current);
-        for (const node of this.getEdges(current)) {
+        for (const node of this.getOriginsOfEffect(current)) {
           if (toVisit.has(node) && cycleFound(node)) {
             return true;
           } else if (inPath.has(node)) {
@@ -240,23 +240,26 @@ export class DependencyGraph<T> {
     }
   }
 
-  // node -> deps
-  addEdge(node: T, dependsOn: T): void {
-    const deps = this.adjacencyMap.get(node);
+    /**
+   * Add an edge that denotes origin effect relationship,
+   * which, in the underlying dependency graph, has direction effect->origin.
+   */
+  addEdge(effect: T, origin: T): void {
+    const deps = this.adjacencyMap.get(effect);
     if (deps == null) {
-      this.adjacencyMap.set(node, new Set([dependsOn]));
+      this.adjacencyMap.set(effect, new Set([origin]));
       this.numberOfEdges++;
     } else {
-      if (!deps.has(dependsOn)) {
-        deps.add(dependsOn);
+      if (!deps.has(origin)) {
+        deps.add(origin);
         this.numberOfEdges++;
       }
     }
     // Create an entry for `dependsOn` if it doesn't exist.
     // This is so that the keys of the map contain all the
     // nodes in the graph.
-    if (!this.adjacencyMap.has(dependsOn)) {
-      this.adjacencyMap.set(dependsOn, new Set());
+    if (!this.adjacencyMap.has(origin)) {
+      this.adjacencyMap.set(origin, new Set());
     }
   }
 
@@ -296,7 +299,7 @@ export class DependencyGraph<T> {
     return [this.adjacencyMap.size, this.numberOfEdges];
   }
 
-  nodes(): IterableIterator<T> {
+  getNodes(): IterableIterator<T> {
     return this.adjacencyMap.keys();
   }
 
@@ -392,7 +395,7 @@ export class DependencyGraph<T> {
     return "digraph G {" + dot + "\n}";
   }
 
-  public rootNodes(): Set<T> {
+  public pureOriginNodes(): Set<T> {
     const roots = new Set<T>();
     /* Populate start set */
     for (const [v, e] of this.adjacencyMap) {
@@ -410,10 +413,10 @@ export class DependencyGraph<T> {
   // have a graph without any leaf nodes.
   // As a result, starting a graph search only from leaf nodes in a
   // cyclic graph, will not necessarily traverse the entire graph.
-  public leafNodes(): Set<T> {
-    const leafs = new Set<T>(this.nodes());
-    for (const node of this.nodes()) {
-      for (const dep of this.getEdges(node)) {
+  public pureEffectNodes(): Set<T> {
+    const leafs = new Set<T>(this.getNodes());
+    for (const node of this.getNodes()) {
+      for (const dep of this.getOriginsOfEffect(node)) {
         leafs.delete(dep);
       }
     }
