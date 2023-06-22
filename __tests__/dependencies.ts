@@ -64,7 +64,7 @@ describe("Manually constructed simple precedence graphs", () => {
   graph.addNode(nodes[0]);
 
   it("graph equality", () => {
-    expect([...graph.nodes()]).toEqual(nodes);
+    expect([...graph.getNodes()]).toEqual(nodes);
   });
 });
 
@@ -142,7 +142,8 @@ describe("Manually constructed precedence graphs", () => {
 
   it("add node 7, make 3 dependent on it", () => {
     graph.addNode(nodes[6]);
-    graph.addEdges(nodes[2], new Set([nodes[6], nodes[3]]));
+    graph.addEdge(nodes[2], nodes[6]);
+    graph.addEdge(nodes[2], nodes[3]);
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(4); // E
     Log.global.debug(graph.toString());

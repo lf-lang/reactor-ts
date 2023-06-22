@@ -38,12 +38,12 @@ d2.addNode(node1);
 d2.addNode(node2);
 d2.addEdge(node1, node2);
 
-test("test leafNodes() helper function", () => {
-  expect(d2.leafNodes()).toEqual(new Set([node1]));
+test("test pureEffectNodes() helper function", () => {
+  expect(d2.pureEffectNodes()).toEqual(new Set([node1]));
 });
 
-test("test rootNodes() helper function", () => {
-  expect(d2.rootNodes()).toEqual(new Set([node2]));
+test("test pureOriginNodes() helper function", () => {
+  expect(d2.pureOriginNodes()).toEqual(new Set([node2]));
 });
 
 const d3 = new DependencyGraph<number>();
@@ -136,7 +136,7 @@ const d7 = new DependencyGraph<number>();
 const d8 = new DependencyGraph<number>();
 const d9 = new DependencyGraph<number>();
 test("test dependency graph", () => {
-  expect(d7.getEdges(node1).size).toBe(0);
+  expect(d7.getOriginsOfEffect(node1).size).toBe(0);
   d7.merge(d5);
   expect(d7.size()).toStrictEqual(d5.size());
 
@@ -144,7 +144,7 @@ test("test dependency graph", () => {
   d9.addEdge(node1, node2);
   d8.merge(d9);
   expect(d8.size()).toStrictEqual(d9.size());
-  expect(d9.getBackEdges(node2).size).toBe(1);
+  expect(d9.getEffectsOfOrigin(node2).size).toBe(1);
   d8.removeNode(node2);
   expect(d8.size()).toStrictEqual([1, 0]);
 });
@@ -154,13 +154,16 @@ test("test add/remove Edges", () => {
   d10.addEdge(node1, node2); // {(node1 -> node2)}
   expect(d10.size()).toStrictEqual([2, 1]);
 
-  d10.addBackEdges(node2, new Set<number>().add(node1).add(node3)); // {(node1 -> node2), (node3 -> node2)}
+  d10.addEdge(node1, node2);
+  d10.addEdge(node3, node2);
   expect(d10.size()).toStrictEqual([3, 2]);
 
-  d10.addEdges(node1, new Set<number>().add(node2).add(node3).add(node4)); // {(node1 -> node2), (node1 -> node3), (node1 -> node4), (node3 -> node2)}
+  d10.addEdge(node1, node2);
+  d10.addEdge(node1, node3);
+  d10.addEdge(node1, node4);
   expect(d10.size()).toStrictEqual([4, 4]);
 
-  d10.addEdges(node5, new Set<number>().add(node1)); // {(node1 -> node2), (node1 -> node3), (node1 -> node4), (node3 -> node2), {node5 -> node1}}
+  d10.addEdge(node5, node1);
   expect(d10.size()).toStrictEqual([5, 5]);
 
   d10.removeEdge(node1, node2); // {(node1 -> node3), (node1 -> node4), (node3 -> node2), {node5 -> node1}}
@@ -194,16 +197,16 @@ test("test for reachableOrigins function of the dependency graph", () => {
   d13.addEdge(node1, node2);
   d13.addEdge(node1, node3);
   d13.addEdge(node2, node4); // { (node1 -> node2 -> node4), (node1 -> node3) }
-  expect(d13.reachableOrigins(node1, new Set<number>(d13.nodes())).size).toBe(
+  expect(d13.reachableOrigins(node1, new Set<number>(d13.getNodes())).size).toBe(
     3
   );
-  expect(d13.reachableOrigins(node2, new Set<number>(d13.nodes())).size).toBe(
+  expect(d13.reachableOrigins(node2, new Set<number>(d13.getNodes())).size).toBe(
     1
   );
-  expect(d13.reachableOrigins(node3, new Set<number>(d13.nodes())).size).toBe(
+  expect(d13.reachableOrigins(node3, new Set<number>(d13.getNodes())).size).toBe(
     0
   );
-  expect(d13.reachableOrigins(node4, new Set<number>(d13.nodes())).size).toBe(
+  expect(d13.reachableOrigins(node4, new Set<number>(d13.getNodes())).size).toBe(
     0
   );
 });
