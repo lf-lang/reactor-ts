@@ -280,10 +280,50 @@ export class DependencyGraph<T> {
     return this.adjacencyMap.keys();
   }
 
+  toString : (() => string) = (() => this.toMermaidRepresentation());
+
+  /**
+   * Return a representation that conforms with the syntax of mermaid.js
+   * @param edgesWithIssue Edges in the **dependency** graph that causes issues
+   * to the execution. A set containing arrays with [effect, origin].
+   */
+  toMermaidRepresentation(edgesWithIssue?: Set<[T, T]>): string {
+    if (edgesWithIssue == null) edgesWithIssue = new Set();
+    let result = "graph";
+    const nodeToNumber = new Map<T, number>();
+    const getNodeString = (node: T, def: string): string => {
+      if (node == null || node?.toString === Object.prototype.toString) {
+        console.error(
+          `Encountered node with no toString() implementation: ${String(node?.constructor)}`
+        );
+        return def;
+      }
+      return node.toString();
+    };
+
+    // Build a block here since we only need `counter` temporarily here
+    {
+      let counter = 0;
+      for (const v of this.getNodes()) {
+        nodeToNumber.set(v, counter++);
+      }
+    }
+    // This is the effect
+    for (const s of this.getNodes()) {
+      // This is the origin
+      for (const t of this.getOriginsOfEffect(s)) {
+        result += `\n\t${nodeToNumber.get(t)}["${getNodeString(t, String(nodeToNumber.get(t)))}"]`;
+        result += edgesWithIssue.has([s, t]) ? " --x " : " --> ";
+        result += `${nodeToNumber.get(s)}["${getNodeString(s, String(nodeToNumber.get(s)))}"]`;
+      }
+    }
+    return result;
+  }
+
   /**
    * Return a DOT representation of the graph.
    */
-  toString(): string {
+  toDOTRepresentation(): string {
     let dot = "";
     const graph = this.adjacencyMap;
     const visited = new Set<T>();
