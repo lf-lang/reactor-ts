@@ -96,11 +96,21 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(7); // E
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`digraph G {
-            "app.R[R0]"->"app.R[R1]"->"app.R[R4]"->"app.R[R3]"->"app.R[R5]";
-            "app.R[R0]"->"app.R[R4]";
-            "app.R[R1]"->"app.R[R2]"->"app.R[R3]";
-            }`
+      StringUtil.dontIndent
+      `graph
+        0["app.R[R3]"]
+        1["app.R[R5]"]
+        2["app.R[R4]"]
+        3["app.R[R2]"]
+        4["app.R[R1]"]
+        5["app.R[R0]"]
+        1 --> 0
+        0 --> 2
+        0 --> 3
+        3 --> 4
+        2 --> 4
+        4 --> 5
+        2 --> 5`
     );
   });
 
@@ -119,11 +129,19 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(6); // E
     expect(graph.toString()).toBe(
-      `digraph G {
-"app.R[R0]"->"app.R[R1]"->"app.R[R2]"->"app.R[R3]"->"app.R[R5]";
-"app.R[R1]"->"app.R[R4]";
-"app.R[R0]"->"app.R[R4]";
-}`
+      StringUtil.dontIndent`graph
+      0["app.R[R3]"]
+      1["app.R[R5]"]
+      2["app.R[R4]"]
+      3["app.R[R2]"]
+      4["app.R[R1]"]
+      5["app.R[R0]"]
+      1 --> 0
+      0 --> 3
+      3 --> 4
+      2 --> 4
+      4 --> 5
+      2 --> 5`
     );
   });
 
@@ -133,10 +151,15 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[1]).toEqual(3); // E
     Log.global.debug(graph.toString());
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`digraph G {
-            "app.R[R2]"->"app.R[R3]"->"app.R[R5]";
-            "app.R[R0]"->"app.R[R4]";
-            }`
+      StringUtil.dontIndent`graph
+        0["app.R[R3]"]
+        1["app.R[R5]"]
+        2["app.R[R4]"]
+        3["app.R[R2]"]
+        4["app.R[R0]"]
+        1 --> 0
+        0 --> 3
+        2 --> 4`
     );
   });
 
@@ -148,11 +171,17 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[1]).toEqual(4); // E
     Log.global.debug(graph.toString());
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`digraph G {
-            "app.R[R2]"->"app.R[R3]"->"app.R[R5]";
-            "app.R[R0]"->"app.R[R4]";
-            "app.R[R2]"->"app.R[R6]";
-            }`
+      StringUtil.dontIndent`graph
+        0["app.R[R3]"]
+        1["app.R[R5]"]
+        2["app.R[R4]"]
+        3["app.R[R2]"]
+        4["app.R[R0]"]
+        5["app.R[R6]"]
+        1 --> 0
+        0 --> 3
+        5 --> 3
+        2 --> 4`
     );
   });
 

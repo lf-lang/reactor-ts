@@ -305,7 +305,7 @@ export class DependencyGraph<T> {
     {
       let counter = 0;
       for (const v of this.getNodes()) {
-        result += `\n\t${counter}["${getNodeString(v, String(counter))}"]`
+        result += `\n${counter}["${getNodeString(v, String(counter))}"]`
         nodeToNumber.set(v, counter++);
       }
     }
@@ -313,7 +313,7 @@ export class DependencyGraph<T> {
     for (const s of this.getNodes()) {
       // This is the origin
       for (const t of this.getOriginsOfEffect(s)) {
-        result += `\n\t${nodeToNumber.get(t)}`;
+        result += `\n${nodeToNumber.get(t)}`;
         result += edgesWithIssue.has([s, t]) ? " --x " : " --> ";
         result += `${nodeToNumber.get(s)}`;
       }
