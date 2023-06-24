@@ -451,19 +451,20 @@ export class SortableDependencyGraph<
       type: new (...args: any[]) => T): SortableDependencyGraph<T> {
     const collapsed = new SortableDependencyGraph<T>();
 
-    // Originally from reactor.ts. This removes all nodes that are not of type `Sortable<number>`,
-    // And reassign node relationship, preserving original lineage.
+    // Originally from reactor.ts. 
+    // This removes all nodes that are not of type `T`,
+    // and reassign node relationship in a way that preserves original lineage.
     const visited = new Set();
-    const search = (reaction: T, nodes: Set<R>): void => {
+    const search = (parentNode: T, nodes: Set<R>): void => {
       for (const node of nodes) {
         if (node instanceof type) {
-          collapsed.addEdge(reaction, node);
+          collapsed.addEdge(parentNode, node);
           if (!visited.has(node)) {
             visited.add(node);
             search(node, apg.getOriginsOfEffect(node));
           }
         } else {
-          search(reaction, apg.getOriginsOfEffect(node));
+          search(parentNode, apg.getOriginsOfEffect(node));
         }
       }
     }
@@ -479,6 +480,7 @@ export class SortableDependencyGraph<
     return collapsed;
   }
 
+  // This implements Kahn's algorithm
   updatePriorities(destructive: boolean, spacing = 100): boolean {
     const start = new Array<T>();
     let graph: Map<T, Set<T>>;
