@@ -2586,36 +2586,9 @@ export class App extends Reactor {
     console.log(apg.toString());
 
     Log.debug(this, () => "Before collapse: " + apg.toString());
-    const collapsed = new SortableDependencyGraph();
-
+    
     // 1. Collapse dependencies and weed out the ports.
-    const leafs = apg.pureEffectNodes();
-    const visited = new Set();
-
-    function search(
-      reaction: Reaction<unknown>,
-      nodes: Set<Port<Present> | Reaction<unknown>>
-    ): void {
-      for (const node of nodes) {
-        if (node instanceof Reaction) {
-          collapsed.addEdge(reaction, node);
-          if (!visited.has(node)) {
-            visited.add(node);
-            search(node, apg.getOriginsOfEffect(node));
-          }
-        } else {
-          search(reaction, apg.getOriginsOfEffect(node));
-        }
-      }
-    }
-
-    for (const leaf of leafs) {
-      if (leaf instanceof Reaction) {
-        collapsed.addNode(leaf);
-        search(leaf, apg.getOriginsOfEffect(leaf));
-        visited.clear();
-      }
-    }
+    const collapsed = SortableDependencyGraph.fromDependencyGraph(apg, Reaction<unknown>);
 
     // 2. Update priorities.
     Log.debug(this, () => "After collapse: " + collapsed.toString());
