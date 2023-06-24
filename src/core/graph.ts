@@ -184,7 +184,7 @@ export class DependencyGraph<T> {
       for (const next of this.getOriginsOfEffect(current)) {
         if (!visited.has(next)) search(next);
       }
-    }
+    };
     search(effect);
     reachable.delete(effect);
 
@@ -197,9 +197,9 @@ export class DependencyGraph<T> {
    * Refer to https://stackoverflow.com/a/56317289
    */
   hasCycle(): boolean {
-    const stack = new Array<T>;
-    const visited = new Set<T>;
-    const currentDirectAncestors = new Set<T>;
+    const stack = new Array<T>();
+    const visited = new Set<T>();
+    const currentDirectAncestors = new Set<T>();
 
     for (const v of this.getNodes()) {
       if (visited.has(v)) {
@@ -280,7 +280,7 @@ export class DependencyGraph<T> {
     return this.adjacencyMap.keys();
   }
 
-  toString : (() => string) = (() => this.toMermaidRepresentation());
+  toString: () => string = () => this.toMermaidRepresentation();
 
   /**
    * Return a representation that conforms with the syntax of mermaid.js
@@ -294,7 +294,9 @@ export class DependencyGraph<T> {
     const getNodeString = (node: T, def: string): string => {
       if (node == null || node?.toString === Object.prototype.toString) {
         console.error(
-          `Encountered node with no toString() implementation: ${String(node?.constructor)}`
+          `Encountered node with no toString() implementation: ${String(
+            node?.constructor
+          )}`
         );
         return def;
       }
@@ -305,7 +307,7 @@ export class DependencyGraph<T> {
     {
       let counter = 0;
       for (const v of this.getNodes()) {
-        result += `\n${counter}["${getNodeString(v, String(counter))}"]`
+        result += `\n${counter}["${getNodeString(v, String(counter))}"]`;
         nodeToNumber.set(v, counter++);
       }
     }
@@ -446,12 +448,13 @@ export class SortableDependencyGraph<
   T extends Sortable<number>
 > extends DependencyGraph<T> {
   static fromDependencyGraph<R, T extends Sortable<number>>(
-      apg: DependencyGraph<R>, 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      type: new (...args: any[]) => T): SortableDependencyGraph<T> {
+    apg: DependencyGraph<R>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    type: new (...args: any[]) => T
+  ): SortableDependencyGraph<T> {
     const collapsed = new SortableDependencyGraph<T>();
 
-    // Originally from reactor.ts. 
+    // Originally from reactor.ts.
     // This removes all nodes that are not of type `T`,
     // and reassign node relationship in a way that preserves original lineage.
     const visited = new Set();
@@ -467,7 +470,7 @@ export class SortableDependencyGraph<
           search(parentNode, apg.getOriginsOfEffect(node));
         }
       }
-    }
+    };
     const leafs = apg.pureEffectNodes();
     for (const leaf of leafs) {
       if (leaf instanceof type) {

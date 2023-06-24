@@ -677,7 +677,10 @@ export abstract class Reactor extends Component {
     // Make effects dependent on sources.
     for (const effect of effects) {
       for (const source of sources) {
-        this._causalityGraph.addEdge(effect as Port<Present>, source as Port<Present>);
+        this._causalityGraph.addEdge(
+          effect as Port<Present>,
+          source as Port<Present>
+        );
       }
     }
   }
@@ -775,9 +778,7 @@ export abstract class Reactor extends Component {
       );
       if (trigs.list.length > 1) {
         // A procedure can only have a single trigger.
-        throw new Error(
-          `Procedure "${procedure}" has multiple triggers.`
-        );
+        throw new Error(`Procedure "${procedure}" has multiple triggers.`);
       }
       procedure.active = true;
       this._recordDeps(procedure);
@@ -1372,7 +1373,7 @@ export abstract class Reactor extends Component {
           }
         }
       }
-    }
+    };
 
     // For each output, walk the graph and add dependencies to
     // the inputs that are reachable.
@@ -2267,10 +2268,7 @@ export class App extends Reactor {
         r = this._reactionQ.pop();
         r.doReact();
       } catch (e) {
-        Log.error(
-          this,
-          () => `Exception occurred in reaction: ${r}: ${e}`
-        );
+        Log.error(this, () => `Exception occurred in reaction: ${r}: ${e}`);
         // Allow errors in reactions to kill execution.
         throw e;
       }
@@ -2337,10 +2335,7 @@ export class App extends Reactor {
         while (nextEvent?.tag.isSimultaneousWith(this._currentTag) ?? false) {
           const trigger = nextEvent?.trigger;
           this._eventQ.pop();
-          Log.debug(
-            this,
-            () => `Popped off the event queue: ${trigger}`
-          );
+          Log.debug(this, () => `Popped off the event queue: ${trigger}`);
           // Handle timers.
           if (trigger instanceof Timer) {
             if (!trigger.period.isZero()) {
@@ -2586,9 +2581,12 @@ export class App extends Reactor {
     console.log(apg.toString());
 
     Log.debug(this, () => "Before collapse: " + apg.toString());
-    
+
     // 1. Collapse dependencies and weed out the ports.
-    const collapsed = SortableDependencyGraph.fromDependencyGraph(apg, Reaction<unknown>);
+    const collapsed = SortableDependencyGraph.fromDependencyGraph(
+      apg,
+      Reaction<unknown>
+    );
 
     // 2. Update priorities.
     Log.debug(this, () => "After collapse: " + collapsed.toString());
@@ -2636,10 +2634,7 @@ export class App extends Reactor {
         this._startOfExecution.add(this._executionTimeout),
         0
       );
-      Log.debug(
-        this,
-        () => `Execution timeout: ${this._executionTimeout}`
-      );
+      Log.debug(this, () => `Execution timeout: ${this._executionTimeout}`);
 
       // If there is a known end of execution, schedule a shutdown reaction to that effect.
       this.__runtime.schedule(
