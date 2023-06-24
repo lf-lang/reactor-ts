@@ -2586,7 +2586,7 @@ export class App extends Reactor {
     console.log(apg.toString());
 
     Log.debug(this, () => "Before collapse: " + apg.toString());
-/*     const collapsed = new SortableDependencyGraph();
+    const collapsed = new SortableDependencyGraph();
 
     // 1. Collapse dependencies and weed out the ports.
     const leafs = apg.pureEffectNodes();
@@ -2618,9 +2618,9 @@ export class App extends Reactor {
     }
 
     // 2. Update priorities.
-    Log.debug(this, () => "After collapse: " + collapsed.toString()); */
+    Log.debug(this, () => "After collapse: " + collapsed.toString());
 
-    if (!apg.hasCycle()) {
+    if (collapsed.updatePriorities(true)) {
       Log.global.debug("No cycles.");
     } else {
       throw new Error("Cycle in reaction graph.");
