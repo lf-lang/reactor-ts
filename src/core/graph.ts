@@ -150,11 +150,13 @@ export class DependencyGraph<T> {
     }
   }
 
-  getOriginsOfEffect(node: T): Set<T> {
+  getChildren(node: T): Set<T> {
     return this.adjacencyMap.get(node) ?? new Set<T>();
   }
+  
+  getUpstreamNeighbors = this.getChildren.bind(this);
 
-  getEffectsOfOrigin(node: T): Set<T> {
+  getParents(node: T): Set<T> {
     const backEdges = new Set<T>();
     this.adjacencyMap.forEach((edges, dep) => {
       edges.forEach((edge) => {
@@ -165,6 +167,8 @@ export class DependencyGraph<T> {
     });
     return backEdges;
   }
+
+  getDownstreamNeighbors = this.getParents.bind(this);
 
   /**
    * Return the subset of origins that are reachable from the given effect.
@@ -181,7 +185,7 @@ export class DependencyGraph<T> {
     const search = (current: T): void => {
       visited.add(current);
       if (origins.has(current)) reachable.add(current);
-      for (const next of this.getOriginsOfEffect(current)) {
+      for (const next of this.getChildren(current)) {
         if (!visited.has(next)) search(next);
       }
     };
@@ -218,7 +222,7 @@ export class DependencyGraph<T> {
           currentDirectAncestors.add(top);
         }
 
-        for (const child of this.getOriginsOfEffect(top)) {
+        for (const child of this.getChildren(top)) {
           if (currentDirectAncestors.has(child)) return true;
           if (!visited.has(child)) stack.push(child);
         }
@@ -314,7 +318,7 @@ export class DependencyGraph<T> {
     // This is the effect
     for (const s of this.getNodes()) {
       // This is the origin
-      for (const t of this.getOriginsOfEffect(s)) {
+      for (const t of this.getChildren(s)) {
         result += `\n${nodeToNumber.get(t)}`;
         result += edgesWithIssue.has([s, t]) ? " --x " : " --> ";
         result += `${nodeToNumber.get(s)}`;
@@ -415,7 +419,7 @@ export class DependencyGraph<T> {
     return "digraph G {" + dot + "\n}";
   }
 
-  public pureOriginNodes(): Set<T> {
+  public sinkGraphNodes(): Set<T> {
     const roots = new Set<T>();
     /* Populate start set */
     for (const [v, e] of this.adjacencyMap) {
@@ -427,21 +431,22 @@ export class DependencyGraph<T> {
     return roots;
   }
 
-  // Leaf nodes are nodes that do not depend on any other nodes.
-  //
-  // In the context of cyclic graphs it is therefore possible to
-  // have a graph without any leaf nodes.
-  // As a result, starting a graph search only from leaf nodes in a
-  // cyclic graph, will not necessarily traverse the entire graph.
-  public pureEffectNodes(): Set<T> {
+  sourceDataNodes = this.sinkGraphNodes.bind(this);
+
+  // Source nodes are nodes that do not depend on any other nodes.
+  // In the context of cyclic graphs it is therefore possible to have a graph without any source nodes.
+  // As a result, starting a graph search only from leaf nodes in a cyclic graph will not necessarily traverse the entire graph.
+  public sourceGraphNodes(): Set<T> {
     const leafs = new Set<T>(this.getNodes());
     for (const node of this.getNodes()) {
-      for (const dep of this.getOriginsOfEffect(node)) {
+      for (const dep of this.getChildren(node)) {
         leafs.delete(dep);
       }
     }
     return leafs;
   }
+
+  sinkDataNodes = this.sourceGraphNodes.bind(this);
 }
 
 export class SortableDependencyGraph<
@@ -464,18 +469,18 @@ export class SortableDependencyGraph<
           collapsed.addEdge(parentNode, node);
           if (!visited.has(node)) {
             visited.add(node);
-            search(node, apg.getOriginsOfEffect(node));
+            search(node, apg.getChildren(node));
           }
         } else {
-          search(parentNode, apg.getOriginsOfEffect(node));
+          search(parentNode, apg.getChildren(node));
         }
       }
     };
-    const leafs = apg.pureEffectNodes();
+    const leafs = apg.sourceGraphNodes();
     for (const leaf of leafs) {
       if (leaf instanceof type) {
         collapsed.addNode(leaf);
-        search(leaf, apg.getOriginsOfEffect(leaf));
+        search(leaf, apg.getChildren(leaf));
         visited.clear();
       }
     }

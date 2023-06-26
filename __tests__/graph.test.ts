@@ -39,11 +39,11 @@ d2.addNode(node2);
 d2.addEdge(node1, node2);
 
 test("test pureEffectNodes() helper function", () => {
-  expect(d2.pureEffectNodes()).toEqual(new Set([node1]));
+  expect(d2.sinkDataNodes()).toEqual(new Set([node1]));
 });
 
 test("test pureOriginNodes() helper function", () => {
-  expect(d2.pureOriginNodes()).toEqual(new Set([node2]));
+  expect(d2.sourceDataNodes()).toEqual(new Set([node2]));
 });
 
 const d3 = new DependencyGraph<number>();
@@ -136,7 +136,7 @@ const d7 = new DependencyGraph<number>();
 const d8 = new DependencyGraph<number>();
 const d9 = new DependencyGraph<number>();
 test("test dependency graph", () => {
-  expect(d7.getOriginsOfEffect(node1).size).toBe(0);
+  expect(d7.getChildren(node1).size).toBe(0);
   d7.merge(d5);
   expect(d7.size()).toStrictEqual(d5.size());
 
@@ -144,7 +144,7 @@ test("test dependency graph", () => {
   d9.addEdge(node1, node2);
   d8.merge(d9);
   expect(d8.size()).toStrictEqual(d9.size());
-  expect(d9.getEffectsOfOrigin(node2).size).toBe(1);
+  expect(d9.getParents(node2).size).toBe(1);
   d8.removeNode(node2);
   expect(d8.size()).toStrictEqual([1, 0]);
 });
