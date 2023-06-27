@@ -1,6 +1,4 @@
-import type {Port} from "./port";
-import {Reaction} from "./reaction";
-import type {Present} from "./types";
+import type { Sortable } from "./types";
 import {Log} from "./util";
 
 /**
@@ -309,19 +307,24 @@ export class PrecedenceGraph<T> {
   }
 }
 
-export class ReactionGraph extends PrecedenceGraph<Reaction<unknown>> {
-  constructor(apg?: PrecedenceGraph<Port<Present> | Reaction<unknown>>) {
-    super()
-    if (apg === undefined) {
-        return;
-    }
+export class SortablePrecedenceGraph<
+  T extends Sortable<number>
+> extends PrecedenceGraph<T> {
+  static fromPrecedenceGraph<R, T extends Sortable<number>>(
+    apg: PrecedenceGraph<R>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    type: new (...args: any[]) => T
+  ): SortablePrecedenceGraph<T> {
+    const collapsed = new SortablePrecedenceGraph<T>();
+
+    // Originally from reactor.ts.
+    // This removes all nodes that are not of type `T`,
+    // and reassign node relationship in a way that preserves original lineage.
     const visited = new Set();
-    
-    // Only include nodes of type Reaction.
-    const search = (parentNode: Reaction<unknown>, nodes: Set<Port<Present> | Reaction<unknown>>): void => {
+    const search = (parentNode: T, nodes: Set<R>): void => {
       for (const node of nodes) {
-        if (node instanceof Reaction) {
-          this.addEdge(parentNode, node);
+        if (node instanceof type) {
+          collapsed.addEdge(parentNode, node);
           if (!visited.has(node)) {
             visited.add(node);
             search(node, apg.getUpstream(node));
@@ -333,18 +336,20 @@ export class ReactionGraph extends PrecedenceGraph<Reaction<unknown>> {
     };
     const leafs = apg.sinkNodes();
     for (const leaf of leafs) {
-      if (leaf instanceof Reaction) {
-        this.addNode(leaf);
+      if (leaf instanceof type) {
+        collapsed.addNode(leaf);
         search(leaf, apg.getUpstream(leaf));
         visited.clear();
       }
     }
+
+    return collapsed;
   }
 
   // This implements Kahn's algorithm
   updatePriorities(destructive: boolean, spacing = 100): boolean {
-    const start = new Array<Reaction<unknown>>();
-    let graph: Map<Reaction<unknown>, Set<Reaction<unknown>>>;
+    const start = new Array<T>();
+    let graph: Map<T, Set<T>>;
     let count = 0;
     if (!destructive) {
       graph = new Map();
@@ -364,7 +369,7 @@ export class ReactionGraph extends PrecedenceGraph<Reaction<unknown>> {
       }
     }
     /* Sort reactions */
-    for (let n: Reaction<unknown> | undefined; (n = start.shift()) != null; count += spacing) {
+    for (let n: T | undefined; (n = start.shift()) != null; count += spacing) {
       n.setPriority(count);
       // for each node v with an edge e from n to v do
       for (const [v, e] of graph) {

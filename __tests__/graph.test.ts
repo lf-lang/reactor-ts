@@ -1,10 +1,9 @@
-import type {PrioritySetElement} from "../src/core/queue";
+import {PrioritySet, PrioritySetElement} from "../src/core/queue";
 import type { Sortable } from "../src/core/types";
 import {
   PrecedenceGraph,
-  ReactionGraph
+  SortablePrecedenceGraph
 } from "../src/core/graph";
-import { Reaction } from "../src/core/reaction";
 /**
  * The tests below test the functionality of the hasCycle() utility function on various
  * dependency graphs, in combination with various graph manipulation utilities
@@ -18,7 +17,7 @@ const node3 = 3;
 const node4 = 4;
 const node5 = 5;
 
-const d0 = new DependencyGraph<number>();
+const d0 = new PrecedenceGraph<number>();
 d0.addNode(node1);
 d0.addEdge(node1, node1);
 
@@ -39,12 +38,12 @@ d2.addNode(node1);
 d2.addNode(node2);
 d2.addEdge(node1, node2);
 
-test("test pureEffectNodes() helper function", () => {
-  expect(d2.sinkDataNodes()).toEqual(new Set([node1]));
+test("test sinkNodes() helper function", () => {
+  expect(d2.sinkNodes()).toEqual(new Set([node1]));
 });
 
-test("test pureOriginNodes() helper function", () => {
-  expect(d2.sourceDataNodes()).toEqual(new Set([node2]));
+test("test sourceNodes() helper function", () => {
+  expect(d2.sourceNodes()).toEqual(new Set([node2]));
 });
 
 const d3 = new PrecedenceGraph<number>();
@@ -137,7 +136,7 @@ const d7 = new PrecedenceGraph<number>();
 const d8 = new PrecedenceGraph<number>();
 const d9 = new PrecedenceGraph<number>();
 test("test dependency graph", () => {
-  expect(d7.getChildren(node1).size).toBe(0);
+  expect(d7.getUpstreamNodes(node1).size).toBe(0);
   d7.merge(d5);
   expect(d7.size()).toStrictEqual(d5.size());
 
@@ -145,7 +144,7 @@ test("test dependency graph", () => {
   d9.addEdge(node1, node2);
   d8.merge(d9);
   expect(d8.size()).toStrictEqual(d9.size());
-  expect(d9.getParents(node2).size).toBe(1);
+  expect(d9.getDownstreamNodes(node2).size).toBe(1);
   d8.removeNode(node2);
   expect(d8.size()).toStrictEqual([1, 0]);
 });
@@ -193,27 +192,8 @@ test("test the DOT representation of the dependency graph", () => {
   expect(d11.toDOTRepresentation()).toBe('digraph G {\n"1"->"2"->"1"->"3";\n"2"->"3";\n}');
 });
 
-const d13 = new PrecedenceGraph<number>();
-test("test for reachableOrigins function of the dependency graph", () => {
-  d13.addEdge(node1, node2);
-  d13.addEdge(node1, node3);
-  d13.addEdge(node2, node4); // { (node1 -> node2 -> node4), (node1 -> node3) }
-  expect(d13.reachableOrigins(node1, new Set<number>(d13.getNodes())).size).toBe(
-    3
-  );
-  expect(d13.reachableOrigins(node2, new Set<number>(d13.getNodes())).size).toBe(
-    1
-  );
-  expect(d13.reachableOrigins(node3, new Set<number>(d13.getNodes())).size).toBe(
-    0
-  );
-  expect(d13.reachableOrigins(node4, new Set<number>(d13.getNodes())).size).toBe(
-    0
-  );
-});
-
-const sd0 = new ReactionGraph();
-const sd1 = new ReactionGraph();
+const sd0 = new SortablePrecedenceGraph<Sortable<number>>();
+const sd1 = new SortablePrecedenceGraph<Sortable<number>>();
 
 class SortVariable implements Sortable<number> {
   next: PrioritySetElement<number> | undefined;

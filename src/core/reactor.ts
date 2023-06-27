@@ -24,7 +24,7 @@ import {
   getCurrentPhysicalTime,
   Alarm,
   PrioritySet,
-  ReactionGraph,
+  SortablePrecedenceGraph,
   Log,
   PrecedenceGraph,
   Reaction,
@@ -864,7 +864,7 @@ export abstract class Reactor extends Component {
       const procedure = p.getManager(this._getKey(p)).getProcedure();
       const lastCaller = p.getManager(this._getKey(p)).getLastCaller();
       if (procedure != null && lastCaller != null) {
-        const effects = this._dependencyGraph.getDownstream(procedure);
+        const effects = this._dependencyGraph.getDownstreamNodes(procedure);
         for (const e of effects) {
           if (!(e instanceof CalleePort)) {
             // Also add edge to the local graph.
@@ -1080,7 +1080,7 @@ export abstract class Reactor extends Component {
     // Check the race condition
     //   - between reactors and reactions (NOTE: check also needs to happen
     //     in addReaction)
-    const deps = this._dependencyGraph.getUpstream(dst); // FIXME this will change with multiplex ports
+    const deps = this._dependencyGraph.getUpstreamNodes(dst); // FIXME this will change with multiplex ports
     if (deps !== undefined && deps.size > 0) {
       throw Error("Destination port is already occupied.");
     }
@@ -1093,7 +1093,7 @@ export abstract class Reactor extends Component {
       // console.log("IOPort")
       // Rule out write conflicts.
       //   - (between reactors)
-      if (this._dependencyGraph.getDownstream(dst).size > 0) {
+      if (this._dependencyGraph.getDownstreamNodes(dst).size > 0) {
         return false;
       }
 
@@ -1321,7 +1321,7 @@ export abstract class Reactor extends Component {
       const callerManager = src.getManager(this._getKey(src));
       const container = callerManager.getContainer();
       const callers = new Set<Reaction<any>>();
-      container._dependencyGraph.getDownstream(src).forEach((dep) => {
+      container._dependencyGraph.getDownstreamNodes(src).forEach((dep) => {
         if (dep instanceof Reaction) {
           callers.add(dep);
         }
@@ -1369,7 +1369,7 @@ export abstract class Reactor extends Component {
           if (node instanceof InPort && inputs.has(node as InPort<Present>)) {
             ifGraph.addEdge(output, node);
           } else {
-            search(output, this._dependencyGraph.getUpstream(output));
+            search(output, this._dependencyGraph.getUpstreamNodes(output));
           }
         }
       }
@@ -1378,7 +1378,7 @@ export abstract class Reactor extends Component {
     // For each output, walk the graph and add dependencies to
     // the inputs that are reachable.
     for (const output of outputs) {
-      search(output, this._dependencyGraph.getUpstream(output));
+      search(output, this._dependencyGraph.getUpstreamNodes(output));
       visited.clear();
     }
 
@@ -1465,7 +1465,7 @@ export abstract class Reactor extends Component {
       src.getManager(this._getKey(src)).delReceiver(writer as WritablePort<S>);
       this._dependencyGraph.removeEdge(dst, src);
     } else {
-      const nodes = this._dependencyGraph.getDownstream(src);
+      const nodes = this._dependencyGraph.getDownstreamNodes(src);
       for (const node of nodes) {
         if (node instanceof IOPort) {
           const writer = node.asWritable(this._getKey(node));
@@ -2583,7 +2583,10 @@ export class App extends Reactor {
     Log.debug(this, () => "Before collapse: " + apg.toString());
 
     // 1. Collapse dependencies and weed out the ports.
-    const collapsed = new ReactionGraph(apg);
+    const collapsed = SortablePrecedenceGraph.fromPrecedenceGraph(
+        apg,
+        Reaction<unknown>
+      );
 
     // 2. Update priorities.
     Log.debug(this, () => "After collapse: " + collapsed.toString());
