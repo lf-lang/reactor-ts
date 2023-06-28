@@ -6,7 +6,7 @@
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
 
-import type {
+import {
   Priority,
   Absent,
   ArgList,
@@ -15,7 +15,8 @@ import type {
   Sched,
   Variable,
   Write,
-  TriggerManager
+  TriggerManager,
+  ReactionGraph
 } from "./internal";
 import {
   TimeValue,
@@ -24,7 +25,6 @@ import {
   getCurrentPhysicalTime,
   Alarm,
   PrioritySet,
-  SortablePrecedenceGraph,
   Log,
   PrecedenceGraph,
   Reaction,
@@ -2583,7 +2583,7 @@ export class App extends Reactor {
     Log.debug(this, () => "Before collapse: " + apg.toString());
 
     // 1. Collapse dependencies and weed out the ports.
-    const collapsed = new SortablePrecedenceGraph(Reaction<unknown>, apg);
+    const collapsed = new ReactionGraph(apg);
 
     // 2. Update priorities.
     Log.debug(this, () => "After collapse: " + collapsed.toString());

@@ -3,6 +3,7 @@
  * @author Marten Lohstroh <marten@berkeley.edu>
  */
 
+import { Reaction } from "./reaction";
 import type {Sortable} from "./types";
 import {Log} from "./util";
 
@@ -450,4 +451,13 @@ export class SortablePrecedenceGraph<
       return true;
     }
   }
+}
+
+/**
+ * A sortable precedence graph for reactions.
+ */
+export class ReactionGraph extends SortablePrecedenceGraph<Reaction<unknown>> {
+    constructor(pg?: PrecedenceGraph<unknown>) {
+        super(Reaction<unknown>, pg)
+    }
 }
