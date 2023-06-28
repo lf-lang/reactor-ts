@@ -134,7 +134,7 @@ export class PrecedenceGraph<T> {
    * Add an edge that denotes origin effect relationship,
    * which, in the underlying dependency graph, has direction effect->origin.
    */
-  addEdge(downstream: T, upstream: T): void {
+  addEdge(upstream: T, downstream: T): void {
     // FIXME: switch order.
     const deps = this.adjacencyMap.get(downstream);
     if (deps == null) {
@@ -154,7 +154,7 @@ export class PrecedenceGraph<T> {
     }
   }
 
-  removeEdge(downstream: T, upstream: T): void {
+  removeEdge(upstream: T, downstream: T): void {
     // FIXME: switch order.
     const deps = this.adjacencyMap.get(downstream);
     if (deps?.has(upstream) ?? false) {
@@ -181,8 +181,8 @@ export class PrecedenceGraph<T> {
 
   /**
    * Return a representation that conforms with the syntax of mermaid.js
-   * @param edgesWithIssue Edges in the **dependency** graph that causes issues
-   * to the execution. A set containing arrays with [effect, origin].
+   * @param edgesWithIssue A set containing arrays with [origin, effect].
+   * Denotes edges in the graph that causes issues to the execution, will be visualized as `--x` in mermaid.
    */
   toMermaidString(edgesWithIssue?: Set<[T, T]>): string {
     if (edgesWithIssue == null) edgesWithIssue = new Set();
@@ -201,6 +201,10 @@ export class PrecedenceGraph<T> {
     };
 
     // Build a block here since we only need `counter` temporarily here
+
+    // We use numbers instead of names of reactors directly as node names
+    // in mermaid.js because mermaid has strict restrictions regarding
+    // what could be used as names of the node. 
     {
       let counter = 0;
       for (const v of this.getNodes()) {
@@ -357,7 +361,7 @@ export class SortablePrecedenceGraph<
     const search = (parentNode: T, nodes: Set<R>): void => {
       for (const node of nodes) {
         if (node instanceof type) {
-          collapsed.addEdge(parentNode, node);
+          collapsed.addEdge(node, parentNode);
           if (!visited.has(node)) {
             visited.add(node);
             search(node, apg.getUpstreamNeighbors(node));

@@ -595,7 +595,7 @@ export abstract class Reactor extends Component {
     // Add a dependency on the previous reaction or mutation, if it exists.
     const prev = this._getLastReactionOrMutation();
     if (prev != null) {
-      this._dependencyGraph.addEdge(reaction, prev);
+      this._dependencyGraph.addEdge(prev, reaction);
     }
 
     // FIXME: Add a dependency on the last mutation that the owner of this reactor
@@ -620,18 +620,18 @@ export abstract class Reactor extends Component {
 
       // Also record this trigger as a dependency.
       if (t instanceof IOPort) {
-        this._dependencyGraph.addEdge(reaction, t);
+        this._dependencyGraph.addEdge(t, reaction);
       } else if (t instanceof MultiPort) {
         t.channels().forEach((channel) => {
-          this._dependencyGraph.addEdge(reaction, channel);
+          this._dependencyGraph.addEdge(channel, reaction);
         });
       } else if (t instanceof Array) {
         t.forEach((trigger) => {
           if (trigger instanceof IOPort) {
-            this._dependencyGraph.addEdge(reaction, trigger);
+            this._dependencyGraph.addEdge(trigger, reaction);
           } else if (trigger instanceof MultiPort) {
             trigger.channels().forEach((channel) => {
-              this._dependencyGraph.addEdge(reaction, channel);
+              this._dependencyGraph.addEdge(channel, reaction);
             });
           } else {
             throw new Error("Non-Port included in Triggers list.");
@@ -647,17 +647,17 @@ export abstract class Reactor extends Component {
 
     for (const a of reaction.args.tuple) {
       if (a instanceof IOPort) {
-        this._dependencyGraph.addEdge(reaction, a);
+        this._dependencyGraph.addEdge(a, reaction);
         sources.add(a);
       } else if (a instanceof MultiPort) {
         a.channels().forEach((channel) => {
-          this._dependencyGraph.addEdge(reaction, channel);
+          this._dependencyGraph.addEdge(channel, reaction);
           sources.add(channel);
         });
       } else if (a instanceof CalleePort) {
-        this._dependencyGraph.addEdge(a, reaction);
-      } else if (a instanceof CallerPort) {
         this._dependencyGraph.addEdge(reaction, a);
+      } else if (a instanceof CallerPort) {
+        this._dependencyGraph.addEdge(a, reaction);
       }
       // Only necessary if we want to add actions to the dependency graph.
       else if (a instanceof Action) {
@@ -665,11 +665,11 @@ export abstract class Reactor extends Component {
       } else if (a instanceof SchedulableAction) {
         // antidep
       } else if (a instanceof WritablePort) {
-        this._dependencyGraph.addEdge(a.getPort(), reaction);
+        this._dependencyGraph.addEdge(reaction, a.getPort());
         effects.add(a.getPort());
       } else if (a instanceof WritableMultiPort) {
         a.getPorts().forEach((channel) => {
-          this._dependencyGraph.addEdge(channel, reaction);
+          this._dependencyGraph.addEdge(reaction, channel);
           effects.add(channel);
         });
       }
@@ -678,8 +678,8 @@ export abstract class Reactor extends Component {
     for (const effect of effects) {
       for (const source of sources) {
         this._causalityGraph.addEdge(
-          effect as Port<Present>,
-          source as Port<Present>
+          source as Port<Present>,
+          effect as Port<Present>
         );
       }
     }
@@ -847,7 +847,7 @@ export abstract class Reactor extends Component {
       toDependOn != null &&
       this._getContainer() !== this
     ) {
-      this._dependencyGraph.addEdge(dependent, toDependOn); // FIXME: this assumes there is always at least one mutation.
+      this._dependencyGraph.addEdge(toDependOn, dependent); // FIXME: this assumes there is always at least one mutation.
     }
   }
 
@@ -868,7 +868,7 @@ export abstract class Reactor extends Component {
         for (const e of effects) {
           if (!(e instanceof CalleePort)) {
             // Also add edge to the local graph.
-            this._dependencyGraph.addEdge(e, lastCaller);
+            this._dependencyGraph.addEdge(lastCaller, e);
           }
         }
       } else {
@@ -1124,7 +1124,7 @@ export abstract class Reactor extends Component {
       }
 
       // Add the new edge.
-      graph.addEdge(dst, src);
+      graph.addEdge(src, dst);
 
       // 1) check for loops
       const hasCycle = graph.hasCycle();
@@ -1199,7 +1199,7 @@ export abstract class Reactor extends Component {
   ): void {
     Log.debug(this, () => `connecting ${src} and ${dst}`);
     // Add dependency implied by connection to local graph.
-    this._dependencyGraph.addEdge(dst, src);
+    this._dependencyGraph.addEdge(src, dst);
     // Register receiver for value propagation.
     const writer = dst.asWritable(this._getKey(dst));
     src.getManager(this._getKey(src)).addReceiver(writer as WritablePort<S>);
@@ -1334,9 +1334,9 @@ export abstract class Reactor extends Component {
         // there may be zero or more callers. We now continue
         // building a chain of callers.
         if (first != null) {
-          this._dependencyGraph.addEdge(first, lastCaller);
+          this._dependencyGraph.addEdge(lastCaller, first);
         } else {
-          this._dependencyGraph.addEdge(src, dst);
+          this._dependencyGraph.addEdge(dst, src);
         }
         if (last != null) calleeManager.setLastCaller(last);
       } else {
@@ -1367,7 +1367,7 @@ export abstract class Reactor extends Component {
         if (!visited.has(node)) {
           visited.add(node);
           if (node instanceof InPort && inputs.has(node as InPort<Present>)) {
-            ifGraph.addEdge(output, node);
+            ifGraph.addEdge(node, output);
           } else {
             search(output, this._dependencyGraph.getUpstreamNeighbors(output));
           }
@@ -1463,7 +1463,7 @@ export abstract class Reactor extends Component {
     if (dst instanceof IOPort) {
       const writer = dst.asWritable(this._getKey(dst));
       src.getManager(this._getKey(src)).delReceiver(writer as WritablePort<S>);
-      this._dependencyGraph.removeEdge(dst, src);
+      this._dependencyGraph.removeEdge(src, dst);
     } else {
       const nodes = this._dependencyGraph.getDownstreamNeighbors(src);
       for (const node of nodes) {
@@ -1472,7 +1472,7 @@ export abstract class Reactor extends Component {
           src
             .getManager(this._getKey(src))
             .delReceiver(writer as WritablePort<S>);
-          this._dependencyGraph.removeEdge(node, src);
+          this._dependencyGraph.removeEdge(src, node);
         }
       }
     }
