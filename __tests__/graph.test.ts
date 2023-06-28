@@ -136,7 +136,7 @@ const d7 = new PrecedenceGraph<number>();
 const d8 = new PrecedenceGraph<number>();
 const d9 = new PrecedenceGraph<number>();
 test("test dependency graph", () => {
-  expect(d7.getUpstreamNodes(node1).size).toBe(0);
+  expect(d7.getUpstream(node1).size).toBe(0);
   d7.merge(d5);
   expect(d7.size()).toStrictEqual(d5.size());
 
@@ -144,7 +144,7 @@ test("test dependency graph", () => {
   d9.addEdge(node1, node2);
   d8.merge(d9);
   expect(d8.size()).toStrictEqual(d9.size());
-  expect(d9.getDownstreamNodes(node2).size).toBe(1);
+  expect(d9.getDownstream(node2).size).toBe(1);
   d8.removeNode(node2);
   expect(d8.size()).toStrictEqual([1, 0]);
 });
