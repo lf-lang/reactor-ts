@@ -1,3 +1,11 @@
+/**
+ * @file A collection of classes for handling queues.
+ * @author Marten Lohstroh <marten@berkeley.edu>
+ */
+
+/**
+ * Interface for prioritized elements than be hooked into a linked list.
+ */
 export interface PrioritySetElement<P> {
   /**
    * Pointer to the next node in the priority set.
@@ -10,7 +18,7 @@ export interface PrioritySetElement<P> {
   getPriority: () => P;
 
   /**
-   * Determine whether this node has priority over the given node or not.
+   * Return true if this node has priority over the given node, false otherwise.
    * @param node A node to compare the priority of this node to.
    */
   hasPriorityOver: (node: PrioritySetElement<P>) => boolean;
@@ -24,13 +32,55 @@ export interface PrioritySetElement<P> {
 }
 
 /**
- * A priority queue that overwrites duplicate entries.
+ * A deduplicating priority queue that overwrites duplicate entries,
+ * based on a singly-linked list.
  */
 export class PrioritySet<P> {
-  private head: PrioritySetElement<P> | undefined;
-
+  /**
+   * The number of elements in the queue.
+   */
   private count = 0;
 
+  /**
+   * The first-in-line element in the queue.
+   */
+  private head: PrioritySetElement<P> | undefined;
+
+  /**
+   * Empty the queue.
+   */
+  empty(): void {
+    this.head = undefined;
+    this.count = 0;
+  }
+
+  /**
+   * Return the first-in-line element of the queue, but do not remove it.
+   */
+  peek(): PrioritySetElement<P> | undefined {
+    if (this.head != null) {
+      return this.head;
+    }
+  }
+
+  /**
+   * Return the first-in-line element of the queue and remove it.
+   */
+  pop(): PrioritySetElement<P> | undefined {
+    if (this.head != null) {
+      const node = this.head;
+      this.head = this.head.next;
+      node.next = undefined; // unhook from linked list
+      this.count--;
+      return node;
+    }
+  }
+
+  /**
+   * Insert a new element into the queue based on its priority.
+   * If a duplicate entry already exists, abort the insertion.
+   * @param element The element to push onto the queue.
+   */
   push(element: PrioritySetElement<P>): void {
     // update linked list
     if (this.head === undefined) {
@@ -78,28 +128,10 @@ export class PrioritySet<P> {
     }
   }
 
-  pop(): PrioritySetElement<P> | undefined {
-    if (this.head != null) {
-      const node = this.head;
-      this.head = this.head.next;
-      node.next = undefined; // unhook from linked list
-      this.count--;
-      return node;
-    }
-  }
-
-  peek(): PrioritySetElement<P> | undefined {
-    if (this.head != null) {
-      return this.head;
-    }
-  }
-
+  /**
+   * Return the number of elements in the queue.
+   */
   size(): number {
     return this.count;
-  }
-
-  empty(): void {
-    this.head = undefined;
-    this.count = 0;
   }
 }

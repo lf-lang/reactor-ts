@@ -1,9 +1,9 @@
 /**
- * @file A collection of classes for dealing with graphs.
+ * @file A collection of classes for handling graphs.
  * @author Marten Lohstroh <marten@berkeley.edu>
  */
 
-import { Reaction } from "./reaction";
+import {Reaction} from "./reaction";
 import type {Sortable} from "./types";
 import {Log} from "./util";
 
@@ -457,7 +457,7 @@ export class SortablePrecedenceGraph<
  * A sortable precedence graph for reactions.
  */
 export class ReactionGraph extends SortablePrecedenceGraph<Reaction<unknown>> {
-    constructor(pg?: PrecedenceGraph<unknown>) {
-        super(Reaction<unknown>, pg)
-    }
+  constructor(pg?: PrecedenceGraph<unknown>) {
+    super(Reaction<unknown>, pg);
+  }
 }

@@ -1,4 +1,4 @@
-import {Reaction, Priority, Sortable, ReactionGraph} from "../src/core/internal";
+import {Priority, Sortable, ReactionGraph} from "../src/core/internal";
 import {
   Reactor,
   App,
