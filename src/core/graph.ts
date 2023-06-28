@@ -1,22 +1,32 @@
+/**
+ * @file A collection of classes for dealing with graphs.
+ * @author Marten Lohstroh <marten@berkeley.edu>
+ */
+
 import type { Sortable } from "./types";
 import {Log} from "./util";
 
 /**
- * Classes for graphs.
- *
- * @author Marten Lohstroh (marten@berkeley.edu)
+ * A generic precedence graph.
  */
-
 export class PrecedenceGraph<T> {
+  
   /**
-   * Map nodes to the set of nodes that they depend on.
-   **/
+   * A map from nodes to the set of nodes that they depend on.
+   */
   protected adjacencyMap = new Map<T, Set<T>>();
 
+  /**
+   * The total number of edges in the graph.
+   */
   protected numberOfEdges = 0;
 
-  merge(apg: this): void {
-    for (const [k, v] of apg.adjacencyMap) {
+  /**
+   * Add all the nodes and edges from the given precedence graph to this one.
+   * @param pg A precedence graph
+   */
+  addAll(pg: this): void {
+    for (const [k, v] of pg.adjacencyMap) {
       const nodes = this.adjacencyMap.get(k);
       if (nodes != null) {
         for (const n of v) {
@@ -32,17 +42,32 @@ export class PrecedenceGraph<T> {
     }
   }
 
+
+  /**
+   * Add the given node to this graph.
+   * @param node 
+   */
   addNode(node: T): void {
     if (!this.adjacencyMap.has(node)) {
       this.adjacencyMap.set(node, new Set());
     }
   }
-
-  getUpstream(node: T): Set<T> {
+  
+  /**
+   * Return the set of all incoming nodes of the given node.
+   * Incoming nodes are immediate upstream neighbors.
+   * @param node The node to retrieve the incoming nodes of.
+   */
+  getInNodes(node: T): Set<T> {
     return this.adjacencyMap.get(node) ?? new Set<T>();
   }
 
-  getDownstream(node: T): Set<T> {
+  /**
+   * Return the set of all outgoing nodes of the given node.
+   * Outgoing nodes are immediate downstream neighbors.
+   * @param node The node to retrieve the outgoing nodes of.
+   */
+  getOutNodes(node: T): Set<T> {
     const backEdges = new Set<T>();
     this.adjacencyMap.forEach((edges, dep) => {
       edges.forEach((edge) => {
@@ -55,17 +80,16 @@ export class PrecedenceGraph<T> {
   }
 
   /**
-   * Return true if the DAG has a cycle.
-   *
-   * This uses DFS with iteration to check for back edges in the graph.
-   * Iteration is used because TS does not have tail recursion.
-   * Refer to https://stackoverflow.com/a/56317289
+   * Return true if the graph has a cycle in it.
    */
   hasCycle(): boolean {
     const stack = new Array<T>();
     const visited = new Set<T>();
     const currentDirectAncestors = new Set<T>();
 
+    // This uses DFS with iteration to check for back edges in the graph.
+    // Iteration is used because TS does not have tail recursion.
+    // Refer to https://stackoverflow.com/a/56317289
     for (const v of this.getNodes()) {
       if (visited.has(v)) {
         continue;
@@ -83,7 +107,7 @@ export class PrecedenceGraph<T> {
           currentDirectAncestors.add(top);
         }
 
-        for (const child of this.getUpstream(top)) {
+        for (const child of this.getInNodes(top)) {
           if (currentDirectAncestors.has(child)) return true;
           if (!visited.has(child)) stack.push(child);
         }
@@ -92,6 +116,10 @@ export class PrecedenceGraph<T> {
     return false;
   }
 
+  /**
+   * Remove the given node from the graph.
+   * @param node The node to remove.
+   */
   removeNode(node: T): void {
     let deps: Set<T> | undefined;
     if ((deps = this.adjacencyMap.get(node)) != null) {
@@ -180,7 +208,7 @@ export class PrecedenceGraph<T> {
     // This is the effect
     for (const s of this.getNodes()) {
       // This is the origin
-      for (const t of this.getUpstream(s)) {
+      for (const t of this.getInNodes(s)) {
         result += `\n${nodeToNumber.get(t)}`;
         result += edgesWithIssue.has([s, t]) ? " --x " : " --> ";
         result += `${nodeToNumber.get(s)}`;
@@ -299,7 +327,7 @@ export class PrecedenceGraph<T> {
   public sinkNodes(): Set<T> {
     const leafs = new Set<T>(this.getNodes());
     for (const node of this.getNodes()) {
-      for (const dep of this.getUpstream(node)) {
+      for (const dep of this.getInNodes(node)) {
         leafs.delete(dep);
       }
     }
@@ -310,6 +338,7 @@ export class PrecedenceGraph<T> {
 export class SortablePrecedenceGraph<
   T extends Sortable<number>
 > extends PrecedenceGraph<T> {
+
   static fromPrecedenceGraph<R, T extends Sortable<number>>(
     apg: PrecedenceGraph<R>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -327,10 +356,10 @@ export class SortablePrecedenceGraph<
           collapsed.addEdge(parentNode, node);
           if (!visited.has(node)) {
             visited.add(node);
-            search(node, apg.getUpstream(node));
+            search(node, apg.getInNodes(node));
           }
         } else {
-          search(parentNode, apg.getUpstream(node));
+          search(parentNode, apg.getInNodes(node));
         }
       }
     };
@@ -338,7 +367,7 @@ export class SortablePrecedenceGraph<
     for (const leaf of leafs) {
       if (leaf instanceof type) {
         collapsed.addNode(leaf);
-        search(leaf, apg.getUpstream(leaf));
+        search(leaf, apg.getInNodes(leaf));
         visited.clear();
       }
     }
