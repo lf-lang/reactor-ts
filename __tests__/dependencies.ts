@@ -1,4 +1,4 @@
-import type {Priority, Sortable} from "../src/core/internal";
+import type {Reaction, Priority, Sortable} from "../src/core/internal";
 import {
   Reactor,
   App,
@@ -8,8 +8,7 @@ import {
   SortablePrecedenceGraph,
   PrioritySet,
   Log,
-  StringUtil,
-  Reaction
+  StringUtil
 } from "../src/core/internal";
 
 // Log.setGlobalLevel(Log.levels.DEBUG);
@@ -57,7 +56,7 @@ class CNode<T> implements Sortable<Priority> {
 }
 
 describe("Manually constructed simple precedence graphs", () => {
-  var graph = new SortablePrecedenceGraph<Sortable<Priority>>(Reaction<unknown>);
+  var graph = new SortablePrecedenceGraph<Sortable<Priority>>();
   var reactor = new SR(new App());
 
   var nodes = reactor.getNodes();
@@ -76,7 +75,7 @@ describe("Test for corner cases", () => {
 });
 
 describe("Manually constructed precedence graphs", () => {
-  var graph = new SortablePrecedenceGraph<Sortable<Priority>>(Reaction<unknown>);
+  var graph = new SortablePrecedenceGraph<Sortable<Priority>>();
   var reactor = new R(new App());
 
   var nodes = reactor.getNodes();
@@ -205,7 +204,7 @@ describe("Manually constructed precedence graphs", () => {
 });
 
 describe("ReactionQ", () => {
-  var graph = new SortablePrecedenceGraph<Reaction<unknown>>(Reaction<unknown>);
+  var graph = new SortablePrecedenceGraph<Reaction<unknown>>();
   var reactor = new R(new App());
 
   var nodes = reactor.getNodes();
