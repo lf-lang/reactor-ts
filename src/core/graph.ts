@@ -221,7 +221,9 @@ export class PrecedenceGraph<T> {
       // This is the origin
       for (const t of this.getUpstreamNeighbors(s)) {
         result += `\n${nodeToNumber.get(t)}`;
-        result += edgesWithIssue.some((v) => v[0] === t && v[1] === s) ? " --x " : " --> ";
+        result += edgesWithIssue.some((v) => v[0] === t && v[1] === s)
+          ? " --x "
+          : " --> ";
         result += `${nodeToNumber.get(s)}`;
       }
     }

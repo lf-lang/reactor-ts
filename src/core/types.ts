@@ -111,11 +111,11 @@ export class Triggers {
 }
 
 export interface Sortable<P> {
-    setPriority: (priority: P) => void;
-  
-    // getSTPUntil(): TimeInstant
-    // setSTPUntil(): TimeInstant
-  }  
+  setPriority: (priority: P) => void;
+
+  // getSTPUntil(): TimeInstant
+  // setSTPUntil(): TimeInstant
+}
 
 /**
  * Interface for schedulable actions.

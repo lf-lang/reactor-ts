@@ -96,8 +96,7 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(7); // E
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent
-      `graph
+      StringUtil.dontIndent`graph
         0["app.R[R3]"]
         1["app.R[R5]"]
         2["app.R[R4]"]
