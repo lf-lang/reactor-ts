@@ -69,7 +69,7 @@ describe("Manually constructed simple precedence graphs", () => {
 });
 
 describe("Test for corner cases", () => {
-  var graph = new SortablePrecedenceGraph<Sortable<Priority>>(CNode<Priority>);
+  var graph = new SortablePrecedenceGraph<Sortable<Priority>>();
   const node: Sortable<Priority> = new CNode<Priority>();
   graph.addEdge(new CNode<Priority>(), node);
 });
