@@ -44,10 +44,7 @@ export abstract class Port<T> extends Trigger {
     Log.debug(this, () => "In isPresent()...");
     Log.debug(this, () => `value: ${this.value?.toString()}`);
     Log.debug(this, () => `tag: ${this.tag}`);
-    Log.debug(
-      this,
-      () => `time: ${this.runtime.util.getCurrentLogicalTime()}`
-    );
+    Log.debug(this, () => `time: ${this.runtime.util.getCurrentLogicalTime()}`);
 
     if (
       this.value !== undefined &&

@@ -68,13 +68,12 @@ describe("Test names for contained reactors", () => {
 
       it("graph before connect", () => {
         expect(this._getPrecedenceGraph().toString()).toBe(
-          "digraph G {" +
-            "\n" +
-            '"myApp.x[M0]"->"myApp[M0]";' +
-            "\n" +
-            '"myApp.y[M0]"->"myApp[M0]";' +
-            "\n" +
-            "}"
+          StringUtil.dontIndent`graph
+          0["myApp.x[M0]"]
+          1["myApp[M0]"]
+          2["myApp.y[M0]"]
+          1 --> 0
+          1 --> 2`
         );
       });
 
@@ -92,23 +91,29 @@ describe("Test names for contained reactors", () => {
 
       it("graph after connect and before disconnect", () => {
         expect(this._getPrecedenceGraph().toString()).toBe(
-          StringUtil.dontIndent`digraph G {
-                "myApp.x.a"->"myApp.y.b";
-                "myApp.x[M0]"->"myApp[M0]";
-                "myApp.y[M0]"->"myApp[M0]";
-                }`
+          StringUtil.dontIndent`graph
+            0["myApp.x.a"]
+            1["myApp.y.b"]
+            2["myApp.x[M0]"]
+            3["myApp[M0]"]
+            4["myApp.y[M0]"]
+            1 --> 0
+            3 --> 2
+            3 --> 4`
         );
       });
 
       it("graph after disconnect", () => {
         this._disconnect(this.y.b, this.x.a);
         expect(this._getPrecedenceGraph().toString()).toBe(
-          StringUtil.dontIndent`digraph G {
-                "myApp.x.a";
-                "myApp.y.b";
-                "myApp.x[M0]"->"myApp[M0]";
-                "myApp.y[M0]"->"myApp[M0]";
-                }`
+          StringUtil.dontIndent`graph
+            0["myApp.x.a"]
+            1["myApp.y.b"]
+            2["myApp.x[M0]"]
+            3["myApp[M0]"]
+            4["myApp.y[M0]"]
+            3 --> 2
+            3 --> 4`
         );
       });
 

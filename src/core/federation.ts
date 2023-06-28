@@ -1203,9 +1203,7 @@ export class FederatedApp extends App {
     } else {
       Log.global.debug(
         "Ignoring FederatedApp._shutdown() since EndOfExecution is already set earlier than current tag." +
-          `currentTag: ${this.util.getCurrentTag()} endTag: ${String(
-            endTag
-          )}`
+          `currentTag: ${this.util.getCurrentTag()} endTag: ${String(endTag)}`
       );
     }
   }
