@@ -4,6 +4,7 @@ import {
   PrecedenceGraph,
   SortablePrecedenceGraph
 } from "../src/core/graph";
+import { StringUtil } from "../src/core/strings";
 /**
  * The tests below test the functionality of the hasCycle() utility function on various
  * dependency graphs, in combination with various graph manipulation utilities
@@ -190,6 +191,25 @@ test("test the DOT representation of the dependency graph", () => {
   expect(d11.toDotString()).toBe('digraph G {\n"2"->"1"->"2"->"3";\n}');
   d11.addEdge(node3, node1);
   expect(d11.toDotString()).toBe('digraph G {\n"1"->"2"->"1"->"3";\n"2"->"3";\n}');
+});
+
+const d13 = new PrecedenceGraph<number>();
+const d14 = new PrecedenceGraph<Object>();
+test("test the mermaid.js representation of the dependency graph", () => {
+  expect(d13.toMermaidString()).toBe('graph');
+
+  d13.addNode(node1); // { node1 }
+  expect(d13.toMermaidString()).toBe('graph\n0["1"]');
+
+  d13.addEdge(node2, node1) // { (node1 -> node2); }
+  d13.addEdge(node3, node2) // { (node1 -> node2 -> node3); }
+  expect(d13.toMermaidString()).toBe('graph\n0["1"]\n1["2"]\n2["3"]\n1 --> 0\n2 --> 1');
+  expect(d13.toMermaidString([[node2, node1]])).toBe('graph\n0["1"]\n1["2"]\n2["3"]\n1 --x 0\n2 --> 1');
+  expect(d13.toMermaidString([[node2, node1], [node3, node2]])).toBe('graph\n0["1"]\n1["2"]\n2["3"]\n1 --x 0\n2 --x 1');
+
+  const obj = {0: 1};
+  d14.addNode(obj);
+  expect(d14.toMermaidString()).toBe('graph\n0["0"]');
 });
 
 const sd0 = new SortablePrecedenceGraph<Sortable<number>>();

@@ -185,11 +185,11 @@ export class PrecedenceGraph<T> {
 
   /**
    * Return a representation that conforms with the syntax of mermaid.js
-   * @param edgesWithIssue A set containing arrays with [origin, effect].
+   * @param edgesWithIssue An array containing arrays with [origin, effect].
    * Denotes edges in the graph that causes issues to the execution, will be visualized as `--x` in mermaid.
    */
-  toMermaidString(edgesWithIssue?: Set<[T, T]>): string {
-    if (edgesWithIssue == null) edgesWithIssue = new Set();
+  toMermaidString(edgesWithIssue?: Array<[T, T]>): string {
+    if (edgesWithIssue == null) edgesWithIssue = [];
     let result = "graph";
     const nodeToNumber = new Map<T, number>();
     const getNodeString = (node: T, def: string): string => {
@@ -221,7 +221,7 @@ export class PrecedenceGraph<T> {
       // This is the origin
       for (const t of this.getUpstreamNeighbors(s)) {
         result += `\n${nodeToNumber.get(t)}`;
-        result += edgesWithIssue.has([s, t]) ? " --x " : " --> ";
+        result += edgesWithIssue.some((v) => v[0] === t && v[1] === s) ? " --x " : " --> ";
         result += `${nodeToNumber.get(s)}`;
       }
     }
