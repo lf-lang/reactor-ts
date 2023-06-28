@@ -2583,10 +2583,7 @@ export class App extends Reactor {
     Log.debug(this, () => "Before collapse: " + apg.toString());
 
     // 1. Collapse dependencies and weed out the ports.
-    const collapsed = SortablePrecedenceGraph.fromPrecedenceGraph(
-        apg,
-        Reaction<unknown>
-      );
+    const collapsed = new SortablePrecedenceGraph(Reaction<unknown>, apg);
 
     // 2. Update priorities.
     Log.debug(this, () => "After collapse: " + collapsed.toString());

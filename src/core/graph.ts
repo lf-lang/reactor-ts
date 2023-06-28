@@ -344,53 +344,71 @@ export class PrecedenceGraph<T> {
   }
 }
 
+/**
+ * A precedence graph with nodes that are sortable by assigning a numeric priority.
+ */
 export class SortablePrecedenceGraph<
   T extends Sortable<number>
 > extends PrecedenceGraph<T> {
-  static fromPrecedenceGraph<R, T extends Sortable<number>>(
-    apg: PrecedenceGraph<R>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: new (...args: any[]) => T
-  ): SortablePrecedenceGraph<T> {
-    const collapsed = new SortablePrecedenceGraph<T>();
+  /**
+   * Create a sortable precedence graph. If a type and precedence graph are given,
+   * then remove all nodes that are not of the given type in a way the preserves
+   * the original lineage.
+   * @param type A type that extends T.
+   * @param pg A precedence graph.
+   */
+  constructor(
+    type?: new (...args: never[]) => T,
+    pg?: PrecedenceGraph<unknown>
+  ) {
+    super();
 
-    // Originally from reactor.ts.
-    // This removes all nodes that are not of type `T`,
-    // and reassign node relationship in a way that preserves original lineage.
+    if (pg == null || type == null) return;
+
     const visited = new Set();
-    const search = (parentNode: T, nodes: Set<R>): void => {
+    const search = (parentNode: T, nodes: Set<unknown>): void => {
       for (const node of nodes) {
         if (node instanceof type) {
-          collapsed.addEdge(node, parentNode);
+          this.addEdge(node, parentNode);
           if (!visited.has(node)) {
             visited.add(node);
-            search(node, apg.getUpstreamNeighbors(node));
+            search(node, pg.getUpstreamNeighbors(node));
           }
         } else {
-          search(parentNode, apg.getUpstreamNeighbors(node));
+          search(parentNode, pg.getUpstreamNeighbors(node));
         }
       }
     };
-    const leafs = apg.getSinkNodes();
+    const leafs = pg.getSinkNodes();
     for (const leaf of leafs) {
       if (leaf instanceof type) {
-        collapsed.addNode(leaf);
-        search(leaf, apg.getUpstreamNeighbors(leaf));
+        this.addNode(leaf);
+        search(leaf, pg.getUpstreamNeighbors(leaf));
         visited.clear();
       }
     }
-
-    return collapsed;
   }
 
-  // This implements Kahn's algorithm
-  updatePriorities(destructive: boolean, spacing = 100): boolean {
+  /**
+   * Assign priorities to the nodes of the graph such that any two nodes of
+   * which one has precedence over the other, the priority of the one node is
+   * lower than the other.
+   *
+   * @param destructive Destroy the graph structure if true, leave it in tact by
+   * working on a copy if false (the default).
+   * @param spacing The minimum spacing between the priorities of two nodes that
+   * are in a precedence relationship. The default is 100.
+   * @returns True if priorities were assigned successfully, false if the graph
+   * has one or more cycles.
+   */
+  updatePriorities(destructive = false, spacing = 100): boolean {
+    // This implements Kahn's algorithm
     const start = new Array<T>();
     let graph: Map<T, Set<T>>;
     let count = 0;
     if (!destructive) {
       graph = new Map();
-      /* duplicate the map */
+      /* Duplicate the map */
       for (const [v, e] of this.adjacencyMap) {
         graph.set(v, new Set(e));
       }
@@ -421,7 +439,7 @@ export class SortablePrecedenceGraph<
       }
     }
     if (graph.size !== 0) {
-      return false; // ERROR: cycle detected
+      return false; // cycle detected
     } else {
       return true;
     }
