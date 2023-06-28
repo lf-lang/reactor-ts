@@ -131,11 +131,11 @@ export class PrecedenceGraph<T> {
   }
 
   /**
-   * Add an edge that denotes origin effect relationship,
-   * which, in the underlying dependency graph, has direction effect->origin.
+   * Add an edge from an upstream node to a downstream one.
+   * @param upstream The node at which the directed edge starts.
+   * @param downstream The node at which the directed edge ends.
    */
   addEdge(upstream: T, downstream: T): void {
-    // FIXME: switch order.
     const deps = this.adjacencyMap.get(downstream);
     if (deps == null) {
       this.adjacencyMap.set(downstream, new Set([upstream]));
@@ -154,8 +154,12 @@ export class PrecedenceGraph<T> {
     }
   }
 
+  /**
+   * Remove a directed edge from an upstream node to a downstream one.
+   * @param upstream The node at which the directed edge starts.
+   * @param downstream The node at which the directed edge ends.
+   */
   removeEdge(upstream: T, downstream: T): void {
-    // FIXME: switch order.
     const deps = this.adjacencyMap.get(downstream);
     if (deps?.has(upstream) ?? false) {
       deps?.delete(upstream);
@@ -204,7 +208,7 @@ export class PrecedenceGraph<T> {
 
     // We use numbers instead of names of reactors directly as node names
     // in mermaid.js because mermaid has strict restrictions regarding
-    // what could be used as names of the node. 
+    // what could be used as names of the node.
     {
       let counter = 0;
       for (const v of this.getNodes()) {
