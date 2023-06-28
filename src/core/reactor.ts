@@ -162,7 +162,7 @@ export abstract class Reactor extends Component {
    * ports, reactions, and connections.
    */
   protected _dependencyGraph = new PrecedenceGraph<
-    Port<Present> | Reaction<any>
+    Port<unknown> | Reaction<any>
   >();
 
   /**
@@ -197,7 +197,7 @@ export abstract class Reactor extends Component {
    * connection at runtime could result in a cyclic dependency, _without_
    * having to consult other reactors.
    */
-  private readonly _causalityGraph = new PrecedenceGraph<Port<Present>>();
+  private readonly _causalityGraph = new PrecedenceGraph<Port<unknown>>();
 
   /**
    * Indicates whether this reactor is active (meaning it has reacted to a
@@ -895,7 +895,7 @@ export abstract class Reactor extends Component {
    */
   protected _getPrecedenceGraph(
     depth = -1
-  ): PrecedenceGraph<Port<Present> | Reaction<unknown>> {
+  ): PrecedenceGraph<Port<unknown> | Reaction<unknown>> {
     const graph = new PrecedenceGraph<Port<unknown> | Reaction<unknown>>();
 
     this._addHierarchicalDependencies();
