@@ -71,7 +71,7 @@ describe("Manually constructed simple precedence graphs", () => {
 describe("Test for corner cases", () => {
   var graph = new SortablePrecedenceGraph<Sortable<Priority>>();
   const node: Sortable<Priority> = new CNode<Priority>();
-  graph.addEdge(node, new CNode<Priority>());
+  graph.addEdge(new CNode<Priority>(), node);
 });
 
 describe("Manually constructed precedence graphs", () => {
@@ -80,13 +80,13 @@ describe("Manually constructed precedence graphs", () => {
 
   var nodes = reactor.getNodes();
 
-  graph.addEdge(nodes[3], nodes[5]);
-  graph.addEdge(nodes[4], nodes[3]);
-  graph.addEdge(nodes[2], nodes[3]);
-  graph.addEdge(nodes[1], nodes[2]);
-  graph.addEdge(nodes[1], nodes[4]);
-  graph.addEdge(nodes[0], nodes[1]);
-  graph.addEdge(nodes[0], nodes[4]);
+  graph.addEdge(nodes[5], nodes[3]);
+  graph.addEdge(nodes[3], nodes[4]);
+  graph.addEdge(nodes[3], nodes[2]);
+  graph.addEdge(nodes[2], nodes[1]);
+  graph.addEdge(nodes[4], nodes[1]);
+  graph.addEdge(nodes[1], nodes[0]);
+  graph.addEdge(nodes[4], nodes[0]);
 
   it("reaction equality", () => {
     expect(Object.is(nodes[0], nodes[1])).toBeFalsy();
@@ -125,7 +125,7 @@ describe("Manually constructed precedence graphs", () => {
   });
 
   it("remove dependency 4 -> 5", () => {
-    graph.removeEdge(nodes[4], nodes[3]);
+    graph.removeEdge(nodes[3], nodes[4]);
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(6); // E
     expect(graph.toString()).toBe(
@@ -165,8 +165,8 @@ describe("Manually constructed precedence graphs", () => {
 
   it("add node 7, make 3 dependent on it", () => {
     graph.addNode(nodes[6]);
-    graph.addEdge(nodes[2], nodes[6]);
-    graph.addEdge(nodes[2], nodes[3]);
+    graph.addEdge(nodes[6], nodes[2]);
+    graph.addEdge(nodes[3], nodes[2]);
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(4); // E
     Log.global.debug(graph.toString());
@@ -197,7 +197,7 @@ describe("Manually constructed precedence graphs", () => {
   });
 
   it("introduce a cycle", () => {
-    graph.addEdge(nodes[5], nodes[2]);
+    graph.addEdge(nodes[2], nodes[5]);
     expect(graph.updatePriorities(false)).toBeFalsy();
     Log.global.debug(graph.toString());
   });
@@ -209,13 +209,13 @@ describe("ReactionQ", () => {
 
   var nodes = reactor.getNodes();
 
-  graph.addEdge(nodes[3], nodes[5]);
-  graph.addEdge(nodes[4], nodes[3]);
-  graph.addEdge(nodes[2], nodes[3]);
-  graph.addEdge(nodes[1], nodes[2]);
-  graph.addEdge(nodes[1], nodes[4]);
-  graph.addEdge(nodes[0], nodes[1]);
-  graph.addEdge(nodes[0], nodes[4]);
+  graph.addEdge(nodes[5], nodes[3]);
+  graph.addEdge(nodes[3], nodes[4]);
+  graph.addEdge(nodes[3], nodes[2]);
+  graph.addEdge(nodes[2], nodes[1]);
+  graph.addEdge(nodes[4], nodes[1]);
+  graph.addEdge(nodes[1], nodes[0]);
+  graph.addEdge(nodes[4], nodes[0]);
   graph.updatePriorities(false);
 
   var reactionQ = new PrioritySet<Priority>();
