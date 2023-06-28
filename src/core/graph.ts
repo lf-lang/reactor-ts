@@ -3,16 +3,15 @@
  * @author Marten Lohstroh <marten@berkeley.edu>
  */
 
-import type { Sortable } from "./types";
+import type {Sortable} from "./types";
 import {Log} from "./util";
 
 /**
  * A generic precedence graph.
  */
 export class PrecedenceGraph<T> {
-  
   /**
-   * A map from nodes to the set of nodes that they depend on.
+   * A map from nodes to the set of their upstream neighbors.
    */
   protected adjacencyMap = new Map<T, Set<T>>();
 
@@ -42,41 +41,38 @@ export class PrecedenceGraph<T> {
     }
   }
 
-
   /**
    * Add the given node to this graph.
-   * @param node 
+   * @param node
    */
   addNode(node: T): void {
     if (!this.adjacencyMap.has(node)) {
       this.adjacencyMap.set(node, new Set());
     }
   }
-  
-  /**
-   * Return the set of all incoming nodes of the given node.
-   * Incoming nodes are immediate upstream neighbors.
-   * @param node The node to retrieve the incoming nodes of.
-   */
-  getInNodes(node: T): Set<T> {
-    return this.adjacencyMap.get(node) ?? new Set<T>();
-  }
 
   /**
-   * Return the set of all outgoing nodes of the given node.
-   * Outgoing nodes are immediate downstream neighbors.
+   * Return the set of all downstream neighbors of the given node.
    * @param node The node to retrieve the outgoing nodes of.
    */
-  getOutNodes(node: T): Set<T> {
+  getDownstreamNeighbors(node: T): Set<T> {
     const backEdges = new Set<T>();
-    this.adjacencyMap.forEach((edges, dep) => {
-      edges.forEach((edge) => {
-        if (edge === node) {
-          backEdges.add(dep);
+    this.adjacencyMap.forEach((upstreamNeighbors, downstream) => {
+      upstreamNeighbors.forEach((upstream) => {
+        if (upstream === node) {
+          backEdges.add(downstream);
         }
       });
     });
     return backEdges;
+  }
+
+  /**
+   * Return the set of all upstream neighbors of the given node.
+   * @param node The node to retrieve the incoming nodes of.
+   */
+  getUpstreamNeighbors(node: T): Set<T> {
+    return this.adjacencyMap.get(node) ?? new Set<T>();
   }
 
   /**
@@ -107,7 +103,7 @@ export class PrecedenceGraph<T> {
           currentDirectAncestors.add(top);
         }
 
-        for (const child of this.getInNodes(top)) {
+        for (const child of this.getUpstreamNeighbors(top)) {
           if (currentDirectAncestors.has(child)) return true;
           if (!visited.has(child)) stack.push(child);
         }
@@ -159,6 +155,7 @@ export class PrecedenceGraph<T> {
   }
 
   removeEdge(downstream: T, upstream: T): void {
+    // FIXME: switch order.
     const deps = this.adjacencyMap.get(downstream);
     if (deps?.has(upstream) ?? false) {
       deps?.delete(upstream);
@@ -166,22 +163,28 @@ export class PrecedenceGraph<T> {
     }
   }
 
+  /**
+   * Return the size of the graph in terms of number of nodes and edges.
+   */
   size(): [number, number] {
     return [this.adjacencyMap.size, this.numberOfEdges];
   }
 
+  /**
+   * Return an iterator over the nodes in the graph.
+   */
   getNodes(): IterableIterator<T> {
     return this.adjacencyMap.keys();
   }
 
-  toString: () => string = () => this.toMermaidRepresentation();
+  toString: () => string = () => this.toMermaidString();
 
   /**
    * Return a representation that conforms with the syntax of mermaid.js
    * @param edgesWithIssue Edges in the **dependency** graph that causes issues
    * to the execution. A set containing arrays with [effect, origin].
    */
-  toMermaidRepresentation(edgesWithIssue?: Set<[T, T]>): string {
+  toMermaidString(edgesWithIssue?: Set<[T, T]>): string {
     if (edgesWithIssue == null) edgesWithIssue = new Set();
     let result = "graph";
     const nodeToNumber = new Map<T, number>();
@@ -208,7 +211,7 @@ export class PrecedenceGraph<T> {
     // This is the effect
     for (const s of this.getNodes()) {
       // This is the origin
-      for (const t of this.getInNodes(s)) {
+      for (const t of this.getUpstreamNeighbors(s)) {
         result += `\n${nodeToNumber.get(t)}`;
         result += edgesWithIssue.has([s, t]) ? " --x " : " --> ";
         result += `${nodeToNumber.get(s)}`;
@@ -220,7 +223,7 @@ export class PrecedenceGraph<T> {
   /**
    * Return a DOT representation of the graph.
    */
-  toDOTRepresentation(): string {
+  toDotString(): string {
     let dot = "";
     const graph = this.adjacencyMap;
     const visited = new Set<T>();
@@ -309,25 +312,27 @@ export class PrecedenceGraph<T> {
     return "digraph G {" + dot + "\n}";
   }
 
-  public sourceNodes(): Set<T> {
+  /**
+   * Return the nodes in the graph that have no upstream neighbors.
+   */
+  public getSourceNodes(): Set<T> {
     const roots = new Set<T>();
     /* Populate start set */
     for (const [v, e] of this.adjacencyMap) {
       if (e == null || e.size === 0) {
-        roots.add(v); // leaf nodes have no dependencies
-        // clone.delete(v); // FIXME add a removeNodes function to factor out the duplicate code below
+        roots.add(v);
       }
     }
     return roots;
   }
 
-  // Source nodes are nodes that do not depend on any other nodes.
-  // In the context of cyclic graphs it is therefore possible to have a graph without any source nodes.
-  // As a result, starting a graph search only from leaf nodes in a cyclic graph will not necessarily traverse the entire graph.
-  public sinkNodes(): Set<T> {
+  /**
+   * Return the nodes in the graph that have no downstream neighbors.
+   */
+  public getSinkNodes(): Set<T> {
     const leafs = new Set<T>(this.getNodes());
     for (const node of this.getNodes()) {
-      for (const dep of this.getInNodes(node)) {
+      for (const dep of this.getUpstreamNeighbors(node)) {
         leafs.delete(dep);
       }
     }
@@ -338,7 +343,6 @@ export class PrecedenceGraph<T> {
 export class SortablePrecedenceGraph<
   T extends Sortable<number>
 > extends PrecedenceGraph<T> {
-
   static fromPrecedenceGraph<R, T extends Sortable<number>>(
     apg: PrecedenceGraph<R>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -356,18 +360,18 @@ export class SortablePrecedenceGraph<
           collapsed.addEdge(parentNode, node);
           if (!visited.has(node)) {
             visited.add(node);
-            search(node, apg.getInNodes(node));
+            search(node, apg.getUpstreamNeighbors(node));
           }
         } else {
-          search(parentNode, apg.getInNodes(node));
+          search(parentNode, apg.getUpstreamNeighbors(node));
         }
       }
     };
-    const leafs = apg.sinkNodes();
+    const leafs = apg.getSinkNodes();
     for (const leaf of leafs) {
       if (leaf instanceof type) {
         collapsed.addNode(leaf);
-        search(leaf, apg.getInNodes(leaf));
+        search(leaf, apg.getUpstreamNeighbors(leaf));
         visited.clear();
       }
     }

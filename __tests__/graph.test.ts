@@ -136,7 +136,7 @@ const d7 = new PrecedenceGraph<number>();
 const d8 = new PrecedenceGraph<number>();
 const d9 = new PrecedenceGraph<number>();
 test("test dependency graph", () => {
-  expect(d7.getInNodes(node1).size).toBe(0);
+  expect(d7.getUpstreamNeighbors(node1).size).toBe(0);
   d7.addAll(d5);
   expect(d7.size()).toStrictEqual(d5.size());
 
@@ -144,7 +144,7 @@ test("test dependency graph", () => {
   d9.addEdge(node1, node2);
   d8.addAll(d9);
   expect(d8.size()).toStrictEqual(d9.size());
-  expect(d9.getOutNodes(node2).size).toBe(1);
+  expect(d9.getDownstreamNeighbors(node2).size).toBe(1);
   d8.removeNode(node2);
   expect(d8.size()).toStrictEqual([1, 0]);
 });
@@ -173,23 +173,23 @@ test("test add/remove Edges", () => {
 const d11 = new PrecedenceGraph<number>();
 const d12 = new PrecedenceGraph<Object>();
 test("test the DOT representation of the dependency graph", () => {
-  expect(d11.toDOTRepresentation()).toBe("digraph G {" + "\n}");
+  expect(d11.toDotRepresentation()).toBe("digraph G {" + "\n}");
 
   d11.addNode(node1); // { node1 }
-  expect(d11.toDOTRepresentation()).toBe('digraph G {\n"1";\n}');
+  expect(d11.toDotRepresentation()).toBe('digraph G {\n"1";\n}');
 
   d11.addEdge(node1, node2); // { (node1 -> node2) }
   d11.addEdge(node2, node3); // { (node1 -> node2 -> node3) }
-  expect(d11.toDOTRepresentation()).toBe('digraph G {\n"1"->"2"->"3";\n}');
+  expect(d11.toDotRepresentation()).toBe('digraph G {\n"1"->"2"->"3";\n}');
 
   const obj = {0: 1};
   d12.addNode(obj);
-  expect(d12.toDOTRepresentation()).toBe('digraph G {\n"[object Object]";\n}');
+  expect(d12.toDotRepresentation()).toBe('digraph G {\n"[object Object]";\n}');
 
   d11.addEdge(node2, node1);
-  expect(d11.toDOTRepresentation()).toBe('digraph G {\n"2"->"1"->"2"->"3";\n}');
+  expect(d11.toDotRepresentation()).toBe('digraph G {\n"2"->"1"->"2"->"3";\n}');
   d11.addEdge(node1, node3);
-  expect(d11.toDOTRepresentation()).toBe('digraph G {\n"1"->"2"->"1"->"3";\n"2"->"3";\n}');
+  expect(d11.toDotRepresentation()).toBe('digraph G {\n"1"->"2"->"1"->"3";\n"2"->"3";\n}');
 });
 
 const sd0 = new SortablePrecedenceGraph<Sortable<number>>();

@@ -105,7 +105,7 @@ export class Reaction<T>
    * @param another Reaction to compare this reaction's priority against.
    */
   hasPriorityOver(another: PrioritySetElement<Priority> | undefined): boolean {
-    if (another !== undefined && this.getPriority() < another.getPriority()) {
+    if (another != null && this.getPriority() < another.getPriority()) {
       return true;
     } else {
       return false;
