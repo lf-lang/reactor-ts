@@ -38,12 +38,12 @@ d2.addNode(node1);
 d2.addNode(node2);
 d2.addEdge(node1, node2);
 
-test("test sinkNodes() helper function", () => {
-  expect(d2.sinkNodes()).toEqual(new Set([node1]));
+test("test getSinkNodes() helper function", () => {
+  expect(d2.getSinkNodes()).toEqual(new Set([node1]));
 });
 
-test("test sourceNodes() helper function", () => {
-  expect(d2.sourceNodes()).toEqual(new Set([node2]));
+test("test getSourceNodes() helper function", () => {
+  expect(d2.getSourceNodes()).toEqual(new Set([node2]));
 });
 
 const d3 = new PrecedenceGraph<number>();
@@ -173,23 +173,23 @@ test("test add/remove Edges", () => {
 const d11 = new PrecedenceGraph<number>();
 const d12 = new PrecedenceGraph<Object>();
 test("test the DOT representation of the dependency graph", () => {
-  expect(d11.toDotRepresentation()).toBe("digraph G {" + "\n}");
+  expect(d11.toDotString()).toBe("digraph G {" + "\n}");
 
   d11.addNode(node1); // { node1 }
-  expect(d11.toDotRepresentation()).toBe('digraph G {\n"1";\n}');
+  expect(d11.toDotString()).toBe('digraph G {\n"1";\n}');
 
   d11.addEdge(node1, node2); // { (node1 -> node2) }
   d11.addEdge(node2, node3); // { (node1 -> node2 -> node3) }
-  expect(d11.toDotRepresentation()).toBe('digraph G {\n"1"->"2"->"3";\n}');
+  expect(d11.toDotString()).toBe('digraph G {\n"1"->"2"->"3";\n}');
 
   const obj = {0: 1};
   d12.addNode(obj);
-  expect(d12.toDotRepresentation()).toBe('digraph G {\n"[object Object]";\n}');
+  expect(d12.toDotString()).toBe('digraph G {\n"[object Object]";\n}');
 
   d11.addEdge(node2, node1);
-  expect(d11.toDotRepresentation()).toBe('digraph G {\n"2"->"1"->"2"->"3";\n}');
+  expect(d11.toDotString()).toBe('digraph G {\n"2"->"1"->"2"->"3";\n}');
   d11.addEdge(node1, node3);
-  expect(d11.toDotRepresentation()).toBe('digraph G {\n"1"->"2"->"1"->"3";\n"2"->"3";\n}');
+  expect(d11.toDotString()).toBe('digraph G {\n"1"->"2"->"1"->"3";\n"2"->"3";\n}');
 });
 
 const sd0 = new SortablePrecedenceGraph<Sortable<number>>();
