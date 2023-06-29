@@ -53,6 +53,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'reactor-ts/package-lock.json'
+      - name: Build reactor-ts
+        run: |
+          cd ./reactor-ts
+          npm install
+          npm run build
       - name: Install pnpm
         run: npm i -g pnpm
       - name: Install RTI
@@ -60,4 +67,4 @@ jobs:
         if: ${{ runner.os == 'macOS' || runner.os == 'Linux' }}
       - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew targetTest -Ptarget=TypeScript -Druntime="file://${{ github.workspace }}/reactor-ts"
+          ./gradlew targetTest -Ptarget=TypeScript -Druntime="file:${{ github.workspace }}/reactor-ts"
