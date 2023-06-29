@@ -1,11 +1,11 @@
-import type {Reaction, Priority, Sortable} from "../src/core/internal";
+import {Priority, Sortable, ReactionGraph} from "../src/core/internal";
 import {
   Reactor,
   App,
   Triggers,
   Args,
   InPort,
-  SortableDependencyGraph,
+  SortablePrecedenceGraph,
   PrioritySet,
   Log,
   StringUtil
@@ -56,7 +56,7 @@ class CNode<T> implements Sortable<Priority> {
 }
 
 describe("Manually constructed simple precedence graphs", () => {
-  var graph = new SortableDependencyGraph<Sortable<Priority>>();
+  var graph = new ReactionGraph();
   var reactor = new SR(new App());
 
   var nodes = reactor.getNodes();
@@ -64,29 +64,29 @@ describe("Manually constructed simple precedence graphs", () => {
   graph.addNode(nodes[0]);
 
   it("graph equality", () => {
-    expect([...graph.nodes()]).toEqual(nodes);
+    expect([...graph.getNodes()]).toEqual(nodes);
   });
 });
 
 describe("Test for corner cases", () => {
-  var graph = new SortableDependencyGraph<Sortable<Priority>>();
+  var graph = new SortablePrecedenceGraph<Sortable<Priority>>();
   const node: Sortable<Priority> = new CNode<Priority>();
-  graph.addEdge(node, new CNode<Priority>());
+  graph.addEdge(new CNode<Priority>(), node);
 });
 
 describe("Manually constructed precedence graphs", () => {
-  var graph = new SortableDependencyGraph<Sortable<Priority>>();
+  var graph = new ReactionGraph();
   var reactor = new R(new App());
 
   var nodes = reactor.getNodes();
 
-  graph.addEdge(nodes[3], nodes[5]);
-  graph.addEdge(nodes[4], nodes[3]);
-  graph.addEdge(nodes[2], nodes[3]);
-  graph.addEdge(nodes[1], nodes[2]);
-  graph.addEdge(nodes[1], nodes[4]);
-  graph.addEdge(nodes[0], nodes[1]);
-  graph.addEdge(nodes[0], nodes[4]);
+  graph.addEdge(nodes[5], nodes[3]);
+  graph.addEdge(nodes[3], nodes[4]);
+  graph.addEdge(nodes[3], nodes[2]);
+  graph.addEdge(nodes[2], nodes[1]);
+  graph.addEdge(nodes[4], nodes[1]);
+  graph.addEdge(nodes[1], nodes[0]);
+  graph.addEdge(nodes[4], nodes[0]);
 
   it("reaction equality", () => {
     expect(Object.is(nodes[0], nodes[1])).toBeFalsy();
@@ -96,11 +96,20 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(7); // E
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`digraph G {
-            "app.R[R0]"->"app.R[R1]"->"app.R[R4]"->"app.R[R3]"->"app.R[R5]";
-            "app.R[R0]"->"app.R[R4]";
-            "app.R[R1]"->"app.R[R2]"->"app.R[R3]";
-            }`
+      StringUtil.dontIndent`graph
+        0["app.R[R3]"]
+        1["app.R[R5]"]
+        2["app.R[R4]"]
+        3["app.R[R2]"]
+        4["app.R[R1]"]
+        5["app.R[R0]"]
+        1 --> 0
+        0 --> 2
+        0 --> 3
+        3 --> 4
+        2 --> 4
+        4 --> 5
+        2 --> 5`
     );
   });
 
@@ -115,15 +124,23 @@ describe("Manually constructed precedence graphs", () => {
   });
 
   it("remove dependency 4 -> 5", () => {
-    graph.removeEdge(nodes[4], nodes[3]);
+    graph.removeEdge(nodes[3], nodes[4]);
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(6); // E
     expect(graph.toString()).toBe(
-      `digraph G {
-"app.R[R0]"->"app.R[R1]"->"app.R[R2]"->"app.R[R3]"->"app.R[R5]";
-"app.R[R1]"->"app.R[R4]";
-"app.R[R0]"->"app.R[R4]";
-}`
+      StringUtil.dontIndent`graph
+      0["app.R[R3]"]
+      1["app.R[R5]"]
+      2["app.R[R4]"]
+      3["app.R[R2]"]
+      4["app.R[R1]"]
+      5["app.R[R0]"]
+      1 --> 0
+      0 --> 3
+      3 --> 4
+      2 --> 4
+      4 --> 5
+      2 --> 5`
     );
   });
 
@@ -133,25 +150,37 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[1]).toEqual(3); // E
     Log.global.debug(graph.toString());
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`digraph G {
-            "app.R[R2]"->"app.R[R3]"->"app.R[R5]";
-            "app.R[R0]"->"app.R[R4]";
-            }`
+      StringUtil.dontIndent`graph
+        0["app.R[R3]"]
+        1["app.R[R5]"]
+        2["app.R[R4]"]
+        3["app.R[R2]"]
+        4["app.R[R0]"]
+        1 --> 0
+        0 --> 3
+        2 --> 4`
     );
   });
 
   it("add node 7, make 3 dependent on it", () => {
     graph.addNode(nodes[6]);
-    graph.addEdges(nodes[2], new Set([nodes[6], nodes[3]]));
+    graph.addEdge(nodes[6], nodes[2]);
+    graph.addEdge(nodes[3], nodes[2]);
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(4); // E
     Log.global.debug(graph.toString());
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`digraph G {
-            "app.R[R2]"->"app.R[R3]"->"app.R[R5]";
-            "app.R[R0]"->"app.R[R4]";
-            "app.R[R2]"->"app.R[R6]";
-            }`
+      StringUtil.dontIndent`graph
+        0["app.R[R3]"]
+        1["app.R[R5]"]
+        2["app.R[R4]"]
+        3["app.R[R2]"]
+        4["app.R[R0]"]
+        5["app.R[R6]"]
+        1 --> 0
+        0 --> 3
+        5 --> 3
+        2 --> 4`
     );
   });
 
@@ -167,25 +196,25 @@ describe("Manually constructed precedence graphs", () => {
   });
 
   it("introduce a cycle", () => {
-    graph.addEdge(nodes[5], nodes[2]);
+    graph.addEdge(nodes[2], nodes[5]);
     expect(graph.updatePriorities(false)).toBeFalsy();
     Log.global.debug(graph.toString());
   });
 });
 
 describe("ReactionQ", () => {
-  var graph = new SortableDependencyGraph<Reaction<unknown>>();
+  var graph = new ReactionGraph();
   var reactor = new R(new App());
 
   var nodes = reactor.getNodes();
 
-  graph.addEdge(nodes[3], nodes[5]);
-  graph.addEdge(nodes[4], nodes[3]);
-  graph.addEdge(nodes[2], nodes[3]);
-  graph.addEdge(nodes[1], nodes[2]);
-  graph.addEdge(nodes[1], nodes[4]);
-  graph.addEdge(nodes[0], nodes[1]);
-  graph.addEdge(nodes[0], nodes[4]);
+  graph.addEdge(nodes[5], nodes[3]);
+  graph.addEdge(nodes[3], nodes[4]);
+  graph.addEdge(nodes[3], nodes[2]);
+  graph.addEdge(nodes[2], nodes[1]);
+  graph.addEdge(nodes[4], nodes[1]);
+  graph.addEdge(nodes[1], nodes[0]);
+  graph.addEdge(nodes[4], nodes[0]);
   graph.updatePriorities(false);
 
   var reactionQ = new PrioritySet<Priority>();

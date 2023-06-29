@@ -1,134 +1,32 @@
+/**
+ * @file A collection of classes for handling graphs.
+ * @author Marten Lohstroh <marten@berkeley.edu>
+ */
+
+import {Reaction} from "./reaction";
+import type {Sortable} from "./types";
 import {Log} from "./util";
 
 /**
- * Utilities for the reactor runtime.
- *
- * @author Marten Lohstroh (marten@berkeley.edu)
+ * A generic precedence graph.
  */
-
-export interface PrioritySetElement<P> {
+export class PrecedenceGraph<T> {
   /**
-   * Pointer to the next node in the priority set.
+   * A map from nodes to the set of their upstream neighbors.
    */
-  next: PrioritySetElement<P> | undefined;
-
-  /**
-   * Return the priority of this node.
-   */
-  getPriority: () => P;
-
-  /**
-   * Determine whether this node has priority over the given node or not.
-   * @param node A node to compare the priority of this node to.
-   */
-  hasPriorityOver: (node: PrioritySetElement<P>) => boolean;
-
-  /**
-   * If the given node is considered a duplicate of this node, then
-   * update this node if needed, and return true. Return false otherwise.
-   * @param node A node that may or may not be a duplicate of this node.
-   */
-  updateIfDuplicateOf: (node: PrioritySetElement<P> | undefined) => boolean;
-}
-
-export interface Sortable<P> {
-  setPriority: (priority: P) => void;
-
-  // getSTPUntil(): TimeInstant
-  // setSTPUntil(): TimeInstant
-}
-
-/**
- * A priority queue that overwrites duplicate entries.
- */
-export class PrioritySet<P> {
-  private head: PrioritySetElement<P> | undefined;
-
-  private count = 0;
-
-  push(element: PrioritySetElement<P>): void {
-    // update linked list
-    if (this.head === undefined) {
-      // create head
-      element.next = undefined;
-      this.head = element;
-      this.count++;
-    } else if (element.updateIfDuplicateOf(this.head)) {
-      // updateIfDuplicateOf returned true, i.e.,
-      // it has updated the value of this.head to
-      // equal that of element.
-    } else {
-      // prepend
-      if (element.hasPriorityOver(this.head)) {
-        element.next = this.head;
-        this.head = element;
-        this.count++;
-        return;
-      }
-      // seek
-      let curr: PrioritySetElement<P> | undefined = this.head;
-      while (curr != null) {
-        const next: PrioritySetElement<P> | undefined = curr.next;
-        if (next != null) {
-          if (element.updateIfDuplicateOf(next)) {
-            // updateIfDuplicateOf returned true, i.e.,
-            // it has updated the value of this.head to
-            // equal that of element.
-            return;
-          } else if (element.hasPriorityOver(next)) {
-            break;
-          } else {
-            curr = next;
-          }
-        } else {
-          break;
-        }
-      }
-      if (curr != null) {
-        // insert
-        element.next = curr.next; // undefined if last
-        curr.next = element;
-        this.count++;
-      }
-    }
-  }
-
-  pop(): PrioritySetElement<P> | undefined {
-    if (this.head != null) {
-      const node = this.head;
-      this.head = this.head.next;
-      node.next = undefined; // unhook from linked list
-      this.count--;
-      return node;
-    }
-  }
-
-  peek(): PrioritySetElement<P> | undefined {
-    if (this.head != null) {
-      return this.head;
-    }
-  }
-
-  size(): number {
-    return this.count;
-  }
-
-  empty(): void {
-    this.head = undefined;
-    this.count = 0;
-  }
-}
-
-export class DependencyGraph<T> {
-  /**
-   * Map nodes to the set of nodes that they depend on.
-   **/
   protected adjacencyMap = new Map<T, Set<T>>();
 
+  /**
+   * The total number of edges in the graph.
+   */
   protected numberOfEdges = 0;
 
-  merge(apg: this): void {
-    for (const [k, v] of apg.adjacencyMap) {
+  /**
+   * Add all the nodes and edges from the given precedence graph to this one.
+   * @param pg A precedence graph
+   */
+  addAll(pg: this): void {
+    for (const [k, v] of pg.adjacencyMap) {
       const nodes = this.adjacencyMap.get(k);
       if (nodes != null) {
         for (const n of v) {
@@ -144,28 +42,26 @@ export class DependencyGraph<T> {
     }
   }
 
+  /**
+   * Add the given node to this graph.
+   * @param node
+   */
   addNode(node: T): void {
     if (!this.adjacencyMap.has(node)) {
       this.adjacencyMap.set(node, new Set());
     }
   }
 
-  getEdges(node: T): Set<T> {
-    // FIXME: use different terminology: origins/effects
-    const nodes = this.adjacencyMap.get(node);
-    if (nodes !== undefined) {
-      return nodes;
-    } else {
-      return new Set<T>();
-    }
-  }
-
-  getBackEdges(node: T): Set<T> {
+  /**
+   * Return the set of all downstream neighbors of the given node.
+   * @param node The node to retrieve the outgoing nodes of.
+   */
+  getDownstreamNeighbors(node: T): Set<T> {
     const backEdges = new Set<T>();
-    this.adjacencyMap.forEach((edges, dep) => {
-      edges.forEach((edge) => {
-        if (edge === node) {
-          backEdges.add(dep);
+    this.adjacencyMap.forEach((upstreamNeighbors, downstream) => {
+      upstreamNeighbors.forEach((upstream) => {
+        if (upstream === node) {
+          backEdges.add(downstream);
         }
       });
     });
@@ -173,62 +69,54 @@ export class DependencyGraph<T> {
   }
 
   /**
-   * Return the subset of origins that are reachable from the given effect.
-   * @param effect A node in the graph that to search upstream of.
-   * @param origins A set of nodes to be found anywhere upstream of effect.
+   * Return the set of all upstream neighbors of the given node.
+   * @param node The node to retrieve the incoming nodes of.
    */
-  reachableOrigins(effect: T, origins: Set<T>): Set<T> {
-    const visited = new Set<T>();
-    const reachable = new Set<T>();
-    const self = this;
-
-    /**
-     * Recursively traverse the graph to collect reachable origins.
-     * @param current The current node being visited.
-     */
-    function search(current: T): void {
-      visited.add(current);
-      if (origins.has(current)) reachable.add(current);
-      for (const next of self.getEdges(current)) {
-        if (!visited.has(next)) search(next);
-      }
-    }
-    search(effect);
-    reachable.delete(effect);
-
-    return reachable;
+  getUpstreamNeighbors(node: T): Set<T> {
+    return this.adjacencyMap.get(node) ?? new Set<T>();
   }
 
+  /**
+   * Return true if the graph has a cycle in it.
+   */
   hasCycle(): boolean {
-    const toVisit = new Set(this.nodes());
-    const inPath = new Set<T>();
-    const self = this;
+    const stack = new Array<T>();
+    const visited = new Set<T>();
+    const currentDirectAncestors = new Set<T>();
 
-    function cycleFound(current: T): boolean {
-      if (toVisit.has(current)) {
-        toVisit.delete(current);
-        inPath.add(current);
-        for (const node of self.getEdges(current)) {
-          if (toVisit.has(node) && cycleFound(node)) {
-            return true;
-          } else if (inPath.has(node)) {
-            return true;
-          }
-        }
+    // This uses DFS with iteration to check for back edges in the graph.
+    // Iteration is used because TS does not have tail recursion.
+    // Refer to https://stackoverflow.com/a/56317289
+    for (const v of this.getNodes()) {
+      if (visited.has(v)) {
+        continue;
       }
-      inPath.delete(current);
-      return false;
-    }
+      stack.push(v);
 
-    while (toVisit.size > 0) {
-      const [node] = toVisit;
-      if (cycleFound(node)) {
-        return true;
+      while (stack.length !== 0) {
+        const top = stack[stack.length - 1];
+
+        if (visited.has(top)) {
+          currentDirectAncestors.delete(top);
+          stack.pop();
+        } else {
+          visited.add(top);
+          currentDirectAncestors.add(top);
+        }
+
+        for (const child of this.getUpstreamNeighbors(top)) {
+          if (currentDirectAncestors.has(child)) return true;
+          if (!visited.has(child)) stack.push(child);
+        }
       }
     }
     return false;
   }
 
+  /**
+   * Remove the given node from the graph.
+   * @param node The node to remove.
+   */
   removeNode(node: T): void {
     let deps: Set<T> | undefined;
     if ((deps = this.adjacencyMap.get(node)) != null) {
@@ -243,70 +131,110 @@ export class DependencyGraph<T> {
     }
   }
 
-  // node -> deps
-  addEdge(node: T, dependsOn: T): void {
-    const deps = this.adjacencyMap.get(node);
+  /**
+   * Add an edge from an upstream node to a downstream one.
+   * @param upstream The node at which the directed edge starts.
+   * @param downstream The node at which the directed edge ends.
+   */
+  addEdge(upstream: T, downstream: T): void {
+    const deps = this.adjacencyMap.get(downstream);
     if (deps == null) {
-      this.adjacencyMap.set(node, new Set([dependsOn]));
+      this.adjacencyMap.set(downstream, new Set([upstream]));
       this.numberOfEdges++;
     } else {
-      if (!deps.has(dependsOn)) {
-        deps.add(dependsOn);
+      if (!deps.has(upstream)) {
+        deps.add(upstream);
         this.numberOfEdges++;
       }
     }
     // Create an entry for `dependsOn` if it doesn't exist.
     // This is so that the keys of the map contain all the
     // nodes in the graph.
-    if (!this.adjacencyMap.has(dependsOn)) {
-      this.adjacencyMap.set(dependsOn, new Set());
+    if (!this.adjacencyMap.has(upstream)) {
+      this.adjacencyMap.set(upstream, new Set());
     }
   }
 
-  addBackEdges(node: T, dependentNodes: Set<T>): void {
-    for (const a of dependentNodes) {
-      this.addEdge(a, node);
-    }
-  }
-
-  addEdges(node: T, dependsOn: Set<T>): void {
-    const deps = this.adjacencyMap.get(node);
-    if (deps == null) {
-      this.adjacencyMap.set(node, new Set(dependsOn));
-      this.numberOfEdges += dependsOn.size;
-    } else {
-      for (const dependency of dependsOn) {
-        if (!deps.has(dependency)) {
-          deps.add(dependency);
-          this.numberOfEdges++;
-        }
-        if (!this.adjacencyMap.has(dependency)) {
-          this.adjacencyMap.set(dependency, new Set());
-        }
-      }
-    }
-  }
-
-  removeEdge(node: T, dependsOn: T): void {
-    const deps = this.adjacencyMap.get(node);
-    if (deps?.has(dependsOn) ?? false) {
-      deps?.delete(dependsOn);
+  /**
+   * Remove a directed edge from an upstream node to a downstream one.
+   * @param upstream The node at which the directed edge starts.
+   * @param downstream The node at which the directed edge ends.
+   */
+  removeEdge(upstream: T, downstream: T): void {
+    const deps = this.adjacencyMap.get(downstream);
+    if (deps?.has(upstream) ?? false) {
+      deps?.delete(upstream);
       this.numberOfEdges--;
     }
   }
 
+  /**
+   * Return the size of the graph in terms of number of nodes and edges.
+   */
   size(): [number, number] {
     return [this.adjacencyMap.size, this.numberOfEdges];
   }
 
-  nodes(): IterableIterator<T> {
+  /**
+   * Return an iterator over the nodes in the graph.
+   */
+  getNodes(): IterableIterator<T> {
     return this.adjacencyMap.keys();
+  }
+
+  toString: () => string = () => this.toMermaidString();
+
+  /**
+   * Return a representation that conforms with the syntax of mermaid.js
+   * @param edgesWithIssue An array containing arrays with [origin, effect].
+   * Denotes edges in the graph that causes issues to the execution, will be visualized as `--x` in mermaid.
+   */
+  toMermaidString(edgesWithIssue?: Array<[T, T]>): string {
+    if (edgesWithIssue == null) edgesWithIssue = [];
+    let result = "graph";
+    const nodeToNumber = new Map<T, number>();
+    const getNodeString = (node: T, def: string): string => {
+      if (node == null || node?.toString === Object.prototype.toString) {
+        console.error(
+          `Encountered node with no toString() implementation: ${String(
+            node?.constructor
+          )}`
+        );
+        return def;
+      }
+      return node.toString();
+    };
+
+    // Build a block here since we only need `counter` temporarily here
+
+    // We use numbers instead of names of reactors directly as node names
+    // in mermaid.js because mermaid has strict restrictions regarding
+    // what could be used as names of the node.
+    {
+      let counter = 0;
+      for (const v of this.getNodes()) {
+        result += `\n${counter}["${getNodeString(v, String(counter))}"]`;
+        nodeToNumber.set(v, counter++);
+      }
+    }
+    // This is the effect
+    for (const s of this.getNodes()) {
+      // This is the origin
+      for (const t of this.getUpstreamNeighbors(s)) {
+        result += `\n${nodeToNumber.get(t)}`;
+        result += edgesWithIssue.some((v) => v[0] === t && v[1] === s)
+          ? " --x "
+          : " --> ";
+        result += `${nodeToNumber.get(s)}`;
+      }
+    }
+    return result;
   }
 
   /**
    * Return a DOT representation of the graph.
    */
-  toString(): string {
+  toDotString(): string {
     let dot = "";
     const graph = this.adjacencyMap;
     const visited = new Set<T>();
@@ -395,28 +323,27 @@ export class DependencyGraph<T> {
     return "digraph G {" + dot + "\n}";
   }
 
-  public rootNodes(): Set<T> {
+  /**
+   * Return the nodes in the graph that have no upstream neighbors.
+   */
+  public getSourceNodes(): Set<T> {
     const roots = new Set<T>();
     /* Populate start set */
     for (const [v, e] of this.adjacencyMap) {
       if (e == null || e.size === 0) {
-        roots.add(v); // leaf nodes have no dependencies
-        // clone.delete(v); // FIXME add a removeNodes function to factor out the duplicate code below
+        roots.add(v);
       }
     }
     return roots;
   }
 
-  // Leaf nodes are nodes that do not depend on any other nodes.
-  //
-  // In the context of cyclic graphs it is therefore possible to
-  // have a graph without any leaf nodes.
-  // As a result, starting a graph search only from leaf nodes in a
-  // cyclic graph, will not necessarily traverse the entire graph.
-  public leafNodes(): Set<T> {
-    const leafs = new Set<T>(this.nodes());
-    for (const node of this.nodes()) {
-      for (const dep of this.getEdges(node)) {
+  /**
+   * Return the nodes in the graph that have no downstream neighbors.
+   */
+  public getSinkNodes(): Set<T> {
+    const leafs = new Set<T>(this.getNodes());
+    for (const node of this.getNodes()) {
+      for (const dep of this.getUpstreamNeighbors(node)) {
         leafs.delete(dep);
       }
     }
@@ -424,16 +351,71 @@ export class DependencyGraph<T> {
   }
 }
 
-export class SortableDependencyGraph<
+/**
+ * A precedence graph with nodes that are sortable by assigning a numeric priority.
+ */
+export class SortablePrecedenceGraph<
   T extends Sortable<number>
-> extends DependencyGraph<T> {
-  updatePriorities(destructive: boolean, spacing = 100): boolean {
+> extends PrecedenceGraph<T> {
+  /**
+   * Create a sortable precedence graph. If a type and precedence graph are given,
+   * then remove all nodes that are not of the given type in a way the preserves
+   * the original lineage.
+   * @param type A type that extends T.
+   * @param pg A precedence graph.
+   */
+  constructor(
+    type?: new (...args: never[]) => T,
+    pg?: PrecedenceGraph<unknown>
+  ) {
+    super();
+
+    if (pg == null || type == null) return;
+
+    const visited = new Set();
+    const search = (parentNode: T, nodes: Set<unknown>): void => {
+      for (const node of nodes) {
+        if (node instanceof type) {
+          this.addEdge(node, parentNode);
+          if (!visited.has(node)) {
+            visited.add(node);
+            search(node, pg.getUpstreamNeighbors(node));
+          }
+        } else {
+          search(parentNode, pg.getUpstreamNeighbors(node));
+        }
+      }
+    };
+    const leafs = pg.getSinkNodes();
+    for (const leaf of leafs) {
+      if (leaf instanceof type) {
+        this.addNode(leaf);
+        search(leaf, pg.getUpstreamNeighbors(leaf));
+        visited.clear();
+      }
+    }
+  }
+
+  /**
+   * Assign priorities to the nodes of the graph such that any two nodes of
+   * which one has precedence over the other, the priority of the one node is
+   * lower than the other.
+   *
+   * @param destructive Destroy the graph structure if true, leave it in tact by
+   * working on a copy if false (the default).
+   * @param spacing The minimum spacing between the priorities of two nodes that
+   * are in a precedence relationship. The default is 100.
+   * @returns True if priorities were assigned successfully, false if the graph
+   * has one or more cycles.
+   */
+  updatePriorities(destructive = false, spacing = 100): boolean {
+    // This implements Kahn's algorithm
     const start = new Array<T>();
     let graph: Map<T, Set<T>>;
     let count = 0;
     if (!destructive) {
       graph = new Map();
-      /* duplicate the map */
+      /* Duplicate the map */
       for (const [v, e] of this.adjacencyMap) {
         graph.set(v, new Set(e));
       }
@@ -464,9 +446,18 @@ export class SortableDependencyGraph<
       }
     }
     if (graph.size !== 0) {
-      return false; // ERROR: cycle detected
+      return false; // cycle detected
     } else {
       return true;
     }
+  }
+}
+
+/**
+ * A sortable precedence graph for reactions.
+ */
+export class ReactionGraph extends SortablePrecedenceGraph<Reaction<unknown>> {
+  constructor(pg?: PrecedenceGraph<unknown>) {
+    super(Reaction<unknown>, pg);
   }
 }

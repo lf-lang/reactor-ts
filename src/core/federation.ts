@@ -355,8 +355,6 @@ class RTIClient extends EventEmitter {
   public connectToRTI(port: number, host: string): void {
     // Create an IPv4 socket for TCP (not UDP) communication over IP (0)
 
-    const thiz = this;
-
     const options: SocketConnectOpts = {
       port,
       family: 4, // IPv4,
@@ -402,7 +400,7 @@ class RTIClient extends EventEmitter {
       this.emit("connected");
     });
 
-    this.socket?.on("data", thiz.handleSocketData.bind(thiz));
+    this.socket?.on("data", this.handleSocketData.bind(this));
 
     // If the socket reports a connection refused error,
     // suppress the message and try to reconnect.
@@ -743,13 +741,12 @@ class RTIClient extends EventEmitter {
    * The handler for the socket's data event.
    * The data Buffer given to the handler may contain 0 or more complete messages.
    * Iterate through the complete messages, and if the last message is incomplete
-   * save it as thiz.chunkedBuffer so it can be prepended onto the
+   * save it as this.chunkedBuffer so it can be prepended onto the
    * data when handleSocketData is called again.
    * @param assembledData The Buffer of data received by the socket. It may
    * contain 0 or more complete messages.
    */
   private handleSocketData(data: Buffer): void {
-    const thiz = this;
     if (data.length < 1) {
       throw new Error("Received a message from the RTI with 0 length.");
     }
@@ -761,15 +758,15 @@ class RTIClient extends EventEmitter {
     // The result is assembledData.
     let assembledData: Buffer;
 
-    if (thiz.chunkedBuffer != null) {
-      assembledData = Buffer.alloc(thiz.chunkedBuffer.length + data.length);
-      thiz.chunkedBuffer.copy(assembledData, 0, 0, thiz.chunkedBuffer.length);
-      data.copy(assembledData, thiz.chunkedBuffer.length);
-      thiz.chunkedBuffer = null;
+    if (this.chunkedBuffer != null) {
+      assembledData = Buffer.alloc(this.chunkedBuffer.length + data.length);
+      this.chunkedBuffer.copy(assembledData, 0, 0, this.chunkedBuffer.length);
+      data.copy(assembledData, this.chunkedBuffer.length);
+      this.chunkedBuffer = null;
     } else {
       assembledData = data;
     }
-    Log.debug(thiz, () => {
+    Log.debug(this, () => {
       return `Assembled data is: ${assembledData.toString("hex")}`;
     });
 
@@ -781,7 +778,7 @@ class RTIClient extends EventEmitter {
           // Federate ID: 2 bytes long.
           // Should never be received by a federate.
 
-          Log.error(thiz, () => {
+          Log.error(this, () => {
             return "Received MSG_TYPE_FED_IDS message from the RTI.";
           });
           throw new Error(
@@ -796,27 +793,27 @@ class RTIClient extends EventEmitter {
           const incomplete = assembledData.length < 9 + bufferIndex;
 
           if (incomplete) {
-            thiz.chunkedBuffer = Buffer.alloc(
+            this.chunkedBuffer = Buffer.alloc(
               assembledData.length - bufferIndex
             );
-            assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
+            assembledData.copy(this.chunkedBuffer, 0, bufferIndex);
           } else {
             const timeBuffer = Buffer.alloc(8);
             assembledData.copy(timeBuffer, 0, bufferIndex + 1, bufferIndex + 9);
             const startTime = TimeValue.fromBinary(timeBuffer);
-            Log.debug(thiz, () => {
+            Log.debug(this, () => {
               return (
                 "Received MSG_TYPE_TIMESTAMP buffer from the RTI " +
                 `with startTime: ${timeBuffer.toString("hex")}`
               );
             });
-            Log.debug(thiz, () => {
+            Log.debug(this, () => {
               return (
                 "Received MSG_TYPE_TIMESTAMP message from the RTI " +
                 `with startTime: ${startTime}`
               );
             });
-            thiz.emit("startTime", startTime);
+            this.emit("startTime", startTime);
           }
 
           bufferIndex += 9;
@@ -832,10 +829,10 @@ class RTIClient extends EventEmitter {
           const incomplete = assembledData.length < 9 + bufferIndex;
 
           if (incomplete) {
-            thiz.chunkedBuffer = Buffer.alloc(
+            this.chunkedBuffer = Buffer.alloc(
               assembledData.length - bufferIndex
             );
-            assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
+            assembledData.copy(this.chunkedBuffer, 0, bufferIndex);
             bufferIndex += 9;
           } else {
             const destPortID = assembledData.readUInt16LE(bufferIndex + 1);
@@ -848,10 +845,10 @@ class RTIClient extends EventEmitter {
 
             if (isChunked) {
               // Copy the unprocessed remainder of assembledData into chunkedBuffer
-              thiz.chunkedBuffer = Buffer.alloc(
+              this.chunkedBuffer = Buffer.alloc(
                 assembledData.length - bufferIndex
               );
-              assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
+              assembledData.copy(this.chunkedBuffer, 0, bufferIndex);
             } else {
               // Finish processing the complete message.
               const messageBuffer = Buffer.alloc(messageLength);
@@ -862,8 +859,8 @@ class RTIClient extends EventEmitter {
                 bufferIndex + 9 + messageLength
               );
               const destPortAction =
-                thiz.federatePortActionByID.get(destPortID);
-              thiz.emit("message", destPortAction, messageBuffer);
+                this.federatePortActionByID.get(destPortID);
+              this.emit("message", destPortAction, messageBuffer);
             }
 
             bufferIndex += messageLength + 9;
@@ -882,10 +879,10 @@ class RTIClient extends EventEmitter {
           const incomplete = assembledData.length < 21 + bufferIndex;
 
           if (incomplete) {
-            thiz.chunkedBuffer = Buffer.alloc(
+            this.chunkedBuffer = Buffer.alloc(
               assembledData.length - bufferIndex
             );
-            assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
+            assembledData.copy(this.chunkedBuffer, 0, bufferIndex);
             bufferIndex += 21;
           } else {
             const destPortID = assembledData.readUInt16LE(bufferIndex + 1);
@@ -894,7 +891,7 @@ class RTIClient extends EventEmitter {
             const tagBuffer = Buffer.alloc(12);
             assembledData.copy(tagBuffer, 0, bufferIndex + 9, bufferIndex + 21);
             const tag = Tag.fromBinary(tagBuffer);
-            Log.debug(thiz, () => {
+            Log.debug(this, () => {
               return `Received an RTI MSG_TYPE_TAGGED_MESSAGE: Tag Buffer: ${String(
                 tag
               )}`;
@@ -906,10 +903,10 @@ class RTIClient extends EventEmitter {
 
             if (isChunked) {
               // Copy the unprocessed remainder of assembledData into chunkedBuffer
-              thiz.chunkedBuffer = Buffer.alloc(
+              this.chunkedBuffer = Buffer.alloc(
                 assembledData.length - bufferIndex
               );
-              assembledData.copy(thiz.chunkedBuffer, 0, bufferIndex);
+              assembledData.copy(this.chunkedBuffer, 0, bufferIndex);
             } else {
               // Finish processing the complete message.
               const messageBuffer = Buffer.alloc(messageLength);
@@ -919,8 +916,8 @@ class RTIClient extends EventEmitter {
                 bufferIndex + 21,
                 bufferIndex + 21 + messageLength
               );
-              const destPort = thiz.federatePortActionByID.get(destPortID);
-              thiz.emit("timedMessage", destPort, messageBuffer, tag);
+              const destPort = this.federatePortActionByID.get(destPortID);
+              this.emit("timedMessage", destPort, messageBuffer, tag);
             }
 
             bufferIndex += messageLength + 21;
@@ -933,10 +930,10 @@ class RTIClient extends EventEmitter {
         // message.
         case RTIMessageTypes.MSG_TYPE_RESIGN: {
           // MessageType: 1 byte.
-          Log.debug(thiz, () => {
+          Log.debug(this, () => {
             return "Received an RTI MSG_TYPE_RESIGN.";
           });
-          Log.error(thiz, () => {
+          Log.error(this, () => {
             return (
               "FIXME: No functionality has " +
               "been implemented yet for a federate receiving a MSG_TYPE_RESIGN message from " +
@@ -950,7 +947,7 @@ class RTIClient extends EventEmitter {
           // MessageType: 1 byte.
           // Timestamp: 8 bytes.
           // Microstep: 4 bytes.
-          Log.error(thiz, () => {
+          Log.error(this, () => {
             return (
               "Received an RTI MSG_TYPE_NEXT_EVENT_TAG. This message type " +
               "should not be received by a federate"
@@ -963,33 +960,33 @@ class RTIClient extends EventEmitter {
           // MessageType: 1 byte.
           // Timestamp: 8 bytes.
           // Microstep: 4 bytes.
-          Log.debug(thiz, () => {
+          Log.debug(this, () => {
             return "Received an RTI MSG_TYPE_TAG_ADVANCE_GRANT";
           });
           const tagBuffer = Buffer.alloc(12);
           assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
           const tag = Tag.fromBinary(tagBuffer);
-          thiz.emit("timeAdvanceGrant", tag);
+          this.emit("timeAdvanceGrant", tag);
           bufferIndex += 13;
           break;
         }
         case RTIMessageTypes.MSG_TYPE_PROVISIONAL_TAG_ADVANCE_GRANT: {
-          Log.debug(thiz, () => {
+          Log.debug(this, () => {
             return "Received an RTI MSG_TYPE_PROVISIONAL_TAG_ADVANCE_GRANT";
           });
           const tagBuffer = Buffer.alloc(12);
           assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
           const tag = Tag.fromBinary(tagBuffer);
-          Log.debug(thiz, () => {
+          Log.debug(this, () => {
             return `PTAG value: ${tag}`;
           });
-          thiz.emit("provisionalTimeAdvanceGrant", tag);
+          this.emit("provisionalTimeAdvanceGrant", tag);
           bufferIndex += 13;
           break;
         }
         case RTIMessageTypes.MSG_TYPE_LOGICAL_TAG_COMPLETE: {
           // Logial Time Complete: The next eight bytes will be the timestamp.
-          Log.error(thiz, () => {
+          Log.error(this, () => {
             return (
               "Received an RTI MSG_TYPE_LOGICAL_TAG_COMPLETE.  This message type " +
               "should not be received by a federate"
@@ -1001,26 +998,26 @@ class RTIClient extends EventEmitter {
         case RTIMessageTypes.MSG_TYPE_STOP_REQUEST: {
           // The next 8 bytes will be the timestamp.
           // The next 4 bytes will be the microstep.
-          Log.debug(thiz, () => {
+          Log.debug(this, () => {
             return "Received an RTI MSG_TYPE_STOP_REQUEST";
           });
           const tagBuffer = Buffer.alloc(12);
           assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
           const tag = Tag.fromBinary(tagBuffer);
-          thiz.emit("stopRequest", tag);
+          this.emit("stopRequest", tag);
           bufferIndex += 13;
           break;
         }
         case RTIMessageTypes.MSG_TYPE_STOP_GRANTED: {
           // The next 8 bytes will be the time at which the federates will stop.
           // The next 4 bytes will be the microstep at which the federates will stop.
-          Log.debug(thiz, () => {
+          Log.debug(this, () => {
             return "Received an RTI MSG_TYPE_STOP_GRANTED";
           });
           const tagBuffer = Buffer.alloc(12);
           assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
           const tag = Tag.fromBinary(tagBuffer);
-          thiz.emit("stopRequestGranted", tag);
+          this.emit("stopRequestGranted", tag);
           bufferIndex += 13;
           break;
         }
@@ -1035,17 +1032,17 @@ class RTIClient extends EventEmitter {
           const tagBuffer = Buffer.alloc(12);
           assembledData.copy(tagBuffer, 0, bufferIndex + 5, bufferIndex + 17);
           const intendedTag = Tag.fromBinary(tagBuffer);
-          Log.debug(thiz, () => {
+          Log.debug(this, () => {
             return `Handling port absent for tag ${String(
               intendedTag
             )} for port ${portID}.`;
           });
-          thiz.emit("portAbsent", portID, intendedTag);
+          this.emit("portAbsent", portID, intendedTag);
           bufferIndex += 17;
           break;
         }
         case RTIMessageTypes.MSG_TYPE_ACK: {
-          Log.debug(thiz, () => {
+          Log.debug(this, () => {
             return "Received an RTI MSG_TYPE_ACK";
           });
           bufferIndex += 1;
@@ -1053,7 +1050,7 @@ class RTIClient extends EventEmitter {
         }
         case RTIMessageTypes.MSG_TYPE_REJECT: {
           const rejectionReason = assembledData.readUInt8(bufferIndex + 1);
-          Log.error(thiz, () => {
+          Log.error(this, () => {
             return `Received an RTI MSG_TYPE_REJECT. Rejection reason: ${rejectionReason}`;
           });
           bufferIndex += 2;
@@ -1068,7 +1065,7 @@ class RTIClient extends EventEmitter {
         }
       }
     }
-    Log.debug(thiz, () => {
+    Log.debug(this, () => {
       return "exiting handleSocketData";
     });
   }
@@ -1206,9 +1203,7 @@ export class FederatedApp extends App {
     } else {
       Log.global.debug(
         "Ignoring FederatedApp._shutdown() since EndOfExecution is already set earlier than current tag." +
-          `currentTag: ${this.util.getCurrentTag()} endTag: ${String(
-            endTag
-          )}`
+          `currentTag: ${this.util.getCurrentTag()} endTag: ${String(endTag)}`
       );
     }
   }
