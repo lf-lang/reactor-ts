@@ -1371,7 +1371,7 @@ export abstract class Reactor extends Component {
           }
         }
       }
-    }
+    };
 
     // For each output, walk the graph and add dependencies to
     // the inputs that are reachable.

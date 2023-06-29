@@ -190,7 +190,7 @@ export class DependencyGraph<T> {
       for (const next of this.getEdges(current)) {
         if (!visited.has(next)) search(next);
       }
-    }
+    };
     search(effect);
     reachable.delete(effect);
 
@@ -215,7 +215,7 @@ export class DependencyGraph<T> {
       }
       inPath.delete(current);
       return false;
-    }
+    };
 
     while (toVisit.size > 0) {
       const [node] = toVisit;
