@@ -2,6 +2,7 @@ export * from "./types";
 export * from "./strings";
 export * from "./time";
 export * from "./util";
+export * from "./queue";
 export * from "./graph";
 export * from "./reaction";
 export * from "./component";
