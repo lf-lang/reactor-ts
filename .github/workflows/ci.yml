@@ -18,6 +18,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm'
       - name: Run the type checker and then run the tests
         run: |
           npm install
@@ -68,3 +69,33 @@ jobs:
       - name: Perform Lingua Franca TypeScript tests
         run: |
           ./gradlew targetTest -Ptarget=TypeScript -Druntime="file:/${{ github.workspace }}/reactor-ts"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+      - name: Run eslint
+        run: |
+          npm install
+          npm run lint
+
+  prettier: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Run prettier
+        run: |
+          npm install
+          npm run check-style
+  
