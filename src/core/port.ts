@@ -71,9 +71,7 @@ export abstract class WritablePort<T> implements ReadWrite<T> {
   abstract getPort(): IOPort<T>;
 }
 
-export abstract class WritableMultiPort<T>
-  implements MultiReadWrite<T>
-{
+export abstract class WritableMultiPort<T> implements MultiReadWrite<T> {
   abstract get(index: number): T | undefined;
   abstract set(index: number, value: T): void;
   abstract width(): number;

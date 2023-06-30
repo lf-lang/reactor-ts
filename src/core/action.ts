@@ -1,10 +1,4 @@
-import type {
-  Absent,
-  Read,
-  Sched,
-  Reactor,
-  TriggerManager
-} from "./internal";
+import type {Absent, Read, Sched, Reactor, TriggerManager} from "./internal";
 import {
   Log,
   TaggedEvent,
@@ -36,10 +30,7 @@ export abstract class SchedulableAction<T> implements Sched<T> {
  * scheduled by a reactor by invoking the schedule function in a reaction
  * or in an asynchronous callback that has been set up in a reaction.
  */
-export class Action<T>
-  extends ScheduledTrigger<T>
-  implements Read<T>
-{
+export class Action<T> extends ScheduledTrigger<T> implements Read<T> {
   readonly origin: Origin;
 
   readonly minDelay: TimeValue;
@@ -68,9 +59,7 @@ export class Action<T>
     throw Error("Unable to grant access to manager.");
   }
 
-  protected scheduler = new (class<
-    T
-  > extends SchedulableAction<T> {
+  protected scheduler = new (class<T> extends SchedulableAction<T> {
     get(): T | undefined {
       return this.action.get();
     }

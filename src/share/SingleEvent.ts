@@ -3,7 +3,9 @@ import {
   type ReactionSandbox,
   type Parameter,
   Tuple,
-  Reactor, Timer, OutPort
+  Reactor,
+  Timer,
+  OutPort
 } from "../core/internal";
 
 function produceOutput<S>(

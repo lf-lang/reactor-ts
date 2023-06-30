@@ -19,10 +19,7 @@ import {WritableMultiPort} from "./port";
  * @author Marten Lohstroh <marten@berkeley.edu>
  * @author Hokeun Kim <hokeun@berkeley.edu>
  */
-export abstract class MultiPort<T>
-  extends Trigger
-  implements MultiRead<T>
-{
+export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
   /**
    * Return all channels of this multiport.
    */
@@ -48,9 +45,7 @@ export abstract class MultiPort<T>
    * @param ports the ports to return the values of
    * @returns the current values of the given ports
    */
-  public static values<T>(
-    ports: Array<IOPort<T>>
-  ): Array<T | Absent> {
+  public static values<T>(ports: Array<IOPort<T>>): Array<T | Absent> {
     const values = new Array<T | Absent>(ports.length);
     for (let i = 0; i < values.length; i++) {
       values[i] = ports[i].get();

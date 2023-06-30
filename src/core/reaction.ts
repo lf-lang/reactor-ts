@@ -5,19 +5,11 @@ import type {
   MutationSandbox,
   Reactor,
   TimeValue,
+  Tuple,
   ArgList,
   Variable
 } from "./internal";
 import {Log, Timer, Tag, Startup} from "./internal";
-
-export class Tuple<T extends Variable[]> {
-    elements: T;
-  
-    constructor(...args: T) {
-      this.elements = args;
-    }
-  }
-  
 
 /**
  * A number that indicates a reaction's position with respect to other

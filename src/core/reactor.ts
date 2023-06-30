@@ -431,12 +431,7 @@ export abstract class Reactor extends Component {
      * @param src
      * @param dst
      */
-    public connect<
-      A extends T,
-      R,
-      T,
-      S extends R
-    >(
+    public connect<A extends T, R, T, S extends R>(
       src: CallerPort<A, R> | IOPort<S>,
       dst: CalleePort<T, S> | IOPort<R>
     ): void {
@@ -556,9 +551,7 @@ export abstract class Reactor extends Component {
 
   //
 
-  public allWritable<T>(
-    port: MultiPort<T>
-  ): WritableMultiPort<T> {
+  public allWritable<T>(port: MultiPort<T>): WritableMultiPort<T> {
     return port.asWritable(this._getKey(port));
   }
 
@@ -575,7 +568,7 @@ export abstract class Reactor extends Component {
 
     if (reaction instanceof Mutation) {
       index = this._mutations.indexOf(reaction as Mutation<Variable[]>);
-    }else {
+    } else {
       index = this._reactions.indexOf(reaction);
     }
 
@@ -593,7 +586,10 @@ export abstract class Reactor extends Component {
     // Add a dependency on the previous reaction or mutation, if it exists.
     const prev = this._getLastReactionOrMutation();
     if (prev != null) {
-      this._dependencyGraph.addEdge(prev, reaction as unknown as Reaction<Variable[]>);
+      this._dependencyGraph.addEdge(
+        prev,
+        reaction as unknown as Reaction<Variable[]>
+      );
     }
 
     // FIXME: Add a dependency on the last mutation that the owner of this reactor
@@ -605,11 +601,15 @@ export abstract class Reactor extends Component {
     for (const t of reaction.trigs.elements) {
       // Link the trigger to the reaction.
       if (t instanceof Trigger) {
-        t.getManager(this._getKey(t)).addReaction(reaction as unknown as Reaction<Variable[]>);
+        t.getManager(this._getKey(t)).addReaction(
+          reaction as unknown as Reaction<Variable[]>
+        );
       } else if (t instanceof Array) {
         t.forEach((trigger) => {
           if (trigger instanceof Trigger) {
-            trigger.getManager(this._getKey(trigger)).addReaction(reaction as unknown as Reaction<Variable[]>);
+            trigger
+              .getManager(this._getKey(trigger))
+              .addReaction(reaction as unknown as Reaction<Variable[]>);
           } else {
             throw new Error("Non-Trigger included in Triggers list.");
           }
@@ -618,26 +618,41 @@ export abstract class Reactor extends Component {
 
       // Also record this trigger as a dependency.
       if (t instanceof IOPort) {
-        this._dependencyGraph.addEdge(t, reaction as unknown as Reaction<Variable[]>);
+        this._dependencyGraph.addEdge(
+          t,
+          reaction as unknown as Reaction<Variable[]>
+        );
       } else if (t instanceof MultiPort) {
         t.channels().forEach((channel) => {
-          this._dependencyGraph.addEdge(channel, reaction as unknown as Reaction<Variable[]>);
+          this._dependencyGraph.addEdge(
+            channel,
+            reaction as unknown as Reaction<Variable[]>
+          );
         });
       } else if (t instanceof Array) {
         t.forEach((trigger) => {
           if (trigger instanceof IOPort) {
-            this._dependencyGraph.addEdge(trigger, reaction as unknown as Reaction<Variable[]>);
+            this._dependencyGraph.addEdge(
+              trigger,
+              reaction as unknown as Reaction<Variable[]>
+            );
           } else if (trigger instanceof MultiPort) {
             trigger.channels().forEach((channel) => {
-              this._dependencyGraph.addEdge(channel, reaction as unknown as Reaction<Variable[]>);
+              this._dependencyGraph.addEdge(
+                channel,
+                reaction as unknown as Reaction<Variable[]>
+              );
             });
           } else {
             throw new Error("Non-Port included in Triggers list.");
           }
         });
       } else {
-        Log.debug(this, () => `
-        >>>>> not a dependency: ${t}`);
+        Log.debug(
+          this,
+          () => `
+        >>>>> not a dependency: ${t}`
+        );
       }
     }
 
@@ -646,17 +661,29 @@ export abstract class Reactor extends Component {
 
     for (const a of reaction.args.elements) {
       if (a instanceof IOPort) {
-        this._dependencyGraph.addEdge(a, reaction as unknown as Reaction<Variable[]>);
+        this._dependencyGraph.addEdge(
+          a,
+          reaction as unknown as Reaction<Variable[]>
+        );
         sources.add(a);
       } else if (a instanceof MultiPort) {
         a.channels().forEach((channel) => {
-          this._dependencyGraph.addEdge(channel, reaction as unknown as Reaction<Variable[]>);
+          this._dependencyGraph.addEdge(
+            channel,
+            reaction as unknown as Reaction<Variable[]>
+          );
           sources.add(channel);
         });
       } else if (a instanceof CalleePort) {
-        this._dependencyGraph.addEdge(reaction as unknown as Reaction<Variable[]>, a);
+        this._dependencyGraph.addEdge(
+          reaction as unknown as Reaction<Variable[]>,
+          a
+        );
       } else if (a instanceof CallerPort) {
-        this._dependencyGraph.addEdge(a, reaction as unknown as Reaction<Variable[]>);
+        this._dependencyGraph.addEdge(
+          a,
+          reaction as unknown as Reaction<Variable[]>
+        );
       }
       // Only necessary if we want to add actions to the dependency graph.
       else if (a instanceof Action) {
@@ -664,11 +691,17 @@ export abstract class Reactor extends Component {
       } else if (a instanceof SchedulableAction) {
         // antidep
       } else if (a instanceof WritablePort) {
-        this._dependencyGraph.addEdge(reaction as unknown as Reaction<Variable[]>, a.getPort());
+        this._dependencyGraph.addEdge(
+          reaction as unknown as Reaction<Variable[]>,
+          a.getPort()
+        );
         effects.add(a.getPort());
       } else if (a instanceof WritableMultiPort) {
         a.getPorts().forEach((channel) => {
-          this._dependencyGraph.addEdge(reaction as unknown as Reaction<Variable[]>, channel);
+          this._dependencyGraph.addEdge(
+            reaction as unknown as Reaction<Variable[]>,
+            channel
+          );
           effects.add(channel);
         });
       }
@@ -676,10 +709,7 @@ export abstract class Reactor extends Component {
     // Make effects dependent on sources.
     for (const effect of effects) {
       for (const source of sources) {
-        this._causalityGraph.addEdge(
-          source,
-          effect
-        );
+        this._causalityGraph.addEdge(source, effect);
       }
     }
   }
@@ -761,7 +791,9 @@ export abstract class Reactor extends Component {
       Log.global.warn("Deadline violation occurred!");
     }
   ): void {
-    const calleePorts = trigs.elements.filter((trig) => trig instanceof CalleePort);
+    const calleePorts = trigs.elements.filter(
+      (trig) => trig instanceof CalleePort
+    );
 
     if (calleePorts.length > 0) {
       // This is a procedure.
@@ -1026,12 +1058,10 @@ export abstract class Reactor extends Component {
     return false;
   }
 
-  public canConnectCall<
-    A extends T,
-    R,
-    T,
-    S extends R
-  >(src: CallerPort<A, R>, dst: CalleePort<T, S>): boolean {
+  public canConnectCall<A extends T, R, T, S extends R>(
+    src: CallerPort<A, R>,
+    dst: CalleePort<T, S>
+  ): boolean {
     // FIXME: can we change the inheritance relationship so that we can overload?
 
     if (!this._runtime.isRunning()) {
@@ -1067,10 +1097,7 @@ export abstract class Reactor extends Component {
    * @param src The start point of a new connection.
    * @param dst The end point of a new connection.
    */
-  public canConnect<R, S extends R>(
-    src: IOPort<S>,
-    dst: IOPort<R>
-  ): boolean {
+  public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean {
     // Immediate rule out trivial self loops.
     if (src === dst) {
       throw Error("Source port and destination port are the same.");
@@ -1220,10 +1247,7 @@ export abstract class Reactor extends Component {
    * @param src The source port to connect.
    * @param dst The destination port to connect.
    */
-  protected _connect<R, S extends R>(
-    src: IOPort<S>,
-    dst: IOPort<R>
-  ): void {
+  protected _connect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): void {
     if (src === undefined || src === null) {
       throw new Error("Cannot connect unspecified source");
     }
@@ -1302,12 +1326,10 @@ export abstract class Reactor extends Component {
     }
   }
 
-  protected _connectCall<
-    A extends T,
-    R,
-    T,
-    S extends R
-  >(src: CallerPort<A, R>, dst: CalleePort<T, S>): void {
+  protected _connectCall<A extends T, R, T, S extends R>(
+    src: CallerPort<A, R>,
+    dst: CalleePort<T, S>
+  ): void {
     if (this.canConnectCall(src, dst)) {
       Log.debug(this, () => `connecting ${src} and ${dst}`);
       // Treat connections between callers and callees separately.
@@ -1351,7 +1373,6 @@ export abstract class Reactor extends Component {
    * and the dependencies between them.
    */
   protected _getCausalityInterface(): PrecedenceGraph<Port<unknown>> {
-
     const ifGraph = this._causalityGraph;
     // Find all the input and output ports that this reactor owns.
 
@@ -1441,10 +1462,7 @@ export abstract class Reactor extends Component {
    * @param src Source port of connection to be disconnected.
    * @param dst Destination port of connection to be disconnected. If undefined, disconnect all connections from the source port.
    */
-  protected _disconnect<R, S extends R>(
-    src: IOPort<S>,
-    dst?: IOPort<R>
-  ): void {
+  protected _disconnect<R, S extends R>(src: IOPort<S>, dst?: IOPort<R>): void {
     if (
       (!this._runtime.isRunning() && this._isInScope(src, dst)) ||
       this._runtime.isRunning()
@@ -1546,10 +1564,7 @@ interface ComponentManager {
 /**
  * A caller port sends arguments of type T and receives a response of type R.
  */
-export class CallerPort<A, R>
-  extends Port<R>
-  implements Write<A>, Read<R>
-{
+export class CallerPort<A, R> extends Port<R> implements Write<A>, Read<R> {
   public get(): R | undefined {
     if (
       this.tag?.isSimultaneousWith(this.runtime.util.getCurrentTag()) ??
@@ -1620,10 +1635,7 @@ interface CalleeManager<T> extends TriggerManager {
 /**
  * A callee port receives arguments of type A and send a response of type R.
  */
-export class CalleePort<A, R>
-  extends Port<A>
-  implements Read<A>, Write<R>
-{
+export class CalleePort<A, R> extends Port<A> implements Read<A>, Write<R> {
   get(): A | undefined {
     return this.argValue;
   }

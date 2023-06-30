@@ -456,7 +456,9 @@ export class SortablePrecedenceGraph<
 /**
  * A sortable precedence graph for reactions.
  */
-export class ReactionGraph extends SortablePrecedenceGraph<Reaction<Variable[]>> {
+export class ReactionGraph extends SortablePrecedenceGraph<
+  Reaction<Variable[]>
+> {
   constructor(pg?: PrecedenceGraph<unknown>) {
     super(Reaction<Variable[]>, pg);
   }
