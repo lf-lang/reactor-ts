@@ -4,7 +4,7 @@
  *
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
-import {Tuple, type WritablePort} from "../core/internal";
+import type {WritablePort} from "../core/internal";
 import {
   Log,
   TimeValue,
@@ -13,6 +13,7 @@ import {
   OutPort,
   InPort,
   State,
+  Tuple,
   Action,
   Reactor,
   App
