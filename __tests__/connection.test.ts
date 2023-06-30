@@ -1,10 +1,9 @@
 import {
   Reactor,
   App,
-  Triggers,
-  Args,
   State,
   OutPort,
+  Tuple,
   InPort,
   TimeUnit,
   TimeValue
@@ -61,8 +60,8 @@ describe("Check _connect", () => {
     constructor(container: Reactor) {
       super(container);
       this.addReaction(
-        new Triggers(this.startup),
-        new Args(this.writable(this.out)),
+        new Tuple(this.startup),
+        new Tuple(this.writable(this.out)),
         function (this, __out) {
           __out.set(100);
         }
@@ -77,8 +76,8 @@ describe("Check _connect", () => {
     constructor(container: Reactor) {
       super(container);
       this.addReaction(
-        new Triggers(this.in),
-        new Args(this.in, this.received),
+        new Tuple(this.in),
+        new Tuple(this.in, this.received),
         function (this, __in, __received) {
           const tmp = __in.get();
           try {

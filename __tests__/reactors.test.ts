@@ -1,8 +1,7 @@
 import {
   Reactor,
   App,
-  Triggers,
-  Args,
+  Tuple,
   Timer,
   OutPort,
   InPort,
@@ -21,8 +20,8 @@ class Starter extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Triggers(this.startup),
-      new Args(this.writable(this.out)),
+      new Tuple(this.startup),
+      new Tuple(this.writable(this.out)),
       function (this, __out) {
         __out.set(4);
       }
@@ -43,8 +42,8 @@ class R1 extends Reactor {
   ) {
     super(parent);
     this.addReaction(
-      new Triggers(this.in),
-      new Args(this.in, this.writable(this.out)),
+      new Tuple(this.in),
+      new Tuple(this.in, this.writable(this.out)),
       function (this, __in, __out) {
         const util = this.util;
         const initialElapsedTime = util.getElapsedPhysicalTime();
@@ -96,8 +95,8 @@ class R2 extends Reactor {
   ) {
     super(parent);
     this.addReaction(
-      new Triggers(this.in),
-      new Args(this.in),
+      new Tuple(this.in),
+      new Tuple(this.in),
       function (this, __in) {
         const tmp = __in.get();
         /* Do Nothing */
@@ -156,8 +155,8 @@ class ReactorWithAction extends App {
   ) {
     super(timeout, false, false, success, fail);
     this.addReaction(
-      new Triggers(this.t),
-      new Args(this.schedulable(this.a)),
+      new Tuple(this.t),
+      new Tuple(this.schedulable(this.a)),
       function (this, a) {
         a.schedule(0, 1);
       }

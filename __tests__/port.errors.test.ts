@@ -2,9 +2,7 @@ import {
   Reactor,
   App,
   InPort,
-  OutPort,
-  Triggers,
-  Args
+  OutPort
 } from "../src/core/internal";
 
 class R1 extends Reactor {
