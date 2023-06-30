@@ -15,7 +15,8 @@ import {
   Variable,
   Write,
   TriggerManager,
-  ReactionGraph
+  ReactionGraph,
+  Tuple
 } from "./internal";
 import {
   TimeValue,
@@ -29,9 +30,7 @@ import {
   Reaction,
   Mutation,
   Procedure,
-  Args,
   SchedulableAction,
-  Triggers,
   TaggedEvent,
   Component,
   ScheduledTrigger,
@@ -162,7 +161,7 @@ export abstract class Reactor extends Component {
    * ports, reactions, and connections.
    */
   protected _dependencyGraph = new PrecedenceGraph<
-    Port<unknown> | Reaction<any>
+    Port<unknown> | Reaction<Variable[]>
   >();
 
   /**
@@ -224,7 +223,7 @@ export abstract class Reactor extends Component {
   /**
    * The list of reactions this reactor has.
    */
-  private readonly _reactions: Array<Reaction<any>> = [];
+  private readonly _reactions: Array<Reaction<Variable[]>> = [];
 
   /**
    * Sandbox for the execution of reactions.
@@ -234,7 +233,7 @@ export abstract class Reactor extends Component {
   /**
    * The list of mutations this reactor has.
    */
-  private readonly _mutations: Array<Mutation<any>> = [];
+  private readonly _mutations: Array<Mutation<Variable[]>> = [];
 
   /**
    * Sandbox for the execution of mutations.
@@ -334,8 +333,8 @@ export abstract class Reactor extends Component {
   }
 
   private _getLast(
-    reactions: Set<Reaction<any>>
-  ): Reaction<unknown> | undefined {
+    reactions: Set<Reaction<Variable[]>>
+  ): Reaction<Variable[]> | undefined {
     let index = -1;
     const all = this._getReactionsAndMutations();
 
@@ -351,8 +350,8 @@ export abstract class Reactor extends Component {
   }
 
   private _getFirst(
-    reactions: Set<Reaction<any>>
-  ): Reaction<unknown> | undefined {
+    reactions: Set<Reaction<Variable[]>>
+  ): Reaction<Variable[]> | undefined {
     let index = -1;
     const all = this._getReactionsAndMutations();
 
@@ -523,13 +522,13 @@ export abstract class Reactor extends Component {
     // Pass in a reference to the reactor because the runtime object
     // is inaccessible for the top-level reactor (it is created after this constructor returns).
     const self = this as Reactor;
-    this.addMutation(new Triggers(this.shutdown), new Args(), function (this) {
+    this.addMutation(new Tuple(this.shutdown), new Tuple(), function (this) {
       self._findOwnReactors().forEach((r) => {
         r._delete();
       });
     });
 
-    // If this reactor was created at runtime, simply set the priorty of
+    // If this reactor was created at runtime, simply set the priority of
     // the default to the priority of from the last mutation of its
     // container plus one. Subsequent reactions and mutations that are added
     // will get a priority relative to this one.
@@ -571,12 +570,12 @@ export abstract class Reactor extends Component {
    * Return the index of the reaction given as an argument.
    * @param reaction The reaction to return the index of.
    */
-  public _getReactionIndex(reaction: Reaction<any>): number {
+  public _getReactionIndex(reaction: Reaction<Variable[]>): number {
     let index: number | undefined;
 
     if (reaction instanceof Mutation) {
-      index = this._mutations.indexOf(reaction);
-    } else {
+      index = this._mutations.indexOf(reaction as Mutation<Variable[]>);
+    }else {
       index = this._reactions.indexOf(reaction);
     }
 
@@ -590,11 +589,11 @@ export abstract class Reactor extends Component {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private _recordDeps<T extends Variable[]>(reaction: Reaction<any>): void {
+  private _recordDeps<T extends Variable[]>(reaction: Reaction<T>): void {
     // Add a dependency on the previous reaction or mutation, if it exists.
     const prev = this._getLastReactionOrMutation();
     if (prev != null) {
-      this._dependencyGraph.addEdge(prev, reaction);
+      this._dependencyGraph.addEdge(prev, reaction as unknown as Reaction<Variable[]>);
     }
 
     // FIXME: Add a dependency on the last mutation that the owner of this reactor
@@ -603,14 +602,14 @@ export abstract class Reactor extends Component {
     // that allows for a link to be updated.
 
     // Set up the triggers.
-    for (const t of reaction.trigs.list) {
+    for (const t of reaction.trigs.elements) {
       // Link the trigger to the reaction.
       if (t instanceof Trigger) {
-        t.getManager(this._getKey(t)).addReaction(reaction);
+        t.getManager(this._getKey(t)).addReaction(reaction as unknown as Reaction<Variable[]>);
       } else if (t instanceof Array) {
         t.forEach((trigger) => {
           if (trigger instanceof Trigger) {
-            trigger.getManager(this._getKey(trigger)).addReaction(reaction);
+            trigger.getManager(this._getKey(trigger)).addReaction(reaction as unknown as Reaction<Variable[]>);
           } else {
             throw new Error("Non-Trigger included in Triggers list.");
           }
@@ -619,18 +618,18 @@ export abstract class Reactor extends Component {
 
       // Also record this trigger as a dependency.
       if (t instanceof IOPort) {
-        this._dependencyGraph.addEdge(t, reaction);
+        this._dependencyGraph.addEdge(t, reaction as unknown as Reaction<Variable[]>);
       } else if (t instanceof MultiPort) {
         t.channels().forEach((channel) => {
-          this._dependencyGraph.addEdge(channel, reaction);
+          this._dependencyGraph.addEdge(channel, reaction as unknown as Reaction<Variable[]>);
         });
       } else if (t instanceof Array) {
         t.forEach((trigger) => {
           if (trigger instanceof IOPort) {
-            this._dependencyGraph.addEdge(trigger, reaction);
+            this._dependencyGraph.addEdge(trigger, reaction as unknown as Reaction<Variable[]>);
           } else if (trigger instanceof MultiPort) {
             trigger.channels().forEach((channel) => {
-              this._dependencyGraph.addEdge(channel, reaction);
+              this._dependencyGraph.addEdge(channel, reaction as unknown as Reaction<Variable[]>);
             });
           } else {
             throw new Error("Non-Port included in Triggers list.");
@@ -642,22 +641,22 @@ export abstract class Reactor extends Component {
       }
     }
 
-    const sources = new Set<Port<any>>();
-    const effects = new Set<Port<any>>();
+    const sources = new Set<Port<unknown>>();
+    const effects = new Set<Port<unknown>>();
 
-    for (const a of reaction.args.tuple) {
+    for (const a of reaction.args.elements) {
       if (a instanceof IOPort) {
-        this._dependencyGraph.addEdge(a, reaction);
+        this._dependencyGraph.addEdge(a, reaction as unknown as Reaction<Variable[]>);
         sources.add(a);
       } else if (a instanceof MultiPort) {
         a.channels().forEach((channel) => {
-          this._dependencyGraph.addEdge(channel, reaction);
+          this._dependencyGraph.addEdge(channel, reaction as unknown as Reaction<Variable[]>);
           sources.add(channel);
         });
       } else if (a instanceof CalleePort) {
-        this._dependencyGraph.addEdge(reaction, a);
+        this._dependencyGraph.addEdge(reaction as unknown as Reaction<Variable[]>, a);
       } else if (a instanceof CallerPort) {
-        this._dependencyGraph.addEdge(a, reaction);
+        this._dependencyGraph.addEdge(a, reaction as unknown as Reaction<Variable[]>);
       }
       // Only necessary if we want to add actions to the dependency graph.
       else if (a instanceof Action) {
@@ -665,11 +664,11 @@ export abstract class Reactor extends Component {
       } else if (a instanceof SchedulableAction) {
         // antidep
       } else if (a instanceof WritablePort) {
-        this._dependencyGraph.addEdge(reaction, a.getPort());
+        this._dependencyGraph.addEdge(reaction as unknown as Reaction<Variable[]>, a.getPort());
         effects.add(a.getPort());
       } else if (a instanceof WritableMultiPort) {
         a.getPorts().forEach((channel) => {
-          this._dependencyGraph.addEdge(reaction, channel);
+          this._dependencyGraph.addEdge(reaction as unknown as Reaction<Variable[]>, channel);
           effects.add(channel);
         });
       }
@@ -678,8 +677,8 @@ export abstract class Reactor extends Component {
     for (const effect of effects) {
       for (const source of sources) {
         this._causalityGraph.addEdge(
-          source as Port<unknown>,
-          effect as Port<unknown>
+          source,
+          effect
         );
       }
     }
@@ -691,12 +690,12 @@ export abstract class Reactor extends Component {
    * @param reaction A reaction to find the predecessor of.
    */
   protected prevReaction(
-    reaction: Reaction<unknown>
-  ): Reaction<any> | undefined {
+    reaction: Reaction<Variable[]>
+  ): Reaction<Variable[]> | undefined {
     let index: number | undefined;
 
     if (reaction instanceof Mutation) {
-      index = this._mutations.indexOf(reaction);
+      index = this._mutations.indexOf(reaction as Mutation<Variable[]>);
       if (index !== undefined && index > 0) {
         return this._mutations[index - 1];
       }
@@ -719,12 +718,12 @@ export abstract class Reactor extends Component {
    * @param reaction A reaction to find the successor of.
    */
   protected nextReaction(
-    reaction: Reaction<unknown>
-  ): Reaction<any> | undefined {
+    reaction: Reaction<Variable[]>
+  ): Reaction<Variable[]> | undefined {
     let index: number | undefined;
 
     if (reaction instanceof Mutation) {
-      index = this._mutations.indexOf(reaction);
+      index = this._mutations.indexOf(reaction as Mutation<Variable[]>);
       if (index !== undefined && index < this._mutations.length - 1) {
         return this._mutations[index + 1];
       } else if (this._reactions.length > 0) {
@@ -753,16 +752,16 @@ export abstract class Reactor extends Component {
    * @param deadline
    * @param late
    */
-  protected addReaction<T>(
-    trigs: Triggers,
-    args: Args<ArgList<T>>,
+  protected addReaction<T extends Variable[]>(
+    trigs: Tuple<Variable[]>,
+    args: Tuple<ArgList<T>>,
     react: (this: ReactionSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
     }
   ): void {
-    const calleePorts = trigs.list.filter((trig) => trig instanceof CalleePort);
+    const calleePorts = trigs.elements.filter((trig) => trig instanceof CalleePort);
 
     if (calleePorts.length > 0) {
       // This is a procedure.
@@ -776,7 +775,7 @@ export abstract class Reactor extends Component {
         deadline,
         late
       );
-      if (trigs.list.length > 1) {
+      if (trigs.elements.length > 1) {
         // A procedure can only have a single trigger.
         throw new Error(`Procedure "${procedure}" has multiple triggers.`);
       }
@@ -787,7 +786,7 @@ export abstract class Reactor extends Component {
       port
         .getManager(this._getKey(port))
         .setLastCaller(this._getLastReactionOrMutation());
-      this._reactions.push(procedure);
+      this._reactions.push(procedure as unknown as Procedure<Variable[]>);
       // FIXME: set priority manually if this happens at runtime.
     } else {
       // This is an ordinary reaction.
@@ -802,19 +801,19 @@ export abstract class Reactor extends Component {
       );
       // Stage it directly if it to be triggered immediately.
       if (reaction.isTriggeredImmediately()) {
-        this._runtime.stage(reaction as Reaction<unknown>);
+        this._runtime.stage(reaction as unknown as Reaction<Variable[]>);
         // FIXME: if we're already running, then we need to set the priority as well.
       }
       reaction.active = true;
       this._recordDeps(reaction);
-      this._reactions.push(reaction);
+      this._reactions.push(reaction as unknown as Reaction<Variable[]>);
       // FIXME: set priority manually if this happens at runtime.
     }
   }
 
-  protected addMutation<T>(
-    trigs: Triggers,
-    args: Args<ArgList<T>>,
+  protected addMutation<T extends Variable[]>(
+    trigs: Tuple<Variable[]>,
+    args: Tuple<ArgList<T>>,
     react: (this: MutationSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late: (this: MutationSandbox, ...args: ArgList<T>) => void = () => {
@@ -832,11 +831,11 @@ export abstract class Reactor extends Component {
     );
     // Stage it directly if it to be triggered immediately.
     if (mutation.isTriggeredImmediately()) {
-      this._runtime.stage(mutation as unknown as Reaction<unknown>); // FIXME: types
+      this._runtime.stage(mutation as unknown as Mutation<Variable[]>);
     }
     mutation.active = true;
     this._recordDeps(mutation);
-    this._mutations.push(mutation);
+    this._mutations.push(mutation as unknown as Mutation<Variable[]>);
   }
 
   private _addHierarchicalDependencies(): void {
@@ -895,8 +894,8 @@ export abstract class Reactor extends Component {
    */
   protected _getPrecedenceGraph(
     depth = -1
-  ): PrecedenceGraph<Port<unknown> | Reaction<unknown>> {
-    const graph = new PrecedenceGraph<Port<unknown> | Reaction<unknown>>();
+  ): PrecedenceGraph<Port<unknown> | Reaction<Variable[]>> {
+    const graph = new PrecedenceGraph<Port<unknown> | Reaction<Variable[]>>();
 
     this._addHierarchicalDependencies();
     this._addRPCDependencies();
@@ -927,8 +926,8 @@ export abstract class Reactor extends Component {
   /**
    * Return a list of reactions owned by this reactor.
    */
-  protected _getReactions(): Array<Reaction<unknown>> {
-    const arr = new Array<Reaction<any>>();
+  protected _getReactions(): Array<Reaction<Variable[]>> {
+    const arr = new Array<Reaction<Variable[]>>();
     this._reactions.forEach((it) => arr.push(it));
     return arr;
   }
@@ -936,8 +935,8 @@ export abstract class Reactor extends Component {
   /**
    * Return a list of reactions and mutations owned by this reactor.
    */
-  protected _getReactionsAndMutations(): Array<Reaction<unknown>> {
-    const arr = new Array<Reaction<any>>();
+  protected _getReactionsAndMutations(): Array<Reaction<Variable[]>> {
+    const arr = new Array<Reaction<Variable[]>>();
     this._mutations.forEach((it) => arr.push(it));
     this._reactions.forEach((it) => arr.push(it));
     return arr;
@@ -947,14 +946,14 @@ export abstract class Reactor extends Component {
    * Return the last mutation of this reactor. All contained reactors
    * must have their reactions depend on this.
    */
-  protected _getLastMutation(): Mutation<any> | undefined {
+  protected _getLastMutation(): Mutation<Variable[]> | undefined {
     const len = this._mutations.length;
     if (len > 0) {
       return this._mutations[len - 1];
     }
   }
 
-  protected _getFirstReactionOrMutation(): Reaction<any> | undefined {
+  protected _getFirstReactionOrMutation(): Reaction<Variable[]> | undefined {
     if (this._mutations.length > 0) {
       return this._mutations[0];
     }
@@ -966,7 +965,7 @@ export abstract class Reactor extends Component {
   /**
    * Return the last reaction or mutation of this reactor.
    */
-  protected _getLastReactionOrMutation(): Reaction<any> | undefined {
+  protected _getLastReactionOrMutation(): Reaction<Variable[]> | undefined {
     let len = this._reactions.length;
     if (len > 0) {
       return this._reactions[len - 1];
@@ -983,8 +982,8 @@ export abstract class Reactor extends Component {
    * The returned list is a copy of the list kept inside of the reactor,
    * so changing it will not affect this reactor.
    */
-  protected _getMutations(): Array<Reaction<unknown>> {
-    const arr = new Array<Reaction<any>>();
+  protected _getMutations(): Array<Reaction<Variable[]>> {
+    const arr = new Array<Reaction<Variable[]>>();
     this._mutations.forEach((it) => arr.push(it));
     return arr;
   }
@@ -1116,7 +1115,7 @@ export abstract class Reactor extends Component {
 
       // Take the local graph and merge in all the causality interfaces
       // of contained reactors. Then:
-      const graph = new PrecedenceGraph<Port<unknown> | Reaction<unknown>>();
+      const graph = new PrecedenceGraph<Port<unknown> | Reaction<Variable[]>>();
       graph.addAll(this._dependencyGraph);
 
       for (const r of this._getOwnReactors()) {
@@ -1320,7 +1319,7 @@ export abstract class Reactor extends Component {
       const calleeManager = dst.getManager(this._getKey(dst));
       const callerManager = src.getManager(this._getKey(src));
       const container = callerManager.getContainer();
-      const callers = new Set<Reaction<any>>();
+      const callers = new Set<Reaction<Variable[]>>();
       container._dependencyGraph.getDownstreamNeighbors(src).forEach((dep) => {
         if (dep instanceof Reaction) {
           callers.add(dep);
@@ -1362,7 +1361,7 @@ export abstract class Reactor extends Component {
 
     const search = (
       output: OutPort<unknown>,
-      nodes: Set<Port<unknown> | Reaction<unknown>>
+      nodes: Set<Port<unknown> | Reaction<Variable[]>>
     ): void => {
       for (const node of nodes) {
         if (!visited.has(node)) {
@@ -1592,11 +1591,11 @@ export class CallerPort<A, R>
   protected manager: TriggerManager = new (class implements TriggerManager {
     constructor(private readonly port: CallerPort<A, R>) {}
 
-    addReaction(reaction: Reaction<unknown>): void {
+    addReaction(reaction: Reaction<Variable[]>): void {
       throw new Error("A Caller port cannot use used as a trigger.");
     }
 
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction(reaction: Reaction<Variable[]>): void {
       throw new Error("A Caller port cannot use used as a trigger.");
     }
 
@@ -1612,10 +1611,10 @@ export class CallerPort<A, R>
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface CalleeManager<T> extends TriggerManager {
-  setLastCaller: (reaction: Reaction<unknown> | undefined) => void;
-  getLastCaller: () => Reaction<unknown> | undefined;
-  addReaction: (procedure: Procedure<unknown>) => void;
-  getProcedure: () => Procedure<any> | undefined;
+  setLastCaller: (reaction: Reaction<Variable[]> | undefined) => void;
+  getLastCaller: () => Reaction<Variable[]> | undefined;
+  addReaction: (procedure: Procedure<Variable[]>) => void;
+  getProcedure: () => Procedure<Variable[]> | undefined;
 }
 
 /**
@@ -1633,9 +1632,9 @@ export class CalleePort<A, R>
 
   public argValue: A | undefined;
 
-  protected procedure: Procedure<unknown> | undefined;
+  protected procedure: Procedure<Variable[]> | undefined;
 
-  protected lastCaller: Reaction<unknown> | undefined;
+  protected lastCaller: Reaction<Variable[]> | undefined;
 
   public invoke(value: A): R | undefined {
     this.argValue = value;
@@ -1672,7 +1671,7 @@ export class CalleePort<A, R>
       return this.port._getContainer();
     }
 
-    addReaction(procedure: Reaction<unknown>): void {
+    addReaction(procedure: Reaction<Variable[]>): void {
       if (this.port.procedure !== undefined) {
         throw new Error(
           "Each callee port can trigger only a single" +
@@ -1683,19 +1682,19 @@ export class CalleePort<A, R>
       this.port.procedure = procedure;
     }
 
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction(reaction: Reaction<Variable[]>): void {
       throw new Error("Method not implemented.");
     }
 
-    setLastCaller(reaction: Reaction<unknown> | undefined): void {
+    setLastCaller(reaction: Reaction<Variable[]> | undefined): void {
       this.port.lastCaller = reaction;
     }
 
-    getProcedure(): Procedure<unknown> | undefined {
+    getProcedure(): Procedure<Variable[]> | undefined {
       return this.port.procedure;
     }
 
-    getLastCaller(): Reaction<unknown> | undefined {
+    getLastCaller(): Reaction<Variable[]> | undefined {
       return this.port.lastCaller;
     }
   })(this);
@@ -1720,24 +1719,24 @@ class EventQueue extends PrioritySet<Tag> {
 }
 
 class ReactionQueue extends PrioritySet<Priority> {
-  public push(reaction: Reaction<unknown>): void {
+  public push(reaction: Reaction<Variable[]>): void {
     super.push(reaction);
   }
 
-  public pop(): Reaction<unknown> {
-    return super.pop() as Reaction<unknown>;
+  public pop(): Reaction<Variable[]> {
+    return super.pop() as Reaction<Variable[]>;
   }
 
-  public peek(): Reaction<unknown> {
-    return super.peek() as Reaction<unknown>;
+  public peek(): Reaction<Variable[]> {
+    return super.peek() as Reaction<Variable[]>;
   }
 }
 
 export interface Runtime {
   util: UtilityFunctions;
-  stage: (reaction: Reaction<unknown>) => void;
+  stage: (reaction: Reaction<Variable[]>) => void;
   initialize: (timer: Timer) => void;
-  schedule: (e: TaggedEvent<any>) => void;
+  schedule: (e: TaggedEvent<unknown>) => void;
   delete: (r: Reactor) => void;
   isRunning: () => boolean;
 }
@@ -1807,7 +1806,7 @@ export class App extends Reactor {
   /**
    * Set of reactions to stage when this app starts executing.
    */
-  private readonly _reactionsAtStartup = new Set<Reaction<unknown>>();
+  private readonly _reactionsAtStartup = new Set<Reaction<Variable[]>>();
 
   /**
    * Set of timers to schedule when this app starts executing.
@@ -1932,7 +1931,7 @@ export class App extends Reactor {
      * Stage the given reaction for execution at the current logical time.
      * @param reaction The reaction to load onto the reaction queue.
      */
-    public stage(reaction: Reaction<unknown>): void {
+    public stage(reaction: Reaction<Variable[]>): void {
       if (this.app._active) {
         this.app._reactionQ.push(reaction);
       } else {
@@ -1993,7 +1992,7 @@ export class App extends Reactor {
      * Push an event onto the event queue.
      * @param e Tagged event to push onto the event queue.
      */
-    public schedule(e: TaggedEvent<any>): void {
+    public schedule(e: TaggedEvent<unknown>): void {
       const head = this.app._eventQ.peek();
 
       // Don't schedule events past the end of execution.
@@ -2263,7 +2262,7 @@ export class App extends Reactor {
    * Iterate over all reactions in the reaction queue and execute them.
    */
   private _react(): void {
-    let r: Reaction<unknown>;
+    let r: Reaction<Variable[]>;
     while (this._reactionQ.size() > 0) {
       try {
         r = this._reactionQ.pop();

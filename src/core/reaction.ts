@@ -6,14 +6,22 @@ import type {
   Reactor,
   TimeValue,
   ArgList,
-  Args,
-  Triggers
+  Variable
 } from "./internal";
 import {Log, Timer, Tag, Startup} from "./internal";
 
+export class Tuple<T extends Variable[]> {
+    elements: T;
+  
+    constructor(...args: T) {
+      this.elements = args;
+    }
+  }
+  
+
 /**
  * A number that indicates a reaction's position with respect to other
- * reactions in an acyclic precendence graph.
+ * reactions in an acyclic precedence graph.
  * @see ReactionQueue
  */
 export type Priority = number;
@@ -23,9 +31,9 @@ export type Priority = number;
  * the argument list of the `react` function that that is applied to when this
  * reaction gets triggered.
  *
- * @author Marten Lohstroh (marten@berkeley.edu)
+ * @author Marten Lohstroh <marten@berkeley.edu>
  */
-export class Reaction<T>
+export class Reaction<T extends Variable[]>
   implements Sortable<Priority>, PrioritySetElement<Priority>
 {
   /**
@@ -62,8 +70,8 @@ export class Reaction<T>
   constructor(
     private readonly reactor: Reactor,
     private readonly sandbox: ReactionSandbox,
-    readonly trigs: Triggers,
-    readonly args: Args<ArgList<T>>,
+    readonly trigs: Tuple<Variable[]>,
+    readonly args: Tuple<ArgList<T>>,
     private readonly react: (...args: ArgList<T>) => void,
     private deadline?: TimeValue,
     private readonly late: (...args: ArgList<T>) => void = () => {
@@ -84,7 +92,7 @@ export class Reaction<T>
    */
   isTriggeredImmediately(): boolean {
     return (
-      this.trigs.list.filter(
+      this.trigs.elements.filter(
         (trig) =>
           trig instanceof Startup ||
           (trig instanceof Timer && trig.offset.isZero())
@@ -150,9 +158,9 @@ export class Reaction<T>
         .getLaterTag(this.deadline)
         .isSmallerThan(new Tag(this.sandbox.util.getCurrentPhysicalTime(), 0))
     ) {
-      this.late.apply(this.sandbox, this.args.tuple); // late
+      this.late.apply(this.sandbox, this.args.elements); // late
     } else {
-      this.react.apply(this.sandbox, this.args.tuple); // on time
+      this.react.apply(this.sandbox, this.args.elements); // on time
     }
   }
 
@@ -183,21 +191,21 @@ export class Reaction<T>
    */
   public toString(): string {
     return `${this.reactor._getFullyQualifiedName()}[R${this.reactor._getReactionIndex(
-      this
+      this as unknown as Reaction<Variable[]>
     )}]`;
   }
 }
 
-export class Procedure<T> extends Reaction<T> {}
+export class Procedure<T extends Variable[]> extends Reaction<T> {}
 
-export class Mutation<T> extends Reaction<T> {
+export class Mutation<T extends Variable[]> extends Reaction<T> {
   readonly parent: Reactor;
 
   constructor(
     __parent__: Reactor,
     sandbox: MutationSandbox,
-    trigs: Triggers,
-    args: Args<ArgList<T>>,
+    trigs: Tuple<Variable[]>,
+    args: Tuple<ArgList<T>>,
     react: (...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late?: (...args: ArgList<T>) => void
@@ -211,7 +219,7 @@ export class Mutation<T> extends Reaction<T> {
    */
   public toString(): string {
     return `${this.parent._getFullyQualifiedName()}[M${this.parent._getReactionIndex(
-      this
+      this as unknown as Reaction<Variable[]>
     )}]`;
   }
 }

@@ -77,26 +77,6 @@ export type Absent = undefined;
  */
 export type ArgList<T> = T extends Variable[] ? T : never;
 
-export type ParmList<T> = T extends any[] ? T : never;
-
-export class Args<T extends Variable[]> {
-  tuple: T;
-
-  constructor(...args: T) {
-    this.tuple = args;
-  }
-}
-
-export class Triggers {
-  list: Array<Trigger | Trigger[]>;
-
-  constructor(
-    trigger: Trigger | Trigger[],
-    ...triggers: Array<Trigger | Trigger[]>
-  ) {
-    this.list = triggers.concat(trigger);
-  }
-}
 
 export interface Sortable<P> {
   setPriority: (priority: P) => void;
