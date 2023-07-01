@@ -708,8 +708,8 @@ export abstract class Reactor extends Component {
     for (const effect of effects) {
       for (const source of sources) {
         this._causalityGraph.addEdge(
-          source as Port<Present>,
-          effect as Port<Present>
+          source,
+          effect 
         );
       }
     }
@@ -2014,7 +2014,7 @@ export class App extends Reactor {
         this.app._endOfExecution == null ||
         !this.app._endOfExecution.isSmallerThan(e.tag)
       ) {
-        this.app._eventQ.push(e as TaggedEvent<Present>);
+        this.app._eventQ.push(e);
       }
 
       Log.debug(this, () => `Scheduling with trigger: ${e.trigger}`);

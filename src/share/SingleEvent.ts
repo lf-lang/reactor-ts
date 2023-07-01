@@ -2,7 +2,7 @@ import {
   type Write,
   type ReactionSandbox,
   type Parameter,
-  Present,
+  type Present,
   Reactor,
   Timer,
   OutPort

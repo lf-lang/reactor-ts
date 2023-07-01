@@ -1,14 +1,13 @@
-import {Component, Variable} from "./internal";
-
-import type {
-  Reactor,
-  Runtime,
-  Absent,
-  Present,
-  TaggedEvent,
-  Reaction,
-  Tag
+import {Component, type Variable,
+  type Reactor,
+  type Runtime,
+  type Absent,
+  type Present,
+  type TaggedEvent,
+  type Reaction,
+  type Tag
 } from "./internal";
+
 
 export interface TriggerManager {
   getContainer: () => Reactor;
