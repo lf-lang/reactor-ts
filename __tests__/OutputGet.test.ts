@@ -1,7 +1,6 @@
 import {
   App,
   Timer,
-  Tuple,
   OutPort,
   TimeValue,
   Log
@@ -21,8 +20,8 @@ class OutputGetTest extends App {
     super(timeout, true, false, success, failure);
     Log.global.debug(">>>>>>>>----" + this.util);
     this.addReaction(
-      new Tuple(this.t),
-      new Tuple(this.writable(this.o)),
+      [this.t],
+      [this.writable(this.o]),
       function (this, o) {
         Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>");
         if (o.get() != null) {

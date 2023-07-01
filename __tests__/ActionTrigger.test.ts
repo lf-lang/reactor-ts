@@ -1,7 +1,6 @@
 import type {Sched} from "../src/core/internal";
 import {
   App,
-  Tuple,
   Origin,
   TimeValue,
   Reactor,
@@ -24,8 +23,8 @@ export class ActionTrigger extends Reactor {
     super(parent);
     // Reaction priorities matter here. The overridden reaction must go first.
     this.addReaction(
-      new Tuple(this.t1),
-      new Tuple(this.schedulable(this.a1)),
+      [this.t1],
+      [this.schedulable(this.a1]),
       /**
        * Schedule the incorrect payload for action a1.
        */
@@ -38,8 +37,8 @@ export class ActionTrigger extends Reactor {
     );
 
     this.addReaction(
-      new Tuple(this.t1),
-      new Tuple(this.schedulable(this.a1), this.a2),
+      [this.t1],
+      [this.schedulable(this.a1], this.a2),
       /**
        * Schedule the correct payload for action a1.
        */
@@ -52,8 +51,8 @@ export class ActionTrigger extends Reactor {
     );
 
     this.addReaction(
-      new Tuple(this.a1),
-      new Tuple(this.a1, this.a2),
+      [this.a1],
+      [this.a1, this.a2],
       /**
        * If the action payload is correct, test is successful. Otherwise it fails.
        * Since a2 was not scheduled it should return null on a call to get() and

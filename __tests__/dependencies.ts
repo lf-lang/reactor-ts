@@ -5,7 +5,6 @@ import {
   InPort,
   SortablePrecedenceGraph,
   PrioritySet,
-  Tuple,
   Log,
   StringUtil
 } from "../src/core/internal";
@@ -18,7 +17,7 @@ class R extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     for (let i = 0; i < 7; i++) {
-      this.addReaction(new Tuple(this.in), new Tuple(), function (this) {
+      this.addReaction([this.in], [], function (this) {
         throw new Error("Method not implemented.");
       });
     }
@@ -34,7 +33,7 @@ class SR extends Reactor {
 
   constructor(parent: Reactor | null) {
     super(parent);
-    this.addReaction(new Tuple(this.in), new Tuple(), function (this) {
+    this.addReaction([this.in], [], function (this) {
       throw new Error("Method not implemented.");
     });
   }

@@ -5,7 +5,6 @@ import {
   App,
   Origin,
   TimeValue,
-  Tuple
 } from "../src/core/internal";
 
 let intendedTagDelay: TimeValue | undefined;
@@ -20,8 +19,8 @@ class ReactorWithFederatePortAction extends App {
   constructor() {
     super(TimeValue.msec(1));
     this.addReaction(
-      new Tuple(this.startup),
-      new Tuple(this.schedulable(this.a)),
+      [this.startup],
+      [this.schedulable(this.a]),
       function (this, a) {
         startUpTag = this.util.getCurrentTag();
         a.schedule(0, 0);
@@ -29,8 +28,8 @@ class ReactorWithFederatePortAction extends App {
     );
 
     this.addReaction(
-      new Tuple(this.a),
-      new Tuple(this.schedulable(this.f)),
+      [this.a],
+      [this.schedulable(this.f]),
       function (this, f) {
         let intendedTag: Tag | undefined;
         if (intendedTagDelay === undefined) {

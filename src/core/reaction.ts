@@ -5,7 +5,6 @@ import type {
   MutationSandbox,
   Reactor,
   TimeValue,
-  Tuple,
   ArgList,
   Variable
 } from "./internal";
@@ -62,8 +61,8 @@ export class Reaction<T extends Variable[]>
   constructor(
     private readonly reactor: Reactor,
     private readonly sandbox: ReactionSandbox,
-    readonly trigs: Tuple<Variable[]>,
-    readonly args: Tuple<ArgList<T>>,
+    readonly trigs: Variable[],
+    readonly args: [...ArgList<T>],
     private readonly react: (...args: ArgList<T>) => void,
     private deadline?: TimeValue,
     private readonly late: (...args: ArgList<T>) => void = () => {
@@ -84,7 +83,7 @@ export class Reaction<T extends Variable[]>
    */
   isTriggeredImmediately(): boolean {
     return (
-      this.trigs.elements.filter(
+      this.trigs.filter(
         (trig) =>
           trig instanceof Startup ||
           (trig instanceof Timer && trig.offset.isZero())
@@ -150,9 +149,9 @@ export class Reaction<T extends Variable[]>
         .getLaterTag(this.deadline)
         .isSmallerThan(new Tag(this.sandbox.util.getCurrentPhysicalTime(), 0))
     ) {
-      this.late.apply(this.sandbox, this.args.elements); // late
+      this.late.apply(this.sandbox, this.args); // late
     } else {
-      this.react.apply(this.sandbox, this.args.elements); // on time
+      this.react.apply(this.sandbox, this.args); // on time
     }
   }
 
@@ -196,8 +195,8 @@ export class Mutation<T extends Variable[]> extends Reaction<T> {
   constructor(
     __parent__: Reactor,
     sandbox: MutationSandbox,
-    trigs: Tuple<Variable[]>,
-    args: Tuple<ArgList<T>>,
+    trigs: Variable[],
+    args: [...ArgList<T>],
     react: (...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late?: (...args: ArgList<T>) => void

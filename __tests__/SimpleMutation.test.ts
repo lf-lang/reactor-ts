@@ -3,7 +3,6 @@ import {
   App,
   OutPort,
   InPort,
-  Tuple
 } from "../src/core/internal";
 
 /* Set a port in startup to get thing going */
@@ -13,8 +12,8 @@ class Starter extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Tuple(this.startup),
-      new Tuple(this.writable(this.out)),
+      [this.startup],
+      [this.writable(this.out]),
       function (this, __out) {
         __out.set(4);
       }
@@ -30,8 +29,8 @@ class R1 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Tuple(this.in),
-      new Tuple(this.in, this.writable(this.out)),
+      [this.in],
+      [this.in, this.writable(this.out]),
       function (this, __in, __out) {
         __out.set(4);
       }
@@ -47,8 +46,8 @@ class R2 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addMutation(
-      new Tuple(this.in),
-      new Tuple(this.in, this.out),
+      [this.in],
+      [this.in, this.out],
       function (this, __in, __out) {
         test("expect error to be thrown", () => {
           expect(() => {
