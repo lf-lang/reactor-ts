@@ -60,7 +60,7 @@ describe("Check _connect", () => {
       super(container);
       this.addReaction(
         [this.startup],
-        [this.writable(this.out]),
+        [this.writable(this.out)],
         function (this, __out) {
           __out.set(100);
         }

@@ -15,7 +15,7 @@ class Starter extends Reactor {
     super(parent);
     this.addReaction(
       [this.in],
-      [this.in, this.writable(this.out]),
+      [this.in, this.writable(this.out)],
       function (this, __in, __out) {
         __out.set(4);
       }
@@ -32,7 +32,7 @@ class R1 extends Reactor {
     super(parent);
     this.addReaction(
       [this.in],
-      [this.in, this.writable(this.out]),
+      [this.in, this.writable(this.out)],
       function (this, __in, __out) {
         const tmp = __in.get();
         let out = 0;
@@ -56,7 +56,7 @@ class R2 extends Reactor {
     super(parent);
     this.addReaction(
       [this.in],
-      [this.in, this.writable(this.out]),
+      [this.in, this.writable(this.out)],
       function (this, __in, __out) {
         const tmp = __in.get();
         const out = 0;

@@ -18,7 +18,7 @@ export class Adder extends Reactor {
 
     this.addReaction(
       [this.in1, this.in2],
-      [this.in1, this.in2, this.writable(this.out]),
+      [this.in1, this.in2, this.writable(this.out)],
       function (this, in1, in2, out) {
         // Type assertions allow coercion of null to 0.
         out.set((in1.get() as number) + (in2.get() as number));

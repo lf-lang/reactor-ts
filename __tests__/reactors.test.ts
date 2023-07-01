@@ -20,7 +20,7 @@ class Starter extends Reactor {
     super(parent);
     this.addReaction(
       [this.startup],
-      [this.writable(this.out]),
+      [this.writable(this.out)],
       function (this, __out) {
         __out.set(4);
       }
@@ -42,7 +42,7 @@ class R1 extends Reactor {
     super(parent);
     this.addReaction(
       [this.in],
-      [this.in, this.writable(this.out]),
+      [this.in, this.writable(this.out)],
       function (this, __in, __out) {
         const util = this.util;
         const initialElapsedTime = util.getElapsedPhysicalTime();
@@ -155,7 +155,7 @@ class ReactorWithAction extends App {
     super(timeout, false, false, success, fail);
     this.addReaction(
       [this.t],
-      [this.schedulable(this.a]),
+      [this.schedulable(this.a)],
       function (this, a) {
         a.schedule(0, 1);
       }

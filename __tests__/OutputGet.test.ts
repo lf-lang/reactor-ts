@@ -21,7 +21,7 @@ class OutputGetTest extends App {
     Log.global.debug(">>>>>>>>----" + this.util);
     this.addReaction(
       [this.t],
-      [this.writable(this.o]),
+      [this.writable(this.o)],
       function (this, o) {
         Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>");
         if (o.get() != null) {

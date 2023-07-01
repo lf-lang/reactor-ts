@@ -73,7 +73,7 @@ class TwoInTwoOut extends Reactor {
     );
     this.addReaction(
       [this.startup],
-      [this.allWritable(this.out]),
+      [this.allWritable(this.out)],
       function (out) {
         test("start up reaction triggered", () => {
           expect(true).toBe(true);
