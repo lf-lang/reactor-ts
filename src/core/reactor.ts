@@ -7,17 +7,16 @@
  */
 
 import {
-  Priority,
-  Absent,
-  ArgList,
-  Read,
-  Sched,
-  Variable,
-  Write,
-  TriggerManager,
-  ReactionGraph
-} from "./internal";
-import {
+  type Priority,
+  type Absent,
+  type ArgList,
+  type Present,
+  type Read,
+  type Sched,
+  type Variable,
+  type Write,
+  type TriggerManager,
+  ReactionGraph,
   TimeValue,
   Tag,
   Origin,
