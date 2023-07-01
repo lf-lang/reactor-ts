@@ -9,12 +9,11 @@ import {
   Log,
   TimeValue,
   Origin,
-  Args,
   Parameter,
   OutPort,
   InPort,
   State,
-  Triggers,
+  Tuple,
   Action,
   Reactor,
   App
@@ -198,8 +197,8 @@ export class Producer extends Reactor {
       period
     );
     this.addReaction(
-      new Triggers(this.startup, this.nextCustomer),
-      new Args(
+      new Tuple(this.startup, this.nextCustomer),
+      new Tuple(
         this.schedulable(this.nextCustomer),
         this.numPoints,
         this.gridSize,
@@ -261,8 +260,8 @@ export class Summary extends Reactor {
     super(parent);
 
     this.addReaction(
-      new Triggers(this.fromRootQuadrant),
-      new Args(this.fromRootQuadrant),
+      new Tuple(this.fromRootQuadrant),
+      new Tuple(this.fromRootQuadrant),
       function (this, fromRootQuadrant) {
         const msgFromRootQuadrant = fromRootQuadrant.get();
         if (msgFromRootQuadrant != null) {
@@ -299,13 +298,13 @@ export class Accumulator extends Reactor {
     super(parent);
 
     this.addReaction(
-      new Triggers(
+      new Tuple(
         this.fromFirstQuadrant,
         this.fromSecondQuadrant,
         this.fromThirdQuadrant,
         this.fromFourthQuadrant
       ),
-      new Args(
+      new Tuple(
         this.fromFirstQuadrant,
         this.fromSecondQuadrant,
         this.fromThirdQuadrant,
@@ -460,8 +459,8 @@ export class Quadrant extends Reactor {
 
     // Startup reaction for initialization of state variables using given parameters.
     this.addReaction(
-      new Triggers(this.startup),
-      new Args(
+      new Tuple(this.startup),
+      new Tuple(
         // Parameters.
         this.boundary,
         this.initLocalFacilities,
@@ -513,8 +512,8 @@ export class Quadrant extends Reactor {
 
     // Main mutation reaction for QuadrantActor.process() of Akka implementation.
     this.addMutation(
-      new Triggers(this.fromProducer),
-      new Args(
+      new Tuple(this.fromProducer),
+      new Tuple(
         this.hasQuadrantProducer,
         this.positionRelativeToParent,
         this.boundary,

@@ -7,7 +7,8 @@ import type {
   Absent,
   MultiReadWrite,
   Present,
-  ReadWrite
+  ReadWrite,
+  Variable
 } from "./internal";
 import {Trigger, Log} from "./internal";
 
@@ -198,11 +199,11 @@ export abstract class IOPort<T extends Present> extends Port<T> {
       this.port.receivers.delete(port);
     }
 
-    addReaction(reaction: Reaction<unknown>): void {
+    addReaction(reaction: Reaction<Variable[]>): void {
       this.port.reactions.add(reaction);
     }
 
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction(reaction: Reaction<Variable[]>): void {
       this.port.reactions.delete(reaction);
     }
   })(this);

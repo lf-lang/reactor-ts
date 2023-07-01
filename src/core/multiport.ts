@@ -7,7 +7,8 @@ import type {
   Runtime,
   WritablePort,
   TriggerManager,
-  Reaction
+  Reaction,
+  Variable
 } from "./internal";
 import {InPort, OutPort, Trigger, Component} from "./internal";
 import {WritableMultiPort} from "./port";
@@ -133,7 +134,7 @@ export abstract class MultiPort<T extends Present>
     }
 
     /** @inheritdoc */
-    addReaction(reaction: Reaction<unknown>): void {
+    addReaction(reaction: Reaction<Variable[]>): void {
       this.port.channels().forEach((channel) => {
         channel
           .getManager(this.getContainer()._getKey(channel))
@@ -142,7 +143,7 @@ export abstract class MultiPort<T extends Present>
     }
 
     /** @inheritdoc */
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction(reaction: Reaction<Variable[]>): void {
       this.port.channels().forEach((channel) => {
         channel.getManager(this.port._key).delReaction(reaction);
       });

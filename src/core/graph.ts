@@ -4,7 +4,7 @@
  */
 
 import {Reaction} from "./reaction";
-import type {Sortable} from "./types";
+import type {Sortable, Variable} from "./types";
 import {Log} from "./util";
 
 /**
@@ -456,8 +456,10 @@ export class SortablePrecedenceGraph<
 /**
  * A sortable precedence graph for reactions.
  */
-export class ReactionGraph extends SortablePrecedenceGraph<Reaction<unknown>> {
+export class ReactionGraph extends SortablePrecedenceGraph<
+  Reaction<Variable[]>
+> {
   constructor(pg?: PrecedenceGraph<unknown>) {
-    super(Reaction<unknown>, pg);
+    super(Reaction<Variable[]>, pg);
   }
 }

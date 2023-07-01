@@ -1,12 +1,11 @@
 import {
   Reactor,
   App,
-  Triggers,
-  Args,
   Timer,
   OutPort,
   InPort,
-  TimeValue
+  TimeValue,
+  Tuple
 } from "../src/core/internal";
 
 class Source extends Reactor {
@@ -17,8 +16,8 @@ class Source extends Reactor {
   constructor(parent: Reactor) {
     super(parent);
     this.addReaction(
-      new Triggers(this.timer),
-      new Args(this.writable(this.output)),
+      new Tuple(this.timer),
+      new Tuple(this.writable(this.output)),
       function (this, out) {
         out.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
       }
@@ -34,8 +33,8 @@ class AddOne extends Reactor {
   constructor(owner: Reactor, id: number) {
     super(owner);
     this.addReaction(
-      new Triggers(this.input),
-      new Args(this.input, this.writable(this.output)),
+      new Tuple(this.input),
+      new Tuple(this.input, this.writable(this.output)),
       function (this, input, output) {
         const val = input.get();
         if (val) {
@@ -54,8 +53,8 @@ class Print extends Reactor {
   constructor(owner: Reactor) {
     super(owner);
     this.addReaction(
-      new Triggers(this.input),
-      new Args(this.input),
+      new Tuple(this.input),
+      new Tuple(this.input),
       function (this, input) {
         const val = input.get();
         console.log("Print reacting...");
@@ -89,8 +88,8 @@ class Computer extends Reactor {
     super(container);
     this._connect(this.in, this.adder.input);
     this.addMutation(
-      new Triggers(this.in),
-      new Args(this.in),
+      new Tuple(this.in),
+      new Tuple(this.in),
       function (this, src) {
         const vals = src.get();
         if (vals) {
@@ -107,8 +106,8 @@ class Computer extends Reactor {
       }
     );
     this.addReaction(
-      new Triggers(this.adder.output),
-      new Args(this.adder.output, this.writable(this.out)),
+      new Tuple(this.adder.output),
+      new Tuple(this.adder.output, this.writable(this.out)),
       function (this, adderout, out) {
         const arr = adderout.get();
         if (arr) {
@@ -131,7 +130,7 @@ class ScatterGather extends App {
     this._connect(this.source.output, this.compute.in);
     this._connect(this.compute.out, this.print.input);
     var self = this;
-    this.addReaction(new Triggers(this.shutdown), new Args(), function (this) {
+    this.addReaction(new Tuple(this.shutdown), new Tuple(), function (this) {
       console.log(self._getPrecedenceGraph().toString());
     });
   }
@@ -145,19 +144,19 @@ class ZenoClock extends Reactor {
     console.log("Creating ZenoClock " + iteration);
     this.tick = new Timer(this, 0, 0);
     this.addReaction(
-      new Triggers(this.tick),
-      new Args(this.tick),
+      new Tuple(this.tick),
+      new Tuple(this.tick),
       function (this, tick) {
         console.log("Tick at " + this.util.getElapsedLogicalTime());
       }
     );
-    this.addReaction(new Triggers(this.shutdown), new Args(), function (this) {
+    this.addReaction(new Tuple(this.shutdown), new Tuple(), function (this) {
       console.log("Shutdown reaction of reactor " + iteration);
     });
     if (iteration < 5) {
       this.addMutation(
-        new Triggers(this.tick),
-        new Args(this.tick),
+        new Tuple(this.tick),
+        new Tuple(this.tick),
         function (this, tick) {
           new ZenoClock(this.getReactor(), iteration + 1);
         }
@@ -176,7 +175,7 @@ class Zeno extends App {
 
     var self = this;
 
-    this.addReaction(new Triggers(this.shutdown), new Args(), function (this) {
+    this.addReaction(new Tuple(this.shutdown), new Tuple(), function (this) {
       console.log(self._getPrecedenceGraph().toString());
     });
   }

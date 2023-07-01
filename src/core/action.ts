@@ -69,9 +69,7 @@ export class Action<T extends Present>
     throw Error("Unable to grant access to manager.");
   }
 
-  protected scheduler = new (class<
-    T extends Present
-  > extends SchedulableAction<T> {
+  protected scheduler = new (class<T extends Present> extends SchedulableAction<T> {
     get(): T | undefined {
       return this.action.get();
     }

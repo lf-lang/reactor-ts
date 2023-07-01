@@ -1,10 +1,13 @@
-import type {
-  Write,
-  ReactionSandbox,
+import {
+  type Write,
+  type ReactionSandbox,
+  type Parameter,
   Present,
-  Parameter
+  Tuple,
+  Reactor,
+  Timer,
+  OutPort
 } from "../core/internal";
-import {Reactor, Timer, Triggers, Args, OutPort} from "../core/internal";
 
 function produceOutput<S>(
   this: ReactionSandbox,
@@ -29,8 +32,8 @@ export class SingleEvent<T extends Present> extends Reactor {
   constructor(parent: Reactor, private readonly payload: Parameter<T>) {
     super(parent);
     this.addReaction(
-      new Triggers(this.t1),
-      new Args(this.writable(this.o), this.payload),
+      new Tuple(this.t1),
+      new Tuple(this.writable(this.o), this.payload),
       produceOutput
     );
   }

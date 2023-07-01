@@ -1,5 +1,5 @@
-import type {Read, Present, ReactionSandbox} from "../core/internal";
-import {Reactor, Triggers, Args, InPort, State} from "../core/internal";
+import {type Read, type Present, type ReactionSandbox, Tuple} from "../core/internal";
+import {Reactor, InPort, State} from "../core/internal";
 
 function print(
   this: ReactionSandbox,
@@ -29,8 +29,8 @@ export class Logger extends Reactor {
   constructor(parent: Reactor, expected: Present) {
     super(parent);
     this.addReaction(
-      new Triggers(this.i),
-      new Args(this.i, new State(expected)),
+      new Tuple(this.i),
+      new Tuple(this.i, new State(expected)),
       print
     );
   }
