@@ -1124,7 +1124,7 @@ export class FederatedApp extends App {
    */
   private stopRequestInfo: StopRequestInfo = new StopRequestInfo(
     StopRequestState.NOT_SENT,
-    new Tag(TimeValue.FOREVER(), 0)
+    new Tag(TimeValue.forever(), 0)
   );
 
   /**
@@ -1133,7 +1133,7 @@ export class FederatedApp extends App {
    * An RTI synchronized Federate cannot advance its logical time
    * beyond this value.
    */
-  private greatestTimeAdvanceGrant: Tag = new Tag(TimeValue.NEVER(), 0);
+  private greatestTimeAdvanceGrant: Tag = new Tag(TimeValue.never(), 0);
 
   private readonly upstreamFedIDs: number[] = [];
 
@@ -1221,7 +1221,7 @@ export class FederatedApp extends App {
    * @param nextEvent
    */
   protected _canProceed(nextEvent: TaggedEvent<unknown>): boolean {
-    let tagBarrier = new Tag(TimeValue.NEVER());
+    let tagBarrier = new Tag(TimeValue.never());
     // Set tag barrier using the tag when stop is requested but not granted yet.
     // Otherwise, set the tagBarrier using the greated TAG.
     if (this.stopRequestInfo.state === StopRequestState.SENT) {
@@ -1362,7 +1362,7 @@ export class FederatedApp extends App {
       );
     }
     for (let index = 0; index < config.dependsOn.length; index++) {
-      let minOutputConnectionDelay = TimeValue.FOREVER();
+      let minOutputConnectionDelay = TimeValue.forever();
       for (const candidate of config.upstreamConnectionDelays[index]) {
         if (minOutputConnectionDelay.isLaterThan(candidate)) {
           minOutputConnectionDelay = candidate;

@@ -62,15 +62,11 @@ export class TimeValue {
     return new TimeValue(0, 0);
   }
 
-  // The symbles "NEVER" and "FOREVER" are used in `lingua-franca` main codebase,
-  // so it does not make much sense to lint them or warn against.
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  static NEVER(): TimeValue {
+  static never(): TimeValue {
     return new TimeValue(Number.MIN_SAFE_INTEGER, 0);
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  static FOREVER(): TimeValue {
+  static forever(): TimeValue {
     return new TimeValue(Number.MAX_SAFE_INTEGER, 0);
   }
 
@@ -305,9 +301,9 @@ export class TimeValue {
     // To avoid overflow and floating point errors, work with BigInts.
     const bigTime = buffer.readBigUInt64LE(0);
     if (bigTime === BigInt(0x8000000000000000n)) {
-      return TimeValue.NEVER();
+      return TimeValue.never();
     } else if (bigTime === BigInt(0x7fffffffffffffffn)) {
-      return TimeValue.FOREVER();
+      return TimeValue.forever();
     }
 
     const bigSeconds = bigTime / billion;
