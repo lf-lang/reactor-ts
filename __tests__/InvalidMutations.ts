@@ -1,7 +1,6 @@
 import {
   Reactor,
   App,
-  Tuple,
   OutPort,
   InPort
 } from "../src/core/internal";
@@ -12,8 +11,8 @@ class Starter extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Tuple(this.startup),
-      new Tuple(this.writable(this.out)),
+      [this.startup],
+      [this.writable(this.out]),
       function (this, __out) {
         __out.set(4);
       }
@@ -33,16 +32,16 @@ class R1 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Tuple(this.in1),
-      new Tuple(this.in1, this.writable(this.out1)),
+      [this.in1],
+      [this.in1, this.writable(this.out1]),
       function (this, __in, __out) {
         __out.set(4);
       }
     );
 
     this.addMutation(
-      new Tuple(this.in1),
-      new Tuple(this.in1, this.in2, this.out1, this.out2),
+      [this.in1],
+      [this.in1, this.in2, this.out1, this.out2],
       function (this, __in1, __in2, __out1, __out2) {
         test("expect error on creating creating direct feed through", () => {
           expect(() => {

@@ -77,14 +77,6 @@ export type Absent = undefined;
  */
 export type ArgList<T> = T extends Variable[] ? T : never;
 
-export class Tuple<T extends Variable[]> {
-  elements: T;
-
-  constructor(...args: T) {
-    this.elements = args;
-  }
-}
-
 export interface Sortable<P> {
   setPriority: (priority: P) => void;
 

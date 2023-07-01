@@ -1,7 +1,6 @@
 import {
   Reactor,
   App,
-  Tuple,
   OutPort,
   InPort,
 } from "../src/core/internal";
@@ -15,8 +14,8 @@ class Starter extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Tuple(this.in),
-      new Tuple(this.in, this.writable(this.out)),
+      [this.in],
+      [this.in, this.writable(this.out]),
       function (this, __in, __out) {
         __out.set(4);
       }
@@ -32,8 +31,8 @@ class R1 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Tuple(this.in),
-      new Tuple(this.in, this.writable(this.out)),
+      [this.in],
+      [this.in, this.writable(this.out]),
       function (this, __in, __out) {
         const tmp = __in.get();
         let out = 0;
@@ -56,8 +55,8 @@ class R2 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Tuple(this.in),
-      new Tuple(this.in, this.writable(this.out)),
+      [this.in],
+      [this.in, this.writable(this.out]),
       function (this, __in, __out) {
         const tmp = __in.get();
         const out = 0;

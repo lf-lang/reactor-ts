@@ -1,4 +1,4 @@
-import {type TimeValue, Tuple} from "../core/internal";
+import {type TimeValue} from "../core/internal";
 import {
   Log,
   Parameter,
@@ -21,8 +21,8 @@ export class Ping extends Reactor {
     this.count = new Parameter(count); // Parameter
     this.client = new CallerPort(this);
     this.addReaction(
-      new Tuple(this.startup),
-      new Tuple(this.client, this.count),
+      [this.startup],
+      [this.client, this.count],
       function (
         this,
         __client: CallerPort<number, number>,
@@ -43,8 +43,8 @@ export class Ping extends Reactor {
       }
     );
     this.addReaction(
-      new Tuple(this.startup),
-      new Tuple(this.client, this.count),
+      [this.startup],
+      [this.client, this.count],
       function (
         this,
         __client: CallerPort<number, number>,
@@ -65,15 +65,15 @@ export class Pong extends Reactor {
     super(parent);
     this.server = new CalleePort(this);
     this.addReaction(
-      new Tuple(this.dummy),
-      new Tuple(this.dummy),
+      [this.dummy],
+      [this.dummy],
       function (this) {
         return undefined;
       }
     );
     this.addReaction(
-      new Tuple(this.server),
-      new Tuple(this.server),
+      [this.server],
+      [this.server],
       function (this, __server: CalleePort<number, number>) {
         // console.log("Pong!")
         const msg = __server.get();
@@ -82,8 +82,8 @@ export class Pong extends Reactor {
       }
     );
     this.addReaction(
-      new Tuple(this.dummy), // replace this with `server` and an error is thrown.
-      new Tuple(this.dummy),
+      [this.dummy], // replace this with `server` and an error is thrown.
+      [this.dummy],
       function (this) {
         return undefined;
       }

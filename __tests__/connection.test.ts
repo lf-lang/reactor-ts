@@ -3,7 +3,6 @@ import {
   App,
   State,
   OutPort,
-  Tuple,
   InPort,
   TimeUnit,
   TimeValue
@@ -60,8 +59,8 @@ describe("Check _connect", () => {
     constructor(container: Reactor) {
       super(container);
       this.addReaction(
-        new Tuple(this.startup),
-        new Tuple(this.writable(this.out)),
+        [this.startup],
+        [this.writable(this.out]),
         function (this, __out) {
           __out.set(100);
         }
@@ -76,8 +75,8 @@ describe("Check _connect", () => {
     constructor(container: Reactor) {
       super(container);
       this.addReaction(
-        new Tuple(this.in),
-        new Tuple(this.in, this.received),
+        [this.in],
+        [this.in, this.received],
         function (this, __in, __received) {
           const tmp = __in.get();
           try {

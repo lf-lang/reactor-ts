@@ -1,7 +1,6 @@
 import {
   Reactor,
   App,
-  Tuple,
   CalleePort,
   CallerPort,
   InPort,
@@ -22,8 +21,8 @@ class R extends Reactor {
     super(parent);
     this.callerp.remotePort = this.calleep;
     this.addReaction(
-      new Tuple(this.calleep),
-      new Tuple(),
+      [this.calleep],
+      [],
       function (this) {
         throw new Error("Method not implemented.");
       },
@@ -31,8 +30,8 @@ class R extends Reactor {
     );
 
     this.addReaction(
-      new Tuple(this.inp),
-      new Tuple(this.callerp),
+      [this.inp],
+      [this.callerp],
       function (this) {
         throw new Error("Method not implemented.");
       },
@@ -55,7 +54,7 @@ describe("Testing Error Cases", function () {
   it("Multiple reactions for a callee port", () => {
     var parent = new App();
     var reactor1 = new R(parent);
-    var trigger = new Tuple(reactor1.calleep);
+    var trigger = [reactor1.calleep];
 
     /* expect(() => { reactor1.addReaction(
             trigger,
@@ -70,7 +69,7 @@ describe("Testing Error Cases", function () {
   it("Multiple triggers", function () {
     var parent = new App();
     var reactor1 = new R(parent);
-    var trigger = new Tuple(reactor1.calleep, new CalleePort(reactor1));
+    var trigger = [reactor1.calleep, new CalleePort(reactor1]);
 
     /* expect( () => { reactor1.addReaction(
             trigger,

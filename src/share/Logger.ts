@@ -1,4 +1,4 @@
-import {type Read, type ReactionSandbox, Tuple} from "../core/internal";
+import {type Read, type ReactionSandbox} from "../core/internal";
 import {Reactor, InPort, State} from "../core/internal";
 
 function print(
@@ -29,8 +29,8 @@ export class Logger extends Reactor {
   constructor(parent: Reactor, expected: unknown) {
     super(parent);
     this.addReaction(
-      new Tuple(this.i),
-      new Tuple(this.i, new State(expected)),
+      [this.i],
+      [this.i, new State(expected)],
       print
     );
   }
