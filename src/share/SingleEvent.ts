@@ -3,7 +3,6 @@ import {
   type ReactionSandbox,
   type Parameter,
   Present,
-  Tuple,
   Reactor,
   Timer,
   OutPort
@@ -32,8 +31,8 @@ export class SingleEvent<T extends Present> extends Reactor {
   constructor(parent: Reactor, private readonly payload: Parameter<T>) {
     super(parent);
     this.addReaction(
-      new Tuple(this.t1),
-      new Tuple(this.writable(this.o), this.payload),
+      [this.t1],
+      [this.writable(this.o), this.payload],
       produceOutput
     );
   }

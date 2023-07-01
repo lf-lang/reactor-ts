@@ -4,7 +4,6 @@ import {
   Reactor,
   App,
   Timer,
-  Tuple,
   OutPort,
   InPort,
   TimeValue,
@@ -20,7 +19,7 @@ class Periodic extends Reactor {
   constructor(parent: Reactor) {
     super(parent);
     const writer = this.writable(this.o);
-    this.addReaction(new Tuple(this.t), new Tuple(this.t), function (this) {
+    this.addReaction([this.t], [this.t], function (this) {
       console.log(this.getBankIndex());
     });
   }
@@ -33,7 +32,7 @@ class MultiPeriodic extends Reactor {
 
   constructor(parent: Reactor) {
     super(parent);
-    this.addReaction(new Tuple(this.t), new Tuple(this.t), function (this) {
+    this.addReaction([this.t], [this.t], function (this) {
       console.log(this.getBankIndex());
     });
   }

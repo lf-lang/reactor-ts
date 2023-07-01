@@ -17,7 +17,6 @@ import {
   type Write,
   type TriggerManager,
   ReactionGraph,
-  Tuple,
   TimeValue,
   Tag,
   Origin,
@@ -516,7 +515,7 @@ export abstract class Reactor extends Component {
     // Pass in a reference to the reactor because the runtime object
     // is inaccessible for the top-level reactor (it is created after this constructor returns).
     const self = this as Reactor;
-    this.addMutation(new Tuple(this.shutdown), new Tuple(), function (this) {
+    this.addMutation([this.shutdown], [], function (this) {
       self._findOwnReactors().forEach((r) => {
         r._delete();
       });
@@ -597,7 +596,7 @@ export abstract class Reactor extends Component {
     // that allows for a link to be updated.
 
     // Set up the triggers.
-    for (const t of reaction.trigs.elements) {
+    for (const t of reaction.trigs) {
       // Link the trigger to the reaction.
       if (t instanceof Trigger) {
         t.getManager(this._getKey(t)).addReaction(
@@ -658,7 +657,7 @@ export abstract class Reactor extends Component {
     const sources = new Set<Port<Present>>();
     const effects = new Set<Port<Present>>();
 
-    for (const a of reaction.args.elements) {
+    for (const a of reaction.args) {
       if (a instanceof IOPort) {
         this._dependencyGraph.addEdge(
           a,
@@ -785,15 +784,15 @@ export abstract class Reactor extends Component {
    * @param late
    */
   protected addReaction<T extends Variable[]>(
-    trigs: Tuple<Variable[]>,
-    args: Tuple<ArgList<T>>,
+    trigs: Variable[],
+    args: [...ArgList<T>],
     react: (this: ReactionSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
     }
   ): void {
-    const calleePorts = trigs.elements.filter(
+    const calleePorts = trigs.filter(
       (trig) => trig instanceof CalleePort
     );
 
@@ -809,7 +808,7 @@ export abstract class Reactor extends Component {
         deadline,
         late
       );
-      if (trigs.elements.length > 1) {
+      if (trigs.length > 1) {
         // A procedure can only have a single trigger.
         throw new Error(`Procedure "${procedure}" has multiple triggers.`);
       }
@@ -846,8 +845,8 @@ export abstract class Reactor extends Component {
   }
 
   protected addMutation<T extends Variable[]>(
-    trigs: Tuple<Variable[]>,
-    args: Tuple<ArgList<T>>,
+    trigs: Variable[],
+    args: [...ArgList<T>],
     react: (this: MutationSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late: (this: MutationSandbox, ...args: ArgList<T>) => void = () => {
