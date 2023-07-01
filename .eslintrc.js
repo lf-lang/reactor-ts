@@ -9,13 +9,15 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: ['./tsconfig.json']
+    project: ['./tsconfig.json', ]
   },
-  ignorePatterns: ['.eslintrc.js', ],
+  ignorePatterns: ['.eslintrc.js', '__tests__/**/*'],
   root: true,
   rules: {
     "@typescript-eslint/quotes": ["error", "double"],
+    // This two might cause redundant String() or .toString() calls
     "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/no-base-to-string": "off",
     "@typescript-eslint/naming-convention": [
       "warn",
       {

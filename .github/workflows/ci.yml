@@ -18,6 +18,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm'
       - name: Run the type checker and then run the tests
         run: |
           npm install
@@ -27,21 +28,39 @@ jobs:
   lingua-franca:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v3
+        with: 
+          path: "reactor-ts"
+          fetch-depth: 0
       - name: Read lingua-franca-ref.txt
-        run: echo "lingua-franca-ref=$(wget -qO- https://raw.githubusercontent.com/lf-lang/reactor-ts/${{ github.head_ref || github.ref_name }}/lingua-franca-ref.txt)" >> $GITHUB_ENV
+        run: echo "lingua-franca-ref=$(cat ./reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
         uses: actions/checkout@v3
         with:
           repository: lf-lang/lingua-franca
           ref: ${{ env.lingua-franca-ref }}
           fetch-depth: 0
+          path: "lingua-franca"
           submodules: true
+      - name: Move Lingua Franca to default pwd
+        run: |
+          shopt -s dotglob
+          mv -- ./lingua-franca/* ${{ github.workspace }}
+          shopt -u dotglob 
       - name: Prepare build environment
         uses: ./.github/actions/prepare-build-env
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'reactor-ts/package-lock.json'
+      - name: Build reactor-ts
+        run: |
+          cd ./reactor-ts
+          npm install
+          npm run build
       - name: Install pnpm
         run: npm i -g pnpm
       - name: Install RTI
@@ -49,4 +68,34 @@ jobs:
         if: ${{ runner.os == 'macOS' || runner.os == 'Linux' }}
       - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew targetTest -Ptarget=TypeScript -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.head_ref || github.ref_name }}"
+          ./gradlew targetTest -Ptarget=TypeScript -Druntime="file:/${{ github.workspace }}/reactor-ts"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+      - name: Run eslint
+        run: |
+          npm install
+          npm run lint
+
+  prettier: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out reactor-ts repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Run prettier
+        run: |
+          npm install
+          npm run check-style
+  
