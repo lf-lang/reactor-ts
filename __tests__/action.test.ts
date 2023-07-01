@@ -20,7 +20,7 @@ class ReactorWithFederatePortAction extends App {
     super(TimeValue.msec(1));
     this.addReaction(
       [this.startup],
-      [this.schedulable(this.a]),
+      [this.schedulable(this.a)],
       function (this, a) {
         startUpTag = this.util.getCurrentTag();
         a.schedule(0, 0);
@@ -29,7 +29,7 @@ class ReactorWithFederatePortAction extends App {
 
     this.addReaction(
       [this.a],
-      [this.schedulable(this.f]),
+      [this.schedulable(this.f)],
       function (this, f) {
         let intendedTag: Tag | undefined;
         if (intendedTagDelay === undefined) {

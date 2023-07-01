@@ -70,7 +70,7 @@ describe("Testing Error Cases", function () {
   it("Multiple triggers", function () {
     var parent = new App();
     var reactor1 = new R(parent);
-    var trigger = [reactor1.calleep, new CalleePort(reactor1]);
+    var trigger = [reactor1.calleep, new CalleePort(reactor1)];
 
     /* expect( () => { reactor1.addReaction(
             trigger,

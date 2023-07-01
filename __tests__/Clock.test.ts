@@ -39,7 +39,7 @@ export class Clock extends App {
     super(timeout, false, false, success, fail);
     this.addReaction(
       [this.t1],
-      [this.schedulable(this.a1]),
+      [this.schedulable(this.a1)],
       /**
        * Print tick and schedule a1
        */
@@ -50,7 +50,7 @@ export class Clock extends App {
     );
     this.addReaction(
       [this.t2],
-      [this.schedulable(this.a2]),
+      [this.schedulable(this.a2)],
       /**
        * Print tock and schedule a2.
        */
@@ -64,7 +64,7 @@ export class Clock extends App {
     // print once.
     this.addReaction(
       [this.t1, this.t2],
-      [this.schedulable(this.a3]),
+      [this.schedulable(this.a3)],
       /**
        * Print cuckoo and schedule a3.
        */

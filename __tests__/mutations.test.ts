@@ -16,7 +16,7 @@ class Source extends Reactor {
     super(parent);
     this.addReaction(
       [this.timer],
-      [this.writable(this.output]),
+      [this.writable(this.output)],
       function (this, out) {
         out.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
       }
@@ -33,7 +33,7 @@ class AddOne extends Reactor {
     super(owner);
     this.addReaction(
       [this.input],
-      [this.input, this.writable(this.output]),
+      [this.input, this.writable(this.output)],
       function (this, input, output) {
         const val = input.get();
         if (val) {
@@ -106,7 +106,7 @@ class Computer extends Reactor {
     );
     this.addReaction(
       [this.adder.output],
-      [this.adder.output, this.writable(this.out]),
+      [this.adder.output, this.writable(this.out)],
       function (this, adderout, out) {
         const arr = adderout.get();
         if (arr) {
