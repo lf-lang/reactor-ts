@@ -1,13 +1,12 @@
 import {
-  Args,
-  Triggers,
   Reactor,
   App,
   InMultiPort,
   OutMultiPort,
   IOPort,
   OutPort,
-  InPort
+  InPort,
+  Tuple
 } from "../src/core/internal";
 class TwoInTwoOut extends Reactor {
   inp = new InMultiPort<number>(this, 2);
@@ -50,8 +49,8 @@ class TwoInTwoOut extends Reactor {
       expect(writer.width()).toBe(2);
     });
     this.addReaction(
-      new Triggers(this.inp),
-      new Args(this.inp),
+      new Tuple(this.inp),
+      new Tuple(this.inp),
       function (this, inp) {
         test("check read values", () => {
           expect(inp.channel(0).get()).toBe(42);
@@ -74,8 +73,8 @@ class TwoInTwoOut extends Reactor {
       }
     );
     this.addReaction(
-      new Triggers(this.startup),
-      new Args(this.allWritable(this.out)),
+      new Tuple(this.startup),
+      new Tuple(this.allWritable(this.out)),
       function (out) {
         test("start up reaction triggered", () => {
           expect(true).toBe(true);

@@ -1,8 +1,4 @@
-import type {
-  Tag,
-  ScheduledTrigger,
-  PrioritySetElement
-} from "./internal";
+import type {Tag, ScheduledTrigger, PrioritySetElement} from "./internal";
 
 /**
  * An event is caused by a timer or a scheduled action. Each event is tagged

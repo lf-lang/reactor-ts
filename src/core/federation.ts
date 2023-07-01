@@ -1614,11 +1614,7 @@ export class FederatedApp extends App {
 
     this.rtiClient.on(
       "timedMessage",
-      <T>(
-        destPortAction: Action<T>,
-        messageBuffer: Buffer,
-        tag: Tag
-      ) => {
+      <T>(destPortAction: Action<T>, messageBuffer: Buffer, tag: Tag) => {
         // Schedule this federate port's action.
 
         /**

@@ -6,7 +6,8 @@ import type {
   TriggerManager,
   Absent,
   MultiReadWrite,
-  ReadWrite
+  ReadWrite,
+  Variable
 } from "./internal";
 import {Trigger, Log} from "./internal";
 
@@ -70,9 +71,7 @@ export abstract class WritablePort<T> implements ReadWrite<T> {
   abstract getPort(): IOPort<T>;
 }
 
-export abstract class WritableMultiPort<T>
-  implements MultiReadWrite<T>
-{
+export abstract class WritableMultiPort<T> implements MultiReadWrite<T> {
   abstract get(index: number): T | undefined;
   abstract set(index: number, value: T): void;
   abstract width(): number;
@@ -197,11 +196,11 @@ export abstract class IOPort<T> extends Port<T> {
       this.port.receivers.delete(port);
     }
 
-    addReaction(reaction: Reaction<unknown>): void {
+    addReaction(reaction: Reaction<Variable[]>): void {
       this.port.reactions.add(reaction);
     }
 
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction(reaction: Reaction<Variable[]>): void {
       this.port.reactions.delete(reaction);
     }
   })(this);

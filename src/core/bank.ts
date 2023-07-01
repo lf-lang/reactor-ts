@@ -104,9 +104,7 @@ export class Bank<T extends Reactor, S> {
     return result;
   }
 
-  public writable<T>(
-    ports: Array<IOPort<T>>
-  ): Array<WritablePort<T>> {
+  public writable<T>(ports: Array<IOPort<T>>): Array<WritablePort<T>> {
     if (ports.length !== this.members.length) {
       throw new Error("Length of ports does not match length of reactors.");
     }

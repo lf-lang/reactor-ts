@@ -6,7 +6,8 @@ import type {
   Runtime,
   WritablePort,
   TriggerManager,
-  Reaction
+  Reaction,
+  Variable
 } from "./internal";
 import {InPort, OutPort, Trigger, Component} from "./internal";
 import {WritableMultiPort} from "./port";
@@ -18,10 +19,7 @@ import {WritableMultiPort} from "./port";
  * @author Marten Lohstroh <marten@berkeley.edu>
  * @author Hokeun Kim <hokeun@berkeley.edu>
  */
-export abstract class MultiPort<T>
-  extends Trigger
-  implements MultiRead<T>
-{
+export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
   /**
    * Return all channels of this multiport.
    */
@@ -47,9 +45,7 @@ export abstract class MultiPort<T>
    * @param ports the ports to return the values of
    * @returns the current values of the given ports
    */
-  public static values<T>(
-    ports: Array<IOPort<T>>
-  ): Array<T | Absent> {
+  public static values<T>(ports: Array<IOPort<T>>): Array<T | Absent> {
     const values = new Array<T | Absent>(ports.length);
     for (let i = 0; i < values.length; i++) {
       values[i] = ports[i].get();
@@ -132,7 +128,7 @@ export abstract class MultiPort<T>
     }
 
     /** @inheritdoc */
-    addReaction(reaction: Reaction<unknown>): void {
+    addReaction(reaction: Reaction<Variable[]>): void {
       this.port.channels().forEach((channel) => {
         channel
           .getManager(this.getContainer()._getKey(channel))
@@ -141,7 +137,7 @@ export abstract class MultiPort<T>
     }
 
     /** @inheritdoc */
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction(reaction: Reaction<Variable[]>): void {
       this.port.channels().forEach((channel) => {
         channel.getManager(this.port._key).delReaction(reaction);
       });

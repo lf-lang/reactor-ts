@@ -5,8 +5,7 @@ import {
   Action,
   Timer,
   App,
-  Triggers,
-  Args,
+  Tuple,
   TimeValue,
   TimeUnit,
   Origin
@@ -40,8 +39,8 @@ export class Clock extends App {
   constructor(timeout: TimeValue, success: () => void, fail: () => void) {
     super(timeout, false, false, success, fail);
     this.addReaction(
-      new Triggers(this.t1),
-      new Args(this.schedulable(this.a1)),
+      new Tuple(this.t1),
+      new Tuple(this.schedulable(this.a1)),
       /**
        * Print tick and schedule a1
        */
@@ -51,8 +50,8 @@ export class Clock extends App {
       }
     );
     this.addReaction(
-      new Triggers(this.t2),
-      new Args(this.schedulable(this.a2)),
+      new Tuple(this.t2),
+      new Tuple(this.schedulable(this.a2)),
       /**
        * Print tock and schedule a2.
        */
@@ -65,8 +64,8 @@ export class Clock extends App {
     // simultaneosly by both timers, "Cuckoo" should only
     // print once.
     this.addReaction(
-      new Triggers(this.t1, this.t2),
-      new Args(this.schedulable(this.a3)),
+      new Tuple(this.t1, this.t2),
+      new Tuple(this.schedulable(this.a3)),
       /**
        * Print cuckoo and schedule a3.
        */
@@ -76,8 +75,8 @@ export class Clock extends App {
       }
     );
     this.addReaction(
-      new Triggers(this.a1, this.a2, this.a3),
-      new Args(this.a1, this.a2, this.a3),
+      new Tuple(this.a1, this.a2, this.a3),
+      new Tuple(this.a1, this.a2, this.a3),
       /**
        * If all the actions are available at logical time 5 seconds from start, the test is successful.
        */

@@ -1,11 +1,9 @@
-import type {WritablePort} from "../core/internal";
+import {Tuple, WritablePort} from "../core/internal";
 import {
-  Args,
   Parameter,
   InPort,
   OutPort,
   State,
-  Triggers,
   Action,
   Reactor,
   App,
@@ -27,8 +25,8 @@ class Ramp extends Reactor {
     this.until = new Parameter(until);
     this.next = new Action<number>(this, Origin.logical, period);
     this.addReaction(
-      new Triggers(this.startup, this.next),
-      new Args(
+      new Tuple(this.startup, this.next),
+      new Tuple(
         this.schedulable(this.next),
         this.until,
         this.writable(this.value)
@@ -68,8 +66,8 @@ class Filter extends Reactor {
     this.localPrimes = new State(new Array<number>());
     this.hasChild = new State(false);
     this.addMutation(
-      new Triggers(this.inp),
-      new Args(
+      new Tuple(this.inp),
+      new Tuple(
         this.inp,
         this.writable(this.out),
         this.startPrime,
