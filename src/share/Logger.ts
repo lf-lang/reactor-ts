@@ -28,10 +28,6 @@ export class Logger extends Reactor {
 
   constructor(parent: Reactor, expected: Present) {
     super(parent);
-    this.addReaction(
-      [this.i],
-      [this.i, new State(expected)],
-      print
-    );
+    this.addReaction([this.i], [this.i, new State(expected)], print);
   }
 }

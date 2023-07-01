@@ -1,10 +1,5 @@
 import type {IOPort, Present} from "../src/core/internal";
-import {
-  App,
-  Reactor,
-  InPort,
-  OutPort
-} from "../src/core/internal";
+import {App, Reactor, InPort, OutPort} from "../src/core/internal";
 
 export class Adder extends Reactor {
   in1 = new InPort<number>(this);

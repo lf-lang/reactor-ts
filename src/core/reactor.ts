@@ -429,7 +429,12 @@ export abstract class Reactor extends Component {
      * @param src
      * @param dst
      */
-    public connect<A extends T, R extends Present, T extends Present, S extends R>(
+    public connect<
+      A extends T,
+      R extends Present,
+      T extends Present,
+      S extends R
+    >(
       src: CallerPort<A, R> | IOPort<S>,
       dst: CalleePort<T, S> | IOPort<R>
     ): void {
@@ -549,7 +554,9 @@ export abstract class Reactor extends Component {
 
   //
 
-  public allWritable<T extends Present>(port: MultiPort<T>): WritableMultiPort<T> {
+  public allWritable<T extends Present>(
+    port: MultiPort<T>
+  ): WritableMultiPort<T> {
     return port.asWritable(this._getKey(port));
   }
 
@@ -707,10 +714,7 @@ export abstract class Reactor extends Component {
     // Make effects dependent on sources.
     for (const effect of effects) {
       for (const source of sources) {
-        this._causalityGraph.addEdge(
-          source,
-          effect 
-        );
+        this._causalityGraph.addEdge(source, effect);
       }
     }
   }
@@ -792,9 +796,7 @@ export abstract class Reactor extends Component {
       Log.global.warn("Deadline violation occurred!");
     }
   ): void {
-    const calleePorts = trigs.filter(
-      (trig) => trig instanceof CalleePort
-    );
+    const calleePorts = trigs.filter((trig) => trig instanceof CalleePort);
 
     if (calleePorts.length > 0) {
       // This is a procedure.
@@ -1059,10 +1061,12 @@ export abstract class Reactor extends Component {
     return false;
   }
 
-  public canConnectCall<A extends T, R extends Present, T extends Present, S extends R>(
-    src: CallerPort<A, R>,
-    dst: CalleePort<T, S>
-  ): boolean {
+  public canConnectCall<
+    A extends T,
+    R extends Present,
+    T extends Present,
+    S extends R
+  >(src: CallerPort<A, R>, dst: CalleePort<T, S>): boolean {
     // FIXME: can we change the inheritance relationship so that we can overload?
 
     if (!this._runtime.isRunning()) {
@@ -1098,7 +1102,10 @@ export abstract class Reactor extends Component {
    * @param src The start point of a new connection.
    * @param dst The end point of a new connection.
    */
-  public canConnect<R extends Present, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean {
+  public canConnect<R extends Present, S extends R>(
+    src: IOPort<S>,
+    dst: IOPort<R>
+  ): boolean {
     // Immediate rule out trivial self loops.
     if (src === dst) {
       throw Error("Source port and destination port are the same.");
@@ -1248,7 +1255,10 @@ export abstract class Reactor extends Component {
    * @param src The source port to connect.
    * @param dst The destination port to connect.
    */
-  protected _connect<R extends Present, S extends R>(src: IOPort<S>, dst: IOPort<R>): void {
+  protected _connect<R extends Present, S extends R>(
+    src: IOPort<S>,
+    dst: IOPort<R>
+  ): void {
     if (src === undefined || src === null) {
       throw new Error("Cannot connect unspecified source");
     }
@@ -1327,10 +1337,12 @@ export abstract class Reactor extends Component {
     }
   }
 
-  protected _connectCall<A extends T, R extends Present, T extends Present, S extends R>(
-    src: CallerPort<A, R>,
-    dst: CalleePort<T, S>
-  ): void {
+  protected _connectCall<
+    A extends T,
+    R extends Present,
+    T extends Present,
+    S extends R
+  >(src: CallerPort<A, R>, dst: CalleePort<T, S>): void {
     if (this.canConnectCall(src, dst)) {
       Log.debug(this, () => `connecting ${src} and ${dst}`);
       // Treat connections between callers and callees separately.
@@ -1374,7 +1386,6 @@ export abstract class Reactor extends Component {
    * and the dependencies between them.
    */
   protected _getCausalityInterface(): PrecedenceGraph<Port<Present>> {
-
     const ifGraph = this._causalityGraph;
     // Find all the input and output ports that this reactor owns.
 
@@ -1464,7 +1475,10 @@ export abstract class Reactor extends Component {
    * @param src Source port of connection to be disconnected.
    * @param dst Destination port of connection to be disconnected. If undefined, disconnect all connections from the source port.
    */
-  protected _disconnect<R extends Present, S extends R>(src: IOPort<S>, dst?: IOPort<R>): void {
+  protected _disconnect<R extends Present, S extends R>(
+    src: IOPort<S>,
+    dst?: IOPort<R>
+  ): void {
     if (
       (!this._runtime.isRunning() && this._isInScope(src, dst)) ||
       this._runtime.isRunning()
@@ -1566,7 +1580,10 @@ interface ComponentManager {
 /**
  * A caller port sends arguments of type T and receives a response of type R.
  */
-export class CallerPort<A extends Present, R extends Present> extends Port<R> implements Write<A>, Read<R> {
+export class CallerPort<A extends Present, R extends Present>
+  extends Port<R>
+  implements Write<A>, Read<R>
+{
   public get(): R | undefined {
     if (
       this.tag?.isSimultaneousWith(this.runtime.util.getCurrentTag()) ??
@@ -1637,7 +1654,10 @@ interface CalleeManager<T extends Present> extends TriggerManager {
 /**
  * A callee port receives arguments of type A and send a response of type R.
  */
-export class CalleePort<A extends Present, R extends Present> extends Port<A> implements Read<A>, Write<R> {
+export class CalleePort<A extends Present, R extends Present>
+  extends Port<A>
+  implements Read<A>, Write<R>
+{
   get(): A | undefined {
     return this.argValue;
   }

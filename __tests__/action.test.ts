@@ -4,7 +4,7 @@ import {
   FederatePortAction,
   App,
   Origin,
-  TimeValue,
+  TimeValue
 } from "../src/core/internal";
 
 let intendedTagDelay: TimeValue | undefined;
@@ -27,21 +27,17 @@ class ReactorWithFederatePortAction extends App {
       }
     );
 
-    this.addReaction(
-      [this.a],
-      [this.schedulable(this.f)],
-      function (this, f) {
-        let intendedTag: Tag | undefined;
-        if (intendedTagDelay === undefined) {
-          intendedTag = undefined;
-        } else {
-          intendedTag = startUpTag
-            .getLaterTag(intendedTagDelay)
-            .getMicroStepsLater(intendedTagMicrostepDelay);
-        }
-        f.schedule(0, 0, intendedTag);
+    this.addReaction([this.a], [this.schedulable(this.f)], function (this, f) {
+      let intendedTag: Tag | undefined;
+      if (intendedTagDelay === undefined) {
+        intendedTag = undefined;
+      } else {
+        intendedTag = startUpTag
+          .getLaterTag(intendedTagDelay)
+          .getMicroStepsLater(intendedTagMicrostepDelay);
       }
-    );
+      f.schedule(0, 0, intendedTag);
+    });
   }
 
   public setLastTagProvisional(value: boolean) {

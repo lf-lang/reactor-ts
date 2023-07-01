@@ -1,9 +1,4 @@
-import {
-  Reactor,
-  App,
-  OutPort,
-  InPort
-} from "../src/core/internal";
+import {Reactor, App, OutPort, InPort} from "../src/core/internal";
 
 class Starter extends Reactor {
   public out = new OutPort<number>(this);

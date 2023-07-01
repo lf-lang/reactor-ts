@@ -153,13 +153,9 @@ class ReactorWithAction extends App {
     deadlineMiss?: () => void
   ) {
     super(timeout, false, false, success, fail);
-    this.addReaction(
-      [this.t],
-      [this.schedulable(this.a)],
-      function (this, a) {
-        a.schedule(0, 1);
-      }
-    );
+    this.addReaction([this.t], [this.schedulable(this.a)], function (this, a) {
+      a.schedule(0, 1);
+    });
   }
 }
 

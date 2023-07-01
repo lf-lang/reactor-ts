@@ -64,13 +64,9 @@ export class Pong extends Reactor {
   constructor(parent: Reactor) {
     super(parent);
     this.server = new CalleePort(this);
-    this.addReaction(
-      [this.dummy],
-      [this.dummy],
-      function (this) {
-        return undefined;
-      }
-    );
+    this.addReaction([this.dummy], [this.dummy], function (this) {
+      return undefined;
+    });
     this.addReaction(
       [this.server],
       [this.server],
