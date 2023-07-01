@@ -12,7 +12,7 @@ import {Logger} from "../src/share/Logger";
 
 class SEContainer extends Reactor {
   // Made these public to accommodate the test below.
-  public o: OutPort<any> = new OutPort<any>(this);
+  public o: OutPort<unknown> = new OutPort(this);
 
   public child = new SingleEvent<string>(this, new Parameter("Foo"));
 
@@ -24,7 +24,7 @@ class SEContainer extends Reactor {
 
 class LogContainer extends Reactor {
   // Made these public to accommodate the test below.
-  public i: InPort<any> = new InPort<any>(this);
+  public i: InPort<unknown> = new InPort(this);
 
   public child: Logger = new Logger(this, "Foo");
 

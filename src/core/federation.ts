@@ -309,10 +309,8 @@ class RTIClient extends EventEmitter {
    * meaning that the type checker cannot check whether uses of the action are type safe.
    * In an alternative design, type information might be preserved. TODO(marten): Look into this.
    */
-  private readonly federatePortActionByID: Map<number, Action<any>> = new Map<
-    number,
-    Action<any>
-  >();
+  private readonly federatePortActionByID: Map<number, Action<unknown>> =
+    new Map<number, Action<unknown>>();
 
   /**
    * Establish the mapping between a federate port's action and its ID.
@@ -323,7 +321,10 @@ class RTIClient extends EventEmitter {
     federatePortID: number,
     federatePortAction: Action<T>
   ): void {
-    this.federatePortActionByID.set(federatePortID, federatePortAction);
+    this.federatePortActionByID.set(
+      federatePortID,
+      federatePortAction as Action<unknown>
+    );
   }
 
   /**

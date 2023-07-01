@@ -18,7 +18,7 @@ class MyActor2 extends Reactor {
 
 describe("Test names for contained reactors", () => {
   class myApp extends App {
-    port: InPort<any> = new InPort<any>(this);
+    port: InPort<unknown> = new InPort(this);
 
     x = new MyActor(this);
 
