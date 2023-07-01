@@ -2009,7 +2009,7 @@ export class App extends Reactor {
         this.app._endOfExecution == null ||
         !this.app._endOfExecution.isSmallerThan(e.tag)
       ) {
-        this.app._eventQ.push(e as TaggedEvent<unknown>);
+        this.app._eventQ.push(e);
       }
 
       Log.debug(this, () => `Scheduling with trigger: ${e.trigger}`);
