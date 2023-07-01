@@ -1,19 +1,18 @@
-import {Component} from "./internal";
-
-import type {
-  Reactor,
-  Runtime,
-  Absent,
-  Present,
-  TaggedEvent,
-  Reaction,
-  Tag
+import {
+  Component,
+  type Variable,
+  type Reactor,
+  type Runtime,
+  type Absent,
+  type TaggedEvent,
+  type Reaction,
+  type Tag
 } from "./internal";
 
 export interface TriggerManager {
   getContainer: () => Reactor;
-  addReaction: (reaction: Reaction<unknown>) => void;
-  delReaction: (reaction: Reaction<unknown>) => void;
+  addReaction: (reaction: Reaction<Variable[]>) => void;
+  delReaction: (reaction: Reaction<Variable[]>) => void;
 }
 
 /**
@@ -23,7 +22,7 @@ export abstract class Trigger extends Component {
   /**
    * Reactions to trigger.
    */
-  protected reactions = new Set<Reaction<unknown>>();
+  protected reactions = new Set<Reaction<Variable[]>>();
 
   /**
    * Request the manager of this trigger. The request will only be honored
@@ -47,7 +46,7 @@ export abstract class Trigger extends Component {
 /**
  *
  */
-export abstract class ScheduledTrigger<T extends Present> extends Trigger {
+export abstract class ScheduledTrigger<T> extends Trigger {
   protected value: T | Absent = undefined;
 
   protected tag: Tag | undefined;
@@ -110,11 +109,11 @@ export abstract class ScheduledTrigger<T extends Present> extends Trigger {
       return this.trigger._getContainer();
     }
 
-    addReaction(reaction: Reaction<unknown>): void {
+    addReaction(reaction: Reaction<Variable[]>): void {
       this.trigger.reactions.add(reaction);
     }
 
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction(reaction: Reaction<Variable[]>): void {
       this.trigger.reactions.delete(reaction);
     }
   })(this);

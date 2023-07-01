@@ -1,8 +1,6 @@
 import {
   Reactor,
   App,
-  Triggers,
-  Args,
   Timer,
   OutPort,
   InPort,
@@ -17,8 +15,8 @@ class Source extends Reactor {
   constructor(parent: Reactor) {
     super(parent);
     this.addReaction(
-      new Triggers(this.timer),
-      new Args(this.writable(this.output)),
+      [this.timer],
+      [this.writable(this.output)],
       function (this, out) {
         out.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
       }
@@ -34,8 +32,8 @@ class AddOne extends Reactor {
   constructor(owner: Reactor, id: number) {
     super(owner);
     this.addReaction(
-      new Triggers(this.input),
-      new Args(this.input, this.writable(this.output)),
+      [this.input],
+      [this.input, this.writable(this.output)],
       function (this, input, output) {
         const val = input.get();
         if (val) {
@@ -53,28 +51,24 @@ class Print extends Reactor {
 
   constructor(owner: Reactor) {
     super(owner);
-    this.addReaction(
-      new Triggers(this.input),
-      new Args(this.input),
-      function (this, input) {
-        const val = input.get();
-        console.log("Print reacting...");
-        if (val !== undefined) {
-          const expected = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-          for (let i = 0; i < 10; i++) {
-            if (val[i] != expected[i]) {
-              this.util.requestErrorStop(
-                "Expected: " + expected + " but got: " + val
-              );
-              return;
-            }
+    this.addReaction([this.input], [this.input], function (this, input) {
+      const val = input.get();
+      console.log("Print reacting...");
+      if (val !== undefined) {
+        const expected = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        for (let i = 0; i < 10; i++) {
+          if (val[i] != expected[i]) {
+            this.util.requestErrorStop(
+              "Expected: " + expected + " but got: " + val
+            );
+            return;
           }
-          console.log("Expected: " + expected + " and got: " + val);
-        } else {
-          this.util.requestErrorStop("Input undefined.");
         }
+        console.log("Expected: " + expected + " and got: " + val);
+      } else {
+        this.util.requestErrorStop("Input undefined.");
       }
-    );
+    });
   }
 }
 
@@ -88,27 +82,23 @@ class Computer extends Reactor {
   constructor(container: Reactor) {
     super(container);
     this._connect(this.in, this.adder.input);
-    this.addMutation(
-      new Triggers(this.in),
-      new Args(this.in),
-      function (this, src) {
-        const vals = src.get();
-        if (vals) {
-          let skip = true;
-          for (const id of vals.keys()) {
-            if (skip) {
-              skip = false;
-              continue;
-            }
-            const x = new AddOne(this.getReactor(), id);
-            this.connect(src, x.input);
+    this.addMutation([this.in], [this.in], function (this, src) {
+      const vals = src.get();
+      if (vals) {
+        let skip = true;
+        for (const id of vals.keys()) {
+          if (skip) {
+            skip = false;
+            continue;
           }
+          const x = new AddOne(this.getReactor(), id);
+          this.connect(src, x.input);
         }
       }
-    );
+    });
     this.addReaction(
-      new Triggers(this.adder.output),
-      new Args(this.adder.output, this.writable(this.out)),
+      [this.adder.output],
+      [this.adder.output, this.writable(this.out)],
       function (this, adderout, out) {
         const arr = adderout.get();
         if (arr) {
@@ -131,7 +121,7 @@ class ScatterGather extends App {
     this._connect(this.source.output, this.compute.in);
     this._connect(this.compute.out, this.print.input);
     var self = this;
-    this.addReaction(new Triggers(this.shutdown), new Args(), function (this) {
+    this.addReaction([this.shutdown], [], function (this) {
       console.log(self._getPrecedenceGraph().toString());
     });
   }
@@ -144,24 +134,16 @@ class ZenoClock extends Reactor {
     super(owner);
     console.log("Creating ZenoClock " + iteration);
     this.tick = new Timer(this, 0, 0);
-    this.addReaction(
-      new Triggers(this.tick),
-      new Args(this.tick),
-      function (this, tick) {
-        console.log("Tick at " + this.util.getElapsedLogicalTime());
-      }
-    );
-    this.addReaction(new Triggers(this.shutdown), new Args(), function (this) {
+    this.addReaction([this.tick], [this.tick], function (this, tick) {
+      console.log("Tick at " + this.util.getElapsedLogicalTime());
+    });
+    this.addReaction([this.shutdown], [], function (this) {
       console.log("Shutdown reaction of reactor " + iteration);
     });
     if (iteration < 5) {
-      this.addMutation(
-        new Triggers(this.tick),
-        new Args(this.tick),
-        function (this, tick) {
-          new ZenoClock(this.getReactor(), iteration + 1);
-        }
-      );
+      this.addMutation([this.tick], [this.tick], function (this, tick) {
+        new ZenoClock(this.getReactor(), iteration + 1);
+      });
     } else {
       this.util.requestStop();
     }
@@ -176,7 +158,7 @@ class Zeno extends App {
 
     var self = this;
 
-    this.addReaction(new Triggers(this.shutdown), new Args(), function (this) {
+    this.addReaction([this.shutdown], [], function (this) {
       console.log(self._getPrecedenceGraph().toString());
     });
   }

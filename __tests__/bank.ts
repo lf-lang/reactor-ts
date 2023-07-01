@@ -1,11 +1,8 @@
-import type {Present} from "../src/core/internal";
 import {
   Bank,
   Reactor,
   App,
   Timer,
-  Triggers,
-  Args,
   OutPort,
   InPort,
   TimeValue,
@@ -21,7 +18,7 @@ class Periodic extends Reactor {
   constructor(parent: Reactor) {
     super(parent);
     const writer = this.writable(this.o);
-    this.addReaction(new Triggers(this.t), new Args(this.t), function (this) {
+    this.addReaction([this.t], [this.t], function (this) {
       console.log(this.getBankIndex());
     });
   }
@@ -34,13 +31,13 @@ class MultiPeriodic extends Reactor {
 
   constructor(parent: Reactor) {
     super(parent);
-    this.addReaction(new Triggers(this.t), new Args(this.t), function (this) {
+    this.addReaction([this.t], [this.t], function (this) {
       console.log(this.getBankIndex());
     });
   }
 }
 
-class Generic<T extends Present> extends Reactor {
+class Generic<T> extends Reactor {
   input = new InPort<T>(this);
 }
 
@@ -56,7 +53,7 @@ describe("Check bank index", () => {
       super();
       const ports = new Array<OutPort<number>>();
       const multiPorts = new Array<OutMultiPort<number>>();
-      test("throw error on mismatch in lenght of ports", () => {
+      test("throw error on mismatch in length of ports", () => {
         expect(() => this.b.writable(ports)).toThrowError(
           "Length of ports does not match length of reactors."
         );

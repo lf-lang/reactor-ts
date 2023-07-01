@@ -2,7 +2,6 @@ import type {
   IOPort,
   MultiPort,
   Port,
-  Present,
   Reactor,
   WritableMultiPort,
   WritablePort
@@ -79,7 +78,7 @@ export class Bank<T extends Reactor, S> {
    * @param selector lambda function that takes a reactor of type T and return a port of type P
    * @returns a list of ports selected across all bank members by the given lambda
    */
-  public port<P extends Port<Present> | MultiPort<Present>>(
+  public port<P extends Port<unknown> | MultiPort<unknown>>(
     selector: (reactor: T) => P
   ): P[] {
     return this.all().reduce(
@@ -92,7 +91,7 @@ export class Bank<T extends Reactor, S> {
     return `bank(${this.members.length})`;
   }
 
-  public allWritable<T extends Present>(
+  public allWritable<T>(
     ports: Array<MultiPort<T>>
   ): Array<WritableMultiPort<T>> {
     if (ports.length !== this.members.length) {
@@ -105,9 +104,7 @@ export class Bank<T extends Reactor, S> {
     return result;
   }
 
-  public writable<T extends Present>(
-    ports: Array<IOPort<T>>
-  ): Array<WritablePort<T>> {
+  public writable<T>(ports: Array<IOPort<T>>): Array<WritablePort<T>> {
     if (ports.length !== this.members.length) {
       throw new Error("Length of ports does not match length of reactors.");
     }

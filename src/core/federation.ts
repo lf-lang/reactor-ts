@@ -1,7 +1,7 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {Present, Action, FederateConfig} from "./internal";
+import type {Action, FederateConfig} from "./internal";
 import {
   Log,
   Tag,
@@ -319,7 +319,7 @@ class RTIClient extends EventEmitter {
    * @param federatePortID The federate port's ID.
    * @param federatePort The federate port's action.
    */
-  public registerFederatePortAction<T extends Present>(
+  public registerFederatePortAction<T>(
     federatePortID: number,
     federatePortAction: Action<T>
   ): void {
@@ -528,7 +528,7 @@ class RTIClient extends EventEmitter {
    * @param destPortID The port ID for the port on the destination
    * federate to which this message should be sent.
    */
-  public sendRTIMessage<T extends Present>(
+  public sendRTIMessage<T>(
     data: T,
     destFederateID: number,
     destPortID: number
@@ -567,7 +567,7 @@ class RTIClient extends EventEmitter {
    * @param time The time of the message encoded as a 64 bit little endian
    * unsigned integer in a Buffer.
    */
-  public sendRTITimedMessage<T extends Present>(
+  public sendRTITimedMessage<T>(
     data: T,
     destFederateID: number,
     destPortID: number,
@@ -1140,7 +1140,7 @@ export class FederatedApp extends App {
 
   private readonly downstreamFedIDs: number[] = [];
 
-  private readonly outputControlReactionTriggers: Array<Action<Present>> = [];
+  private readonly outputControlReactionTriggers: Array<Action<unknown>> = [];
 
   /**
    * The default value, null, indicates there is no output depending on a physical action.
@@ -1168,7 +1168,7 @@ export class FederatedApp extends App {
   }
 
   public registerOutputControlReactionTrigger(
-    outputControlReactionTrigger: Action<Present>
+    outputControlReactionTrigger: Action<unknown>
   ): void {
     this.outputControlReactionTriggers.push(outputControlReactionTrigger);
   }
@@ -1219,7 +1219,7 @@ export class FederatedApp extends App {
    * closed. FIXME: what happens in that case? Will next be called?
    * @param nextEvent
    */
-  protected _canProceed(nextEvent: TaggedEvent<Present>): boolean {
+  protected _canProceed(nextEvent: TaggedEvent<unknown>): boolean {
     let tagBarrier = new Tag(TimeValue.NEVER());
     // Set tag barrier using the tag when stop is requested but not granted yet.
     // Otherwise, set the tagBarrier using the greated TAG.
@@ -1383,7 +1383,7 @@ export class FederatedApp extends App {
    * unique among all port IDs on this federate and be a number between 0 and NUMBER_OF_PORTS - 1
    * @param federatePort The federate port's action for registration.
    */
-  public registerFederatePortAction<T extends Present>(
+  public registerFederatePortAction<T>(
     federatePortID: number,
     federatePortAction: Action<T>
   ): void {
@@ -1400,7 +1400,7 @@ export class FederatedApp extends App {
    * @param destFederateID The ID of the federate intended to receive the message.
    * @param destPortID The ID of the federate's port intended to receive the message.
    */
-  public sendRTIMessage<T extends Present>(
+  public sendRTIMessage<T>(
     msg: T,
     destFederateID: number,
     destPortID: number
@@ -1423,7 +1423,7 @@ export class FederatedApp extends App {
    * @param destPortID The ID of the FederateInPort intended to receive the message.
    * @param time The offset from the current time that the message should have.
    */
-  public sendRTITimedMessage<T extends Present>(
+  public sendRTITimedMessage<T>(
     msg: T,
     destFederateID: number,
     destPortID: number,
@@ -1596,7 +1596,7 @@ export class FederatedApp extends App {
 
     this.rtiClient.on(
       "message",
-      <T extends Present>(destPortAction: Action<T>, messageBuffer: Buffer) => {
+      <T>(destPortAction: Action<T>, messageBuffer: Buffer) => {
         // Schedule this federate port's action.
         // This message is untimed, so schedule it immediately.
         Log.debug(this, () => {
@@ -1614,11 +1614,7 @@ export class FederatedApp extends App {
 
     this.rtiClient.on(
       "timedMessage",
-      <T extends Present>(
-        destPortAction: Action<T>,
-        messageBuffer: Buffer,
-        tag: Tag
-      ) => {
+      <T>(destPortAction: Action<T>, messageBuffer: Buffer, tag: Tag) => {
         // Schedule this federate port's action.
 
         /**

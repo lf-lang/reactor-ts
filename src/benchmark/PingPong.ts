@@ -1,11 +1,9 @@
-import type {TimeValue} from "../core/internal";
+import {type TimeValue} from "../core/internal";
 import {
   Log,
-  Args,
   Parameter,
   CalleePort,
   CallerPort,
-  Triggers,
   Timer,
   Reactor,
   App
@@ -23,8 +21,8 @@ export class Ping extends Reactor {
     this.count = new Parameter(count); // Parameter
     this.client = new CallerPort(this);
     this.addReaction(
-      new Triggers(this.startup),
-      new Args(this.client, this.count),
+      [this.startup],
+      [this.client, this.count],
       function (
         this,
         __client: CallerPort<number, number>,
@@ -45,8 +43,8 @@ export class Ping extends Reactor {
       }
     );
     this.addReaction(
-      new Triggers(this.startup),
-      new Args(this.client, this.count),
+      [this.startup],
+      [this.client, this.count],
       function (
         this,
         __client: CallerPort<number, number>,
@@ -66,16 +64,12 @@ export class Pong extends Reactor {
   constructor(parent: Reactor) {
     super(parent);
     this.server = new CalleePort(this);
+    this.addReaction([this.dummy], [this.dummy], function (this) {
+      return undefined;
+    });
     this.addReaction(
-      new Triggers(this.dummy),
-      new Args(this.dummy),
-      function (this) {
-        return undefined;
-      }
-    );
-    this.addReaction(
-      new Triggers(this.server),
-      new Args(this.server),
+      [this.server],
+      [this.server],
       function (this, __server: CalleePort<number, number>) {
         // console.log("Pong!")
         const msg = __server.get();
@@ -84,8 +78,8 @@ export class Pong extends Reactor {
       }
     );
     this.addReaction(
-      new Triggers(this.dummy), // replace this with `server` and an error is thrown.
-      new Args(this.dummy),
+      [this.dummy], // replace this with `server` and an error is thrown.
+      [this.dummy],
       function (this) {
         return undefined;
       }

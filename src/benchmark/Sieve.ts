@@ -1,11 +1,9 @@
-import type {WritablePort} from "../core/internal";
 import {
-  Args,
+  type WritablePort,
   Parameter,
   InPort,
   OutPort,
   State,
-  Triggers,
   Action,
   Reactor,
   App,
@@ -27,12 +25,8 @@ class Ramp extends Reactor {
     this.until = new Parameter(until);
     this.next = new Action<number>(this, Origin.logical, period);
     this.addReaction(
-      new Triggers(this.startup, this.next),
-      new Args(
-        this.schedulable(this.next),
-        this.until,
-        this.writable(this.value)
-      ),
+      [this.startup, this.next],
+      [this.schedulable(this.next), this.until, this.writable(this.value)],
       function (this, next, until, value) {
         const n = next.get();
         if (n === undefined) {
@@ -68,14 +62,14 @@ class Filter extends Reactor {
     this.localPrimes = new State(new Array<number>());
     this.hasChild = new State(false);
     this.addMutation(
-      new Triggers(this.inp),
-      new Args(
+      [this.inp],
+      [
         this.inp,
         this.writable(this.out),
         this.startPrime,
         this.hasChild,
         this.localPrimes
-      ),
+      ],
       function (this, inp, out, prime, hasChild, localPrimes) {
         const p = inp.get();
         if (p !== undefined) {

@@ -1,9 +1,4 @@
-import type {
-  Tag,
-  ScheduledTrigger,
-  Present,
-  PrioritySetElement
-} from "./internal";
+import type {Tag, ScheduledTrigger, PrioritySetElement} from "./internal";
 
 /**
  * An event is caused by a timer or a scheduled action. Each event is tagged
@@ -11,7 +6,7 @@ import type {
  * determine the event's position with respect to other events in the event
  * queue.
  */
-export class TaggedEvent<T extends Present> implements PrioritySetElement<Tag> {
+export class TaggedEvent<T> implements PrioritySetElement<Tag> {
   /**
    * Pointer to the next element of the priority set that this event might
    * be hooked into.

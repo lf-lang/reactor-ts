@@ -1,12 +1,5 @@
-import type {IOPort, Present} from "../src/core/internal";
-import {
-  App,
-  Reactor,
-  Args,
-  Triggers,
-  InPort,
-  OutPort
-} from "../src/core/internal";
+import type {IOPort} from "../src/core/internal";
+import {App, Reactor, InPort, OutPort} from "../src/core/internal";
 
 export class Adder extends Reactor {
   in1 = new InPort<number>(this);
@@ -19,8 +12,8 @@ export class Adder extends Reactor {
     super(parent);
 
     this.addReaction(
-      new Triggers(this.in1, this.in2),
-      new Args(this.in1, this.in2, this.writable(this.out)),
+      [this.in1, this.in2],
+      [this.in1, this.in2, this.writable(this.out)],
       function (this, in1, in2, out) {
         // Type assertions allow coercion of null to 0.
         out.set((in1.get() as number) + (in2.get() as number));
@@ -36,7 +29,7 @@ class MyAdder extends Adder {
     }
   }
 
-  public getProxy(port: IOPort<Present>) {
+  public getProxy(port: IOPort<unknown>) {
     return this.writable(port);
   }
 }

@@ -6,12 +6,12 @@ import type {
   TriggerManager,
   Absent,
   MultiReadWrite,
-  Present,
-  ReadWrite
+  ReadWrite,
+  Variable
 } from "./internal";
 import {Trigger, Log} from "./internal";
 
-export abstract class Port<T extends Present> extends Trigger {
+export abstract class Port<T> extends Trigger {
   protected receivers = new Set<WritablePort<T>>();
 
   protected runtime!: Runtime;
@@ -65,15 +65,13 @@ export abstract class Port<T extends Present> extends Trigger {
  * a method for retrieving the port that it wraps.
  * We have this abstract class so that we can do `instanceof` checks.
  */
-export abstract class WritablePort<T extends Present> implements ReadWrite<T> {
+export abstract class WritablePort<T> implements ReadWrite<T> {
   abstract get(): T | undefined;
   abstract set(value: T): void;
   abstract getPort(): IOPort<T>;
 }
 
-export abstract class WritableMultiPort<T extends Present>
-  implements MultiReadWrite<T>
-{
+export abstract class WritableMultiPort<T> implements MultiReadWrite<T> {
   abstract get(index: number): T | undefined;
   abstract set(index: number, value: T): void;
   abstract width(): number;
@@ -84,7 +82,7 @@ export abstract class WritableMultiPort<T extends Present>
 /**
  * Interface for a writable multi port, intended as a wrapper for a multi port.
  */
-interface IOPortManager<T extends Present> extends TriggerManager {
+interface IOPortManager<T> extends TriggerManager {
   // TODO (axmmisaka): Function property is better in terms of type checking
   // as tsc will check additional info; yet that additional check will cause massive issues
   // and therefore this linter rule is disabled and method signature is used.
@@ -95,7 +93,7 @@ interface IOPortManager<T extends Present> extends TriggerManager {
   delReceiver(port: WritablePort<T>): void;
 }
 
-export abstract class IOPort<T extends Present> extends Port<T> {
+export abstract class IOPort<T> extends Port<T> {
   /**
    * Return the value set to this port. Return `Absent` if the connected
    * output did not have its value set at the current logical time.
@@ -198,11 +196,11 @@ export abstract class IOPort<T extends Present> extends Port<T> {
       this.port.receivers.delete(port);
     }
 
-    addReaction(reaction: Reaction<unknown>): void {
+    addReaction(reaction: Reaction<Variable[]>): void {
       this.port.reactions.add(reaction);
     }
 
-    delReaction(reaction: Reaction<unknown>): void {
+    delReaction(reaction: Reaction<Variable[]>): void {
       this.port.reactions.delete(reaction);
     }
   })(this);
@@ -212,6 +210,6 @@ export abstract class IOPort<T extends Present> extends Port<T> {
   }
 }
 
-export class OutPort<T extends Present> extends IOPort<T> {}
+export class OutPort<T> extends IOPort<T> {}
 
-export class InPort<T extends Present> extends IOPort<T> {}
+export class InPort<T> extends IOPort<T> {}

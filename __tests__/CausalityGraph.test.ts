@@ -1,18 +1,4 @@
-import {
-  Reactor,
-  App,
-  Triggers,
-  Args,
-  Timer,
-  OutPort,
-  InPort,
-  TimeUnit,
-  TimeValue,
-  Origin,
-  Log,
-  LogLevel,
-  Action
-} from "../src/core/internal";
+import {Reactor, App, OutPort, InPort} from "../src/core/internal";
 
 /* Set a port in startup to get thing going */
 class Starter extends Reactor {
@@ -23,8 +9,8 @@ class Starter extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Triggers(this.in),
-      new Args(this.in, this.writable(this.out)),
+      [this.in],
+      [this.in, this.writable(this.out)],
       function (this, __in, __out) {
         __out.set(4);
       }
@@ -40,8 +26,8 @@ class R1 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Triggers(this.in),
-      new Args(this.in, this.writable(this.out)),
+      [this.in],
+      [this.in, this.writable(this.out)],
       function (this, __in, __out) {
         const tmp = __in.get();
         let out = 0;
@@ -64,8 +50,8 @@ class R2 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Triggers(this.in),
-      new Args(this.in, this.writable(this.out)),
+      [this.in],
+      [this.in, this.writable(this.out)],
       function (this, __in, __out) {
         const tmp = __in.get();
         const out = 0;

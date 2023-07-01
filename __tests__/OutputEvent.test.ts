@@ -1,11 +1,4 @@
-import {
-  App,
-  Reactor,
-  Parameter,
-  Args,
-  Triggers,
-  TimeValue
-} from "../src/core/internal";
+import {App, Reactor, Parameter, TimeValue} from "../src/core/internal";
 import {SingleEvent} from "../src/share/SingleEvent";
 
 /**
@@ -18,8 +11,8 @@ export class OutputResponder extends Reactor {
   constructor(__parent__: Reactor) {
     super(__parent__);
     this.addReaction(
-      new Triggers(this.se.o),
-      new Args(),
+      [this.se.o],
+      [],
       /**
        * If this reaction is triggered by an output event from the contained reactor,
        * succeed the test.

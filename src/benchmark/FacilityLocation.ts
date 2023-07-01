@@ -9,12 +9,10 @@ import {
   Log,
   TimeValue,
   Origin,
-  Args,
   Parameter,
   OutPort,
   InPort,
   State,
-  Triggers,
   Action,
   Reactor,
   App
@@ -198,14 +196,14 @@ export class Producer extends Reactor {
       period
     );
     this.addReaction(
-      new Triggers(this.startup, this.nextCustomer),
-      new Args(
+      [this.startup, this.nextCustomer],
+      [
         this.schedulable(this.nextCustomer),
         this.numPoints,
         this.gridSize,
         this.writable(this.toConsumer),
         this.itemsProduced
-      ),
+      ],
       function (
         this,
         nextCustomer,
@@ -261,8 +259,8 @@ export class Summary extends Reactor {
     super(parent);
 
     this.addReaction(
-      new Triggers(this.fromRootQuadrant),
-      new Args(this.fromRootQuadrant),
+      [this.fromRootQuadrant],
+      [this.fromRootQuadrant],
       function (this, fromRootQuadrant) {
         const msgFromRootQuadrant = fromRootQuadrant.get();
         if (msgFromRootQuadrant != null) {
@@ -299,19 +297,19 @@ export class Accumulator extends Reactor {
     super(parent);
 
     this.addReaction(
-      new Triggers(
+      [
         this.fromFirstQuadrant,
         this.fromSecondQuadrant,
         this.fromThirdQuadrant,
         this.fromFourthQuadrant
-      ),
-      new Args(
+      ],
+      [
         this.fromFirstQuadrant,
         this.fromSecondQuadrant,
         this.fromThirdQuadrant,
         this.fromFourthQuadrant,
         this.writable(this.toNextAccumulator)
-      ),
+      ],
       function (
         this,
         fromFirstQuadrant,
@@ -460,8 +458,8 @@ export class Quadrant extends Reactor {
 
     // Startup reaction for initialization of state variables using given parameters.
     this.addReaction(
-      new Triggers(this.startup),
-      new Args(
+      [this.startup],
+      [
         // Parameters.
         this.boundary,
         this.initLocalFacilities,
@@ -476,7 +474,7 @@ export class Quadrant extends Reactor {
         this.supportCustomers,
         // Statie variable totalCost is initialized inside addCustomer().
         this.totalCost
-      ),
+      ],
       function (
         this,
         // Parameters.
@@ -513,8 +511,8 @@ export class Quadrant extends Reactor {
 
     // Main mutation reaction for QuadrantActor.process() of Akka implementation.
     this.addMutation(
-      new Triggers(this.fromProducer),
-      new Args(
+      [this.fromProducer],
+      [
         this.hasQuadrantProducer,
         this.positionRelativeToParent,
         this.boundary,
@@ -535,7 +533,7 @@ export class Quadrant extends Reactor {
         this.hasChildren,
         this.childrenBoundaries,
         this.totalCost
-      ),
+      ],
       function (
         this,
         hasQuadrantProducer,

@@ -2,8 +2,6 @@ import {Priority, Sortable, ReactionGraph} from "../src/core/internal";
 import {
   Reactor,
   App,
-  Triggers,
-  Args,
   InPort,
   SortablePrecedenceGraph,
   PrioritySet,
@@ -19,7 +17,7 @@ class R extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     for (let i = 0; i < 7; i++) {
-      this.addReaction(new Triggers(this.in), new Args(), function (this) {
+      this.addReaction([this.in], [], function (this) {
         throw new Error("Method not implemented.");
       });
     }
@@ -35,7 +33,7 @@ class SR extends Reactor {
 
   constructor(parent: Reactor | null) {
     super(parent);
-    this.addReaction(new Triggers(this.in), new Args(), function (this) {
+    this.addReaction([this.in], [], function (this) {
       throw new Error("Method not implemented.");
     });
   }

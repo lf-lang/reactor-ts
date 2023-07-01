@@ -1,18 +1,4 @@
-import {
-  Reactor,
-  App,
-  Triggers,
-  Args,
-  Timer,
-  OutPort,
-  InPort,
-  TimeUnit,
-  TimeValue,
-  Origin,
-  Log,
-  LogLevel,
-  Action
-} from "../src/core/internal";
+import {Reactor, App, OutPort, InPort} from "../src/core/internal";
 
 /* Set a port in startup to get thing going */
 class Starter extends Reactor {
@@ -21,8 +7,8 @@ class Starter extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Triggers(this.startup),
-      new Args(this.writable(this.out)),
+      [this.startup],
+      [this.writable(this.out)],
       function (this, __out) {
         __out.set(4);
       }
@@ -38,8 +24,8 @@ class R1 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Triggers(this.in),
-      new Args(this.in, this.writable(this.out)),
+      [this.in],
+      [this.in, this.writable(this.out)],
       function (this, __in, __out) {
         __out.set(4);
       }
@@ -55,8 +41,8 @@ class R2 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addMutation(
-      new Triggers(this.in),
-      new Args(this.in, this.out),
+      [this.in],
+      [this.in, this.out],
       function (this, __in, __out) {
         test("expect error to be thrown", () => {
           expect(() => {

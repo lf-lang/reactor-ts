@@ -3,8 +3,6 @@ import {
   State,
   Bank,
   App,
-  Triggers,
-  Args,
   Timer,
   OutPort,
   InPort,
@@ -22,8 +20,8 @@ class Starter extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Triggers(this.startup),
-      new Args(this.writable(this.out)),
+      [this.startup],
+      [this.writable(this.out)],
       function (this, __out) {
         __out.set(4);
       }
@@ -43,16 +41,16 @@ class R1 extends Reactor {
   constructor(parent: Reactor | null) {
     super(parent);
     this.addReaction(
-      new Triggers(this.in1),
-      new Args(this.in1, this.writable(this.out1)),
+      [this.in1],
+      [this.in1, this.writable(this.out1)],
       function (this, __in, __out) {
         __out.set(4);
       }
     );
 
     this.addMutation(
-      new Triggers(this.in1),
-      new Args(this.in1, this.in2, this.out2),
+      [this.in1],
+      [this.in1, this.in2, this.out2],
       function (this, __in1, __in2, __out2) {
         const R2 = new R1(this.getReactor());
         test("expect that disconnecting an existing connection will not result in an error being thrown", () => {

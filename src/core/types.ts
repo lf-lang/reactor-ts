@@ -1,4 +1,4 @@
-import type {Tag, TimeValue, Trigger} from "./internal";
+import type {Tag, TimeValue} from "./internal";
 
 /**
  * A variable can be read, written to, or scheduled. Variables may be passed to
@@ -76,39 +76,6 @@ export type Absent = undefined;
  * @see Reaction
  */
 export type ArgList<T> = T extends Variable[] ? T : never;
-
-export type ParmList<T> = T extends any[] ? T : never;
-
-/**
- * Type for data exchanged between ports.
- */
-export type Present =
-  | number
-  | bigint
-  | string
-  | boolean
-  | symbol
-  | object
-  | null;
-
-export class Args<T extends Variable[]> {
-  tuple: T;
-
-  constructor(...args: T) {
-    this.tuple = args;
-  }
-}
-
-export class Triggers {
-  list: Array<Trigger | Trigger[]>;
-
-  constructor(
-    trigger: Trigger | Trigger[],
-    ...triggers: Array<Trigger | Trigger[]>
-  ) {
-    this.list = triggers.concat(trigger);
-  }
-}
 
 export interface Sortable<P> {
   setPriority: (priority: P) => void;
