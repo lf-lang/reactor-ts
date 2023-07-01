@@ -197,12 +197,13 @@ export class Producer extends Reactor {
     );
     this.addReaction(
       [this.startup, this.nextCustomer],
-      [this.schedulable(this.nextCustomer),
+      [
+        this.schedulable(this.nextCustomer),
         this.numPoints,
         this.gridSize,
         this.writable(this.toConsumer),
-        this.itemsProduced]
-      ,
+        this.itemsProduced
+      ],
       function (
         this,
         nextCustomer,

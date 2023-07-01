@@ -1,10 +1,4 @@
-import {
-  App,
-  Timer,
-  OutPort,
-  TimeValue,
-  Log
-} from "../src/core/internal";
+import {App, Timer, OutPort, TimeValue, Log} from "../src/core/internal";
 
 class OutputGetTest extends App {
   o: OutPort<number> = new OutPort<number>(this);
@@ -19,24 +13,20 @@ class OutputGetTest extends App {
   ) {
     super(timeout, true, false, success, failure);
     Log.global.debug(">>>>>>>>----" + this.util);
-    this.addReaction(
-      [this.t],
-      [this.writable(this.o)],
-      function (this, o) {
-        Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>");
-        if (o.get() != null) {
-          throw new Error(
-            "Calling get on an output before it has been set does not return null"
-          );
-        }
-        o.set(5);
-        if (o.get() !== 5) {
-          throw new Error(
-            "Calling get on an output after it has been set does not return the set value"
-          );
-        }
+    this.addReaction([this.t], [this.writable(this.o)], function (this, o) {
+      Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>");
+      if (o.get() != null) {
+        throw new Error(
+          "Calling get on an output before it has been set does not return null"
+        );
       }
-    );
+      o.set(5);
+      if (o.get() !== 5) {
+        throw new Error(
+          "Calling get on an output after it has been set does not return the set value"
+        );
+      }
+    });
   }
 }
 

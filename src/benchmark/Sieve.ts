@@ -1,4 +1,5 @@
-import {type WritablePort,
+import {
+  type WritablePort,
   Parameter,
   InPort,
   OutPort,
@@ -25,10 +26,7 @@ class Ramp extends Reactor {
     this.next = new Action<number>(this, Origin.logical, period);
     this.addReaction(
       [this.startup, this.next],
-        [this.schedulable(this.next),
-        this.until,
-        this.writable(this.value)]
-      ,
+      [this.schedulable(this.next), this.until, this.writable(this.value)],
       function (this, next, until, value) {
         const n = next.get();
         if (n === undefined) {
@@ -65,12 +63,13 @@ class Filter extends Reactor {
     this.hasChild = new State(false);
     this.addMutation(
       [this.inp],
-      [this.inp,
-      this.writable(this.out),
-      this.startPrime,
-      this.hasChild,
-      this.localPrimes]
-      ,
+      [
+        this.inp,
+        this.writable(this.out),
+        this.startPrime,
+        this.hasChild,
+        this.localPrimes
+      ],
       function (this, inp, out, prime, hasChild, localPrimes) {
         const p = inp.get();
         if (p !== undefined) {

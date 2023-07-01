@@ -1,9 +1,4 @@
-import {
-  App,
-  Reactor,
-  Parameter,
-  TimeValue
-} from "../src/core/internal";
+import {App, Reactor, Parameter, TimeValue} from "../src/core/internal";
 import {SingleEvent} from "../src/share/SingleEvent";
 
 /**

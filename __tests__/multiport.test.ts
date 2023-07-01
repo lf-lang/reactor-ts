@@ -5,7 +5,7 @@ import {
   OutMultiPort,
   IOPort,
   OutPort,
-  InPort,
+  InPort
 } from "../src/core/internal";
 class TwoInTwoOut extends Reactor {
   inp = new InMultiPort<number>(this, 2);
@@ -47,30 +47,22 @@ class TwoInTwoOut extends Reactor {
       expect(this.inp.width()).toBe(2);
       expect(writer.width()).toBe(2);
     });
-    this.addReaction(
-      [this.inp],
-      [this.inp],
-      function (this, inp) {
-        test("check read values", () => {
-          expect(inp.channel(0).get()).toBe(42);
-          expect(inp.get(0)).toBe(42);
-          expect(inp.channel(1).get()).toBe(69);
-          expect(inp.get(1)).toBe(69);
-          expect(inp.values()).toEqual([42, 69]);
-        });
-        test("print input port names", () => {
-          expect(inp._getName()).toBe("inp");
-          expect(inp.channel(0)._getName()).toBe("inp[0]");
-          expect(inp.channel(1)._getName()).toBe("inp[1]");
-          expect(inp.channel(0)._getFullyQualifiedName()).toBe(
-            "myApp.y.inp[0]"
-          );
-          expect(inp.channel(1)._getFullyQualifiedName()).toBe(
-            "myApp.y.inp[1]"
-          );
-        });
-      }
-    );
+    this.addReaction([this.inp], [this.inp], function (this, inp) {
+      test("check read values", () => {
+        expect(inp.channel(0).get()).toBe(42);
+        expect(inp.get(0)).toBe(42);
+        expect(inp.channel(1).get()).toBe(69);
+        expect(inp.get(1)).toBe(69);
+        expect(inp.values()).toEqual([42, 69]);
+      });
+      test("print input port names", () => {
+        expect(inp._getName()).toBe("inp");
+        expect(inp.channel(0)._getName()).toBe("inp[0]");
+        expect(inp.channel(1)._getName()).toBe("inp[1]");
+        expect(inp.channel(0)._getFullyQualifiedName()).toBe("myApp.y.inp[0]");
+        expect(inp.channel(1)._getFullyQualifiedName()).toBe("myApp.y.inp[1]");
+      });
+    });
     this.addReaction(
       [this.startup],
       [this.allWritable(this.out)],

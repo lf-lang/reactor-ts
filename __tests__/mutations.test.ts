@@ -4,7 +4,7 @@ import {
   Timer,
   OutPort,
   InPort,
-  TimeValue,
+  TimeValue
 } from "../src/core/internal";
 
 class Source extends Reactor {
@@ -51,28 +51,24 @@ class Print extends Reactor {
 
   constructor(owner: Reactor) {
     super(owner);
-    this.addReaction(
-      [this.input],
-      [this.input],
-      function (this, input) {
-        const val = input.get();
-        console.log("Print reacting...");
-        if (val !== undefined) {
-          const expected = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-          for (let i = 0; i < 10; i++) {
-            if (val[i] != expected[i]) {
-              this.util.requestErrorStop(
-                "Expected: " + expected + " but got: " + val
-              );
-              return;
-            }
+    this.addReaction([this.input], [this.input], function (this, input) {
+      const val = input.get();
+      console.log("Print reacting...");
+      if (val !== undefined) {
+        const expected = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        for (let i = 0; i < 10; i++) {
+          if (val[i] != expected[i]) {
+            this.util.requestErrorStop(
+              "Expected: " + expected + " but got: " + val
+            );
+            return;
           }
-          console.log("Expected: " + expected + " and got: " + val);
-        } else {
-          this.util.requestErrorStop("Input undefined.");
         }
+        console.log("Expected: " + expected + " and got: " + val);
+      } else {
+        this.util.requestErrorStop("Input undefined.");
       }
-    );
+    });
   }
 }
 
@@ -86,24 +82,20 @@ class Computer extends Reactor {
   constructor(container: Reactor) {
     super(container);
     this._connect(this.in, this.adder.input);
-    this.addMutation(
-      [this.in],
-      [this.in],
-      function (this, src) {
-        const vals = src.get();
-        if (vals) {
-          let skip = true;
-          for (const id of vals.keys()) {
-            if (skip) {
-              skip = false;
-              continue;
-            }
-            const x = new AddOne(this.getReactor(), id);
-            this.connect(src, x.input);
+    this.addMutation([this.in], [this.in], function (this, src) {
+      const vals = src.get();
+      if (vals) {
+        let skip = true;
+        for (const id of vals.keys()) {
+          if (skip) {
+            skip = false;
+            continue;
           }
+          const x = new AddOne(this.getReactor(), id);
+          this.connect(src, x.input);
         }
       }
-    );
+    });
     this.addReaction(
       [this.adder.output],
       [this.adder.output, this.writable(this.out)],
@@ -142,24 +134,16 @@ class ZenoClock extends Reactor {
     super(owner);
     console.log("Creating ZenoClock " + iteration);
     this.tick = new Timer(this, 0, 0);
-    this.addReaction(
-      [this.tick],
-      [this.tick],
-      function (this, tick) {
-        console.log("Tick at " + this.util.getElapsedLogicalTime());
-      }
-    );
+    this.addReaction([this.tick], [this.tick], function (this, tick) {
+      console.log("Tick at " + this.util.getElapsedLogicalTime());
+    });
     this.addReaction([this.shutdown], [], function (this) {
       console.log("Shutdown reaction of reactor " + iteration);
     });
     if (iteration < 5) {
-      this.addMutation(
-        [this.tick],
-        [this.tick],
-        function (this, tick) {
-          new ZenoClock(this.getReactor(), iteration + 1);
-        }
-      );
+      this.addMutation([this.tick], [this.tick], function (this, tick) {
+        new ZenoClock(this.getReactor(), iteration + 1);
+      });
     } else {
       this.util.requestStop();
     }

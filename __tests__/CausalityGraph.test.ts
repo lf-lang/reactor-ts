@@ -1,9 +1,4 @@
-import {
-  Reactor,
-  App,
-  OutPort,
-  InPort,
-} from "../src/core/internal";
+import {Reactor, App, OutPort, InPort} from "../src/core/internal";
 
 /* Set a port in startup to get thing going */
 class Starter extends Reactor {

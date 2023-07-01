@@ -788,9 +788,7 @@ export abstract class Reactor extends Component {
       Log.global.warn("Deadline violation occurred!");
     }
   ): void {
-    const calleePorts = trigs.filter(
-      (trig) => trig instanceof CalleePort
-    );
+    const calleePorts = trigs.filter((trig) => trig instanceof CalleePort);
 
     if (calleePorts.length > 0) {
       // This is a procedure.
