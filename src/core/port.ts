@@ -83,12 +83,7 @@ export abstract class WritableMultiPort<T> implements MultiReadWrite<T> {
  * Interface for a writable multi port, intended as a wrapper for a multi port.
  */
 interface IOPortManager<T> extends TriggerManager {
-  // TODO (axmmisaka): Function property is better in terms of type checking
-  // as tsc will check additional info; yet that additional check will cause massive issues
-  // and therefore this linter rule is disabled and method signature is used.
-  // However, this indicates that there are typing issues and needs to be addressed.
-  // eslint-disable-next-line @typescript-eslint/method-signature-style
-  addReceiver(port: WritablePort<T>): void;
+  addReceiver: (port: WritablePort<T>) => void;
   delReceiver: (port: WritablePort<T>) => void;
 }
 
