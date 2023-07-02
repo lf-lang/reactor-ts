@@ -7,9 +7,7 @@ import {
   InPort,
   TimeValue,
   OutMultiPort,
-  Port,
-  MultiPort,
-  IOPort
+  Port
 } from "../src/core/internal";
 
 class Periodic extends Reactor {
@@ -64,8 +62,8 @@ describe("Check bank index", () => {
         );
       });
 
-      const allWriter = this.d.allWritable(this.d.port((member) => member.o as MultiPort<unknown>));
-      const writer = this.b.writable(this.b.port((member) => member.o as IOPort<unknown>));
+      const allWriter = this.d.allWritable(this.d.port((member) => member.o));
+      const writer = this.b.writable(this.b.port((member) => member.o));
       test("check multiport width", () => {
         expect(allWriter[0].width()).toBe(2);
       });
@@ -86,7 +84,7 @@ describe("Check bank index", () => {
       it("generic bank", () => {
         this.c.all().forEach((r) => expect(typeof r.input == "number"));
       });
-      var foo = this.b.port((member) => member.o as Port<unknown>);
+      var foo = this.b.port((member) => member.o);
       var bar = [this.b.get(0).o, this.b.get(1).o, this.b.get(2).o];
       it("select port", () => {
         for (let i = 0; i < foo.length; i++) {
