@@ -89,8 +89,7 @@ interface IOPortManager<T> extends TriggerManager {
   // However, this indicates that there are typing issues and needs to be addressed.
   // eslint-disable-next-line @typescript-eslint/method-signature-style
   addReceiver(port: WritablePort<T>): void;
-  // eslint-disable-next-line @typescript-eslint/method-signature-style
-  delReceiver(port: WritablePort<T>): void;
+  delReceiver: (port: WritablePort<T>) => void;
 }
 
 export abstract class IOPort<T> extends Port<T> {

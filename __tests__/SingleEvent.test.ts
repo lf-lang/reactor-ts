@@ -3,7 +3,7 @@ import {SingleEvent} from "../src/share/SingleEvent";
 import {Logger} from "../src/share/Logger";
 
 class SETest extends App {
-  singleEvent: SingleEvent<unknown>;
+  singleEvent: SingleEvent<string>;
 
   logger: Logger;
 
