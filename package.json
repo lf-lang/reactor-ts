@@ -28,7 +28,7 @@
         "jest": "^27.5.1",
         "prettier": "^2.8.8",
         "ts-jest": "^27.0.3",
-        "typedoc": "^0.23.26"
+        "typedoc": "^0.24.8"
     },
     "scripts": {
         "build": "npx tsc",
