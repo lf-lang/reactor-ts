@@ -1093,14 +1093,14 @@ export abstract class Reactor extends Component {
    */
   public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean {
     // Immediate rule out trivial self loops.
-    if (src as unknown as IOPort<R> === dst) {
+    if (src === dst) {
       throw Error("Source port and destination port are the same.");
     }
 
     // Check the race condition
     //   - between reactors and reactions (NOTE: check also needs to happen
     //     in addReaction)
-    const deps = this._dependencyGraph.getUpstreamNeighbors(dst as IOPort<unknown>); // FIXME this will change with multiplex ports
+    const deps = this._dependencyGraph.getUpstreamNeighbors(dst); // FIXME this will change with multiplex ports
     if (deps !== undefined && deps.size > 0) {
       throw Error("Destination port is already occupied.");
     }
@@ -1113,11 +1113,11 @@ export abstract class Reactor extends Component {
       // console.log("IOPort")
       // Rule out write conflicts.
       //   - (between reactors)
-      if (this._dependencyGraph.getDownstreamNeighbors(dst as IOPort<unknown>).size > 0) {
+      if (this._dependencyGraph.getDownstreamNeighbors(dst).size > 0) {
         return false;
       }
 
-      return this._isInScope(src as IOPort<unknown>, dst as IOPort<unknown>);
+      return this._isInScope(src, dst);
     } else {
       // Attempt to make a connection while executing.
       // Check the local dependency graph to figure out whether this change
@@ -1144,7 +1144,7 @@ export abstract class Reactor extends Component {
       }
 
       // Add the new edge.
-      graph.addEdge(src as IOPort<unknown>, dst as IOPort<unknown>);
+      graph.addEdge(src, dst);
 
       // 1) check for loops
       const hasCycle = graph.hasCycle();
@@ -1219,7 +1219,7 @@ export abstract class Reactor extends Component {
   ): void {
     Log.debug(this, () => `connecting ${src} and ${dst}`);
     // Add dependency implied by connection to local graph.
-    this._dependencyGraph.addEdge(src as IOPort<unknown>, dst as IOPort<unknown>);
+    this._dependencyGraph.addEdge(src, dst);
     // Register receiver for value propagation.
     const writer = dst.asWritable(this._getKey(dst));
     src.getManager(this._getKey(src)).addReceiver(writer as unknown as WritablePort<S>);
@@ -1306,7 +1306,7 @@ export abstract class Reactor extends Component {
     }
 
     for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
-      if (!this.canConnect(leftPorts[i] as IOPort<unknown>, rightPorts[i] as IOPort<unknown>)) {
+      if (!this.canConnect(leftPorts[i], rightPorts[i])) {
         throw new Error(
           `ERROR connecting ${leftPorts[i]} 
                     to ${rightPorts[i]} 
@@ -1316,7 +1316,7 @@ export abstract class Reactor extends Component {
       }
     }
     for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
-      this._uncheckedConnect(leftPorts[i] as IOPort<unknown>, rightPorts[i] as IOPort<unknown>);
+      this._uncheckedConnect(leftPorts[i], rightPorts[i]);
     }
   }
 
@@ -1335,7 +1335,7 @@ export abstract class Reactor extends Component {
       const callerManager = src.getManager(this._getKey(src));
       const container = callerManager.getContainer();
       const callers = new Set<Reaction<Variable[]>>();
-      container._dependencyGraph.getDownstreamNeighbors(src as CallerPort<unknown, unknown>).forEach((dep) => {
+      container._dependencyGraph.getDownstreamNeighbors(src).forEach((dep) => {
         if (dep instanceof Reaction) {
           callers.add(dep);
         }
@@ -1350,7 +1350,7 @@ export abstract class Reactor extends Component {
         if (first != null) {
           this._dependencyGraph.addEdge(lastCaller, first);
         } else {
-          this._dependencyGraph.addEdge(dst as CalleePort<unknown, unknown>, src as CallerPort<unknown, unknown>);
+          this._dependencyGraph.addEdge(dst, src);
         }
         if (last != null) calleeManager.setLastCaller(last);
       } else {
@@ -1457,10 +1457,10 @@ export abstract class Reactor extends Component {
    */
   protected  _disconnect<R, S extends R>(src: IOPort<S>, dst?: IOPort<R>): void {
     if (
-      (!this._runtime.isRunning() && this._isInScope(src as IOPort<unknown>, dst as IOPort<unknown>)) ||
+      (!this._runtime.isRunning() && this._isInScope(src, dst)) ||
       this._runtime.isRunning()
     ) {
-      this._uncheckedDisconnect(src as IOPort<unknown>, dst as IOPort<unknown>);
+      this._uncheckedDisconnect(src, dst);
     } else {
       throw new Error(`ERROR disconnecting ${src} to ${dst}`);
     }
