@@ -83,8 +83,11 @@ export abstract class WritableMultiPort<T> implements MultiReadWrite<T> {
  * Interface for a writable multi port, intended as a wrapper for a multi port.
  */
 interface IOPortManager<T> extends TriggerManager {
-  addReceiver: (port: WritablePort<T>) => void;
-  delReceiver: (port: WritablePort<T>) => void;
+  // See https://github.com/lf-lang/reactor-ts/issues/184
+  // eslint-disable-next-line @typescript-eslint/method-signature-style 
+  addReceiver(port: WritablePort<T>): void;
+  // eslint-disable-next-line @typescript-eslint/method-signature-style 
+  delReceiver(port: WritablePort<T>): void;
 }
 
 export abstract class IOPort<T> extends Port<T> {
