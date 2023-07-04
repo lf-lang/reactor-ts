@@ -1222,7 +1222,9 @@ export abstract class Reactor extends Component {
     this._dependencyGraph.addEdge(src, dst);
     // Register receiver for value propagation.
     const writer = dst.asWritable(this._getKey(dst));
-    src.getManager(this._getKey(src)).addReceiver(writer as unknown as WritablePort<S>);
+    src
+      .getManager(this._getKey(src))
+      .addReceiver(writer as unknown as WritablePort<S>);
     const val = src.get();
     if (this._runtime.isRunning() && val !== undefined) {
       writer.set(val);
@@ -1322,7 +1324,8 @@ export abstract class Reactor extends Component {
 
   protected _connectCall<A extends T, R, T, S extends R>(
     src: CallerPort<A, R>,
-    dst: CalleePort<T, S>): void {
+    dst: CalleePort<T, S>
+  ): void {
     if (this.canConnectCall(src, dst)) {
       Log.debug(this, () => `connecting ${src} and ${dst}`);
       // Treat connections between callers and callees separately.
@@ -1455,7 +1458,7 @@ export abstract class Reactor extends Component {
    * @param src Source port of connection to be disconnected.
    * @param dst Destination port of connection to be disconnected. If undefined, disconnect all connections from the source port.
    */
-  protected  _disconnect<R, S extends R>(src: IOPort<S>, dst?: IOPort<R>): void {
+  protected _disconnect<R, S extends R>(src: IOPort<S>, dst?: IOPort<R>): void {
     if (
       (!this._runtime.isRunning() && this._isInScope(src, dst)) ||
       this._runtime.isRunning()
@@ -1480,9 +1483,7 @@ export abstract class Reactor extends Component {
       for (const node of nodes) {
         if (node instanceof IOPort) {
           const writer = node.asWritable(this._getKey(node));
-          src
-            .getManager(this._getKey(src))
-            .delReceiver(writer);
+          src.getManager(this._getKey(src)).delReceiver(writer);
           this._dependencyGraph.removeEdge(src, node);
         }
       }
