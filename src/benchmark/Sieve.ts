@@ -1,3 +1,4 @@
+import { writeSync } from "fs";
 import {
   type WritablePort,
   Parameter,
@@ -11,6 +12,8 @@ import {
   Origin,
   Log
 } from "../core/internal";
+
+import WebSocket, { WebSocketServer } from "ws";
 
 Log.global.level = Log.levels.INFO;
 class Ramp extends Reactor {
@@ -87,6 +90,7 @@ class Filter extends Reactor {
             if (size < numberOfPrimes) {
               seen.push(p);
               console.log(`Found new prime number ${p}`);
+              printSieveGraph();
             } else {
               // Potential prime found.
               if (!hasChild.get()) {
@@ -127,11 +131,25 @@ class Sieve extends App {
     fail?: () => void
   ) {
     super(timeout, keepAlive, fast, success, fail);
-    this.source = new Ramp(this, 100000, TimeValue.nsec(1));
-    this.filter = new Filter(this, 2, 1000);
+    this.source = new Ramp(this, 100, TimeValue.nsec(1));
+    this.filter = new Filter(this, 2, 10);
     this._connect(this.source.value, this.filter.inp);
   }
 }
 
-const sieve = new Sieve("Sieve");
-sieve._start();
+const sieve = new Sieve("Sieve", undefined, false, false, () => {wsclient.close()});
+const wsclient = new WebSocket("ws://localhost:42069/receive")
+wsclient.on("open", () => { wsclient.send("connected"); });
+
+const printSieveGraph = (): void => {
+  const graph = sieve._getPrecedenceGraph();
+  const str = graph.toMermaidString();
+  const time = sieve.util.getElapsedLogicalTime();
+  console.log(time);
+  wsclient.send(JSON.stringify({graph: str, time}));
+}
+
+wsclient.onopen = () => {
+  sieve._start();
+}
+//sieve._start();

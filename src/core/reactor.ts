@@ -918,7 +918,7 @@ export abstract class Reactor extends Component {
    *  - RPCs occur in a deterministic order.
    * @param depth The depth of recursion.
    */
-  protected _getPrecedenceGraph(
+  public _getPrecedenceGraph(
     depth = -1
   ): PrecedenceGraph<Port<unknown> | Reaction<Variable[]>> {
     const graph = new PrecedenceGraph<Port<unknown> | Reaction<Variable[]>>();
@@ -1836,7 +1836,7 @@ export class App extends Reactor {
    * Inner class that provides access to utilities that are safe to expose to
    * reaction code.
    */
-  protected util: UtilityFunctions = new (class implements UtilityFunctions {
+  public util: UtilityFunctions = new (class implements UtilityFunctions {
     constructor(private readonly app: App) {}
 
     public requestStop(): void {
