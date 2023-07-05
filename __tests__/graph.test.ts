@@ -1,7 +1,7 @@
 import {PrioritySet, PrioritySetElement} from "../src/core/queue";
 import type {Sortable} from "../src/core/types";
 import {PrecedenceGraph, SortablePrecedenceGraph} from "../src/core/graph";
-import {StringUtil} from "../src/core/strings";
+
 /**
  * The tests below test the functionality of the hasCycle() utility function on various
  * dependency graphs, in combination with various graph manipulation utilities
