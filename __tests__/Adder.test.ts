@@ -29,7 +29,7 @@ class MyAdder extends Adder {
     }
   }
 
-  public getProxy(port: IOPort<unknown>) {
+  public getProxy<T>(port: IOPort<T>) {
     return this.writable(port);
   }
 }

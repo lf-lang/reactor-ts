@@ -1,6 +1,7 @@
 import type {
   IOPort,
   MultiPort,
+  ParmList,
   Port,
   Reactor,
   WritableMultiPort,
@@ -12,14 +13,8 @@ import type {
  * are of type `ReactorArgs`.
  */
 export type ReactorClass<T extends Reactor, S> = new (
-  ...args: ReactorArgs<S>
+  ...parameters: ParmList<S>
 ) => T;
-
-/**
- * Type that describes a tuple of arguments passed into the constructor
- * of a reactor class.
- */
-export type ReactorArgs<T> = T extends any[] ? T : never;
 
 /**
  * A bank of reactor instances.
@@ -40,18 +35,18 @@ export class Bank<T extends Reactor, S> {
    * Construct a new bank of given width on the basis of a given reactor class and a list of arguments.
    * @param width the width of the bank
    * @param cls the class to construct reactor instances of that will populate the bank
-   * @param args the arguments to pass into the constructor of the given reactor class
+   * @param parameters the arguments to pass into the constructor of the given reactor class
    */
   constructor(
     container: Reactor,
     width: number,
     cls: ReactorClass<T, S>,
-    ...args: ReactorArgs<S>
+    ...parameters: ParmList<S>
   ) {
     for (let i = 0; i < width; i++) {
       Bank.initializationMap.set(container, i);
       console.log(`Setting initializing to ${i}`);
-      this.members.push(Reflect.construct(cls, args, cls));
+      this.members.push(Reflect.construct(cls, parameters, cls));
     }
     Bank.initializationMap.delete(container);
   }
