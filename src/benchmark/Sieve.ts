@@ -90,7 +90,6 @@ class Filter extends Reactor {
             if (size < numberOfPrimes) {
               seen.push(p);
               console.log(`Found new prime number ${p}`);
-              printSieveGraph();
             } else {
               // Potential prime found.
               if (!hasChild.get()) {
@@ -102,6 +101,7 @@ class Filter extends Reactor {
                 // FIXME: weird hack. Maybe just accept writable ports as well?
                 const port = (out as unknown as WritablePort<number>).getPort();
                 this.connect(port, n.inp);
+                printSieveGraph();
                 // FIXME: this updates the dependency graph, but it doesn't redo the topological sort
                 // For a pipeline like this one, it is not necessary, but in general it is.
                 // Can we avoid redoing the entire sort?
@@ -131,8 +131,8 @@ class Sieve extends App {
     fail?: () => void
   ) {
     super(timeout, keepAlive, fast, success, fail);
-    this.source = new Ramp(this, 100, TimeValue.nsec(1));
-    this.filter = new Filter(this, 2, 10);
+    this.source = new Ramp(this, 10000, TimeValue.nsec(1));
+    this.filter = new Filter(this, 2, 100);
     this._connect(this.source.value, this.filter.inp);
   }
 }
@@ -145,11 +145,13 @@ const printSieveGraph = (): void => {
   const graph = sieve._getPrecedenceGraph();
   const str = graph.toMermaidString();
   const time = sieve.util.getElapsedLogicalTime();
+  console.log(str);
   console.log(time);
   wsclient.send(JSON.stringify({graph: str, time}));
 }
 
 wsclient.onopen = () => {
+  printSieveGraph();
   sieve._start();
 }
 //sieve._start();
