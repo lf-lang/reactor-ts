@@ -441,7 +441,7 @@ export abstract class Reactor extends Component {
       }
     }
 
-    public disconnect(src: IOPort<unknown>, dst?: IOPort<unknown>): void {
+    public disconnect<R, S extends R>(src: IOPort<S>, dst?: IOPort<R>): void {
       if (
         src instanceof IOPort &&
         (dst === undefined || dst instanceof IOPort)
@@ -578,7 +578,6 @@ export abstract class Reactor extends Component {
     return action.asSchedulable(this._getKey(action));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _recordDeps<T extends Variable[]>(reaction: Reaction<T>): void {
     // Add a dependency on the previous reaction or mutation, if it exists.
     const prev = this._getLastReactionOrMutation();
@@ -1223,7 +1222,9 @@ export abstract class Reactor extends Component {
     this._dependencyGraph.addEdge(src, dst);
     // Register receiver for value propagation.
     const writer = dst.asWritable(this._getKey(dst));
-    src.getManager(this._getKey(src)).addReceiver(writer as WritablePort<S>);
+    src
+      .getManager(this._getKey(src))
+      .addReceiver(writer as unknown as WritablePort<S>);
     const val = src.get();
     if (this._runtime.isRunning() && val !== undefined) {
       writer.set(val);
@@ -1468,23 +1469,21 @@ export abstract class Reactor extends Component {
     }
   }
 
-  private _uncheckedDisconnect<R, S extends R>(
-    src: IOPort<S>,
-    dst?: IOPort<R>
+  private _uncheckedDisconnect(
+    src: IOPort<unknown>,
+    dst?: IOPort<unknown>
   ): void {
     Log.debug(this, () => `disconnecting ${src} and ${dst}`);
     if (dst instanceof IOPort) {
       const writer = dst.asWritable(this._getKey(dst));
-      src.getManager(this._getKey(src)).delReceiver(writer as WritablePort<S>);
+      src.getManager(this._getKey(src)).delReceiver(writer);
       this._dependencyGraph.removeEdge(src, dst);
     } else {
       const nodes = this._dependencyGraph.getDownstreamNeighbors(src);
       for (const node of nodes) {
         if (node instanceof IOPort) {
           const writer = node.asWritable(this._getKey(node));
-          src
-            .getManager(this._getKey(src))
-            .delReceiver(writer as WritablePort<S>);
+          src.getManager(this._getKey(src)).delReceiver(writer);
           this._dependencyGraph.removeEdge(src, node);
         }
       }
@@ -1619,8 +1618,7 @@ export class CallerPort<A, R> extends Port<R> implements Write<A>, Read<R> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface CalleeManager<T> extends TriggerManager {
+interface CalleeManager extends TriggerManager {
   setLastCaller: (reaction: Reaction<Variable[]> | undefined) => void;
   getLastCaller: () => Reaction<Variable[]> | undefined;
   addReaction: (procedure: Procedure<Variable[]>) => void;
@@ -1664,14 +1662,14 @@ export class CalleePort<A, R> extends Port<A> implements Read<A>, Write<R> {
    *
    * @param key
    */
-  public getManager(key: symbol | undefined): CalleeManager<A> {
+  public getManager(key: symbol | undefined): CalleeManager {
     if (this._key === key) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");
   }
 
-  protected manager: CalleeManager<A> = new (class implements CalleeManager<A> {
+  protected manager: CalleeManager = new (class implements CalleeManager {
     constructor(private readonly port: CalleePort<A, unknown>) {}
 
     getContainer(): Reactor {
@@ -1783,7 +1781,7 @@ export interface MutationSandbox extends ReactionSandbox {
     dst: CalleePort<T, S> | IOPort<R>
   ) => void;
 
-  disconnect: (src: IOPort<unknown>, dst?: IOPort<unknown>) => void;
+  disconnect: <R, S extends R>(src: IOPort<S>, dst?: IOPort<R>) => void;
 
   delete: (reactor: Reactor) => void;
 

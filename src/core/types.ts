@@ -77,6 +77,12 @@ export type Absent = undefined;
  */
 export type ArgList<T> = T extends Variable[] ? T : never;
 
+/**
+ * Type that describes a tuple of parameters passed into the constructor
+ * of a reactor class.
+ */
+export type ParmList<T> = T extends unknown[] ? T : never;
+
 export interface Sortable<P> {
   setPriority: (priority: P) => void;
 
