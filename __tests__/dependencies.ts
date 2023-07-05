@@ -1,4 +1,4 @@
-import {Priority, Sortable, ReactionGraph} from "../src/core/internal";
+import {Priority, Sortable, ReactionGraph, dontIndent} from "../src/core/internal";
 import {
   Reactor,
   App,
@@ -6,7 +6,6 @@ import {
   SortablePrecedenceGraph,
   PrioritySet,
   Log,
-  StringUtil
 } from "../src/core/internal";
 
 // Log.setGlobalLevel(Log.levels.DEBUG);
@@ -94,7 +93,7 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(7); // E
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`graph
+      dontIndent`graph
         0["app.R[R3]"]
         1["app.R[R5]"]
         2["app.R[R4]"]
@@ -126,7 +125,7 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(6); // E
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`graph
+      dontIndent`graph
       0["app.R[R3]"]
       1["app.R[R5]"]
       2["app.R[R4]"]
@@ -148,7 +147,7 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[1]).toEqual(3); // E
     Log.global.debug(graph.toString());
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`graph
+      dontIndent`graph
         0["app.R[R3]"]
         1["app.R[R5]"]
         2["app.R[R4]"]
@@ -168,7 +167,7 @@ describe("Manually constructed precedence graphs", () => {
     expect(graph.size()[1]).toEqual(4); // E
     Log.global.debug(graph.toString());
     expect(graph.toString()).toBe(
-      StringUtil.dontIndent`graph
+      dontIndent`graph
         0["app.R[R3]"]
         1["app.R[R5]"]
         2["app.R[R4]"]

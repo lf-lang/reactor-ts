@@ -1,4 +1,4 @@
-import {Reactor, App, InPort, OutPort, StringUtil} from "../src/core/internal";
+import {Reactor, App, InPort, OutPort, dontIndent} from "../src/core/internal";
 
 class MyActor extends Reactor {
   a = new InPort<{t: number}>(this);
@@ -18,7 +18,7 @@ class MyActor2 extends Reactor {
 
 describe("Test names for contained reactors", () => {
   class myApp extends App {
-    port: InPort<any> = new InPort<any>(this);
+    port: InPort<unknown> = new InPort(this);
 
     x = new MyActor(this);
 
@@ -68,7 +68,7 @@ describe("Test names for contained reactors", () => {
 
       it("graph before connect", () => {
         expect(this._getPrecedenceGraph().toString()).toBe(
-          StringUtil.dontIndent`graph
+          dontIndent`graph
           0["myApp.x[M0]"]
           1["myApp[M0]"]
           2["myApp.y[M0]"]
@@ -91,7 +91,7 @@ describe("Test names for contained reactors", () => {
 
       it("graph after connect and before disconnect", () => {
         expect(this._getPrecedenceGraph().toString()).toBe(
-          StringUtil.dontIndent`graph
+          dontIndent`graph
             0["myApp.x.a"]
             1["myApp.y.b"]
             2["myApp.x[M0]"]
@@ -106,7 +106,7 @@ describe("Test names for contained reactors", () => {
       it("graph after disconnect", () => {
         this._disconnect(this.y.b, this.x.a);
         expect(this._getPrecedenceGraph().toString()).toBe(
-          StringUtil.dontIndent`graph
+          dontIndent`graph
             0["myApp.x.a"]
             1["myApp.y.b"]
             2["myApp.x[M0]"]

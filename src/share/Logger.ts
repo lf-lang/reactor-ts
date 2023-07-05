@@ -24,7 +24,7 @@ function print(
 }
 
 export class Logger extends Reactor {
-  i = new InPort(this);
+  i = new InPort<string>(this);
 
   constructor(parent: Reactor, expected: unknown) {
     super(parent);
