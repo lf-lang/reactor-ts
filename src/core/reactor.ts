@@ -768,13 +768,14 @@ export abstract class Reactor extends Component {
    * Add a reaction to this reactor. Each newly added reaction will acquire a
    * dependency either on the previously added reaction, or on the last added
    * mutation (in case no reactions had been added prior to this one). A
-   * reaction is specified by a list of triggers, a list of arguments, a react
-   * function, an optional deadline, and an optional late function (which
-   * represents the reaction body of the deadline). All triggers a reaction
-   * needs access must be included in the arguments.
+   * reaction is specified by a list of triggers, a list of arguments, a level,
+   * a react function, an optional deadline, and an optional late function 
+   * (which represents the reaction body of the deadline). All triggers a 
+   * reaction needs access must be included in the arguments.
    *
    * @param trigs
    * @param args
+   * @param level
    * @param react
    * @param deadline
    * @param late
@@ -782,6 +783,7 @@ export abstract class Reactor extends Component {
   protected addReaction<T extends Variable[]>(
     trigs: Variable[],
     args: [...ArgList<T>],
+    level: Number,
     react: (this: ReactionSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
@@ -2282,9 +2284,9 @@ export class App extends Reactor {
     Log.global.debug("Finished handling all events at current time.");
   }
 
-  protected enqueueNetworkOutputControlReactions(): void {
-    return undefined;
-  }
+  // protected enqueueNetworkOutputControlReactions(): void {
+  //   return undefined;
+  // }
 
   /**
    * Handle the next events on the event queue.
@@ -2305,6 +2307,7 @@ export class App extends Reactor {
    * stimuli.
    */
   private _next(): void {
+    // TODO: Check the MLAA and execute only allowed reactions
     let nextEvent = this._eventQ.peek();
     if (nextEvent != null) {
       // Check whether the next event can be handled, or not quite yet.
@@ -2382,8 +2385,8 @@ export class App extends Reactor {
         nextEvent != null &&
         this._currentTag.isSimultaneousWith(nextEvent.tag)
       );
-      // enqueue networkOutputControlReactions
-      this.enqueueNetworkOutputControlReactions();
+      // // enqueue networkOutputControlReactions
+      // this.enqueueNetworkOutputControlReactions();
 
       // React to all the events loaded onto the reaction queue.
       this._react();

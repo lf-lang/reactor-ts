@@ -63,6 +63,7 @@ export class Reaction<T extends Variable[]>
     private readonly sandbox: ReactionSandbox,
     readonly trigs: Variable[],
     readonly args: [...ArgList<T>],
+    readonly level: Number,
     private readonly react: (...args: ArgList<T>) => void,
     private deadline?: TimeValue,
     private readonly late: (...args: ArgList<T>) => void = () => {
@@ -109,6 +110,14 @@ export class Reaction<T extends Variable[]>
     } else {
       return false;
     }
+  }
+
+  /**
+   * Return the level of this reaction.
+   * @returns The level of this reaction
+   */
+  getLevel(): Number {
+    return this.level;
   }
 
   /**

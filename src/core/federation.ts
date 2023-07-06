@@ -1209,6 +1209,8 @@ export class FederatedApp extends App {
     }
   }
 
+  //TODO: Add functions for updating MLAA and port statuses
+
   /**
    * Return whether the next event can be handled, or handling the next event
    * has to be postponed to a later time.
@@ -1276,27 +1278,27 @@ export class FederatedApp extends App {
     this.sendRTILogicalTimeComplete(currentTime);
   }
 
-  /**
-   * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
-   * message to downstream federates if a given network output port is not present.
-   */
-  protected enqueueNetworkOutputControlReactions(): void {
-    if (
-      this.downstreamFedIDs.length === 0 ||
-      this.outputControlReactionTriggers.length === 0
-    ) {
-      return;
-      // This federate is not connected to any downstream federates via a
-      // logical connection. No need to trigger network output control
-      // reactions.
-    }
-    const trigger = this.outputControlReactionTriggers[0];
-    const event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
-    Log.debug(this, () => {
-      return "Inserting network output control reaction on reaction queue.";
-    });
-    trigger.update(event);
-  }
+  // /**
+  //  * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
+  //  * message to downstream federates if a given network output port is not present.
+  //  */
+  // protected enqueueNetworkOutputControlReactions(): void {
+  //   if (
+  //     this.downstreamFedIDs.length === 0 ||
+  //     this.outputControlReactionTriggers.length === 0
+  //   ) {
+  //     return;
+  //     // This federate is not connected to any downstream federates via a
+  //     // logical connection. No need to trigger network output control
+  //     // reactions.
+  //   }
+  //   const trigger = this.outputControlReactionTriggers[0];
+  //   const event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
+  //   Log.debug(this, () => {
+  //     return "Inserting network output control reaction on reaction queue.";
+  //   });
+  //   trigger.update(event);
+  // }
 
   protected _finish(): void {
     this.sendRTILogicalTimeComplete(this.util.getCurrentTag());
