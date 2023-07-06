@@ -42,7 +42,8 @@ import {
   Startup,
   Shutdown,
   WritableMultiPort,
-  Dummy
+  Dummy,
+  FederatePortAction
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
@@ -379,7 +380,7 @@ export abstract class Reactor extends Component {
     if (component._isContainedBy(this) || this._key === key) {
       return this._keyChain.get(component);
     } else if (
-      !(component instanceof Action) &&
+      (!(component instanceof Action) || component instanceof FederatePortAction) &&
       component._isContainedByContainerOf(this)
     ) {
       const owner = component.getContainer();
@@ -1202,7 +1203,7 @@ export abstract class Reactor extends Component {
         }
       } else {
         // IN to OUT
-        return false;
+        return true;
       }
     }
   }
