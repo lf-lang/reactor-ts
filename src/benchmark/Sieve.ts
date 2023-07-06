@@ -1,4 +1,10 @@
-import { writeSync } from "fs";
+/**
+ * How to use:
+ * First run `ts-node --files src/utils/wsproxy.ts` which proxies from this file to the browser
+ * Then run cd wss && python3 -m http.server, then access it; don't do it locally unless LF is also being run on localhost
+ * Finally run `ts-node --files src/benchmark/Sieve.ts`
+ */
+
 import {
   type WritablePort,
   Parameter,
