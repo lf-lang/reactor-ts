@@ -381,6 +381,8 @@ export abstract class Reactor extends Component {
       return this._keyChain.get(component);
     } else if (
       (!(component instanceof Action) || component instanceof FederatePortAction) &&
+      //FIXME: Instead of modifying _getKey function, make new function named 
+      //_getFederatePortActionKey that can return federate port action keys of owned reactors 
       component._isContainedByContainerOf(this)
     ) {
       const owner = component.getContainer();
@@ -783,8 +785,8 @@ export abstract class Reactor extends Component {
   protected addReaction<T extends Variable[]>(
     trigs: Variable[],
     args: [...ArgList<T>],
-    level: Number,
     react: (this: ReactionSandbox, ...args: ArgList<T>) => void,
+    level?: Number,
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
@@ -1205,6 +1207,7 @@ export abstract class Reactor extends Component {
         }
       } else {
         // IN to OUT
+        // FIXME: Is direct feedtrough enabled?
         return true;
       }
     }
@@ -2669,7 +2672,7 @@ export class App extends Reactor {
     Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
     // enqueue networkOutputControlReactions
-    this.enqueueNetworkOutputControlReactions();
+    // this.enqueueNetworkOutputControlReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.
     this._react();

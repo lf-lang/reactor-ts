@@ -1648,6 +1648,7 @@ export class FederatedApp extends App {
 
         if (destPortAction.origin === Origin.logical) {
           destPortAction
+            //FIXME: Use _getFederatedPortActionKey in federated execution. See reactor.ts#384
             .asSchedulable(this._getKey(destPortAction))
             .schedule(0, value, tag);
         } else {

@@ -63,8 +63,8 @@ export class Reaction<T extends Variable[]>
     private readonly sandbox: ReactionSandbox,
     readonly trigs: Variable[],
     readonly args: [...ArgList<T>],
-    readonly level: Number,
     private readonly react: (...args: ArgList<T>) => void,
+    readonly level?: Number,
     private deadline?: TimeValue,
     private readonly late: (...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
