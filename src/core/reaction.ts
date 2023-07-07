@@ -116,8 +116,10 @@ export class Reaction<T extends Variable[]>
    * Return the level of this reaction.
    * @returns The level of this reaction
    */
-  getLevel(): Number {
-    return this.level;
+  getLevel(): Number | undefined {
+    if (this.level !== undefined) {
+      return this.level;
+    }
   }
 
   /**
