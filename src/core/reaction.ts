@@ -64,7 +64,6 @@ export class Reaction<T extends Variable[]>
     readonly trigs: Variable[],
     readonly args: [...ArgList<T>],
     private readonly react: (...args: ArgList<T>) => void,
-    readonly level?: Number,
     private deadline?: TimeValue,
     private readonly late: (...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
@@ -109,16 +108,6 @@ export class Reaction<T extends Variable[]>
       return true;
     } else {
       return false;
-    }
-  }
-
-  /**
-   * Return the level of this reaction.
-   * @returns The level of this reaction
-   */
-  getLevel(): Number | undefined {
-    if (this.level !== undefined) {
-      return this.level;
     }
   }
 
