@@ -152,7 +152,7 @@ export abstract class Reactor extends Component {
    * Note: declare this class member before any other ones as they may
    * attempt to access it.
    */
-  private readonly _keyChain = new Map<Component, symbol>();
+  protected readonly _keyChain = new Map<Component, symbol>();
 
   /**
    * This graph has in it all the dependencies implied by this container's
@@ -380,9 +380,7 @@ export abstract class Reactor extends Component {
     if (component._isContainedBy(this) || this._key === key) {
       return this._keyChain.get(component);
     } else if (
-      (!(component instanceof Action) || component instanceof FederatePortAction) &&
-      //FIXME: Instead of modifying _getKey function, make new function named 
-      //_getFederatePortActionKey that can return federate port action keys of owned reactors 
+      (!(component instanceof Action)) &&
       component._isContainedByContainerOf(this)
     ) {
       const owner = component.getContainer();

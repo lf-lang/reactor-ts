@@ -10,7 +10,8 @@ import {
   getCurrentPhysicalTime,
   Alarm,
   App,
-  TaggedEvent
+  TaggedEvent,
+  FederatePortAction
 } from "./internal";
 
 // ---------------------------------------------------------------------//
@@ -1396,6 +1397,18 @@ export class FederatedApp extends App {
     );
   }
 
+  private _getFederatePortActionKey<T>(federatePortAction: FederatePortAction<T>): symbol | undefined {
+    if (
+      (federatePortAction instanceof FederatePortAction) &&
+      federatePortAction._isContainedByContainerOf(this)
+    ) {
+      const owner = federatePortAction.getContainer();
+      if (owner !== null) {
+        return owner._getKey(federatePortAction, this._keyChain.get(owner));
+      }
+    }
+  }
+
   /**
    * Send a message to a potentially remote federate's port via the RTI. This message
    * is untimed, and will be timestamped by the destination federate when it is received.
@@ -1610,7 +1623,7 @@ export class FederatedApp extends App {
         const value: T = JSON.parse(messageBuffer.toString());
 
         destPortAction
-          .asSchedulable(this._getKey(destPortAction))
+          .asSchedulable(this._getFederatePortActionKey(destPortAction))
           .schedule(0, value);
       }
     );
@@ -1648,14 +1661,14 @@ export class FederatedApp extends App {
 
         if (destPortAction.origin === Origin.logical) {
           destPortAction
-            //FIXME: Use _getFederatedPortActionKey in federated execution. See reactor.ts#384
-            .asSchedulable(this._getKey(destPortAction))
+            //FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
+            .asSchedulable(this._getFederatePortActionKey(destPortAction))
             .schedule(0, value, tag);
         } else {
           // The schedule function for physical actions implements
           // Tr = max(r, R + A)
           destPortAction
-            .asSchedulable(this._getKey(destPortAction))
+            .asSchedulable(this._getFederatePortActionKey(destPortAction))
             .schedule(0, value);
         }
       }
