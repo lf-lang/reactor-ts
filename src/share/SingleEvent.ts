@@ -27,7 +27,10 @@ export class SingleEvent<T> extends Reactor {
 
   t1: Timer = new Timer(this, 0, 0);
 
-  constructor(parent: Reactor, private readonly payload: Parameter<T>) {
+  constructor(
+    parent: Reactor,
+    private readonly payload: Parameter<T>
+  ) {
     super(parent);
     this.addReaction(
       [this.t1],
