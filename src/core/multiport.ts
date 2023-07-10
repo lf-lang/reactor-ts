@@ -58,7 +58,10 @@ export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
    * @param container the reactor that will contain the new instance
    * @param width the number of channels of newly created instance
    */
-  constructor(private readonly container: Reactor, width: number) {
+  constructor(
+    private readonly container: Reactor,
+    width: number
+  ) {
     super(container);
     this._channels = new Array<IOPort<T>>(width);
     this._width = width;
