@@ -1555,6 +1555,27 @@ export abstract class Reactor extends Component {
   toString(): string {
     return this._getFullyQualifiedName();
   }
+
+  public _uncheckedAddChild<R extends Reactor, G extends unknown[]>(
+      constructor:new (container: Reactor, ...args: G) => R,
+      ...args: G
+    ): R {
+    const newReactor = new constructor(this, ...args);
+    return newReactor;
+  }
+
+  public _uncheckedAddSibling<R extends Reactor, G extends unknown[]>(
+    constructor:new (container: Reactor, ...args: G) => R,
+    ...args: G
+  ): R {
+    if (this._getContainer() == null) {
+      throw new Error(`Reactor ${this} does not have a parent. Sibling is not well-defined.`);
+    }
+    if (this._getContainer() === this) {
+      throw new Error(`Reactor ${this} is self-contained. Adding sibling creates logical issue.`);
+    }
+    return this._getContainer()._uncheckedAddChild(constructor, ...args);
+  }
 }
 
 /*
