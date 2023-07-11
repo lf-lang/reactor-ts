@@ -90,7 +90,7 @@ class Filter extends Reactor {
             } else {
               // Potential prime found.
               if (!hasChild.get()) {
-                const n = new Filter(this.getReactor(), p, numberOfPrimes);
+                const n = this.getReactor()._uncheckedAddSibling(Filter, p, numberOfPrimes);
                 // this.start(n)
                 // console.log("CREATING...")
                 // let x = this.create(Filter, [this.getReactor(), p])
