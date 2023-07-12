@@ -435,7 +435,12 @@ export abstract class Reactor extends Component {
       if (src instanceof CallerPort && dst instanceof CalleePort) {
         this.reactor._connectCall(src, dst);
       } else if (src instanceof IOPort && dst instanceof IOPort) {
-        this.reactor._connect(src, dst);
+        try {
+          this.reactor._connect(src, dst);
+        } catch (error) {
+          console.log(`[DEBUG] MutationSandbox.connect: Regular connect failed: ${(error as Error).message}}, trying elevated connect`);
+          this.reactor._elevatedConnect(src, dst);
+        }
       } else {
         // ERROR
       }
@@ -1226,10 +1231,10 @@ export abstract class Reactor extends Component {
     dst: IOPort<R>
   ): void {
     Log.debug(this, () => `connecting ${src} and ${dst}`);
-    // Add dependency implied by connection to local graph.
-    this._dependencyGraph.addEdge(src, dst);
     // Register receiver for value propagation.
     const writer = dst.asWritable(this._getKey(dst));
+    // Add dependency implied by connection to local graph.
+    this._dependencyGraph.addEdge(src, dst);
     src
       .getManager(this._getKey(src))
       .addReceiver(writer as unknown as WritablePort<S>);
@@ -1575,6 +1580,29 @@ export abstract class Reactor extends Component {
       throw new Error(`Reactor ${this} is self-contained. Adding sibling creates logical issue.`);
     }
     return this._getContainer()._uncheckedAddChild(constructor, ...args);
+  }
+
+  public _elevatedConnect(...args: Parameters<Reactor["_connect"]>): ReturnType<Reactor["_connect"]> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let currentLevel: Reactor = this;
+    let atTopLevel = false;
+    while (currentLevel != null && !atTopLevel) {
+      console.log(`[DEBUG] _elevatedConnect: I am ${currentLevel}, my parent is ${currentLevel._getContainer()}`);
+      console.log(`[DEBUG] _elevatedConnect: ${currentLevel != null && currentLevel._getContainer() !== currentLevel ? "yes" : "no"}`)
+      if (currentLevel === currentLevel._getContainer()) {
+        atTopLevel = true;
+      }
+      console.log(`[DEBUG] _elevatedConnect: Attempting connection from ${currentLevel}`)
+      try {
+        currentLevel._connect(...args);
+        return
+      } catch (error) {
+        console.log(`[DEBUG] _elevatedConnect: Error - ${(error as Error).message}`)
+      }
+      currentLevel = currentLevel._getContainer();
+      console.log(`[DEBUG] next level ${currentLevel}`)
+    }
+    throw new Error(`[DEBUG] _elevatedConnect: Elevated connect failed for ${this._getFullyQualifiedName()}.`);
   }
 }
 
