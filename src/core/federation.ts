@@ -290,6 +290,7 @@ export class NetworkReactor extends Reactor {
   // TpoLevel of this NetworkReactor
   private TpoLevel: number;
 
+  // Fixme: How to use the appropriate type instead of 'unknown'?
   private networkInputAction: FederatePortAction<unknown> = new FederatePortAction(this, Origin.logical);
 
   private readonly portID: number;
@@ -1636,6 +1637,13 @@ export class FederatedApp extends App {
   }
 
   /**
+   * 
+   */
+  _addEdgesForTpoLevels():void {
+    // Fixme: Add edges for TPO levels by looking tpo levels of network reactors
+  }
+
+  /**
    * @override
    * Register this federated app with the RTI and request a start time.
    * This function registers handlers for the events produced by the federated app's
@@ -1644,6 +1652,8 @@ export class FederatedApp extends App {
    * time message from the RTI.
    */
   _start(): void {
+    this._addEdgesForTpoLevels();
+    
     this._analyzeDependencies();
 
     this._loadStartupReactions();
