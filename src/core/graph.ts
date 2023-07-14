@@ -215,7 +215,7 @@ export class PrecedenceGraph<T> {
       let counter = 0;
       const recurse = (h: HierarchyGraphLevel<T>, level: number): void => {
         const indent = " ".repeat(level);
-        result += `${indent}subgraph "${h.name}"\n`;
+        result += level === 0 ? "" : `${indent}subgraph "${h.name}"\n`;
         for (const v of h.nodes) {
           result += `${indent} ${counter}["${getNodeString(v, String(counter))}"]\n`
           nodeToSymbolString.set(v, `${counter++}`);
@@ -223,7 +223,7 @@ export class PrecedenceGraph<T> {
         for (const c of h.childrenLevels) {
           recurse(c, level + 1);
         }
-        result += `${indent}end\n`;
+        result += level === 0 ? "" :  `${indent}end\n`;
       }
 
       recurse(hierarchy, 0);
