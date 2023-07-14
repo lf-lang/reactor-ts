@@ -951,7 +951,8 @@ export abstract class Reactor extends Component {
     this._addRPCDependencies();
 
     const hierarchy: HierarchyGraphLevel<Port<unknown> | Reaction<Variable[]>> = {
-      name: this._getFullyQualifiedName(),
+      // names could be duplicate which mermaid don't like, better be unique
+      name: `${this._getFullyQualifiedName()}_${this._key.description?.slice(0, 8)}`,
       // I think _getReactions and _getMutations might contain children reactions.
       // So filter by owner might be needed?
       nodes: ([...this._findOwnPorts()] as Array<(Port<unknown> | Reaction<Variable[]>)>)
