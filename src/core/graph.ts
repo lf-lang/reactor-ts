@@ -10,6 +10,12 @@ import {Log} from "./util";
 /**
  * A generic precedence graph.
  */
+
+export interface HierarchyGraphLevel<T> {
+  name: string,
+  nodes: T[],
+  childrenLevels: Array<HierarchyGraphLevel<T>>,
+}
 export class PrecedenceGraph<T> {
   /**
    * A map from nodes to the set of their upstream neighbors.
@@ -189,10 +195,10 @@ export class PrecedenceGraph<T> {
    * @param edgesWithIssue An array containing arrays with [origin, effect].
    * Denotes edges in the graph that causes issues to the execution, will be visualized as `--x` in mermaid.
    */
-  toMermaidString(edgesWithIssue?: Array<[T, T]>): string {
+  toMermaidString(edgesWithIssue?: Array<[T, T]>, hierarchy?: HierarchyGraphLevel<T>): string {
     if (edgesWithIssue == null) edgesWithIssue = [];
-    let result = "graph";
-    const nodeToNumber = new Map<T, number>();
+    let result = "graph\n";
+    const nodeToSymbolString = new Map<T, string>();
     const getNodeString = (node: T, def: string): string => {
       if (node == null || node?.toString === Object.prototype.toString) {
         console.error(
@@ -205,27 +211,45 @@ export class PrecedenceGraph<T> {
       return node.toString();
     };
 
-    // Build a block here since we only need `counter` temporarily here
+    if (hierarchy != null) {
+      let counter = 0;
+      const recurse = (h: HierarchyGraphLevel<T>, level: number): void => {
+        const indent = " ".repeat(level);
+        result += `${indent}subgraph "${h.name}"\n`;
+        for (const v of h.nodes) {
+          result += `${indent} ${counter}["${getNodeString(v, String(counter))}"]\n`
+          nodeToSymbolString.set(v, `${counter++}`);
+        }
+        for (const c of h.childrenLevels) {
+          recurse(c, level + 1);
+        }
+        result += `${indent}end\n`;
+      }
 
+      recurse(hierarchy, 0);
+    }
+    
+    // Build a block here since we only need `counter` temporarily here
     // We use numbers instead of names of reactors directly as node names
     // in mermaid.js because mermaid has strict restrictions regarding
     // what could be used as names of the node.
     {
       let counter = 0;
       for (const v of this.getNodes()) {
-        result += `\n${counter}["${getNodeString(v, String(counter))}"]`;
-        nodeToNumber.set(v, counter++);
+        if (nodeToSymbolString.has(v)) { continue; }
+        result += `\nmissing${counter}["${getNodeString(v, String(counter))}"]`;
+        nodeToSymbolString.set(v, `missing${counter++}`);
       }
     }
     // This is the effect
     for (const s of this.getNodes()) {
       // This is the origin
       for (const t of this.getUpstreamNeighbors(s)) {
-        result += `\n${nodeToNumber.get(t)}`;
+        result += `\n${nodeToSymbolString.get(t)}`;
         result += edgesWithIssue.some((v) => v[0] === t && v[1] === s)
           ? " --x "
           : " --> ";
-        result += `${nodeToNumber.get(s)}`;
+        result += `${nodeToSymbolString.get(s)}`;
       }
     }
     return result;

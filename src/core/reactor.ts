@@ -46,6 +46,7 @@ import {
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
+import { type HierarchyGraphLevel } from "./graph";
 
 // Set the default log level.
 Log.global.level = Log.levels.ERROR;
@@ -945,6 +946,33 @@ export abstract class Reactor extends Component {
     return graph;
   }
 
+  public _getNodeHierarchyLevels(depth = -1): HierarchyGraphLevel<Port<unknown> | Reaction<Variable[]>> {
+    this._addHierarchicalDependencies();
+    this._addRPCDependencies();
+
+    const hierarchy: HierarchyGraphLevel<Port<unknown> | Reaction<Variable[]>> = {
+      name: this._getFullyQualifiedName(),
+      // I think _getReactions and _getMutations might contain children reactions.
+      // So filter by owner might be needed?
+      nodes: ([...this._findOwnPorts()] as Array<(Port<unknown> | Reaction<Variable[]>)>)
+      // reactor is private so we must use bracket
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      .concat([...this._getReactions()].filter((x) => (x["reactor"] === this)))
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      .concat([...this._getMutations()].filter((x) => (x["reactor"] === this))),
+      childrenLevels: []
+    };
+
+    if (depth !== 0) {
+      for (const r of this._getOwnReactors()) {
+        hierarchy.childrenLevels.push(r._getNodeHierarchyLevels(depth - 1));
+      }
+    }
+
+
+    return hierarchy;
+  }
+
   /**
    * Return the reactors that this reactor owns.
    */
@@ -1558,6 +1586,7 @@ export abstract class Reactor extends Component {
       ...args: G
     ): R {
     const newReactor = new constructor(this, ...args);
+    this._keyChain.set(newReactor, newReactor._key);
     return newReactor;
   }
 
@@ -1571,7 +1600,9 @@ export abstract class Reactor extends Component {
     if (this._getContainer() === this) {
       throw new Error(`Reactor ${this} is self-contained. Adding sibling creates logical issue.`);
     }
-    return this._getContainer()._uncheckedAddChild(constructor, ...args);
+    const newReactor = this._getContainer()._uncheckedAddChild(constructor, ...args);
+    this._keyChain.set(newReactor, newReactor._key);
+    return newReactor;
   }
 
   public _elevatedConnect(...args: Parameters<Reactor["_connect"]>): ReturnType<Reactor["_connect"]> {
