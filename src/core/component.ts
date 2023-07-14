@@ -115,10 +115,11 @@ export abstract class Component {
       return (
         this._container._getFullyQualifiedName() +
         Component.pathSeparator +
-        this._getName()
+        this._getName() + "$" +
+        this.uuid.slice(0,4)
       );
     } else {
-      return this._getName();
+      return this._getName() + "$" + this.uuid.slice(0,4);
     }
   }
 

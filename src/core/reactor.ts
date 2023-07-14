@@ -952,7 +952,7 @@ export abstract class Reactor extends Component {
 
     const hierarchy: HierarchyGraphLevel<Port<unknown> | Reaction<Variable[]>> = {
       // names could be duplicate which mermaid don't like, better be unique
-      name: `${this._getFullyQualifiedName()}_${this._key.description?.slice(0, 8)}`,
+      name: `${this._getFullyQualifiedName()}`,
       // I think _getReactions and _getMutations might contain children reactions.
       // So filter by owner might be needed?
       nodes: ([...this._findOwnPorts()] as Array<(Port<unknown> | Reaction<Variable[]>)>)
@@ -965,8 +965,11 @@ export abstract class Reactor extends Component {
     };
 
     if (depth !== 0) {
+      // Sometimes there's duplicative children??
       for (const r of this._getOwnReactors()) {
-        hierarchy.childrenLevels.push(r._getNodeHierarchyLevels(depth - 1));
+        if (r._getContainer() === this) {
+          hierarchy.childrenLevels.push(r._getNodeHierarchyLevels(depth - 1));
+        }
       }
     }
 
