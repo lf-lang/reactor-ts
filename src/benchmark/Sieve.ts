@@ -137,7 +137,7 @@ class Sieve extends App {
     fail?: () => void
   ) {
     super(timeout, keepAlive, fast, success, fail);
-    this.source = new Ramp(this, 10000, TimeValue.nsec(1));
+    this.source = new Ramp(this, 1000, TimeValue.nsec(1));
     this.filter = new Filter(this, 2, 100);
     this._connect(this.source.value, this.filter.inp);
   }
@@ -146,10 +146,16 @@ class Sieve extends App {
 const sieve = new Sieve("Sieve", undefined, false, false, () => {wsclient.close()});
 const wsclient = new WebSocket("ws://localhost:42069/receive")
 wsclient.on("open", () => { wsclient.send("connected"); });
+wsclient.on("error", () => {
+  console.log("123");
+  printSieveGraph();
+  sieve._start();
+});
 
 const printSieveGraph = (): void => {
   const graph = sieve._getPrecedenceGraph();
-  const str = graph.toMermaidString();
+  const hierarchy = sieve._getNodeHierarchyLevels();
+  const str = graph.toMermaidString(undefined, hierarchy);
   const time = sieve.util.getElapsedLogicalTime();
   console.log(str);
   console.log(time);
