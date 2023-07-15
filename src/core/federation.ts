@@ -287,8 +287,8 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  * A network reactor is a reactor handling network actions (NetworkReciever and NetworkSender).
  */
 export class NetworkReactor extends Reactor {
-  // TpoLevel of this NetworkReactor
-  private TpoLevel: number;
+  // TPO level of this NetworkReactor
+  private readonly tpoLevel: number;
 
   // Fixme: How to use the appropriate type instead of 'unknown'?
   private networkInputAction: FederatePortAction<unknown> = new FederatePortAction(this, Origin.logical);
@@ -298,22 +298,22 @@ export class NetworkReactor extends Reactor {
   constructor (
       parent: Reactor,
       portID: number,
-      TpoLevel: number
+      tpoLevel: number
   ) {
     super(parent);
     this.portID = portID;
-    this.TpoLevel = TpoLevel;
+    this.tpoLevel = tpoLevel;
   }
 
-  public getTpoLevel() {
-    return this.TpoLevel;
+  public getTpoLevel(): number {
+    return this.tpoLevel;
   }
 
-  public getPortID() {
+  public getPortID(): number {
     return this.portID;
   }
 
-  public registerNetworkInputAction(networkInputAction: FederatePortAction<unknown>) {
+  public registerNetworkInputAction(networkInputAction: FederatePortAction<unknown>): void {
     this.networkInputAction = networkInputAction;
   }
 
@@ -333,7 +333,7 @@ export class NetworkReactor extends Reactor {
   ):void {
     if (this.networkInputAction.origin === Origin.logical) {
       this.networkInputAction
-        //FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
+        // FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
         .asSchedulable(this._getKey(this.networkInputAction))
         .schedule(0, value, intendedTag);
     } else {
@@ -982,7 +982,7 @@ class RTIClient extends EventEmitter {
                 bufferIndex + 21,
                 bufferIndex + 21 + messageLength
               );
-              //const destPort = this.federatePortActionByID.get(destPortID);
+              // const destPort = this.federatePortActionByID.get(destPortID);
               this.emit("timedMessage", destPortID, messageBuffer, tag);
             }
 
@@ -1186,7 +1186,7 @@ export class FederatedApp extends App {
   /**
    * An array of network receivers
    */
-  private networkRecievers: Array<NetworkReactor> = [];
+  private networkRecievers: NetworkReactor[] = [];
 
   /**
    * Stop request-related information
