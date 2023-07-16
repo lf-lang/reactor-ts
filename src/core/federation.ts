@@ -1357,7 +1357,6 @@ export class FederatedApp extends App {
   }
 
   protected _iterationComplete(): void {
-    this.executeOutputControlReactions();
     const currentTime = this.util.getCurrentTag();
     this.sendRTILogicalTimeComplete(currentTime);
   }
@@ -1512,9 +1511,9 @@ export class FederatedApp extends App {
       }
   }
 
-  protected executeOutputControlReactions(): void {
+  protected enqueueOutputControlReactions(): void {
     this.outputControlReactions.forEach(reaction => {
-      reaction.doReact();
+      this._reactionQ.push(reaction);
     });
   }
 

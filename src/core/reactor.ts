@@ -2158,7 +2158,7 @@ export class App extends Reactor {
   /**
    * Priority set that keeps track of reactions at the current Logical time.
    */
-  private readonly _reactionQ = new ReactionQueue();
+  protected readonly _reactionQ = new ReactionQueue();
 
   /**
    * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
@@ -2298,9 +2298,7 @@ export class App extends Reactor {
     Log.global.debug("Finished handling all events at current time.");
   }
 
-  // protected enqueueNetworkOutputControlReactions(): void {
-  //   return undefined;
-  // }
+  protected enqueueOutputControlReactions(): void { }
 
   /**
    * Handle the next events on the event queue.
@@ -2399,8 +2397,8 @@ export class App extends Reactor {
         nextEvent != null &&
         this._currentTag.isSimultaneousWith(nextEvent.tag)
       );
-      // // enqueue networkOutputControlReactions
-      // this.enqueueNetworkOutputControlReactions();
+      // enqueue networkOutputControlReactions
+      this.enqueueOutputControlReactions();
 
       // React to all the events loaded onto the reaction queue.
       this._react();
@@ -2683,7 +2681,7 @@ export class App extends Reactor {
     Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
     // enqueue networkOutputControlReactions
-    // this.enqueueNetworkOutputControlReactions();
+    this.enqueueOutputControlReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.
     this._react();
