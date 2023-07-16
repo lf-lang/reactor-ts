@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v3
         with: 
           path: "reactor-ts"
-          fetch-depth: 0
+          fetch-depth: 1
       - name: Read lingua-franca-ref.txt
         run: echo "lingua-franca-ref=$(cat ./reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
@@ -40,7 +40,7 @@ jobs:
         with:
           repository: lf-lang/lingua-franca
           ref: ${{ env.lingua-franca-ref }}
-          fetch-depth: 0
+          fetch-depth: 1
           path: "lingua-franca"
           submodules: true
       - name: Move Lingua Franca to default pwd
