@@ -1,7 +1,7 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {Action, FederateConfig} from "./internal";
+import type {Action, FederateConfig, Mutation, Reaction, Variable} from "./internal";
 import {
   Log,
   Tag,
@@ -293,24 +293,30 @@ export class NetworkReactor extends Reactor {
   // Fixme: How to use the appropriate type instead of 'unknown'?
   private networkInputAction: FederatePortAction<unknown> = new FederatePortAction(this, Origin.logical);
 
-  private readonly portID: number;
+  private readonly portID?: number;
 
   constructor (
       parent: Reactor,
-      portID: number,
-      tpoLevel: number
+      tpoLevel: number,
+      portID?: number
   ) {
     super(parent);
-    this.portID = portID;
     this.tpoLevel = tpoLevel;
+    if (portID !== undefined) {
+      this.portID = portID;
+    }
   }
 
   public getTpoLevel(): number {
     return this.tpoLevel;
   }
 
-  public getPortID(): number {
+  public getPortID(): number | undefined {
     return this.portID;
+  }
+
+  public getLastReactioOrMutation():Reaction<Variable[]> | undefined {
+      return this._getLastReactionOrMutation();
   }
 
   public registerNetworkInputAction(networkInputAction: FederatePortAction<unknown>): void {
@@ -1189,6 +1195,13 @@ export class FederatedApp extends App {
   private networkRecievers: NetworkReactor[] = [];
 
   /**
+   * An array of network senders
+   */
+  private networkSenders: NetworkReactor[] = [];
+
+  private outputControlReactions = new Set<Reaction<Variable[]>>();
+
+  /**
    * Stop request-related information
    * including the current state and the tag associated with the stop requested or stop granted.
    */
@@ -1344,6 +1357,7 @@ export class FederatedApp extends App {
   }
 
   protected _iterationComplete(): void {
+    this.executeOutputControlReactions();
     const currentTime = this.util.getCurrentTag();
     this.sendRTILogicalTimeComplete(currentTime);
   }
@@ -1466,10 +1480,42 @@ export class FederatedApp extends App {
   //   );
   // }
 
+  /**
+   * TODO: Add a description
+   * @param networkReciever 
+   */
   public registerNetworkReciever(
     networkReciever: NetworkReactor
   ): void {
-    this.networkRecievers.push(networkReciever)
+    this.networkRecievers.push(networkReciever);
+  }
+
+  /**
+   * TODO: Add a description
+   * @param networkSender 
+   */
+  public registerNetworkSender(
+    networkSender: NetworkReactor
+  ): void {
+    this.networkSenders.push(networkSender);
+  }
+
+  /**
+   * TODO: Add a description
+   */
+  protected registerOutputControlReactions(): void {
+      for (let networkSender of this.networkSenders) {
+        let lastReactionOrMutation = networkSender.getLastReactioOrMutation();
+        if (lastReactionOrMutation !== undefined) {
+          this.outputControlReactions.add(lastReactionOrMutation);
+        }
+      }
+  }
+
+  protected executeOutputControlReactions(): void {
+    this.outputControlReactions.forEach(reaction => {
+      reaction.doReact();
+    });
   }
 
   // private _getFederatePortActionKey<T>(federatePortAction: FederatePortAction<T>): symbol | undefined {

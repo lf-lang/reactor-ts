@@ -784,7 +784,6 @@ export abstract class Reactor extends Component {
     trigs: Variable[],
     args: [...ArgList<T>],
     react: (this: ReactionSandbox, ...args: ArgList<T>) => void,
-    level?: Number,
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
@@ -1917,6 +1916,12 @@ export class App extends Reactor {
     ): void {
       this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
     }
+
+    public registerOutputControlReactions(
+
+    ): void {
+      this.app.registerOutputControlReactions();
+    }
   })(this);
 
   /**
@@ -2098,6 +2103,14 @@ export class App extends Reactor {
   ): void {
     throw new Error(
       "Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp"
+    );
+  }
+
+  protected registerOutputControlReactions(
+    
+  ): void {
+    throw new Error(
+      "Cannot call registerOutputControlReactions from an App. registerOutputControlReactions may be called only from a FederatedApp"
     );
   }
 
