@@ -315,12 +315,16 @@ export class NetworkReactor extends Reactor {
     return this.portID;
   }
 
-  public getLastReactioOrMutation():Reaction<Variable[]> | undefined {
-      return this._getLastReactionOrMutation();
-  }
-
   public registerNetworkInputAction(networkInputAction: FederatePortAction<unknown>): void {
     this.networkInputAction = networkInputAction;
+  }
+
+  public getReactions():Array<Reaction<Variable[]>> {
+    return this._getReactions();
+  }
+
+  public getLastReactioOrMutation():Reaction<Variable[]> | undefined {
+      return this._getLastReactionOrMutation();
   }
 
   public handlingMessage<T>(
@@ -1192,14 +1196,14 @@ export class FederatedApp extends App {
   /**
    * An array of network receivers
    */
-  private networkRecievers: NetworkReactor[] = [];
+  private readonly networkRecievers: NetworkReactor[] = [];
 
   /**
    * An array of network senders
    */
-  private networkSenders: NetworkReactor[] = [];
+  private readonly networkSenders: NetworkReactor[] = [];
 
-  private outputControlReactions = new Set<Reaction<Variable[]>>();
+  private readonly outputControlReactions = new Set<Reaction<Variable[]>>();
 
   /**
    * Stop request-related information
@@ -1292,7 +1296,7 @@ export class FederatedApp extends App {
     }
   }
 
-  //TODO: Add functions for updating MLAA and port statuses
+  // TODO: Add functions for updating MLAA and port statuses
 
   /**
    * Return whether the next event can be handled, or handling the next event
@@ -1503,8 +1507,8 @@ export class FederatedApp extends App {
    * TODO: Add a description
    */
   protected registerOutputControlReactions(): void {
-      for (let networkSender of this.networkSenders) {
-        let lastReactionOrMutation = networkSender.getLastReactioOrMutation();
+      for (const networkSender of this.networkSenders) {
+        const lastReactionOrMutation = networkSender.getLastReactioOrMutation();
         if (lastReactionOrMutation !== undefined) {
           this.outputControlReactions.add(lastReactionOrMutation);
         }
@@ -1685,7 +1689,18 @@ export class FederatedApp extends App {
    * 
    */
   _addEdgesForTpoLevels():void {
-    // Fixme: Add edges for TPO levels by looking tpo levels of network reactors
+    let networkReactors = this.networkRecievers.concat(this.networkSenders);
+    networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
+      return a.getTpoLevel() - b.getTpoLevel();
+    })
+
+    for (let i = 0; i < networkReactors.length - 1; i++) {
+      for (const upstream of networkReactors[i].getReactions()) {
+        for (const downstream of networkReactors[i + 1].getReactions()) {
+          this._dependencyGraph.addEdge(upstream, downstream);
+        }
+      }
+    }
   }
 
   /**
@@ -1751,7 +1766,7 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
-        for (let candidate of this.networkRecievers) {
+        for (const candidate of this.networkRecievers) {
           if (candidate.getPortID() === destPortID) {
             candidate.handlingMessage<T>(destPortID, value);
           }

@@ -152,7 +152,7 @@ export abstract class Reactor extends Component {
    * Note: declare this class member before any other ones as they may
    * attempt to access it.
    */
-  protected readonly _keyChain = new Map<Component, symbol>();
+  private readonly _keyChain = new Map<Component, symbol>();
 
   /**
    * This graph has in it all the dependencies implied by this container's
