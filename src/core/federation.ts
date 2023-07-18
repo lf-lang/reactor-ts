@@ -1195,15 +1195,15 @@ export class FederatedApp extends App {
 
   /**
    * An array of network receivers
-   */
-  private readonly networkRecievers: NetworkReactor[] = [];
+   */ 
+  private readonly networkReceivers: NetworkReactor[] = [];
 
   /**
    * An array of network senders
    */
   private readonly networkSenders: NetworkReactor[] = [];
 
-  private readonly outputControlReactions = new Set<Reaction<Variable[]>>();
+  private readonly portAbsentReactions = new Set<Reaction<Variable[]>>();
 
   /**
    * Stop request-related information
@@ -1490,7 +1490,7 @@ export class FederatedApp extends App {
   public registerNetworkReciever(
     networkReciever: NetworkReactor
   ): void {
-    this.networkRecievers.push(networkReciever);
+    this.networkReceivers.push(networkReciever);
   }
 
   /**
@@ -1510,13 +1510,13 @@ export class FederatedApp extends App {
       for (const networkSender of this.networkSenders) {
         const lastReactionOrMutation = networkSender.getLastReactioOrMutation();
         if (lastReactionOrMutation !== undefined) {
-          this.outputControlReactions.add(lastReactionOrMutation);
+          this.portAbsentReactions.add(lastReactionOrMutation);
         }
       }
   }
 
   protected enqueueOutputControlReactions(): void {
-    this.outputControlReactions.forEach(reaction => {
+    this.portAbsentReactions.forEach(reaction => {
       this._reactionQ.push(reaction);
     });
   }
@@ -1689,7 +1689,7 @@ export class FederatedApp extends App {
    * 
    */
   _addEdgesForTpoLevels():void {
-    let networkReactors = this.networkRecievers.concat(this.networkSenders);
+    let networkReactors = this.networkReceivers.concat(this.networkSenders);
     networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
       return a.getTpoLevel() - b.getTpoLevel();
     })
@@ -1766,7 +1766,7 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
-        for (const candidate of this.networkRecievers) {
+        for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
             candidate.handlingMessage<T>(destPortID, value);
           }
@@ -1809,7 +1809,7 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
-        for (let candidate of this.networkRecievers) {
+        for (let candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
             candidate.handlingTimedMessage<T>(destPortID, value, tag);
           }
