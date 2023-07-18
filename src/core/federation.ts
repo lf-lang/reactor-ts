@@ -1501,20 +1501,16 @@ export class FederatedApp extends App {
     networkSender: NetworkReactor
   ): void {
     this.networkSenders.push(networkSender);
+
+    const portAbsentReaction = networkSender.getLastReactioOrMutation();
+    if (portAbsentReaction !== undefined) {
+      this.portAbsentReactions.add(portAbsentReaction);
+    }
   }
 
   /**
    * TODO: Add a description
    */
-  protected registerOutputControlReactions(): void {
-      for (const networkSender of this.networkSenders) {
-        const lastReactionOrMutation = networkSender.getLastReactioOrMutation();
-        if (lastReactionOrMutation !== undefined) {
-          this.portAbsentReactions.add(lastReactionOrMutation);
-        }
-      }
-  }
-
   protected enqueuePortAbsentReactions(): void {
     this.portAbsentReactions.forEach(reaction => {
       this._reactionQ.push(reaction);
