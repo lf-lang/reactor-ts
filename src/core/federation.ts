@@ -290,9 +290,12 @@ export class NetworkReactor extends Reactor {
   // TPO level of this NetworkReactor
   private readonly tpoLevel: number;
 
-  // Fixme: How to use the appropriate type instead of 'unknown'?
-  private networkInputAction: FederatePortAction<unknown> = new FederatePortAction(this, Origin.logical);
+  // Fixme: Is there a better way to declare the type of this action?
+  //        Currently, it is declared with 'any'.
+  // The action of the port that is allocated to this NetworkReceiver.
+  private networkInputAction: FederatePortAction<any> | undefined = undefined;
 
+  // The port ID of networkInputAction.
   private readonly portID?: number;
 
   constructor (
@@ -315,7 +318,7 @@ export class NetworkReactor extends Reactor {
     return this.portID;
   }
 
-  public registerNetworkInputAction(networkInputAction: FederatePortAction<unknown>): void {
+  public registerNetworkInputAction<T>(networkInputAction: FederatePortAction<T>): void {
     this.networkInputAction = networkInputAction;
   }
 
@@ -323,34 +326,59 @@ export class NetworkReactor extends Reactor {
     return this._getReactions();
   }
 
+  /**
+   * This function is for NetworkSender reactors. 
+   * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
+   * @returns portAbsentReactor of this NetworkSender reactor
+   */
   public getLastReactioOrMutation():Reaction<Variable[]> | undefined {
       return this._getLastReactionOrMutation();
   }
 
+  /**
+   * This function is for NetworkReceiver reactors.
+   * @param portID
+   * @param value
+   * @returns
+   */
   public handlingMessage<T>(
     portID: number,
     value: T
   ):void {
-    this.networkInputAction
-      .asSchedulable(this._getKey(this.networkInputAction))
+    if (portID !== this.portID) {
+      this.util.reportError("FederatedApp attempts to pass the tagged message to the wrong port ID");
+      return;
+    }
+    this.networkInputAction!
+      .asSchedulable(this._getKey(this.networkInputAction!))
       .schedule(0, value);
-}
+  }
 
+  /**
+   * This function is for NetworkReceiver reactors.
+   * @param portID
+   * @param value
+   * @returns
+   */
   public handlingTimedMessage<T>(
     portID: number,
     value: T,
     intendedTag: Tag
   ):void {
-    if (this.networkInputAction.origin === Origin.logical) {
-      this.networkInputAction
+    if (portID !== this.portID) {
+      this.util.reportError("FederatedApp attempts to pass the tagged message to the wrong port ID");
+      return;
+    }
+    if (this.networkInputAction!.origin === Origin.logical) {
+      this.networkInputAction!
         // FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
-        .asSchedulable(this._getKey(this.networkInputAction))
+        .asSchedulable(this._getKey(this.networkInputAction!))
         .schedule(0, value, intendedTag);
     } else {
       // The schedule function for physical actions implements
       // Tr = max(r, R + A)
-      this.networkInputAction
-        .asSchedulable(this._getKey(this.networkInputAction))
+      this.networkInputAction!
+        .asSchedulable(this._getKey(this.networkInputAction!))
         .schedule(0, value);
     }
   }
@@ -1502,10 +1530,7 @@ export class FederatedApp extends App {
   ): void {
     this.networkSenders.push(networkSender);
 
-    const portAbsentReaction = networkSender.getLastReactioOrMutation();
-    if (portAbsentReaction !== undefined) {
-      this.portAbsentReactions.add(portAbsentReaction);
-    }
+    this.portAbsentReactions.add(networkSender.getLastReactioOrMutation()!)
   }
 
   /**
