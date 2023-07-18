@@ -1515,7 +1515,7 @@ export class FederatedApp extends App {
       }
   }
 
-  protected enqueueOutputControlReactions(): void {
+  protected enqueuePortAbsentReactions(): void {
     this.portAbsentReactions.forEach(reaction => {
       this._reactionQ.push(reaction);
     });

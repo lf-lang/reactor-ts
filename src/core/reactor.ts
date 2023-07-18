@@ -768,14 +768,13 @@ export abstract class Reactor extends Component {
    * Add a reaction to this reactor. Each newly added reaction will acquire a
    * dependency either on the previously added reaction, or on the last added
    * mutation (in case no reactions had been added prior to this one). A
-   * reaction is specified by a list of triggers, a list of arguments, a level,
-   * a react function, an optional deadline, and an optional late function 
-   * (which represents the reaction body of the deadline). All triggers a 
-   * reaction needs access must be included in the arguments.
+   * reaction is specified by a list of triggers, a list of arguments, a react
+   * function, an optional deadline, and an optional late function (which
+   * represents the reaction body of the deadline). All triggers a reaction
+   * needs access must be included in the arguments.
    *
    * @param trigs
    * @param args
-   * @param level
    * @param react
    * @param deadline
    * @param late
@@ -1204,7 +1203,7 @@ export abstract class Reactor extends Component {
         }
       } else {
         // IN to OUT
-        // FIXME: Is direct feedtrough enabled?
+        // FIXME: Make this direct feedthrough false after the generated code deletes it.
         return true;
       }
     }
@@ -1916,12 +1915,6 @@ export class App extends Reactor {
     ): void {
       this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
     }
-
-    public registerOutputControlReactions(
-
-    ): void {
-      this.app.registerOutputControlReactions();
-    }
   })(this);
 
   /**
@@ -2103,14 +2096,6 @@ export class App extends Reactor {
   ): void {
     throw new Error(
       "Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp"
-    );
-  }
-
-  protected registerOutputControlReactions(
-    
-  ): void {
-    throw new Error(
-      "Cannot call registerOutputControlReactions from an App. registerOutputControlReactions may be called only from a FederatedApp"
     );
   }
 
@@ -2298,7 +2283,7 @@ export class App extends Reactor {
     Log.global.debug("Finished handling all events at current time.");
   }
 
-  protected enqueueOutputControlReactions(): void { }
+  protected enqueuePortAbsentReactions(): void { return undefined; }
 
   /**
    * Handle the next events on the event queue.
@@ -2398,7 +2383,7 @@ export class App extends Reactor {
         this._currentTag.isSimultaneousWith(nextEvent.tag)
       );
       // enqueue networkOutputControlReactions
-      this.enqueueOutputControlReactions();
+      this.enqueuePortAbsentReactions();
 
       // React to all the events loaded onto the reaction queue.
       this._react();
@@ -2681,7 +2666,7 @@ export class App extends Reactor {
     Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
     // enqueue networkOutputControlReactions
-    this.enqueueOutputControlReactions();
+    this.enqueuePortAbsentReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.
     this._react();
