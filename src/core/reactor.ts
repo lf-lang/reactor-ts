@@ -152,7 +152,7 @@ export abstract class Reactor extends Component {
    * Note: declare this class member before any other ones as they may
    * attempt to access it.
    */
-  protected readonly _keyChain = new Map<Component, symbol>();
+  private readonly _keyChain = new Map<Component, symbol>();
 
   /**
    * This graph has in it all the dependencies implied by this container's
@@ -784,7 +784,6 @@ export abstract class Reactor extends Component {
     trigs: Variable[],
     args: [...ArgList<T>],
     react: (this: ReactionSandbox, ...args: ArgList<T>) => void,
-    level?: Number,
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
@@ -1917,6 +1916,12 @@ export class App extends Reactor {
     ): void {
       this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
     }
+
+    public registerOutputControlReactions(
+
+    ): void {
+      this.app.registerOutputControlReactions();
+    }
   })(this);
 
   /**
@@ -2101,6 +2106,14 @@ export class App extends Reactor {
     );
   }
 
+  protected registerOutputControlReactions(
+    
+  ): void {
+    throw new Error(
+      "Cannot call registerOutputControlReactions from an App. registerOutputControlReactions may be called only from a FederatedApp"
+    );
+  }
+
   /**
    * The current time, made available so actions may be scheduled relative to it.
    */
@@ -2145,7 +2158,7 @@ export class App extends Reactor {
   /**
    * Priority set that keeps track of reactions at the current Logical time.
    */
-  private readonly _reactionQ = new ReactionQueue();
+  protected readonly _reactionQ = new ReactionQueue();
 
   /**
    * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
@@ -2285,9 +2298,7 @@ export class App extends Reactor {
     Log.global.debug("Finished handling all events at current time.");
   }
 
-  // protected enqueueNetworkOutputControlReactions(): void {
-  //   return undefined;
-  // }
+  protected enqueueOutputControlReactions(): void { }
 
   /**
    * Handle the next events on the event queue.
@@ -2386,8 +2397,8 @@ export class App extends Reactor {
         nextEvent != null &&
         this._currentTag.isSimultaneousWith(nextEvent.tag)
       );
-      // // enqueue networkOutputControlReactions
-      // this.enqueueNetworkOutputControlReactions();
+      // enqueue networkOutputControlReactions
+      this.enqueueOutputControlReactions();
 
       // React to all the events loaded onto the reaction queue.
       this._react();
@@ -2670,7 +2681,7 @@ export class App extends Reactor {
     Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
     // enqueue networkOutputControlReactions
-    // this.enqueueNetworkOutputControlReactions();
+    this.enqueueOutputControlReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.
     this._react();
