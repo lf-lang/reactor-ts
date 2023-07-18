@@ -435,11 +435,10 @@ export abstract class Reactor extends Component {
       if (src instanceof CallerPort && dst instanceof CalleePort) {
         this.reactor._connectCall(src, dst);
       } else if (src instanceof IOPort && dst instanceof IOPort) {
-        try {
-          this.reactor._connect(src, dst);
-        } catch (error) {
-          console.log(`[DEBUG] MutationSandbox.connect: Regular connect failed: ${(error as Error).message}}, trying elevated connect`);
+        if (this.reactor.canConnect(src, dst) === 2) {
           this.reactor._elevatedConnect(src, dst);
+        } else {
+          this.reactor._connect(src, dst);
         }
       } else {
         // ERROR
@@ -1096,7 +1095,7 @@ export abstract class Reactor extends Component {
    * @param src The start point of a new connection.
    * @param dst The end point of a new connection.
    */
-  public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean {
+  public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean | number /* dirty hack here */ {
     // Immediate rule out trivial self loops.
     if (src === dst) {
       throw Error("Source port and destination port are the same.");
@@ -1108,6 +1107,11 @@ export abstract class Reactor extends Component {
     const deps = this._dependencyGraph.getUpstreamNeighbors(dst); // FIXME this will change with multiplex ports
     if (deps !== undefined && deps.size > 0) {
       throw Error("Destination port is already occupied.");
+    }
+
+    if (! (src.checkKey(this._key) && dst.checkKey(this._key) )) {
+      console.log("[debug] Scoping issue. Does not possess valid key for src/dst.")
+      return 2;
     }
 
     if (!this._runtime.isRunning()) {
