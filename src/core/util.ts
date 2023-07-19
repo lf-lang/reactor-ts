@@ -1,4 +1,5 @@
 import ULog from "ulog";
+import { readFileSync } from 'fs';
 
 /**
  * Utilities for the reactor runtime.
@@ -184,3 +185,4 @@ export class Log {
     }
   }
 }
+

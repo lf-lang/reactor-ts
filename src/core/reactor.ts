@@ -42,7 +42,8 @@ import {
   Startup,
   Shutdown,
   WritableMultiPort,
-  Dummy
+  Dummy,
+  HierarchyGraphLevel
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
@@ -950,6 +951,35 @@ export abstract class Reactor extends Component {
     }
 
     return graph;
+  }
+
+  public _getNodeHierarchyLevels(depth = -1): HierarchyGraphLevel<Port<unknown> | Reaction<Variable[]>> {
+    this._addHierarchicalDependencies();
+    this._addRPCDependencies();
+
+    const hierarchy: HierarchyGraphLevel<Port<unknown> | Reaction<Variable[]>> = {
+      // names could be duplicate which mermaid don't like, better be unique
+      name: `${this._getFullyQualifiedName()}`,
+      // I think _getReactions and _getMutations might contain children reactions.
+      // So filter by owner might be needed?
+      nodes: ([...this._findOwnPorts()] as Array<(Port<unknown> | Reaction<Variable[]>)>)
+      // reactor is private so we must use bracket
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      .concat([...this._getReactions()].filter((x) => (x["reactor"] === this)))
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      .concat([...this._getMutations()].filter((x) => (x["reactor"] === this))),
+      childrenLevels: []
+    };
+
+    if (depth !== 0) {
+      // Sometimes there's duplicative children??
+      for (const r of this._getOwnReactors()) {
+        if (r._getContainer() === this) {
+          hierarchy.childrenLevels.push(r._getNodeHierarchyLevels(depth - 1));
+        }
+      }
+    }
+    return hierarchy;
   }
 
   /**
