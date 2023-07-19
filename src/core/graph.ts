@@ -8,7 +8,7 @@ import {Reaction} from "./reaction";
 import type {Sortable, Variable} from "./types";
 import {GraphDebugLogger, Log} from "./util";
 
-
+// TODO: find a way to to this with decorators. 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-explicit-any
 const debugLoggerDecorator = (target: any, context: ClassMethodDecoratorContext) => {
   if (context.kind === "method") {
@@ -23,21 +23,24 @@ const debugLoggerDecorator = (target: any, context: ClassMethodDecoratorContext)
 }
 
 declare global {
+  // eslint-disable-next-line no-var
   var graphDebugLogger: GraphDebugLogger | undefined;
+  // eslint-disable-next-line no-var
   var recording: boolean;
 }
 
-const debugHelper = (): void => {
+const debugHelper = (stacktrace: Error): void => {
   if (globalThis.recording) { return; }
+  // If recording now, do not record any subsequent operations, 
+  // as recursion hell might involve when calling `capture`, 
+  // causing infinite loop.
   globalThis.recording = true;
   if (globalThis.graphDebugLogger == null) {
     return
   }
 
-  const err = new Error();
-  console.log(err.stack);
   const debuglogger = globalThis.graphDebugLogger;
-  debuglogger.capture(err);
+  debuglogger.capture(stacktrace);
   globalThis.recording = false;
 };
 
@@ -87,7 +90,7 @@ export class PrecedenceGraph<T> {
    * @param node
    */
   addNode(node: T): void {
-    debugHelper();
+    debugHelper(new Error("addNode"));
     if (!this.adjacencyMap.has(node)) {
       this.adjacencyMap.set(node, new Set());
     }
@@ -178,8 +181,7 @@ export class PrecedenceGraph<T> {
    * @param downstream The node at which the directed edge ends.
    */
   addEdge(upstream: T, downstream: T): void {
-    debugHelper();
-    console.log("!");
+    debugHelper(new Error("addEdge"));
     const deps = this.adjacencyMap.get(downstream);
     if (deps == null) {
       this.adjacencyMap.set(downstream, new Set([upstream]));
@@ -232,7 +234,7 @@ export class PrecedenceGraph<T> {
    * @param edgesWithIssue An array containing arrays with [origin, effect].
    * Denotes edges in the graph that causes issues to the execution, will be visualized as `--x` in mermaid.
    */
-  toMermaidString(edgesWithIssue?: Array<[T, T]>, hierarchy?: HierarchyGraphLevel<T>): string {
+  toMermaidString(edgesWithIssue?: Array<[T, T]>, hierarchy?: HierarchyGraphLevel<T>, uniqueNames?: boolean): string {
     if (edgesWithIssue == null) edgesWithIssue = [];
     let result = "graph\n";
     const nodeToSymbolString = new Map<T, string>();
@@ -250,9 +252,10 @@ export class PrecedenceGraph<T> {
 
     if (hierarchy != null) {
       let counter = 0;
+      let subgraphCounter = 0;
       const recurse = (h: HierarchyGraphLevel<T>, level: number): void => {
         const indent = " ".repeat(level);
-        result += level === 0 ? "" : `${indent}subgraph "${h.name}"\n`;
+        result += level === 0 ? "" : `${indent}subgraph "${(uniqueNames ?? false) ? h.name : `sg${subgraphCounter++}`}"\n`;
         for (const v of h.nodes) {
           result += `${indent} ${counter}["${getNodeString(v, String(counter))}"]\n`
           nodeToSymbolString.set(v, `${counter++}`);
