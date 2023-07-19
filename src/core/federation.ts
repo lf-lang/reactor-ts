@@ -1,7 +1,7 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {Action, FederateConfig, Mutation, Reaction, Variable} from "./internal";
+import type {Action, FederateConfig, Reaction, Variable} from "./internal";
 import {
   Log,
   Tag,
@@ -11,10 +11,10 @@ import {
   Alarm,
   App,
   TaggedEvent,
+  portStatus,
   FederatePortAction,
   Reactor
 } from "./internal";
-
 // ---------------------------------------------------------------------//
 // Federated Execution Constants and Enums                             //
 // ---------------------------------------------------------------------//
@@ -290,13 +290,13 @@ export class NetworkReactor extends Reactor {
   // TPO level of this NetworkReactor
   private readonly tpoLevel: number;
 
+  // The port ID of networkInputAction.
+  private readonly portID?: number;
+
   // Fixme: Is there a better way to declare the type of this action?
   //        Currently, it is declared with 'any'.
   // The action of the port that is allocated to this NetworkReceiver.
-  private networkInputAction: FederatePortAction<any> | undefined = undefined;
-
-  // The port ID of networkInputAction.
-  private readonly portID?: number;
+  private networkInputAction?: FederatePortAction<any>;
 
   constructor (
       parent: Reactor,
@@ -322,6 +322,15 @@ export class NetworkReactor extends Reactor {
     this.networkInputAction = networkInputAction;
   }
 
+  public setNetworkPortStatus(status: portStatus): void {
+    this.networkInputAction!.portStatus = status;
+  }
+
+  /**
+   * This function returns its own reactions. Those reactions are needed to add
+   * edges for TPO levels.
+   * @returns
+   */
   public getReactions():Array<Reaction<Variable[]>> {
     return this._getReactions();
   }
@@ -341,7 +350,7 @@ export class NetworkReactor extends Reactor {
    * @param value
    * @returns
    */
-  public handlingMessage<T>(
+  public handleMessage<T>(
     portID: number,
     value: T
   ):void {
@@ -360,7 +369,7 @@ export class NetworkReactor extends Reactor {
    * @param value
    * @returns
    */
-  public handlingTimedMessage<T>(
+  public handleTimedMessage<T>(
     portID: number,
     value: T,
     intendedTag: Tag
@@ -412,8 +421,8 @@ class RTIClient extends EventEmitter {
    * meaning that the type checker cannot check whether uses of the action are type safe.
    * In an alternative design, type information might be preserved. TODO(marten): Look into this.
    */
-  private readonly federatePortActionByID: Map<number, Action<unknown>> =
-    new Map<number, Action<unknown>>();
+  // private readonly federatePortActionByID: Map<number, Action<unknown>> =
+  //   new Map<number, Action<unknown>>();
 
   // /**
   //  * Establish the mapping between a federate port's action and its ID.
@@ -1222,6 +1231,11 @@ export class FederatedApp extends App {
   private readonly rtiClient: RTIClient;
 
   /**
+   * Variable to track how far in the reaction queue we can go until we need to wait for more network port statuses to be known.
+   */
+  private maxLevelAllowedToAdvance: number = 0;
+
+  /**
    * An array of network receivers
    */ 
   private readonly networkReceivers: NetworkReactor[] = [];
@@ -1231,6 +1245,9 @@ export class FederatedApp extends App {
    */
   private readonly networkSenders: NetworkReactor[] = [];
 
+  /**
+   * An array of port absent reactions
+   */
   private readonly portAbsentReactions = new Set<Reaction<Variable[]>>();
 
   /**
@@ -1534,6 +1551,36 @@ export class FederatedApp extends App {
   }
 
   /**
+   * 
+   * @param tag 
+   */
+  private updateLastKnownStatusOnInputPorts(tag:Tag) {
+    // FIXME: Fill this function
+  }
+
+  /**
+   * 
+   * @param tag 
+   * @param portID 
+   */
+  private updateLastKnownStatusOnInputPort(tag:Tag, portID: number) {
+    // FIXME: Fill this function
+  }
+
+  /**
+   * @override
+   * 
+   */
+  protected resetStatusFieldsOnInputPorts():void {
+    for (const networkReceiver of this.networkReceivers) {
+      networkReceiver.setNetworkPortStatus(portStatus.UNKNOWN);
+    }
+    Log.debug(this, () => {
+      return "Resetting port status fields.";
+    });
+  }
+
+  /**
    * TODO: Add a description
    */
   protected enqueuePortAbsentReactions(): void {
@@ -1789,7 +1836,7 @@ export class FederatedApp extends App {
 
         for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
-            candidate.handlingMessage<T>(destPortID, value);
+            candidate.handleMessage<T>(destPortID, value);
           }
         }
 
@@ -1830,9 +1877,11 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
+        this.updateLastKnownStatusOnInputPort(tag, destPortID);
+
         for (let candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
-            candidate.handlingTimedMessage<T>(destPortID, value, tag);
+            candidate.handleTimedMessage<T>(destPortID, value, tag);
           }
         }
 
@@ -1855,6 +1904,9 @@ export class FederatedApp extends App {
       Log.debug(this, () => {
         return `Time Advance Grant received from RTI for ${tag}.`;
       });
+
+      this.updateLastKnownStatusOnInputPorts(tag);
+
       if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
         // Update the greatest time advance grant and immediately
         // wake up _next, in case it was blocked by the old time advance grant

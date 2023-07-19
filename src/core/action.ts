@@ -194,12 +194,20 @@ export class Dummy extends Action<unknown> {
   }
 }
 
+export enum portStatus {
+  PRESENT,
+  ABSENT,
+  UNKNOWN
+}
 export class FederatePortAction<T> extends Action<T> {
+  portStatus: portStatus;
   constructor(
     __parent__: Reactor,
     origin: Origin,
     minDelay: TimeValue = TimeValue.secs(0)
   ) {
     super(__parent__, origin, minDelay);
+
+    this.portStatus = portStatus.UNKNOWN;
   }
 }

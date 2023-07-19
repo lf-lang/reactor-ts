@@ -2285,6 +2285,8 @@ export class App extends Reactor {
 
   protected enqueuePortAbsentReactions(): void { return undefined; }
 
+  protected resetStatusFieldsOnInputPorts(): void {}
+
   /**
    * Handle the next events on the event queue.
    * ----
@@ -2327,6 +2329,8 @@ export class App extends Reactor {
 
       // Advance logical time.
       this._advanceTime(nextEvent.tag);
+
+      //this.resetStatusFieldsOnInputPorts();
 
       // Start processing events. Execute all reactions that are triggered
       // at the current tag in topological order. After that, if the next
