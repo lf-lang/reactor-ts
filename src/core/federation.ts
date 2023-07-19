@@ -1390,6 +1390,8 @@ export class FederatedApp extends App {
             return false;
           }
         }
+        // FIXME: NET should be sent from a federate that doesn't have any upstream federates
+        //        See issue #.
         this.sendRTINextEventTag(nextEvent.tag);
         Log.debug(
           this,
@@ -1556,6 +1558,7 @@ export class FederatedApp extends App {
    */
   private updateLastKnownStatusOnInputPorts(tag:Tag) {
     // FIXME: Fill this function
+    // this.updateMaxLevel(this.greatestTimeAdvanceGrant, this._isLastTAGProvisional);
   }
 
   /**
@@ -1565,6 +1568,7 @@ export class FederatedApp extends App {
    */
   private updateLastKnownStatusOnInputPort(tag:Tag, portID: number) {
     // FIXME: Fill this function
+    // this.updateMaxLevel(this.greatestTimeAdvanceGrant, this._isLastTAGProvisional);
   }
 
   /**
@@ -1578,6 +1582,7 @@ export class FederatedApp extends App {
     Log.debug(this, () => {
       return "Resetting port status fields.";
     });
+    // this.updateMaxLevel(this.greatestTimeAdvanceGrant, this._isLastTAGProvisional);
   }
 
   /**
@@ -1587,6 +1592,17 @@ export class FederatedApp extends App {
     this.portAbsentReactions.forEach(reaction => {
       this._reactionQ.push(reaction);
     });
+  }
+
+  /**
+   * @brief Attempts to update the max level the reaction queue is allowed to advance to
+   * for the current logical timestep.
+   * 
+   * @param tag 
+   * @param is_provisional 
+   */
+  private updateMaxLevel(tag: Tag, is_provisional: boolean) {
+    // FIXME: Fill this function
   }
 
   // private _getFederatePortActionKey<T>(federatePortAction: FederatePortAction<T>): symbol | undefined {
@@ -1885,6 +1901,8 @@ export class FederatedApp extends App {
           }
         }
 
+        //this.updateMaxLevel(tag, this._isLastTAGProvisional);
+
         // if (destPortAction.origin === Origin.logical) {
         //   destPortAction
         //     //FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
@@ -1932,6 +1950,7 @@ export class FederatedApp extends App {
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
                 */
+                // this.updateMaxLevel();
         // FIXME: Add input control reaction handling.
       }
     });
