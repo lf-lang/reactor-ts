@@ -9,7 +9,8 @@ import {
   App,
   TimeValue,
   Origin,
-  Log
+  Log,
+  GraphDebugLogger
 } from "../core/internal";
 
 Log.global.level = Log.levels.INFO;
@@ -97,6 +98,7 @@ class Filter extends Reactor {
                 // console.log("CREATED: " + x._getFullyQualifiedName())
                 // FIXME: weird hack. Maybe just accept writable ports as well?
                 const port = (out as unknown as WritablePort<number>).getPort();
+                console.log("connecting......");
                 this.connect(port, n.inp);
                 // FIXME: this updates the dependency graph, but it doesn't redo the topological sort
                 // For a pipeline like this one, it is not necessary, but in general it is.
@@ -133,5 +135,10 @@ class Sieve extends App {
   }
 }
 
+
 const sieve = new Sieve("Sieve");
+
+globalThis.graphDebugLogger = new GraphDebugLogger(sieve);
+globalThis.recording = false;
+
 sieve._start();

@@ -3,9 +3,43 @@
  * @author Marten Lohstroh <marten@berkeley.edu>
  */
 
+import { DebugLogger } from "util";
 import {Reaction} from "./reaction";
 import type {Sortable, Variable} from "./types";
-import {Log} from "./util";
+import {GraphDebugLogger, Log} from "./util";
+
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-explicit-any
+const debugLoggerDecorator = (target: any, context: ClassMethodDecoratorContext) => {
+  if (context.kind === "method") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return function (this: any, ...args: unknown[]): any {
+      console.log(`${context.name.toString()} is called.`);
+      console.log(`Tracestack: ${(new Error()).stack}`);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      return target.call(this, ...args);
+    }
+  }
+}
+
+declare global {
+  var graphDebugLogger: GraphDebugLogger | undefined;
+  var recording: boolean;
+}
+
+const debugHelper = (): void => {
+  if (globalThis.recording) { return; }
+  globalThis.recording = true;
+  if (globalThis.graphDebugLogger == null) {
+    return
+  }
+
+  const err = new Error();
+  console.log(err.stack);
+  const debuglogger = globalThis.graphDebugLogger;
+  debuglogger.capture(err);
+  globalThis.recording = false;
+};
 
 /**
  * A generic precedence graph.
@@ -53,6 +87,7 @@ export class PrecedenceGraph<T> {
    * @param node
    */
   addNode(node: T): void {
+    debugHelper();
     if (!this.adjacencyMap.has(node)) {
       this.adjacencyMap.set(node, new Set());
     }
@@ -143,6 +178,8 @@ export class PrecedenceGraph<T> {
    * @param downstream The node at which the directed edge ends.
    */
   addEdge(upstream: T, downstream: T): void {
+    debugHelper();
+    console.log("!");
     const deps = this.adjacencyMap.get(downstream);
     if (deps == null) {
       this.adjacencyMap.set(downstream, new Set([upstream]));
