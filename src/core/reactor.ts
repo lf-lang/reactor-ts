@@ -792,7 +792,8 @@ export abstract class Reactor extends Component {
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
-    }
+    },
+    name?: string
   ): void {
     const calleePorts = trigs.filter((trig) => trig instanceof CalleePort);
 
@@ -806,7 +807,8 @@ export abstract class Reactor extends Component {
         args,
         react,
         deadline,
-        late
+        late,
+        name
       );
       if (trigs.length > 1) {
         // A procedure can only have a single trigger.
@@ -830,7 +832,8 @@ export abstract class Reactor extends Component {
         args,
         react,
         deadline,
-        late
+        late,
+        name
       );
       // Stage it directly if it to be triggered immediately.
       if (reaction.isTriggeredImmediately()) {
@@ -851,7 +854,8 @@ export abstract class Reactor extends Component {
     deadline?: TimeValue,
     late: (this: MutationSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
-    }
+    },
+    name?: string
   ): void {
     const mutation = new Mutation(
       this,
@@ -860,7 +864,8 @@ export abstract class Reactor extends Component {
       args,
       react,
       deadline,
-      late
+      late,
+      name
     );
     // Stage it directly if it to be triggered immediately.
     if (mutation.isTriggeredImmediately()) {
