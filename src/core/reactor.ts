@@ -153,6 +153,11 @@ export abstract class Reactor extends Component {
    */
   private readonly _keyChain = new Map<Component, symbol>();
 
+  // This is the keychain for creation, i.e. if Reactor R's mutation created reactor B,
+  // then R is B's creator, even if they are siblings. R should have access to B,
+  // at least semantically......?
+  private readonly _creatorKeyChain = new Map<Component, symbol>();
+
   /**
    * This graph has in it all the dependencies implied by this container's
    * ports, reactions, and connections.
@@ -375,7 +380,7 @@ export abstract class Reactor extends Component {
    * @param key The key that verifies the containment relation between this
    * reactor and the component, with at most one level of indirection.
    */
-  public _getKey(component: Trigger, key?: symbol): symbol | undefined {
+  public _getKey(component: Trigger, key?: symbol, allowCreatorKey?: boolean): symbol | undefined {
     if (component._isContainedBy(this) || this._key === key) {
       return this._keyChain.get(component);
     } else if (
@@ -386,6 +391,12 @@ export abstract class Reactor extends Component {
       if (owner !== null) {
         return owner._getKey(component, this._keyChain.get(owner));
       }
+    } else if (allowCreatorKey ?? false) {
+      console.log("trying to get key......")
+      if (this._creatorKeyChain.get(component) != null) {
+        return this._creatorKeyChain.get(component);
+      }
+      return this._creatorKeyChain.get(component.getContainer());
     }
   }
 
@@ -436,7 +447,7 @@ export abstract class Reactor extends Component {
         this.reactor._connectCall(src, dst);
       } else if (src instanceof IOPort && dst instanceof IOPort) {
         if (this.reactor.canConnect(src, dst) === 2) {
-          this.reactor._elevatedConnect(src, dst);
+          throw new Error("Connection will fail due to ");
         } else {
           this.reactor._connect(src, dst);
         }
@@ -1117,12 +1128,6 @@ export abstract class Reactor extends Component {
       throw Error("Destination port is already occupied.");
     }
 
-    if (! (src.checkKey(this._key) && dst.checkKey(this._key) )) {
-      // FIXME: dirty hack here
-      // Scoping issue. Does not possess valid key for src/dst.
-      return 2;
-    }
-
     if (!this._runtime.isRunning()) {
       // console.log("Connecting before running")
       // Validate connections between callers and callees.
@@ -1245,11 +1250,12 @@ export abstract class Reactor extends Component {
   ): void {
     Log.debug(this, () => `connecting ${src} and ${dst}`);
     // Register receiver for value propagation.
-    const writer = dst.asWritable(this._getKey(dst));
+    console.log(this._getKey(dst, undefined, true));
+    const writer = dst.asWritable(this._getKey(dst, undefined, true));
     // Add dependency implied by connection to local graph.
     this._dependencyGraph.addEdge(src, dst);
     src
-      .getManager(this._getKey(src))
+      .getManager(this._getKey(src, undefined, true))
       .addReceiver(writer as unknown as WritablePort<S>);
     const val = src.get();
     if (this._runtime.isRunning() && val !== undefined) {
@@ -1592,7 +1598,9 @@ export abstract class Reactor extends Component {
     if (this._getContainer() === this) {
       throw new Error(`Reactor ${this} is self-contained. Adding sibling creates logical issue.`);
     }
-    return this._getContainer()._uncheckedAddChild(constructor, ...args);
+    const newReactor = this._getContainer()._uncheckedAddChild(constructor, ...args);
+    this._creatorKeyChain.set(newReactor, newReactor._key);
+    return newReactor;
   }
 
   public _elevatedConnect(...args: Parameters<Reactor["_connect"]>): ReturnType<Reactor["_connect"]> {

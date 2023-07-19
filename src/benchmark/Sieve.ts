@@ -127,8 +127,8 @@ class Sieve extends App {
     fail?: () => void
   ) {
     super(timeout, keepAlive, fast, success, fail, name);
-    this.source = new Ramp(this, 100000, TimeValue.nsec(1));
-    this.filter = new Filter(this, 2, 1000);
+    this.source = new Ramp(this, 1000, TimeValue.nsec(1));
+    this.filter = new Filter(this, 2, 10);
     this._connect(this.source.value, this.filter.inp);
   }
 }
