@@ -1,5 +1,6 @@
 import type {Runtime} from "./internal";
 import {Reactor, App, MultiPort, IOPort, Bank} from "./internal";
+import {v4 as uuidv4} from "uuid";
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -17,7 +18,7 @@ export abstract class Component {
    * A symbol that identifies this component, and it also used to selectively
    * grant access to its privileged functions.
    */
-  protected _key = Symbol("Unique component identifier");
+  protected _key = Symbol(uuidv4());
 
   /**
    * The container of this component. Each component is contained by a
@@ -25,6 +26,8 @@ export abstract class Component {
    * are self-contained.
    */
   private readonly _container: Reactor;
+
+  protected _name: string;
 
   /**
    * Create a new component and register it with the given container.

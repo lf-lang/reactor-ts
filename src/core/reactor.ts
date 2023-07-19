@@ -487,12 +487,15 @@ export abstract class Reactor extends Component {
     }
   };
 
+  protected _name: string;
+
   /**
    * Create a new reactor.
    * @param container The container of this reactor.
    */
-  constructor(container: Reactor | null) {
+  constructor(container: Reactor | null, name? : string) {
     super(container);
+    this._name = (name == null) ? this._key.description?.slice(0, 8) ?? "unknown reactor" : name;
     this._bankIndex = -1;
     if (container !== null) {
       const index = Bank.initializationMap.get(container);
@@ -2242,8 +2245,6 @@ export class App extends Reactor {
 
   private readonly snooze: Action<Tag>;
 
-  readonly _name: string;
-
   /**
    * Create a new top-level reactor.
    * @param executionTimeout Optional parameter to let the execution of the app time out.
@@ -2257,18 +2258,18 @@ export class App extends Reactor {
     keepAlive = false,
     fast = false,
     public success: () => void = () => undefined,
-    public failure: () => void = () => undefined
+    public failure: () => void = () => undefined,
+    name?: string
   ) {
-    super(null);
-
-    let name = this.constructor.name;
-    if (name === "") {
-      name = "app";
-    } else {
-      name = name.charAt(0).toLowerCase() + name.slice(1);
+    super(null, name);
+    
+    if (name == null) {
+      name = this.constructor.name;
+      if (name !== "") {
+        name = name.charAt(0).toLowerCase() + name.slice(1);
+      }
+      this._name = name;
     }
-    this._name = name;
-
     // Update pointer to runtime object for this reactor and
     // its startup and shutdown action since the inner class
     // instance this.__runtime isn't initialized up until here.

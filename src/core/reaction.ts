@@ -67,7 +67,8 @@ export class Reaction<T extends Variable[]>
     private deadline?: TimeValue,
     private readonly late: (...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
-    }
+    },
+    readonly name?: string
   ) {}
 
   /**
@@ -181,9 +182,9 @@ export class Reaction<T extends Variable[]>
    * Return string representation of the reaction.
    */
   public toString(): string {
-    return `${this.reactor._getFullyQualifiedName()}[R${this.reactor._getReactionIndex(
-      this as unknown as Reaction<Variable[]>
-    )}]`;
+    return `${this.reactor._getFullyQualifiedName()}` +
+      ((this.name != null) ? `${this.name} aka` : "") +
+      `[R${this.reactor._getReactionIndex(this as unknown as Reaction<Variable[]>)}]`;
   }
 }
 
@@ -199,9 +200,10 @@ export class Mutation<T extends Variable[]> extends Reaction<T> {
     args: [...ArgList<T>],
     react: (...args: ArgList<T>) => void,
     deadline?: TimeValue,
-    late?: (...args: ArgList<T>) => void
+    late?: (...args: ArgList<T>) => void,
+    name?: string
   ) {
-    super(__parent__, sandbox, trigs, args, react, deadline, late);
+    super(__parent__, sandbox, trigs, args, react, deadline, late, name);
     this.parent = __parent__;
   }
 
@@ -209,8 +211,8 @@ export class Mutation<T extends Variable[]> extends Reaction<T> {
    * @override
    */
   public toString(): string {
-    return `${this.parent._getFullyQualifiedName()}[M${this.parent._getReactionIndex(
-      this as unknown as Reaction<Variable[]>
-    )}]`;
+    return `${this.parent._getFullyQualifiedName()}` +
+      ((this.name != null) ? `${this.name} aka` : "") +
+      `[M${this.parent._getReactionIndex(this as unknown as Reaction<Variable[]>)}]`;
   }
 }

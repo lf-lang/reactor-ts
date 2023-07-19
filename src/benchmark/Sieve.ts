@@ -21,7 +21,7 @@ class Ramp extends Reactor {
   value = new OutPort<number>(this);
 
   constructor(parent: Reactor, until = 100000, period: TimeValue) {
-    super(parent);
+    super(parent, "Ramp");
     this.until = new Parameter(until);
     this.next = new Action<number>(this, Origin.logical, period);
     this.addReaction(
@@ -56,7 +56,7 @@ class Filter extends Reactor {
   hasChild: State<boolean>;
 
   constructor(parent: Reactor, startPrime: number, numberOfPrimes: number) {
-    super(parent);
+    super(parent, `FilterFor${startPrime}`);
     // console.log("Created filter with prime: " + prime)
     this.startPrime = new Parameter(startPrime);
     this.localPrimes = new State(new Array<number>());
@@ -126,7 +126,7 @@ class Sieve extends App {
     success?: () => void,
     fail?: () => void
   ) {
-    super(timeout, keepAlive, fast, success, fail);
+    super(timeout, keepAlive, fast, success, fail, name);
     this.source = new Ramp(this, 100000, TimeValue.nsec(1));
     this.filter = new Filter(this, 2, 1000);
     this._connect(this.source.value, this.filter.inp);
