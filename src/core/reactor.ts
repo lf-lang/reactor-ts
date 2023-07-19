@@ -487,7 +487,7 @@ export abstract class Reactor extends Component {
     }
   };
 
-  protected _name: string;
+  _name: string;
 
   /**
    * Create a new reactor.

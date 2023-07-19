@@ -27,8 +27,6 @@ export abstract class Component {
    */
   private readonly _container: Reactor;
 
-  protected _name: string;
-
   /**
    * Create a new component and register it with the given container.
    * @param container The reactor that will contain the new component,
@@ -189,7 +187,7 @@ export abstract class Component {
   public _getName(): string {
     let name;
 
-    if (this instanceof Component) {
+    if (this instanceof Reactor) {
       name = this._name;
     } 
 
