@@ -10,7 +10,7 @@ import {GraphDebugLogger, Log} from "./util";
 
 // TODO: find a way to to this with decorators. 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-explicit-any
-const debugLoggerDecorator = (target: any, context: ClassMethodDecoratorContext) => {
+/* const debugLoggerDecorator = (target: any, context: ClassMethodDecoratorContext) => {
   if (context.kind === "method") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return function (this: any, ...args: unknown[]): any {
@@ -20,7 +20,7 @@ const debugLoggerDecorator = (target: any, context: ClassMethodDecoratorContext)
       return target.call(this, ...args);
     }
   }
-}
+} */
 
 declare global {
   // eslint-disable-next-line no-var
