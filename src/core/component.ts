@@ -189,11 +189,9 @@ export abstract class Component {
   public _getName(): string {
     let name;
 
-    if (this instanceof App) {
+    if (this instanceof Component) {
       name = this._name;
-    } else {
-      name = Component.keyOfMatchingEntry(this, this._container);
-    }
+    } 
 
     if (name === "" && this instanceof IOPort) {
       name = Component.keyOfMatchingMultiport(this, this._container);
@@ -203,7 +201,7 @@ export abstract class Component {
       name = Component.keyOfMatchingBank(this, this._container);
     }
 
-    if (name !== "") {
+    if (name != null && name !== "") {
       return name;
     } else {
       return this.constructor.name;
