@@ -1095,7 +1095,7 @@ export abstract class Reactor extends Component {
    * @param src The start point of a new connection.
    * @param dst The end point of a new connection.
    */
-  public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean | number /* dirty hack here */ {
+  public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean | number {
     // Immediate rule out trivial self loops.
     if (src === dst) {
       throw Error("Source port and destination port are the same.");
@@ -1110,7 +1110,8 @@ export abstract class Reactor extends Component {
     }
 
     if (! (src.checkKey(this._key) && dst.checkKey(this._key) )) {
-      console.log("[debug] Scoping issue. Does not possess valid key for src/dst.")
+      // FIXME: dirty hack here
+      // Scoping issue. Does not possess valid key for src/dst.
       return 2;
     }
 
@@ -1591,20 +1592,15 @@ export abstract class Reactor extends Component {
     let currentLevel: Reactor = this;
     let atTopLevel = false;
     while (currentLevel != null && !atTopLevel) {
-      console.log(`[DEBUG] _elevatedConnect: I am ${currentLevel}, my parent is ${currentLevel._getContainer()}`);
-      console.log(`[DEBUG] _elevatedConnect: ${currentLevel != null && currentLevel._getContainer() !== currentLevel ? "yes" : "no"}`)
       if (currentLevel === currentLevel._getContainer()) {
         atTopLevel = true;
       }
-      console.log(`[DEBUG] _elevatedConnect: Attempting connection from ${currentLevel}`)
       try {
         currentLevel._connect(...args);
         return
       } catch (error) {
-        console.log(`[DEBUG] _elevatedConnect: Error - ${(error as Error).message}`)
       }
       currentLevel = currentLevel._getContainer();
-      console.log(`[DEBUG] next level ${currentLevel}`)
     }
     throw new Error(`[DEBUG] _elevatedConnect: Elevated connect failed for ${this._getFullyQualifiedName()}.`);
   }
