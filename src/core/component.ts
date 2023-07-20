@@ -18,7 +18,7 @@ export abstract class Component {
    * A symbol that identifies this component, and it also used to selectively
    * grant access to its privileged functions.
    */
-  protected _key = Symbol(uuidv4());
+  protected readonly _key = Symbol(uuidv4());
 
   /**
    * The container of this component. Each component is contained by a

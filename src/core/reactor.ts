@@ -393,10 +393,7 @@ export abstract class Reactor extends Component {
       }
     } else if (allowCreatorKey ?? false) {
       console.log("trying to get key......")
-      if (this._creatorKeyChain.get(component) != null) {
-        return this._creatorKeyChain.get(component);
-      }
-      return this._creatorKeyChain.get(component.getContainer());
+      return component.getContainer()._getKey(component, this._creatorKeyChain.get(component.getContainer()));
     }
   }
 
