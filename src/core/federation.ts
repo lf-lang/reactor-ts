@@ -288,7 +288,8 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  */
 export class NetworkReactor extends Reactor {
   // TPO level of this NetworkReactor
-  private readonly tpoLevel: number;
+  // FIXME: Comment out tpoLevel until the code generator passes it
+  //private readonly tpoLevel: number;
 
   // Fixme: Is there a better way to declare the type of this action?
   //        Currently, it is declared with 'any'.
@@ -300,19 +301,20 @@ export class NetworkReactor extends Reactor {
 
   constructor (
       parent: Reactor,
-      tpoLevel: number,
+      //tpoLevel: number,
       portID?: number
   ) {
     super(parent);
-    this.tpoLevel = tpoLevel;
+    //this.tpoLevel = tpoLevel;
     if (portID !== undefined) {
       this.portID = portID;
     }
   }
 
-  public getTpoLevel(): number {
-    return this.tpoLevel;
-  }
+  // FIXME: Comment out tpoLevel until the code generator passes it
+  // public getTpoLevel(): number {
+  //   return this.tpoLevel;
+  // }
 
   public getPortID(): number | undefined {
     return this.portID;
@@ -1709,20 +1711,21 @@ export class FederatedApp extends App {
   /**
    * 
    */
-  _addEdgesForTpoLevels():void {
-    let networkReactors = this.networkReceivers.concat(this.networkSenders);
-    networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
-      return a.getTpoLevel() - b.getTpoLevel();
-    })
+  // FIXME: Comment out tpoLevel until the code generator passes it
+  // _addEdgesForTpoLevels():void {
+  //   let networkReactors = this.networkReceivers.concat(this.networkSenders);
+  //   networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
+  //     return a.getTpoLevel() - b.getTpoLevel();
+  //   })
 
-    for (let i = 0; i < networkReactors.length - 1; i++) {
-      for (const upstream of networkReactors[i].getReactions()) {
-        for (const downstream of networkReactors[i + 1].getReactions()) {
-          this._dependencyGraph.addEdge(upstream, downstream);
-        }
-      }
-    }
-  }
+  //   for (let i = 0; i < networkReactors.length - 1; i++) {
+  //     for (const upstream of networkReactors[i].getReactions()) {
+  //       for (const downstream of networkReactors[i + 1].getReactions()) {
+  //         this._dependencyGraph.addEdge(upstream, downstream);
+  //       }
+  //     }
+  //   }
+  // }
 
   /**
    * @override
@@ -1733,7 +1736,7 @@ export class FederatedApp extends App {
    * time message from the RTI.
    */
   _start(): void {
-    this._addEdgesForTpoLevels();
+    // this._addEdgesForTpoLevels();
     
     this._analyzeDependencies();
 
