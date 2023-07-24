@@ -1,7 +1,13 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {FederatePortAction, FederateConfig, Reaction, Variable, TaggedEvent} from "./internal";
+import type {
+  FederatePortAction,
+  FederateConfig,
+  Reaction,
+  Variable,
+  TaggedEvent
+} from "./internal";
 import {
   Log,
   Tag,
@@ -297,10 +303,10 @@ export class NetworkReactor extends Reactor {
   // The port ID of networkInputAction.
   private readonly portID?: number;
 
-  constructor (
-      parent: Reactor,
-      // tpoLevel: number,
-      portID?: number
+  constructor(
+    parent: Reactor,
+    // tpoLevel: number,
+    portID?: number
   ) {
     super(parent);
     // this.tpoLevel = tpoLevel;
@@ -318,21 +324,23 @@ export class NetworkReactor extends Reactor {
     return this.portID;
   }
 
-  public registerNetworkInputAction<T>(networkInputAction: FederatePortAction<T>): void {
+  public registerNetworkInputAction<T>(
+    networkInputAction: FederatePortAction<T>
+  ): void {
     this.networkInputAction = networkInputAction;
   }
 
-  public getReactions():Array<Reaction<Variable[]>> {
+  public getReactions(): Array<Reaction<Variable[]>> {
     return this._getReactions();
   }
 
   /**
-   * This function is for NetworkSender reactors. 
+   * This function is for NetworkSender reactors.
    * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
    * @returns portAbsentReactor of this NetworkSender reactor
    */
-  public getLastReactioOrMutation():Reaction<Variable[]> | undefined {
-      return this._getLastReactionOrMutation();
+  public getLastReactioOrMutation(): Reaction<Variable[]> | undefined {
+    return this._getLastReactionOrMutation();
   }
 
   /**
@@ -341,18 +349,17 @@ export class NetworkReactor extends Reactor {
    * @param value
    * @returns
    */
-  public handlingMessage<T>(
-    portID: number,
-    value: T
-  ):void {
+  public handlingMessage<T>(portID: number, value: T): void {
     if (portID !== this.portID) {
-      this.util.reportError("FederatedApp attempts to pass the tagged message to the wrong port ID");
+      this.util.reportError(
+        "FederatedApp attempts to pass the tagged message to the wrong port ID"
+      );
       return;
     }
     if (this.networkInputAction !== undefined) {
       this.networkInputAction
-      .asSchedulable(this._getKey(this.networkInputAction))
-      .schedule(0, value);
+        .asSchedulable(this._getKey(this.networkInputAction))
+        .schedule(0, value);
     }
   }
 
@@ -366,9 +373,11 @@ export class NetworkReactor extends Reactor {
     portID: number,
     value: T,
     intendedTag: Tag
-  ):void {
+  ): void {
     if (portID !== this.portID) {
-      this.util.reportError("FederatedApp attempts to pass the tagged message to the wrong port ID");
+      this.util.reportError(
+        "FederatedApp attempts to pass the tagged message to the wrong port ID"
+      );
       return;
     }
     if (this.networkInputAction !== undefined) {
@@ -1227,7 +1236,7 @@ export class FederatedApp extends App {
 
   /**
    * An array of network receivers
-   */ 
+   */
   private readonly networkReceivers: NetworkReactor[] = [];
 
   /**
@@ -1516,30 +1525,26 @@ export class FederatedApp extends App {
   // }
 
   /**
-   * Register a network receiver reactors. It must be registered so it is known by this 
-   * FederatedApp and used when add edges for TPO levels and may be used when a message 
+   * Register a network receiver reactors. It must be registered so it is known by this
+   * FederatedApp and used when add edges for TPO levels and may be used when a message
    * for the associated port has been received via the RTI.
    * @param networkReciever The designated network reciever reactor
    */
-  public registerNetworkReciever(
-    networkReciever: NetworkReactor
-  ): void {
+  public registerNetworkReciever(networkReciever: NetworkReactor): void {
     this.networkReceivers.push(networkReciever);
   }
 
   /**
-   * Register a network receiver reactors. It must be registered so it is known by this 
+   * Register a network receiver reactors. It must be registered so it is known by this
    * FederatedApp and used when add edges for TPO levels.
-   * @param networkSender 
+   * @param networkSender
    */
-  public registerNetworkSender(
-    networkSender: NetworkReactor
-  ): void {
+  public registerNetworkSender(networkSender: NetworkReactor): void {
     this.networkSenders.push(networkSender);
 
     const portAbsentReaction = networkSender.getLastReactioOrMutation();
     if (portAbsentReaction !== undefined) {
-      this.portAbsentReactions.add(portAbsentReaction)
+      this.portAbsentReactions.add(portAbsentReaction);
     }
   }
 
@@ -1548,7 +1553,7 @@ export class FederatedApp extends App {
    * message to downstream federates if a given network output port is not present.
    */
   protected enqueuePortAbsentReactions(): void {
-    this.portAbsentReactions.forEach(reaction => {
+    this.portAbsentReactions.forEach((reaction) => {
       this._reactionQ.push(reaction);
     });
   }
@@ -1589,10 +1594,7 @@ export class FederatedApp extends App {
     destPortID: number,
     time: TimeValue
   ): void {
-    const absTime = this.util
-      .getCurrentTag()
-      .getLaterTag(time)
-      .toBinary();
+    const absTime = this.util.getCurrentTag().getLaterTag(time).toBinary();
     Log.debug(this, () => {
       return (
         `Sending RTI timed message to federate ID: ${destFederateID}` +
@@ -1706,7 +1708,7 @@ export class FederatedApp extends App {
   }
 
   /**
-   * 
+   *
    */
   // FIXME: Comment out tpoLevel until the code generator passes it
   // _addEdgesForTpoLevels():void {
@@ -1734,7 +1736,7 @@ export class FederatedApp extends App {
    */
   _start(): void {
     // this._addEdgesForTpoLevels();
-    
+
     this._analyzeDependencies();
 
     this._loadStartupReactions();
@@ -1943,8 +1945,5 @@ export class FederatedApp extends App {
  * port.
  */
 export class RemoteFederatePort {
-  constructor(
-    public federateID: number,
-    public portID: number
-  ) {}
+  constructor(public federateID: number, public portID: number) {}
 }

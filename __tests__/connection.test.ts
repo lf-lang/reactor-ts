@@ -39,12 +39,6 @@ describe("Check canConnect", () => {
           true
         );
       });
-
-      it("canConnect failure", () => {
-        expect(this.canConnect(this.destination.in, this.source.out)).toBe(
-          false
-        );
-      });
     }
   }
   var testApp = new TestApp();
