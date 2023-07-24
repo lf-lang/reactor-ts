@@ -1,7 +1,7 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {Action, FederateConfig, Mutation, Reaction, Variable} from "./internal";
+import type {Action, FederateConfig, Reaction, Variable} from "./internal";
 import {
   Log,
   Tag,
@@ -289,7 +289,7 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
 export class NetworkReactor extends Reactor {
   // TPO level of this NetworkReactor
   // FIXME: Comment out tpoLevel until the code generator passes it
-  //private readonly tpoLevel: number;
+  // private readonly tpoLevel: number;
 
   // Fixme: Is there a better way to declare the type of this action?
   //        Currently, it is declared with 'any'.
@@ -301,11 +301,11 @@ export class NetworkReactor extends Reactor {
 
   constructor (
       parent: Reactor,
-      //tpoLevel: number,
+      // tpoLevel: number,
       portID?: number
   ) {
     super(parent);
-    //this.tpoLevel = tpoLevel;
+    // this.tpoLevel = tpoLevel;
     if (portID !== undefined) {
       this.portID = portID;
     }
@@ -351,9 +351,11 @@ export class NetworkReactor extends Reactor {
       this.util.reportError("FederatedApp attempts to pass the tagged message to the wrong port ID");
       return;
     }
-    this.networkInputAction!
+    if (this.networkInputAction !== undefined) {
+      this.networkInputAction
       .asSchedulable(this._getKey(this.networkInputAction!))
       .schedule(0, value);
+    }
   }
 
   /**
@@ -371,17 +373,19 @@ export class NetworkReactor extends Reactor {
       this.util.reportError("FederatedApp attempts to pass the tagged message to the wrong port ID");
       return;
     }
-    if (this.networkInputAction!.origin === Origin.logical) {
-      this.networkInputAction!
-        // FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
-        .asSchedulable(this._getKey(this.networkInputAction!))
-        .schedule(0, value, intendedTag);
-    } else {
-      // The schedule function for physical actions implements
-      // Tr = max(r, R + A)
-      this.networkInputAction!
-        .asSchedulable(this._getKey(this.networkInputAction!))
-        .schedule(0, value);
+    if (this.networkInputAction !== undefined) {
+      if (this.networkInputAction.origin === Origin.logical) {
+        this.networkInputAction
+          // FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
+          .asSchedulable(this._getKey(this.networkInputAction!))
+          .schedule(0, value, intendedTag);
+      } else {
+        // The schedule function for physical actions implements
+        // Tr = max(r, R + A)
+        this.networkInputAction
+          .asSchedulable(this._getKey(this.networkInputAction!))
+          .schedule(0, value);
+      }
     }
   }
 }
