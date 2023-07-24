@@ -1768,7 +1768,7 @@ interface UtilityFunctions {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: number
+    time: TimeValue
   ) => void;
   sendRTIPortAbsent: (
     additionalDealy: TimeValue,
@@ -1903,7 +1903,7 @@ export class App extends Reactor {
       data: T,
       destFederateID: number,
       destPortID: number,
-      time: number
+      time: TimeValue
     ): void {
       this.app.sendRTITimedMessage(data, destFederateID, destPortID, time);
     }
@@ -2072,7 +2072,7 @@ export class App extends Reactor {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: number
+    time: TimeValue
   ): void {
     throw new Error(
       "Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp"
@@ -2382,7 +2382,7 @@ export class App extends Reactor {
         nextEvent != null &&
         this._currentTag.isSimultaneousWith(nextEvent.tag)
       );
-      // enqueue networkOutputControlReactions
+      // enqueue portAbsentReactions
       this.enqueuePortAbsentReactions();
 
       // React to all the events loaded onto the reaction queue.
@@ -2665,7 +2665,7 @@ export class App extends Reactor {
 
     Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
-    // enqueue networkOutputControlReactions
+    // enqueue portAbsentReactions
     this.enqueuePortAbsentReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.

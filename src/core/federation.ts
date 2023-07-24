@@ -1514,8 +1514,10 @@ export class FederatedApp extends App {
   // }
 
   /**
-   * TODO: Add a description
-   * @param networkReciever 
+   * Register a network receiver reactors. It must be registered so it is known by this 
+   * FederatedApp and used when add edges for TPO levels and may be used when a message 
+   * for the associated port has been received via the RTI.
+   * @param networkReciever The designated network reciever reactor
    */
   public registerNetworkReciever(
     networkReciever: NetworkReactor
@@ -1524,7 +1526,8 @@ export class FederatedApp extends App {
   }
 
   /**
-   * TODO: Add a description
+   * Register a network receiver reactors. It must be registered so it is known by this 
+   * FederatedApp and used when add edges for TPO levels.
    * @param networkSender 
    */
   public registerNetworkSender(
@@ -1536,25 +1539,14 @@ export class FederatedApp extends App {
   }
 
   /**
-   * TODO: Add a description
+   * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
+   * message to downstream federates if a given network output port is not present.
    */
   protected enqueuePortAbsentReactions(): void {
     this.portAbsentReactions.forEach(reaction => {
       this._reactionQ.push(reaction);
     });
   }
-
-  // private _getFederatePortActionKey<T>(federatePortAction: FederatePortAction<T>): symbol | undefined {
-  //   if (
-  //     (federatePortAction instanceof FederatePortAction) &&
-  //     federatePortAction._isContainedByContainerOf(this)
-  //   ) {
-  //     const owner = federatePortAction.getContainer();
-  //     if (owner !== null) {
-  //       return owner._getKey(federatePortAction, this._keyChain.get(owner));
-  //     }
-  //   }
-  // }
 
   /**
    * Send a message to a potentially remote federate's port via the RTI. This message
@@ -1590,11 +1582,11 @@ export class FederatedApp extends App {
     msg: T,
     destFederateID: number,
     destPortID: number,
-    time: number
+    time: TimeValue
   ): void {
     const absTime = this.util
       .getCurrentTag()
-      .getLaterTag(TimeValue.nsec(time))
+      .getLaterTag(time)
       .toBinary();
     Log.debug(this, () => {
       return (
