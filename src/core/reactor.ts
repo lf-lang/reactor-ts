@@ -379,7 +379,7 @@ export abstract class Reactor extends Component {
     if (component._isContainedBy(this) || this._key === key) {
       return this._keyChain.get(component);
     } else if (
-      (!(component instanceof Action)) &&
+      !(component instanceof Action) &&
       component._isContainedByContainerOf(this)
     ) {
       const owner = component.getContainer();

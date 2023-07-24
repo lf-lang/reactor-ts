@@ -1,7 +1,7 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {Action, FederateConfig, Reaction, Variable, TaggedEvent, FederatePortAction} from "./internal";
+import type {FederatePortAction, FederateConfig, Reaction, Variable, TaggedEvent} from "./internal";
 import {
   Log,
   Tag,
@@ -416,8 +416,8 @@ class RTIClient extends EventEmitter {
    * meaning that the type checker cannot check whether uses of the action are type safe.
    * In an alternative design, type information might be preserved. TODO(marten): Look into this.
    */
-  private readonly federatePortActionByID: Map<number, Action<unknown>> =
-    new Map<number, Action<unknown>>();
+  // private readonly federatePortActionByID: Map<number, Action<unknown>> =
+  //   new Map<number, Action<unknown>>();
 
   // /**
   //  * Establish the mapping between a federate port's action and its ID.
