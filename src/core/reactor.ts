@@ -42,8 +42,7 @@ import {
   Startup,
   Shutdown,
   WritableMultiPort,
-  Dummy,
-  FederatePortAction
+  Dummy
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";

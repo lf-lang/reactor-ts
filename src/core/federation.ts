@@ -1,7 +1,7 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {Action, FederateConfig, Reaction, Variable} from "./internal";
+import type {Action, FederateConfig, Reaction, Variable, TaggedEvent, FederatePortAction} from "./internal";
 import {
   Log,
   Tag,
@@ -10,8 +10,6 @@ import {
   getCurrentPhysicalTime,
   Alarm,
   App,
-  TaggedEvent,
-  FederatePortAction,
   Reactor
 } from "./internal";
 
@@ -353,7 +351,7 @@ export class NetworkReactor extends Reactor {
     }
     if (this.networkInputAction !== undefined) {
       this.networkInputAction
-      .asSchedulable(this._getKey(this.networkInputAction!))
+      .asSchedulable(this._getKey(this.networkInputAction))
       .schedule(0, value);
     }
   }
@@ -377,13 +375,13 @@ export class NetworkReactor extends Reactor {
       if (this.networkInputAction.origin === Origin.logical) {
         this.networkInputAction
           // FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
-          .asSchedulable(this._getKey(this.networkInputAction!))
+          .asSchedulable(this._getKey(this.networkInputAction))
           .schedule(0, value, intendedTag);
       } else {
         // The schedule function for physical actions implements
         // Tr = max(r, R + A)
         this.networkInputAction
-          .asSchedulable(this._getKey(this.networkInputAction!))
+          .asSchedulable(this._getKey(this.networkInputAction))
           .schedule(0, value);
       }
     }
@@ -1539,7 +1537,10 @@ export class FederatedApp extends App {
   ): void {
     this.networkSenders.push(networkSender);
 
-    this.portAbsentReactions.add(networkSender.getLastReactioOrMutation()!)
+    const portAbsentReaction = networkSender.getLastReactioOrMutation();
+    if (portAbsentReaction !== undefined) {
+      this.portAbsentReactions.add(portAbsentReaction)
+    }
   }
 
   /**
@@ -1829,7 +1830,7 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
-        for (let candidate of this.networkReceivers) {
+        for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
             candidate.handlingTimedMessage<T>(destPortID, value, tag);
           }
