@@ -1237,12 +1237,16 @@ export class FederatedApp extends App {
   /**
    * An array of network receivers
    */
-  private readonly networkReceivers: NetworkReactor<unknown>[] = [];
+  private readonly networkReceivers: Array<NetworkReactor<unknown>> = new Array<
+    NetworkReactor<unknown>
+  >();
 
   /**
    * An array of network senders
    */
-  private readonly networkSenders: NetworkReactor<unknown>[] = [];
+  private readonly networkSenders: Array<NetworkReactor<unknown>> = new Array<
+    NetworkReactor<unknown>
+  >();
 
   private readonly portAbsentReactions = new Set<Reaction<Variable[]>>();
 

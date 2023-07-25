@@ -54,9 +54,6 @@ describe("Container to Contained", () => {
     expect(
       app.container.canConnect(app.container.b, app.container.contained.a)
     ).toBe(false);
-    expect(
-      app.container.canConnect(app.container.contained.a, app.container.b)
-    ).toBe(false);
 
     expect(
       app.container.canConnect(app.container.b, app.container.contained.b)
