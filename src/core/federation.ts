@@ -335,12 +335,14 @@ export class NetworkReactor<T> extends Reactor {
   }
 
   /**
+   * Handle a timed message being received from the RTI.
    * This function is for NetworkReceiver reactors.
    * @param portID
    * @param value
-   * @returns
    */
   public handleMessage(portID: number, value: T): void {
+    // Schedule this federate port's action.
+    // This message is untimed, so schedule it immediately.
     if (portID !== this.portID) {
       this.util.reportError(
         "FederatedApp attempts to pass the tagged message to the wrong port ID"
@@ -355,12 +357,33 @@ export class NetworkReactor<T> extends Reactor {
   }
 
   /**
+   * Handle a timed message being received from the RTI.
    * This function is for NetworkReceiver reactors.
    * @param portID
    * @param value
-   * @returns
    */
   public handleTimedMessage(portID: number, value: T, intendedTag: Tag): void {
+    // Schedule this federate port's action.
+
+    /**
+     * Definitions:
+     * Ts = timestamp of message at the sending end.
+     * A = after value on connection
+     * Tr = timestamp assigned to the message at the receiving end.
+     * r = physical time at the receiving end when message is received (when schedule() is called).
+     * R = logical time at the receiving end when the message is received (when schedule() is called).
+
+     * We assume that always R <= r.
+
+     * Logical connection, centralized control: Tr = Ts + A
+     * Logical connection, decentralized control: Tr = Ts + A or, if R > Ts + A,
+     *  ERROR triggers at a logical time >= R
+     * Physical connection, centralized or decentralized control: Tr = max(r, R + A)
+     *
+     */
+
+    // FIXME: implement decentralized control.
+
     if (portID !== this.portID) {
       this.util.reportError(
         "FederatedApp attempts to pass the tagged message to the wrong port ID"
@@ -935,8 +958,6 @@ class RTIClient extends EventEmitter {
                 bufferIndex + 9,
                 bufferIndex + 9 + messageLength
               );
-              // const destPort =
-              //   this.federatePortActionByID.get(destPortID);
               this.emit("message", destPortID, messageBuffer);
             }
 
@@ -993,7 +1014,6 @@ class RTIClient extends EventEmitter {
                 bufferIndex + 21,
                 bufferIndex + 21 + messageLength
               );
-              // const destPort = this.federatePortActionByID.get(destPortID);
               this.emit("timedMessage", destPortID, messageBuffer, tag);
             }
 
@@ -1197,16 +1217,12 @@ export class FederatedApp extends App {
   /**
    * An array of network receivers
    */
-  private readonly networkReceivers: Array<NetworkReactor<unknown>> = new Array<
-    NetworkReactor<unknown>
-  >();
+  private readonly networkReceivers: Array<NetworkReactor<unknown>> = [];
 
   /**
    * An array of network senders
    */
-  private readonly networkSenders: Array<NetworkReactor<unknown>> = new Array<
-    NetworkReactor<unknown>
-  >();
+  private readonly networkSenders: Array<NetworkReactor<unknown>> = [];
 
   private readonly portAbsentReactions = new Set<Reaction<Variable[]>>();
 
@@ -1233,8 +1249,6 @@ export class FederatedApp extends App {
 
   private readonly downstreamFedIDs: number[] = [];
 
-  // private readonly outputControlReactionTriggers: Array<Action<unknown>> = [];
-
   /**
    * The default value, null, indicates there is no output depending on a physical action.
    */
@@ -1259,12 +1273,6 @@ export class FederatedApp extends App {
   ): void {
     this.minDelayFromPhysicalActionToFederateOutput = minDelay;
   }
-
-  // public registerOutputControlReactionTrigger(
-  //   outputControlReactionTrigger: Action<unknown>
-  // ): void {
-  //   this.outputControlReactionTriggers.push(outputControlReactionTrigger);
-  // }
 
   /**
    * Getter for greatestTimeAdvanceGrant
@@ -1367,28 +1375,6 @@ export class FederatedApp extends App {
     const currentTime = this.util.getCurrentTag();
     this.sendRTILogicalTimeComplete(currentTime);
   }
-
-  // /**
-  //  * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
-  //  * message to downstream federates if a given network output port is not present.
-  //  */
-  // protected enqueueNetworkOutputControlReactions(): void {
-  //   if (
-  //     this.downstreamFedIDs.length === 0 ||
-  //     this.outputControlReactionTriggers.length === 0
-  //   ) {
-  //     return;
-  //     // This federate is not connected to any downstream federates via a
-  //     // logical connection. No need to trigger network output control
-  //     // reactions.
-  //   }
-  //   const trigger = this.outputControlReactionTriggers[0];
-  //   const event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
-  //   Log.debug(this, () => {
-  //     return "Inserting network output control reaction on reaction queue.";
-  //   });
-  //   trigger.update(event);
-  // }
 
   protected _finish(): void {
     this.sendRTILogicalTimeComplete(this.util.getCurrentTag());
@@ -1665,8 +1651,6 @@ export class FederatedApp extends App {
    * time message from the RTI.
    */
   _start(): void {
-    // this._addEdgesForTpoLevels();
-
     this._analyzeDependencies();
 
     this._loadStartupReactions();
@@ -1710,8 +1694,6 @@ export class FederatedApp extends App {
     this.rtiClient.on(
       "message",
       <T>(destPortID: number, messageBuffer: Buffer) => {
-        // Schedule this federate port's action.
-        // This message is untimed, so schedule it immediately.
         Log.debug(this, () => {
           return "(Untimed) Message received from RTI.";
         });
@@ -1730,27 +1712,6 @@ export class FederatedApp extends App {
     this.rtiClient.on(
       "timedMessage",
       <T>(destPortID: number, messageBuffer: Buffer, tag: Tag) => {
-        // Schedule this federate port's action.
-
-        /**
-             *  Definitions:
-             * Ts = timestamp of message at the sending end.
-             * A = after value on connection
-             * Tr = timestamp assigned to the message at the receiving end.
-             * r = physical time at the receiving end when message is received (when schedule() is called).
-             * R = logical time at the receiving end when the message is received (when schedule() is called).
-
-             * We assume that always R <= r.
-
-             * Logical connection, centralized control: Tr = Ts + A
-             * Logical connection, decentralized control: Tr = Ts + A or, if R > Ts + A,
-             *  ERROR triggers at a logical time >= R
-             * Physical connection, centralized or decentralized control: Tr = max(r, R + A)
-             *
-             */
-
-        // FIXME: implement decentralized control.
-
         Log.debug(this, () => {
           return `Timed Message received from RTI with tag ${tag}.`;
         });
