@@ -291,47 +291,38 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  * A network reactor is a reactor handling network actions (NetworkReciever and NetworkSender).
  */
 export class NetworkReactor<T> extends Reactor {
-  // TPO level of this NetworkReactor
-  // FIXME: Comment out tpoLevel until the code generator passes it
-  // private readonly tpoLevel: number;
-
-  // Fixme: Is there a better way to declare the type of this action?
-  //        Currently, it is declared with 'any'.
-  // The action of the port that is allocated to this NetworkReceiver.
+  /*
+   * A FederatePortAction instance of this NetworkReactor. The action is only registered when this
+   * reactor is a network receiver. Otherwise, it is remained undefined.
+   */
   private networkInputAction: FederatePortAction<T> | undefined = undefined;
 
-  // The port ID of networkInputAction.
+  // The port ID of networkInputAction. It is defined if this NetworkReactor is
+  // a network receiver.
   private readonly portID?: number;
 
-  constructor(
-    parent: Reactor,
-    // tpoLevel: number,
-    portID?: number
-  ) {
+  constructor(parent: Reactor, portID?: number) {
     super(parent);
-    // this.tpoLevel = tpoLevel;
     if (portID !== undefined) {
       this.portID = portID;
     }
   }
 
-  // FIXME: Comment out tpoLevel until the code generator passes it
-  // public getTpoLevel(): number {
-  //   return this.tpoLevel;
-  // }
-
+  /**
+   * Getter for portID of this NetworkReactor.
+   */
   public getPortID(): number | undefined {
     return this.portID;
   }
 
+  /**
+   * Register a federate port's action with the network receiver.
+   * @param networkInputAction The federate port's action for registration.
+   */
   public registerNetworkInputAction(
     networkInputAction: FederatePortAction<T>
   ): void {
     this.networkInputAction = networkInputAction;
-  }
-
-  public getReactions(): Array<Reaction<Variable[]>> {
-    return this._getReactions();
   }
 
   /**
@@ -349,7 +340,7 @@ export class NetworkReactor<T> extends Reactor {
    * @param value
    * @returns
    */
-  public handlingMessage(portID: number, value: T): void {
+  public handleMessage(portID: number, value: T): void {
     if (portID !== this.portID) {
       this.util.reportError(
         "FederatedApp attempts to pass the tagged message to the wrong port ID"
@@ -369,11 +360,7 @@ export class NetworkReactor<T> extends Reactor {
    * @param value
    * @returns
    */
-  public handlingTimedMessage(
-    portID: number,
-    value: T,
-    intendedTag: Tag
-  ): void {
+  public handleTimedMessage(portID: number, value: T, intendedTag: Tag): void {
     if (portID !== this.portID) {
       this.util.reportError(
         "FederatedApp attempts to pass the tagged message to the wrong port ID"
@@ -383,7 +370,6 @@ export class NetworkReactor<T> extends Reactor {
     if (this.networkInputAction !== undefined) {
       if (this.networkInputAction.origin === Origin.logical) {
         this.networkInputAction
-          // FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
           .asSchedulable(this._getKey(this.networkInputAction))
           .schedule(0, value, intendedTag);
       } else {
@@ -416,32 +402,6 @@ class RTIClient extends EventEmitter {
 
   // The socket descriptor for communicating with this federate.
   private socket: Socket | null = null;
-
-  // The mapping between a federate port ID and the federate port action
-  // scheduled upon reception of a message designated for that federate port.
-
-  /**
-   * A mapping from port IDs to FederatePortAction instances. Unfortunately, the data type of the action has to be `any`,
-   * meaning that the type checker cannot check whether uses of the action are type safe.
-   * In an alternative design, type information might be preserved. TODO(marten): Look into this.
-   */
-  // private readonly federatePortActionByID: Map<number, Action<unknown>> =
-  //   new Map<number, Action<unknown>>();
-
-  // /**
-  //  * Establish the mapping between a federate port's action and its ID.
-  //  * @param federatePortID The federate port's ID.
-  //  * @param federatePort The federate port's action.
-  //  */
-  // public registerFederatePortAction<T>(
-  //   federatePortID: number,
-  //   federatePortAction: Action<T>
-  // ): void {
-  //   this.federatePortActionByID.set(
-  //     federatePortID,
-  //     federatePortAction as Action<unknown>
-  //   );
-  // }
 
   /**
    * Constructor for an RTIClient
@@ -1341,8 +1301,6 @@ export class FederatedApp extends App {
     }
   }
 
-  // TODO: Add functions for updating MLAA and port statuses
-
   /**
    * Return whether the next event can be handled, or handling the next event
    * has to be postponed to a later time.
@@ -1509,29 +1467,14 @@ export class FederatedApp extends App {
     }
   }
 
-  // /**
-  //  * Register a federate port's action with the federate. It must be registered
-  //  * so it is known by the rtiClient and may be scheduled when a message for the
-  //  * port has been received via the RTI.
-  //  * @param federatePortID The designated ID for the federate port. For compatability with the
-  //  * C RTI, the ID must be expressable as a 16 bit unsigned short. The ID must be
-  //  * unique among all port IDs on this federate and be a number between 0 and NUMBER_OF_PORTS - 1
-  //  * @param federatePort The federate port's action for registration.
-  //  */
-  // public registerFederatePortAction<T>(
-  //   federatePortID: number,
-  //   federatePortAction: Action<T>
-  // ): void {
-  //   this.rtiClient.registerFederatePortAction(
-  //     federatePortID,
-  //     federatePortAction
-  //   );
-  // }
-
   /**
    * Register a network receiver reactors. It must be registered so it is known by this
    * FederatedApp and used when add edges for TPO levels and may be used when a message
    * for the associated port has been received via the RTI.
+   *
+   * Unfortunately, the data type of the action has to be `unknown`,
+   * meaning that the type checker cannot check whether uses of the action are type safe.
+   * In an alternative design, type information might be preserved. TODO(marten): Look into this.
    * @param networkReceiver The designated network reciever reactor
    */
   public registerNetworkReceiver(
@@ -1714,25 +1657,6 @@ export class FederatedApp extends App {
   }
 
   /**
-   *
-   */
-  // FIXME: Comment out tpoLevel until the code generator passes it
-  // _addEdgesForTpoLevels():void {
-  //   let networkReactors = this.networkReceivers.concat(this.networkSenders);
-  //   networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
-  //     return a.getTpoLevel() - b.getTpoLevel();
-  //   })
-
-  //   for (let i = 0; i < networkReactors.length - 1; i++) {
-  //     for (const upstream of networkReactors[i].getReactions()) {
-  //       for (const downstream of networkReactors[i + 1].getReactions()) {
-  //         this._dependencyGraph.addEdge(upstream, downstream);
-  //       }
-  //     }
-  //   }
-  // }
-
-  /**
    * @override
    * Register this federated app with the RTI and request a start time.
    * This function registers handlers for the events produced by the federated app's
@@ -1797,13 +1721,9 @@ export class FederatedApp extends App {
 
         for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
-            candidate.handlingMessage(destPortID, value);
+            candidate.handleMessage(destPortID, value);
           }
         }
-
-        // destPortAction
-        //   .asSchedulable(this._getFederatePortActionKey(destPortAction))
-        //   .schedule(0, value);
       }
     );
 
@@ -1840,22 +1760,9 @@ export class FederatedApp extends App {
 
         for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
-            candidate.handlingTimedMessage(destPortID, value, tag);
+            candidate.handleTimedMessage(destPortID, value, tag);
           }
         }
-
-        // if (destPortAction.origin === Origin.logical) {
-        //   destPortAction
-        //     //FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
-        //     .asSchedulable(this._getFederatePortActionKey(destPortAction))
-        //     .schedule(0, value, tag);
-        // } else {
-        //   // The schedule function for physical actions implements
-        //   // Tr = max(r, R + A)
-        //   destPortAction
-        //     .asSchedulable(this._getFederatePortActionKey(destPortAction))
-        //     .schedule(0, value);
-        // }
       }
     );
 
@@ -1882,13 +1789,13 @@ export class FederatedApp extends App {
         // Update the greatest time advance grant and immediately
         // wake up _next, in case it was blocked by the old time advance grant
         // FIXME: Temporarily disabling PTAG handling until the
-        // input control reaction is implemented.
+        // MLAA based execution is implemented.
         /*
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
                 */
-        // FIXME: Add input control reaction handling.
+        //
       }
     });
 
@@ -1931,7 +1838,7 @@ export class FederatedApp extends App {
         return `Port Absent received from RTI for ${intendedTag}.`;
       });
       // FIXME: Temporarily disabling portAbsent until the
-      // input control reaction is implemented.
+      // MLAA based execution is implemented.
       // this.updatelastKnownStatusTag(intendedTag, portID);
       // if (this._isReactionRemainedAtThisTag === true) {
       //     this._requestImmediateInvocationOfNext();
