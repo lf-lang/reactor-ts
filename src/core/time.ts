@@ -43,7 +43,10 @@ export class TimeValue {
    * @param seconds Number of seconds in the interval.
    * @param nanoseconds Remaining number of nanoseconds (defaults to zero).
    */
-  constructor(protected seconds: number, protected nanoseconds: number = 0) {
+  constructor(
+    protected seconds: number,
+    protected nanoseconds: number = 0
+  ) {
     if (
       !Number.isInteger(seconds) ||
       !Number.isInteger(nanoseconds) ||
@@ -364,7 +367,10 @@ export class Tag {
    * @param timeSinceEpoch Time elapsed since Epoch.
    * @param microstep Superdense time index.
    */
-  constructor(timeSinceEpoch: TimeValue, readonly microstep: number = 0) {
+  constructor(
+    timeSinceEpoch: TimeValue,
+    readonly microstep: number = 0
+  ) {
     if (!Number.isInteger(microstep)) {
       throw new Error("Microstep must be integer.");
     }

@@ -1951,5 +1951,8 @@ export class FederatedApp extends App {
  * port.
  */
 export class RemoteFederatePort {
-  constructor(public federateID: number, public portID: number) {}
+  constructor(
+    public federateID: number,
+    public portID: number
+  ) {}
 }
