@@ -290,7 +290,7 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
 /**
  * A network reactor is a reactor handling network actions (NetworkReciever and NetworkSender).
  */
-export class NetworkReactor extends Reactor {
+export class NetworkReactor<T> extends Reactor {
   // TPO level of this NetworkReactor
   // FIXME: Comment out tpoLevel until the code generator passes it
   // private readonly tpoLevel: number;
@@ -298,7 +298,7 @@ export class NetworkReactor extends Reactor {
   // Fixme: Is there a better way to declare the type of this action?
   //        Currently, it is declared with 'any'.
   // The action of the port that is allocated to this NetworkReceiver.
-  private networkInputAction: FederatePortAction<any> | undefined = undefined;
+  private networkInputAction: FederatePortAction<T> | undefined = undefined;
 
   // The port ID of networkInputAction.
   private readonly portID?: number;
@@ -324,7 +324,7 @@ export class NetworkReactor extends Reactor {
     return this.portID;
   }
 
-  public registerNetworkInputAction<T>(
+  public registerNetworkInputAction(
     networkInputAction: FederatePortAction<T>
   ): void {
     this.networkInputAction = networkInputAction;
@@ -349,7 +349,7 @@ export class NetworkReactor extends Reactor {
    * @param value
    * @returns
    */
-  public handlingMessage<T>(portID: number, value: T): void {
+  public handlingMessage(portID: number, value: T): void {
     if (portID !== this.portID) {
       this.util.reportError(
         "FederatedApp attempts to pass the tagged message to the wrong port ID"
@@ -369,7 +369,7 @@ export class NetworkReactor extends Reactor {
    * @param value
    * @returns
    */
-  public handlingTimedMessage<T>(
+  public handlingTimedMessage(
     portID: number,
     value: T,
     intendedTag: Tag
@@ -1237,12 +1237,12 @@ export class FederatedApp extends App {
   /**
    * An array of network receivers
    */
-  private readonly networkReceivers: NetworkReactor[] = [];
+  private readonly networkReceivers: NetworkReactor<unknown>[] = [];
 
   /**
    * An array of network senders
    */
-  private readonly networkSenders: NetworkReactor[] = [];
+  private readonly networkSenders: NetworkReactor<unknown>[] = [];
 
   private readonly portAbsentReactions = new Set<Reaction<Variable[]>>();
 
@@ -1528,10 +1528,12 @@ export class FederatedApp extends App {
    * Register a network receiver reactors. It must be registered so it is known by this
    * FederatedApp and used when add edges for TPO levels and may be used when a message
    * for the associated port has been received via the RTI.
-   * @param networkReciever The designated network reciever reactor
+   * @param networkReceiver The designated network reciever reactor
    */
-  public registerNetworkReciever(networkReciever: NetworkReactor): void {
-    this.networkReceivers.push(networkReciever);
+  public registerNetworkReceiver(
+    networkReceiver: NetworkReactor<unknown>
+  ): void {
+    this.networkReceivers.push(networkReceiver);
   }
 
   /**
@@ -1539,7 +1541,7 @@ export class FederatedApp extends App {
    * FederatedApp and used when add edges for TPO levels.
    * @param networkSender
    */
-  public registerNetworkSender(networkSender: NetworkReactor): void {
+  public registerNetworkSender(networkSender: NetworkReactor<unknown>): void {
     this.networkSenders.push(networkSender);
 
     const portAbsentReaction = networkSender.getLastReactioOrMutation();
@@ -1791,7 +1793,7 @@ export class FederatedApp extends App {
 
         for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
-            candidate.handlingMessage<T>(destPortID, value);
+            candidate.handlingMessage(destPortID, value);
           }
         }
 
@@ -1834,7 +1836,7 @@ export class FederatedApp extends App {
 
         for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
-            candidate.handlingTimedMessage<T>(destPortID, value, tag);
+            candidate.handlingTimedMessage(destPortID, value, tag);
           }
         }
 
