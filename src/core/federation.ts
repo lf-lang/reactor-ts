@@ -1461,7 +1461,7 @@ export class FederatedApp extends App {
    * Unfortunately, the data type of the action has to be `unknown`,
    * meaning that the type checker cannot check whether uses of the action are type safe.
    * In an alternative design, type information might be preserved. TODO(marten): Look into this.
-   * @param networkReceiver The designated network reciever reactor
+   * @param networkReceiver The designated network receiver reactor.
    */
   public registerNetworkReceiver(
     networkReceiver: NetworkReactor<unknown>
