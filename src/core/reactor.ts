@@ -2286,7 +2286,7 @@ export class App extends Reactor {
     return undefined;
   }
 
-  protected resetStatusFieldsOnInputPorts(): void {}
+  protected resetStatusFieldsOnInputPorts(): void { return undefined; }
 
   /**
    * Handle the next events on the event queue.
@@ -2331,7 +2331,7 @@ export class App extends Reactor {
       // Advance logical time.
       this._advanceTime(nextEvent.tag);
 
-      //this.resetStatusFieldsOnInputPorts();
+      // this.resetStatusFieldsOnInputPorts();
 
       // TODO: Seperate this part into the new function popEvents() and 
       //       make new overrided _next() function in the federation.ts

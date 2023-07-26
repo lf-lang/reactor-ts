@@ -16,7 +16,7 @@ import {
   getCurrentPhysicalTime,
   Alarm,
   App,
-  portStatus,
+  PortStatus,
   Reactor
 } from "./internal";
 // ---------------------------------------------------------------------//
@@ -287,12 +287,45 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
   return typeof (e as NodeJSCodedError).code === "string";
 }
 
+abstract class NetworkReactor extends Reactor {
+  // TPO level of this NetworkReactor
+  protected readonly tpoLevel: number;
+
+  constructor (parent: Reactor, tpoLevel: number) {
+    super(parent);
+    this.tpoLevel = tpoLevel;
+  }
+
+  /**
+   * Getter for the TPO level of this NetworkReactor.
+   */
+  public getTpoLevel(): number {
+    return this.tpoLevel;
+  }
+
+  /**
+   * This function returns its own reactions. Those reactions are needed to add
+   * edges for TPO levels.
+   * @returns
+   */
+  public getReactions():Array<Reaction<Variable[]>> {
+    return this._getReactions();
+  }
+
+  /**
+   * This function is for NetworkSender reactors.
+   * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
+   * @returns portAbsentReactor of this NetworkSender reactor
+   */
+  public getLastReactioOrMutation(): Reaction<Variable[]> | undefined {
+    return this._getLastReactionOrMutation();
+  }
+}
+
 /**
  * A network reactor is a reactor handling network actions (NetworkReceiver and NetworkSender).
  */
-export class NetworkReactor<T> extends Reactor {
-  // TPO level of this NetworkReactor
-  private readonly tpoLevel: number;
+export class NetworkReceiver<T> extends NetworkReactor {
   /*
    * A FederatePortAction instance of this NetworkReactor. The action is only registered when this
    * reactor is a network receiver. Otherwise, it is remained undefined.
@@ -301,21 +334,11 @@ export class NetworkReactor<T> extends Reactor {
 
   // The port ID of networkInputAction. It is defined if this NetworkReactor is
   // a network receiver.
-  private readonly portID?: number;
+  private readonly portID: number;
 
-  constructor(parent: Reactor, tpoLevel: number, portID?: number) {
-    super(parent);
-    this.tpoLevel = tpoLevel;
-    if (portID !== undefined) {
-      this.portID = portID;
-    }
-  }
-
-  /**
-   * Getter for the TPO level of this NetworkReactor.
-   */
-  public getTpoLevel(): number {
-    return this.tpoLevel;
+  constructor(parent: NetworkReactor, tpoLevel: number, portID: number) {
+    super(parent, tpoLevel);
+    this.portID = portID;
   }
 
   /**
@@ -337,24 +360,6 @@ export class NetworkReactor<T> extends Reactor {
 
   public setNetworkPortStatus(status: portStatus): void {
     this.networkInputAction!.portStatus = status;
-  }
-
-  /**
-   * This function returns its own reactions. Those reactions are needed to add
-   * edges for TPO levels.
-   * @returns
-   */
-  public getReactions():Array<Reaction<Variable[]>> {
-    return this._getReactions();
-  }
-
-  /**
-   * This function is for NetworkSender reactors.
-   * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
-   * @returns portAbsentReactor of this NetworkSender reactor
-   */
-  public getLastReactioOrMutation(): Reaction<Variable[]> | undefined {
-    return this._getLastReactionOrMutation();
   }
 
   /**
@@ -426,6 +431,16 @@ export class NetworkReactor<T> extends Reactor {
           .schedule(0, value);
       }
     }
+  }
+}
+
+/**
+ * A network reactor is a reactor handling network actions (NetworkReceiver and NetworkSender).
+ */
+export class NetworkSender extends NetworkReactor {
+
+  constructor(parent: Reactor, tpoLevel: number) {
+    super(parent, tpoLevel);
   }
 }
 
@@ -1240,17 +1255,17 @@ export class FederatedApp extends App {
   /**
    * Variable to track how far in the reaction queue we can go until we need to wait for more network port statuses to be known.
    */
-  private maxLevelAllowedToAdvance: number = 0;
+  private maxLevelAllowedToAdvance = 0;
 
   /**
    * An array of network receivers
    */
-  private readonly networkReceivers: Array<NetworkReactor<unknown>> = [];
+  private readonly networkReceivers: Array<NetworkReceiver<unknown>> = [];
 
   /**
    * An array of network senders
    */
-  private readonly networkSenders: Array<NetworkReactor<unknown>> = [];
+  private readonly networkSenders: Array<NetworkSender> = [];
 
   /**
    * An array of port absent reactions
@@ -1497,7 +1512,7 @@ export class FederatedApp extends App {
    * @param networkReceiver The designated network receiver reactor.
    */
   public registerNetworkReceiver(
-    networkReceiver: NetworkReactor<unknown>
+    networkReceiver: NetworkReceiver<unknown>
   ): void {
     this.networkReceivers.push(networkReceiver);
   }
@@ -1507,7 +1522,7 @@ export class FederatedApp extends App {
    * FederatedApp to be used when register portAbsentReaction and add edges for TPO levels.
    * @param networkSender The designated network sender reactor
    */
-  public registerNetworkSender(networkSender: NetworkReactor<unknown>): void {
+  public registerNetworkSender(networkSender: NetworkSender): void {
     this.networkSenders.push(networkSender);
 
     const portAbsentReaction = networkSender.getLastReactioOrMutation();
@@ -1520,7 +1535,7 @@ export class FederatedApp extends App {
    * 
    * @param tag 
    */
-  private updateLastKnownStatusOnInputPorts(tag:Tag) {
+  private updateLastKnownStatusOnInputPorts(tag:Tag): void {
     // FIXME: Fill this function
     // this.updateMaxLevel(this.greatestTimeAdvanceGrant, this._isLastTAGProvisional);
   }
@@ -1530,7 +1545,7 @@ export class FederatedApp extends App {
    * @param tag 
    * @param portID 
    */
-  private updateLastKnownStatusOnInputPort(tag:Tag, portID: number) {
+  private updateLastKnownStatusOnInputPort(tag:Tag, portID: number): void {
     // FIXME: Fill this function
     // this.updateMaxLevel(this.greatestTimeAdvanceGrant, this._isLastTAGProvisional);
   }
@@ -1541,7 +1556,7 @@ export class FederatedApp extends App {
    */
   protected resetStatusFieldsOnInputPorts():void {
     for (const networkReceiver of this.networkReceivers) {
-      networkReceiver.setNetworkPortStatus(portStatus.UNKNOWN);
+      networkReceiver.setNetworkPortStatus(PortStatus.UNKNOWN);
     }
     Log.debug(this, () => {
       return "Resetting port status fields.";
@@ -1566,7 +1581,7 @@ export class FederatedApp extends App {
    * @param tag 
    * @param isProvisional 
    */
-  private updateMaxLevel(tag: Tag, isProvisional: boolean) {
+  private updateMaxLevel(tag: Tag, isProvisional: boolean): void {
     // FIXME: Fill this function
   }
 
@@ -1723,8 +1738,9 @@ export class FederatedApp extends App {
    * 
    */
   _addEdgesForTpoLevels():void {
-    let networkReactors = this.networkReceivers.concat(this.networkSenders);
-    networkReactors.sort((a: NetworkReactor<unknown>, b: NetworkReactor<unknown>): number => {
+    const networkReceivers = this.networkReceivers as NetworkReactor[];
+    const networkReactors = networkReceivers.concat(this.networkSenders as NetworkReactor[]);
+    networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
       return a.getTpoLevel() - b.getTpoLevel();
     })
 
