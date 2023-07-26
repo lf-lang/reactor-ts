@@ -288,7 +288,7 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
 }
 
 /**
- * A network reactor is a reactor handling network actions (NetworkReciever and NetworkSender).
+ * A network reactor is a reactor handling network actions (NetworkReceiver and NetworkSender).
  */
 export class NetworkReactor<T> extends Reactor {
   /*
