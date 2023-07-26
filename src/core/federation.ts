@@ -291,10 +291,6 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  * A network sender is a reactor containing a portAbsentReaction.
  */
 export class NetworkSender extends Reactor {
-  constructor(parent: Reactor) {
-    super(parent);
-  }
-
   /**
    * This function is for NetworkSender reactors.
    * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
