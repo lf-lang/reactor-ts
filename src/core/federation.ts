@@ -288,9 +288,27 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
 }
 
 /**
+ * A network sender is a reactor containing a portAbsentReaction.
+ */
+export class NetworkSender extends Reactor {
+  constructor (parent: Reactor) {
+    super(parent);
+  }
+
+  /**
+   * This function is for NetworkSender reactors.
+   * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
+   * @returns portAbsentReactor of this NetworkSender reactor
+   */
+  public getLastReactioOrMutation(): Reaction<Variable[]> | undefined {
+    return this._getLastReactionOrMutation();
+  }
+}
+
+/**
  * A network reactor is a reactor handling network actions (NetworkReceiver and NetworkSender).
  */
-export class NetworkReactor<T> extends Reactor {
+export class NetworkReceiver<T> extends Reactor {
   /*
    * A FederatePortAction instance of this NetworkReactor. The action is only registered when this
    * reactor is a network receiver. Otherwise, it is remained undefined.
@@ -299,13 +317,11 @@ export class NetworkReactor<T> extends Reactor {
 
   // The port ID of networkInputAction. It is defined if this NetworkReactor is
   // a network receiver.
-  private readonly portID?: number;
+  private readonly portID: number;
 
-  constructor(parent: Reactor, portID?: number) {
+  constructor(parent: Reactor, portID: number) {
     super(parent);
-    if (portID !== undefined) {
-      this.portID = portID;
-    }
+    this.portID = portID;
   }
 
   /**
@@ -323,15 +339,6 @@ export class NetworkReactor<T> extends Reactor {
     networkInputAction: FederatePortAction<T>
   ): void {
     this.networkInputAction = networkInputAction;
-  }
-
-  /**
-   * This function is for NetworkSender reactors.
-   * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
-   * @returns portAbsentReactor of this NetworkSender reactor
-   */
-  public getLastReactioOrMutation(): Reaction<Variable[]> | undefined {
-    return this._getLastReactionOrMutation();
   }
 
   /**
@@ -1217,12 +1224,12 @@ export class FederatedApp extends App {
   /**
    * An array of network receivers
    */
-  private readonly networkReceivers: Array<NetworkReactor<unknown>> = [];
+  private readonly networkReceivers: Array<NetworkReceiver<unknown>> = [];
 
   /**
    * An array of network senders
    */
-  private readonly networkSenders: Array<NetworkReactor<unknown>> = [];
+  private readonly networkSenders: Array<NetworkSender> = [];
 
   private readonly portAbsentReactions = new Set<Reaction<Variable[]>>();
 
@@ -1464,7 +1471,7 @@ export class FederatedApp extends App {
    * @param networkReceiver The designated network receiver reactor.
    */
   public registerNetworkReceiver(
-    networkReceiver: NetworkReactor<unknown>
+    networkReceiver: NetworkReceiver<unknown>
   ): void {
     this.networkReceivers.push(networkReceiver);
   }
@@ -1474,7 +1481,7 @@ export class FederatedApp extends App {
    * FederatedApp to be used when register portAbsentReaction and add edges for TPO levels.
    * @param networkSender The designated network sender reactor
    */
-  public registerNetworkSender(networkSender: NetworkReactor<unknown>): void {
+  public registerNetworkSender(networkSender: NetworkSender): void {
     this.networkSenders.push(networkSender);
 
     const portAbsentReaction = networkSender.getLastReactioOrMutation();
