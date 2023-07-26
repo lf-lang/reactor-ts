@@ -337,8 +337,8 @@ export class NetworkReactor<T> extends Reactor {
   /**
    * Handle a timed message being received from the RTI.
    * This function is for NetworkReceiver reactors.
-   * @param portID
-   * @param value
+   * @param portID The destination port ID of the message.
+   * @param value The payload of the message.
    */
   public handleMessage(portID: number, value: T): void {
     // Schedule this federate port's action.
@@ -359,8 +359,8 @@ export class NetworkReactor<T> extends Reactor {
   /**
    * Handle a timed message being received from the RTI.
    * This function is for NetworkReceiver reactors.
-   * @param portID
-   * @param value
+   * @param portID The destination port ID of the message.
+   * @param value The payload of the message.
    */
   public handleTimedMessage(portID: number, value: T, intendedTag: Tag): void {
     // Schedule this federate port's action.
@@ -1470,9 +1470,9 @@ export class FederatedApp extends App {
   }
 
   /**
-   * Register a network receiver reactors. It must be registered so it is known by this
-   * FederatedApp and used when add edges for TPO levels.
-   * @param networkSender
+   * Register a network sender reactors. It must be registered so it is known by this
+   * FederatedApp to be used when register portAbsentReaction and add edges for TPO levels.
+   * @param networkSender The designated network sender reactor
    */
   public registerNetworkSender(networkSender: NetworkReactor<unknown>): void {
     this.networkSenders.push(networkSender);
