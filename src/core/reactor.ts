@@ -42,8 +42,7 @@ import {
   Startup,
   Shutdown,
   WritableMultiPort,
-  Dummy,
-  FederatePortAction
+  Dummy
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
@@ -380,7 +379,7 @@ export abstract class Reactor extends Component {
     if (component._isContainedBy(this) || this._key === key) {
       return this._keyChain.get(component);
     } else if (
-      (!(component instanceof Action)) &&
+      !(component instanceof Action) &&
       component._isContainedByContainerOf(this)
     ) {
       const owner = component.getContainer();
@@ -1768,7 +1767,7 @@ interface UtilityFunctions {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: number
+    time: TimeValue
   ) => void;
   sendRTIPortAbsent: (
     additionalDealy: TimeValue,
@@ -1903,7 +1902,7 @@ export class App extends Reactor {
       data: T,
       destFederateID: number,
       destPortID: number,
-      time: number
+      time: TimeValue
     ): void {
       this.app.sendRTITimedMessage(data, destFederateID, destPortID, time);
     }
@@ -2072,7 +2071,7 @@ export class App extends Reactor {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: number
+    time: TimeValue
   ): void {
     throw new Error(
       "Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp"
@@ -2283,7 +2282,9 @@ export class App extends Reactor {
     Log.global.debug("Finished handling all events at current time.");
   }
 
-  protected enqueuePortAbsentReactions(): void { return undefined; }
+  protected enqueuePortAbsentReactions(): void {
+    return undefined;
+  }
 
   protected resetStatusFieldsOnInputPorts(): void {}
 
@@ -2388,7 +2389,7 @@ export class App extends Reactor {
         nextEvent != null &&
         this._currentTag.isSimultaneousWith(nextEvent.tag)
       );
-      // enqueue networkOutputControlReactions
+      // enqueue portAbsentReactions
       this.enqueuePortAbsentReactions();
 
       // React to all the events loaded onto the reaction queue.
@@ -2671,7 +2672,7 @@ export class App extends Reactor {
 
     Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
-    // enqueue networkOutputControlReactions
+    // enqueue portAbsentReactions
     this.enqueuePortAbsentReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.

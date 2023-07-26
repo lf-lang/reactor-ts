@@ -118,6 +118,9 @@ export class TimeValue {
    * @param other The time value to add to this one.
    */
   add(other: TimeValue): TimeValue {
+    if (other.isNever()) {
+      return this;
+    }
     let seconds = this.seconds + other.seconds;
     let nanoseconds = this.nanoseconds + other.nanoseconds;
 

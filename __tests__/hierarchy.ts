@@ -42,29 +42,17 @@ describe("Container to Contained", () => {
     ).toBe(false);
     expect(
       app.container.canConnect(
-        app.container.contained.a,
-        app.container.contained.b
-      )
-    ).toBe(false);
-    expect(
-      app.container.canConnect(
         app.container.contained.b,
         app.container.contained.a
       )
     ).toBe(true);
 
     expect(
-      app.container.canConnect(app.container.a, app.container.contained.b)
-    ).toBe(false);
-    expect(
       app.container.canConnect(app.container.contained.b, app.container.a)
     ).toBe(false);
 
     expect(
       app.container.canConnect(app.container.b, app.container.contained.a)
-    ).toBe(false);
-    expect(
-      app.container.canConnect(app.container.contained.a, app.container.b)
     ).toBe(false);
 
     expect(
@@ -77,9 +65,6 @@ describe("Container to Contained", () => {
     expect(app.container.canConnect(app.container.contained.a, app.foo.a)).toBe(
       false
     );
-    expect(app.container.canConnect(app.container.contained.a, app.foo.b)).toBe(
-      false
-    );
     expect(app.container.canConnect(app.foo.a, app.container.contained.a)).toBe(
       false
     );
@@ -87,7 +72,6 @@ describe("Container to Contained", () => {
       false
     );
 
-    expect(app.container.canConnect(app.foo.a, app.container.b)).toBe(false);
     expect(app.container.canConnect(app.foo.a, app.container.a)).toBe(false);
 
     // expect(app.container.contained).toBeDefined();

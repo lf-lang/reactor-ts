@@ -1,7 +1,13 @@
 import type {Socket, SocketConnectOpts} from "net";
 import {createConnection} from "net";
 import {EventEmitter} from "events";
-import type {Action, FederateConfig, Reaction, Variable} from "./internal";
+import type {
+  FederatePortAction,
+  FederateConfig,
+  Reaction,
+  Variable,
+  TaggedEvent
+} from "./internal";
 import {
   Log,
   Tag,
@@ -10,9 +16,7 @@ import {
   getCurrentPhysicalTime,
   Alarm,
   App,
-  TaggedEvent,
   portStatus,
-  FederatePortAction,
   Reactor
 } from "./internal";
 // ---------------------------------------------------------------------//
@@ -284,25 +288,22 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
 }
 
 /**
- * A network reactor is a reactor handling network actions (NetworkReciever and NetworkSender).
+ * A network reactor is a reactor handling network actions (NetworkReceiver and NetworkSender).
  */
-export class NetworkReactor extends Reactor {
+export class NetworkReactor<T> extends Reactor {
   // TPO level of this NetworkReactor
   private readonly tpoLevel: number;
+  /*
+   * A FederatePortAction instance of this NetworkReactor. The action is only registered when this
+   * reactor is a network receiver. Otherwise, it is remained undefined.
+   */
+  private networkInputAction: FederatePortAction<T> | undefined = undefined;
 
-  // The port ID of networkInputAction.
+  // The port ID of networkInputAction. It is defined if this NetworkReactor is
+  // a network receiver.
   private readonly portID?: number;
 
-  // Fixme: Is there a better way to declare the type of this action?
-  //        Currently, it is declared with 'any'.
-  // The action of the port that is allocated to this NetworkReceiver.
-  private networkInputAction?: FederatePortAction<any>;
-
-  constructor (
-      parent: Reactor,
-      tpoLevel: number,
-      portID?: number
-  ) {
+  constructor(parent: Reactor, tpoLevel: number, portID?: number) {
     super(parent);
     this.tpoLevel = tpoLevel;
     if (portID !== undefined) {
@@ -310,15 +311,27 @@ export class NetworkReactor extends Reactor {
     }
   }
 
+  /**
+   * Getter for the TPO level of this NetworkReactor.
+   */
   public getTpoLevel(): number {
     return this.tpoLevel;
   }
 
+  /**
+   * Getter for portID of this NetworkReactor.
+   */
   public getPortID(): number | undefined {
     return this.portID;
   }
 
-  public registerNetworkInputAction<T>(networkInputAction: FederatePortAction<T>): void {
+  /**
+   * Register a federate port's action with the network receiver.
+   * @param networkInputAction The federate port's action for registration.
+   */
+  public registerNetworkInputAction(
+    networkInputAction: FederatePortAction<T>
+  ): void {
     this.networkInputAction = networkInputAction;
   }
 
@@ -336,59 +349,82 @@ export class NetworkReactor extends Reactor {
   }
 
   /**
-   * This function is for NetworkSender reactors. 
+   * This function is for NetworkSender reactors.
    * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
    * @returns portAbsentReactor of this NetworkSender reactor
    */
-  public getLastReactioOrMutation():Reaction<Variable[]> | undefined {
-      return this._getLastReactionOrMutation();
+  public getLastReactioOrMutation(): Reaction<Variable[]> | undefined {
+    return this._getLastReactionOrMutation();
   }
 
   /**
+   * Handle a timed message being received from the RTI.
    * This function is for NetworkReceiver reactors.
-   * @param portID
-   * @param value
-   * @returns
+   * @param portID The destination port ID of the message.
+   * @param value The payload of the message.
    */
-  public handleMessage<T>(
-    portID: number,
-    value: T
-  ):void {
+  public handleMessage(portID: number, value: T): void {
+    // Schedule this federate port's action.
+    // This message is untimed, so schedule it immediately.
     if (portID !== this.portID) {
-      this.util.reportError("FederatedApp attempts to pass the tagged message to the wrong port ID");
+      this.util.reportError(
+        "FederatedApp attempts to pass the tagged message to the wrong port ID"
+      );
       return;
     }
-    this.networkInputAction!
-      .asSchedulable(this._getKey(this.networkInputAction!))
-      .schedule(0, value);
-  }
-
-  /**
-   * This function is for NetworkReceiver reactors.
-   * @param portID
-   * @param value
-   * @returns
-   */
-  public handleTimedMessage<T>(
-    portID: number,
-    value: T,
-    intendedTag: Tag
-  ):void {
-    if (portID !== this.portID) {
-      this.util.reportError("FederatedApp attempts to pass the tagged message to the wrong port ID");
-      return;
-    }
-    if (this.networkInputAction!.origin === Origin.logical) {
-      this.networkInputAction!
-        // FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
-        .asSchedulable(this._getKey(this.networkInputAction!))
-        .schedule(0, value, intendedTag);
-    } else {
-      // The schedule function for physical actions implements
-      // Tr = max(r, R + A)
-      this.networkInputAction!
-        .asSchedulable(this._getKey(this.networkInputAction!))
+    if (this.networkInputAction !== undefined) {
+      this.networkInputAction
+        .asSchedulable(this._getKey(this.networkInputAction))
         .schedule(0, value);
+    }
+  }
+
+  /**
+   * Handle a timed message being received from the RTI.
+   * This function is for NetworkReceiver reactors.
+   * @param portID The destination port ID of the message.
+   * @param value The payload of the message.
+   */
+  public handleTimedMessage(portID: number, value: T, intendedTag: Tag): void {
+    // Schedule this federate port's action.
+
+    /**
+     * Definitions:
+     * Ts = timestamp of message at the sending end.
+     * A = after value on connection
+     * Tr = timestamp assigned to the message at the receiving end.
+     * r = physical time at the receiving end when message is received (when schedule() is called).
+     * R = logical time at the receiving end when the message is received (when schedule() is called).
+
+     * We assume that always R <= r.
+
+     * Logical connection, centralized control: Tr = Ts + A
+     * Logical connection, decentralized control: Tr = Ts + A or, if R > Ts + A,
+     *  ERROR triggers at a logical time >= R
+     * Physical connection, centralized or decentralized control: Tr = max(r, R + A)
+     *
+     */
+
+    // FIXME: implement decentralized control.
+
+    if (portID !== this.portID) {
+      this.util.reportError(
+        "FederatedApp attempts to pass the tagged message to the wrong port ID"
+      );
+      return;
+    }
+    if (this.networkInputAction !== undefined) {
+      if (this.networkInputAction.origin === Origin.logical) {
+        this.networkInputAction
+          .asSchedulable(this._getKey(this.networkInputAction))
+          .schedule(0, value, intendedTag);
+      } else {
+        // The schedule function for physical actions implements
+        // Tr = max(r, R + A)
+        this.networkInputAction
+          .asSchedulable(this._getKey(this.networkInputAction))
+          .schedule(0, value);
+      }
     }
   }
 }
@@ -412,32 +448,6 @@ class RTIClient extends EventEmitter {
 
   // The socket descriptor for communicating with this federate.
   private socket: Socket | null = null;
-
-  // The mapping between a federate port ID and the federate port action
-  // scheduled upon reception of a message designated for that federate port.
-
-  /**
-   * A mapping from port IDs to FederatePortAction instances. Unfortunately, the data type of the action has to be `any`,
-   * meaning that the type checker cannot check whether uses of the action are type safe.
-   * In an alternative design, type information might be preserved. TODO(marten): Look into this.
-   */
-  // private readonly federatePortActionByID: Map<number, Action<unknown>> =
-  //   new Map<number, Action<unknown>>();
-
-  // /**
-  //  * Establish the mapping between a federate port's action and its ID.
-  //  * @param federatePortID The federate port's ID.
-  //  * @param federatePort The federate port's action.
-  //  */
-  // public registerFederatePortAction<T>(
-  //   federatePortID: number,
-  //   federatePortAction: Action<T>
-  // ): void {
-  //   this.federatePortActionByID.set(
-  //     federatePortID,
-  //     federatePortAction as Action<unknown>
-  //   );
-  // }
 
   /**
    * Constructor for an RTIClient
@@ -971,8 +981,6 @@ class RTIClient extends EventEmitter {
                 bufferIndex + 9,
                 bufferIndex + 9 + messageLength
               );
-              // const destPort =
-              //   this.federatePortActionByID.get(destPortID);
               this.emit("message", destPortID, messageBuffer);
             }
 
@@ -1029,7 +1037,6 @@ class RTIClient extends EventEmitter {
                 bufferIndex + 21,
                 bufferIndex + 21 + messageLength
               );
-              // const destPort = this.federatePortActionByID.get(destPortID);
               this.emit("timedMessage", destPortID, messageBuffer, tag);
             }
 
@@ -1237,13 +1244,13 @@ export class FederatedApp extends App {
 
   /**
    * An array of network receivers
-   */ 
-  private readonly networkReceivers: NetworkReactor[] = [];
+   */
+  private readonly networkReceivers: Array<NetworkReactor<unknown>> = [];
 
   /**
    * An array of network senders
    */
-  private readonly networkSenders: NetworkReactor[] = [];
+  private readonly networkSenders: Array<NetworkReactor<unknown>> = [];
 
   /**
    * An array of port absent reactions
@@ -1273,8 +1280,6 @@ export class FederatedApp extends App {
 
   private readonly downstreamFedIDs: number[] = [];
 
-  // private readonly outputControlReactionTriggers: Array<Action<unknown>> = [];
-
   /**
    * The default value, null, indicates there is no output depending on a physical action.
    */
@@ -1299,12 +1304,6 @@ export class FederatedApp extends App {
   ): void {
     this.minDelayFromPhysicalActionToFederateOutput = minDelay;
   }
-
-  // public registerOutputControlReactionTrigger(
-  //   outputControlReactionTrigger: Action<unknown>
-  // ): void {
-  //   this.outputControlReactionTriggers.push(outputControlReactionTrigger);
-  // }
 
   /**
    * Getter for greatestTimeAdvanceGrant
@@ -1340,8 +1339,6 @@ export class FederatedApp extends App {
       );
     }
   }
-
-  // TODO: Add functions for updating MLAA and port statuses
 
   /**
    * Return whether the next event can be handled, or handling the next event
@@ -1411,28 +1408,6 @@ export class FederatedApp extends App {
     const currentTime = this.util.getCurrentTag();
     this.sendRTILogicalTimeComplete(currentTime);
   }
-
-  // /**
-  //  * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
-  //  * message to downstream federates if a given network output port is not present.
-  //  */
-  // protected enqueueNetworkOutputControlReactions(): void {
-  //   if (
-  //     this.downstreamFedIDs.length === 0 ||
-  //     this.outputControlReactionTriggers.length === 0
-  //   ) {
-  //     return;
-  //     // This federate is not connected to any downstream federates via a
-  //     // logical connection. No need to trigger network output control
-  //     // reactions.
-  //   }
-  //   const trigger = this.outputControlReactionTriggers[0];
-  //   const event = new TaggedEvent(trigger, this.util.getCurrentTag(), null);
-  //   Log.debug(this, () => {
-  //     return "Inserting network output control reaction on reaction queue.";
-  //   });
-  //   trigger.update(event);
-  // }
 
   protected _finish(): void {
     this.sendRTILogicalTimeComplete(this.util.getCurrentTag());
@@ -1511,45 +1486,34 @@ export class FederatedApp extends App {
     }
   }
 
-  // /**
-  //  * Register a federate port's action with the federate. It must be registered
-  //  * so it is known by the rtiClient and may be scheduled when a message for the
-  //  * port has been received via the RTI.
-  //  * @param federatePortID The designated ID for the federate port. For compatability with the
-  //  * C RTI, the ID must be expressable as a 16 bit unsigned short. The ID must be
-  //  * unique among all port IDs on this federate and be a number between 0 and NUMBER_OF_PORTS - 1
-  //  * @param federatePort The federate port's action for registration.
-  //  */
-  // public registerFederatePortAction<T>(
-  //   federatePortID: number,
-  //   federatePortAction: Action<T>
-  // ): void {
-  //   this.rtiClient.registerFederatePortAction(
-  //     federatePortID,
-  //     federatePortAction
-  //   );
-  // }
-
   /**
-   * TODO: Add a description
-   * @param networkReciever 
+   * Register a network receiver reactors. It must be registered so it is known by this
+   * FederatedApp and used when add edges for TPO levels and may be used when a message
+   * for the associated port has been received via the RTI.
+   *
+   * Unfortunately, the data type of the action has to be `unknown`,
+   * meaning that the type checker cannot check whether uses of the action are type safe.
+   * In an alternative design, type information might be preserved. TODO(marten): Look into this.
+   * @param networkReceiver The designated network receiver reactor.
    */
-  public registerNetworkReciever(
-    networkReciever: NetworkReactor
+  public registerNetworkReceiver(
+    networkReceiver: NetworkReactor<unknown>
   ): void {
-    this.networkReceivers.push(networkReciever);
+    this.networkReceivers.push(networkReceiver);
   }
 
   /**
-   * TODO: Add a description
-   * @param networkSender 
+   * Register a network sender reactors. It must be registered so it is known by this
+   * FederatedApp to be used when register portAbsentReaction and add edges for TPO levels.
+   * @param networkSender The designated network sender reactor
    */
-  public registerNetworkSender(
-    networkSender: NetworkReactor
-  ): void {
+  public registerNetworkSender(networkSender: NetworkReactor<unknown>): void {
     this.networkSenders.push(networkSender);
 
-    this.portAbsentReactions.add(networkSender.getLastReactioOrMutation()!)
+    const portAbsentReaction = networkSender.getLastReactioOrMutation();
+    if (portAbsentReaction !== undefined) {
+      this.portAbsentReactions.add(portAbsentReaction);
+    }
   }
 
   /**
@@ -1586,10 +1550,11 @@ export class FederatedApp extends App {
   }
 
   /**
-   * TODO: Add a description
+   * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
+   * message to downstream federates if a given network output port is not present.
    */
   protected enqueuePortAbsentReactions(): void {
-    this.portAbsentReactions.forEach(reaction => {
+    this.portAbsentReactions.forEach((reaction) => {
       this._reactionQ.push(reaction);
     });
   }
@@ -1599,23 +1564,11 @@ export class FederatedApp extends App {
    * for the current logical timestep.
    * 
    * @param tag 
-   * @param is_provisional 
+   * @param isProvisional 
    */
-  private updateMaxLevel(tag: Tag, is_provisional: boolean) {
+  private updateMaxLevel(tag: Tag, isProvisional: boolean) {
     // FIXME: Fill this function
   }
-
-  // private _getFederatePortActionKey<T>(federatePortAction: FederatePortAction<T>): symbol | undefined {
-  //   if (
-  //     (federatePortAction instanceof FederatePortAction) &&
-  //     federatePortAction._isContainedByContainerOf(this)
-  //   ) {
-  //     const owner = federatePortAction.getContainer();
-  //     if (owner !== null) {
-  //       return owner._getKey(federatePortAction, this._keyChain.get(owner));
-  //     }
-  //   }
-  // }
 
   /**
    * Send a message to a potentially remote federate's port via the RTI. This message
@@ -1651,12 +1604,9 @@ export class FederatedApp extends App {
     msg: T,
     destFederateID: number,
     destPortID: number,
-    time: number
+    time: TimeValue
   ): void {
-    const absTime = this.util
-      .getCurrentTag()
-      .getLaterTag(TimeValue.nsec(time))
-      .toBinary();
+    const absTime = this.util.getCurrentTag().getLaterTag(time).toBinary();
     Log.debug(this, () => {
       return (
         `Sending RTI timed message to federate ID: ${destFederateID}` +
@@ -1774,7 +1724,7 @@ export class FederatedApp extends App {
    */
   _addEdgesForTpoLevels():void {
     let networkReactors = this.networkReceivers.concat(this.networkSenders);
-    networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
+    networkReactors.sort((a: NetworkReactor<unknown>, b: NetworkReactor<unknown>): number => {
       return a.getTpoLevel() - b.getTpoLevel();
     })
 
@@ -1797,7 +1747,7 @@ export class FederatedApp extends App {
    */
   _start(): void {
     this._addEdgesForTpoLevels();
-    
+
     this._analyzeDependencies();
 
     this._loadStartupReactions();
@@ -1841,8 +1791,6 @@ export class FederatedApp extends App {
     this.rtiClient.on(
       "message",
       <T>(destPortID: number, messageBuffer: Buffer) => {
-        // Schedule this federate port's action.
-        // This message is untimed, so schedule it immediately.
         Log.debug(this, () => {
           return "(Untimed) Message received from RTI.";
         });
@@ -1852,40 +1800,15 @@ export class FederatedApp extends App {
 
         for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
-            candidate.handleMessage<T>(destPortID, value);
+            candidate.handleMessage(destPortID, value);
           }
         }
-
-        // destPortAction
-        //   .asSchedulable(this._getFederatePortActionKey(destPortAction))
-        //   .schedule(0, value);
       }
     );
 
     this.rtiClient.on(
       "timedMessage",
       <T>(destPortID: number, messageBuffer: Buffer, tag: Tag) => {
-        // Schedule this federate port's action.
-
-        /**
-             *  Definitions:
-             * Ts = timestamp of message at the sending end.
-             * A = after value on connection
-             * Tr = timestamp assigned to the message at the receiving end.
-             * r = physical time at the receiving end when message is received (when schedule() is called).
-             * R = logical time at the receiving end when the message is received (when schedule() is called).
-
-             * We assume that always R <= r.
-
-             * Logical connection, centralized control: Tr = Ts + A
-             * Logical connection, decentralized control: Tr = Ts + A or, if R > Ts + A,
-             *  ERROR triggers at a logical time >= R
-             * Physical connection, centralized or decentralized control: Tr = max(r, R + A)
-             *
-             */
-
-        // FIXME: implement decentralized control.
-
         Log.debug(this, () => {
           return `Timed Message received from RTI with tag ${tag}.`;
         });
@@ -1894,27 +1817,12 @@ export class FederatedApp extends App {
         const value: T = JSON.parse(messageBuffer.toString());
 
         this.updateLastKnownStatusOnInputPort(tag, destPortID);
-
-        for (let candidate of this.networkReceivers) {
+        
+        for (const candidate of this.networkReceivers) {
           if (candidate.getPortID() === destPortID) {
-            candidate.handleTimedMessage<T>(destPortID, value, tag);
+            candidate.handleTimedMessage(destPortID, value, tag);
           }
         }
-
-        //this.updateMaxLevel(tag, this._isLastTAGProvisional);
-
-        // if (destPortAction.origin === Origin.logical) {
-        //   destPortAction
-        //     //FIXME: Is this a right way to trigger a federatePortAction in the NetworkReceiver reactor?
-        //     .asSchedulable(this._getFederatePortActionKey(destPortAction))
-        //     .schedule(0, value, tag);
-        // } else {
-        //   // The schedule function for physical actions implements
-        //   // Tr = max(r, R + A)
-        //   destPortAction
-        //     .asSchedulable(this._getFederatePortActionKey(destPortAction))
-        //     .schedule(0, value);
-        // }
       }
     );
 
@@ -1944,14 +1852,13 @@ export class FederatedApp extends App {
         // Update the greatest time advance grant and immediately
         // wake up _next, in case it was blocked by the old time advance grant
         // FIXME: Temporarily disabling PTAG handling until the
-        // input control reaction is implemented.
+        // MLAA based execution is implemented.
         /*
                 this.greatestTimeAdvanceGrant = tag;
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
                 */
                 // this.updateMaxLevel();
-        // FIXME: Add input control reaction handling.
       }
     });
 
@@ -1994,7 +1901,7 @@ export class FederatedApp extends App {
         return `Port Absent received from RTI for ${intendedTag}.`;
       });
       // FIXME: Temporarily disabling portAbsent until the
-      // input control reaction is implemented.
+      // MLAA based execution is implemented.
       // this.updatelastKnownStatusTag(intendedTag, portID);
       // if (this._isReactionRemainedAtThisTag === true) {
       //     this._requestImmediateInvocationOfNext();
