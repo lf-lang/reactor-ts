@@ -292,7 +292,6 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  */
 export class NetworkSender extends Reactor {
   /**
-   * This function is for NetworkSender reactors.
    * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
    * @returns portAbsentReactor of this NetworkSender reactor
    */
@@ -302,17 +301,15 @@ export class NetworkSender extends Reactor {
 }
 
 /**
- * A network reactor is a reactor handling network actions (NetworkReceiver and NetworkSender).
+ * A network receiver is a reactor handling a network input.
  */
 export class NetworkReceiver<T> extends Reactor {
   /*
-   * A FederatePortAction instance of this NetworkReactor. The action is only registered when this
-   * reactor is a network receiver. Otherwise, it is remained undefined.
+   * A FederatePortAction instance of this NetworkReceiver.
    */
   private networkInputAction: FederatePortAction<T> | undefined = undefined;
 
-  // The port ID of networkInputAction. It is defined if this NetworkReactor is
-  // a network receiver.
+  // The port ID of networkInputAction.
   private readonly portID: number;
 
   constructor(parent: Reactor, portID: number) {
@@ -338,8 +335,7 @@ export class NetworkReceiver<T> extends Reactor {
   }
 
   /**
-   * Handle a timed message being received from the RTI.
-   * This function is for NetworkReceiver reactors.
+   * Handle a message being received from the RTI.
    * @param portID The destination port ID of the message.
    * @param value The payload of the message.
    */
@@ -361,7 +357,6 @@ export class NetworkReceiver<T> extends Reactor {
 
   /**
    * Handle a timed message being received from the RTI.
-   * This function is for NetworkReceiver reactors.
    * @param portID The destination port ID of the message.
    * @param value The payload of the message.
    */
