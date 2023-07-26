@@ -291,7 +291,7 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  * A network sender is a reactor containing a portAbsentReaction.
  */
 export class NetworkSender extends Reactor {
-  constructor (parent: Reactor) {
+  constructor(parent: Reactor) {
     super(parent);
   }
 
@@ -1229,7 +1229,7 @@ export class FederatedApp extends App {
   /**
    * An array of network senders
    */
-  private readonly networkSenders: Array<NetworkSender> = [];
+  private readonly networkSenders: NetworkSender[] = [];
 
   private readonly portAbsentReactions = new Set<Reaction<Variable[]>>();
 
