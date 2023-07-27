@@ -223,7 +223,7 @@ export class TimeValue {
   }
 
   isForever(): boolean {
-    if (this.seconds === Number.MAX_SAFE_INTEGER && this.nanoseconds === 0) {
+    if (this.seconds === Number.MAX_SAFE_INTEGER) {
       return true;
     } else {
       return false;
