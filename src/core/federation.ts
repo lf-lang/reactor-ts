@@ -292,11 +292,12 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  * A network sender is a reactor containing a portAbsentReaction.
  */
 export class NetworkSender extends Reactor {
+  
   /**
-   * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
-   * @returns portAbsentReactor of this NetworkSender reactor
+   * The last reaction of a NetworkSender reactor is the "port absent" reaction.
+   * @returns the "port absent" of this reactor
    */
-  public getLastReactionOrMutation(): Reaction<Variable[]> | undefined {
+  public getPortAbsentReaction(): Reaction<Variable[]> | undefined {
     return this._getLastReactionOrMutation();
   }
 }
@@ -1454,7 +1455,7 @@ export class FederatedApp extends App {
   public registerNetworkSender(networkSender: NetworkSender): void {
     this.networkSenders.push(networkSender);
 
-    const portAbsentReaction = networkSender.getLastReactionOrMutation();
+    const portAbsentReaction = networkSender.getPortAbsentReaction();
     if (portAbsentReaction !== undefined) {
       this.portAbsentReactions.add(portAbsentReaction);
     }
