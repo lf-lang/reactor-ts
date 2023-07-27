@@ -6,7 +6,8 @@ import type {
   FederateConfig,
   Reaction,
   Variable,
-  TaggedEvent
+  TaggedEvent,
+  SchedulableAction
 } from "./internal";
 import {
   Log,
@@ -304,10 +305,15 @@ export class NetworkSender extends Reactor {
  * A network receiver is a reactor handling a network input.
  */
 export class NetworkReceiver<T> extends Reactor {
-  /*
-   * A FederatePortAction instance of this NetworkReceiver.
+  /**
+   * A schedulable action of this NetworkReceiver's network input.
    */
-  private networkInputAction: FederatePortAction<T> | undefined;
+  private networkInputSchedAction: SchedulableAction<T> | undefined;
+
+  /**
+   * The information of origin of this NetworkReceiver's network input action.
+   */
+  private networkInputActionOrigin: Origin | undefined;
 
   /**
    * Register a federate port's action with the network receiver.
@@ -316,7 +322,10 @@ export class NetworkReceiver<T> extends Reactor {
   public registerNetworkInputAction(
     networkInputAction: FederatePortAction<T>
   ): void {
-    this.networkInputAction = networkInputAction;
+    this.networkInputSchedAction = networkInputAction.asSchedulable(
+      this._getKey(networkInputAction)
+    );
+    this.networkInputActionOrigin = networkInputAction.origin;
   }
 
   /**
@@ -326,10 +335,8 @@ export class NetworkReceiver<T> extends Reactor {
   public handleMessage(value: T): void {
     // Schedule this federate port's action.
     // This message is untimed, so schedule it immediately.
-    if (this.networkInputAction !== undefined) {
-      this.networkInputAction
-        .asSchedulable(this._getKey(this.networkInputAction))
-        .schedule(0, value);
+    if (this.networkInputSchedAction !== undefined) {
+      this.networkInputSchedAction.schedule(0, value);
     }
   }
 
@@ -360,17 +367,13 @@ export class NetworkReceiver<T> extends Reactor {
 
     // FIXME: implement decentralized control.
 
-    if (this.networkInputAction !== undefined) {
-      if (this.networkInputAction.origin === Origin.logical) {
-        this.networkInputAction
-          .asSchedulable(this._getKey(this.networkInputAction))
-          .schedule(0, value, intendedTag);
-      } else {
+    if (this.networkInputSchedAction !== undefined) {
+      if (this.networkInputActionOrigin === Origin.logical) {
+        this.networkInputSchedAction.schedule(0, value, intendedTag);
+      } else if (this.networkInputActionOrigin === Origin.physical) {
         // The schedule function for physical actions implements
         // Tr = max(r, R + A)
-        this.networkInputAction
-          .asSchedulable(this._getKey(this.networkInputAction))
-          .schedule(0, value);
+        this.networkInputSchedAction.schedule(0, value);
       }
     }
   }
