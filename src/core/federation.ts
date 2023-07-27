@@ -307,7 +307,7 @@ export class NetworkReceiver<T> extends Reactor {
   /*
    * A FederatePortAction instance of this NetworkReceiver.
    */
-  private networkInputAction: FederatePortAction<T> | undefined = undefined;
+  private networkInputAction: FederatePortAction<T> | undefined;
 
   // The port ID of networkInputAction.
   private readonly portID: number;
