@@ -1202,8 +1202,15 @@ export abstract class Reactor extends Component {
         }
       } else {
         // IN to OUT
-        // FIXME: Make this direct feedthrough false after the generated code deletes it.
-        return true;
+        if (
+          src._isContainedBy(this) &&
+          dst !== undefined &&
+          dst._isContainedBy(this)
+        ) {
+          return true;
+        } else {
+          return false;
+        }
       }
     }
   }
