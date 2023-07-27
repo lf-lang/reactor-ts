@@ -81,6 +81,19 @@ describe("time helper functions", function () {
     );
   });
 
+/**
+ * Test if addition works correctly.
+ */
+describe("add time value", function () {
+    expect(TimeValue.forever().add(TimeValue.forever())).toEqual(TimeValue.forever());
+    expect(TimeValue.forever().add(TimeValue.never())).toEqual(TimeValue.zero());
+    expect(TimeValue.forever().add(TimeValue.sec(1))).toEqual(TimeValue.forever());
+    expect(TimeValue.never().add(TimeValue.never())).toEqual(TimeValue.never());
+    expect(TimeValue.never().add(TimeValue.forever())).toEqual(TimeValue.zero());
+    expect(TimeValue.never().add(TimeValue.sec(1))).toEqual(TimeValue.never());
+});
+  
+
   /**
    * Test conversion to string
    */
