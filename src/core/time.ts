@@ -468,10 +468,9 @@ export class Tag {
    * @param delay The time interval to add to this time instant.
    */
   getLaterTag(delay: TimeValue | undefined): Tag {
-    if (delay === undefined) {
+    if (delay === undefined || delay.isZero()) {
+      // FIXME: Should a tag + zero returns one microstep after the tag?
       return this;
-    } else if (delay.isZero()) {
-      return new Tag(this.time, this.microstep + 1);
     } else {
       return new Tag(delay.add(this.time), 0);
     }
