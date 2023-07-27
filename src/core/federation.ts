@@ -295,7 +295,7 @@ export class NetworkSender extends Reactor {
    * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
    * @returns portAbsentReactor of this NetworkSender reactor
    */
-  public getLastReactioOrMutation(): Reaction<Variable[]> | undefined {
+  public getLastReactionOrMutation(): Reaction<Variable[]> | undefined {
     return this._getLastReactionOrMutation();
   }
 }
@@ -309,21 +309,6 @@ export class NetworkReceiver<T> extends Reactor {
    */
   private networkInputAction: FederatePortAction<T> | undefined;
 
-  // The port ID of networkInputAction.
-  private readonly portID: number;
-
-  constructor(parent: Reactor, portID: number) {
-    super(parent);
-    this.portID = portID;
-  }
-
-  /**
-   * Getter for portID of this NetworkReactor.
-   */
-  public getPortID(): number | undefined {
-    return this.portID;
-  }
-
   /**
    * Register a federate port's action with the network receiver.
    * @param networkInputAction The federate port's action for registration.
@@ -336,18 +321,11 @@ export class NetworkReceiver<T> extends Reactor {
 
   /**
    * Handle a message being received from the RTI.
-   * @param portID The destination port ID of the message.
    * @param value The payload of the message.
    */
-  public handleMessage(portID: number, value: T): void {
+  public handleMessage(value: T): void {
     // Schedule this federate port's action.
     // This message is untimed, so schedule it immediately.
-    if (portID !== this.portID) {
-      this.util.reportError(
-        "FederatedApp attempts to pass the tagged message to the wrong port ID"
-      );
-      return;
-    }
     if (this.networkInputAction !== undefined) {
       this.networkInputAction
         .asSchedulable(this._getKey(this.networkInputAction))
@@ -360,7 +338,7 @@ export class NetworkReceiver<T> extends Reactor {
    * @param portID The destination port ID of the message.
    * @param value The payload of the message.
    */
-  public handleTimedMessage(portID: number, value: T, intendedTag: Tag): void {
+  public handleTimedMessage(value: T, intendedTag: Tag): void {
     // Schedule this federate port's action.
 
     /**
@@ -382,12 +360,6 @@ export class NetworkReceiver<T> extends Reactor {
 
     // FIXME: implement decentralized control.
 
-    if (portID !== this.portID) {
-      this.util.reportError(
-        "FederatedApp attempts to pass the tagged message to the wrong port ID"
-      );
-      return;
-    }
     if (this.networkInputAction !== undefined) {
       if (this.networkInputAction.origin === Origin.logical) {
         this.networkInputAction
@@ -1215,7 +1187,10 @@ export class FederatedApp extends App {
   /**
    * An array of network receivers
    */
-  private readonly networkReceivers: Array<NetworkReceiver<unknown>> = [];
+  private readonly networkReceivers = new Map<
+    number,
+    NetworkReceiver<unknown>
+  >();
 
   /**
    * An array of network senders
@@ -1462,9 +1437,10 @@ export class FederatedApp extends App {
    * @param networkReceiver The designated network receiver reactor.
    */
   public registerNetworkReceiver(
+    portID: number,
     networkReceiver: NetworkReceiver<unknown>
   ): void {
-    this.networkReceivers.push(networkReceiver);
+    this.networkReceivers.set(portID, networkReceiver);
   }
 
   /**
@@ -1475,7 +1451,7 @@ export class FederatedApp extends App {
   public registerNetworkSender(networkSender: NetworkSender): void {
     this.networkSenders.push(networkSender);
 
-    const portAbsentReaction = networkSender.getLastReactioOrMutation();
+    const portAbsentReaction = networkSender.getLastReactionOrMutation();
     if (portAbsentReaction !== undefined) {
       this.portAbsentReactions.add(portAbsentReaction);
     }
@@ -1699,10 +1675,12 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
-        for (const candidate of this.networkReceivers) {
-          if (candidate.getPortID() === destPortID) {
-            candidate.handleMessage(destPortID, value);
-          }
+        try {
+          this.networkReceivers.get(destPortID)?.handleMessage(value);
+        } catch (e) {
+          Log.error(this, () => {
+            return `${e}`;
+          });
         }
       }
     );
@@ -1717,10 +1695,12 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
-        for (const candidate of this.networkReceivers) {
-          if (candidate.getPortID() === destPortID) {
-            candidate.handleTimedMessage(destPortID, value, tag);
-          }
+        try {
+          this.networkReceivers.get(destPortID)?.handleTimedMessage(value, tag);
+        } catch (e) {
+          Log.error(this, () => {
+            return `${e}`;
+          });
         }
       }
     );
