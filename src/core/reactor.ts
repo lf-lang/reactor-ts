@@ -1774,12 +1774,12 @@ interface UtilityFunctions {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: TimeValue
+    time: TimeValue | undefined
   ) => void;
   sendRTIPortAbsent: (
     destFederateID: number,
     destPortID: number,
-    additionalDelay: TimeValue
+    additionalDelay: TimeValue | undefined
   ) => void;
 }
 
@@ -1909,7 +1909,7 @@ export class App extends Reactor {
       data: T,
       destFederateID: number,
       destPortID: number,
-      time: TimeValue
+      time: TimeValue | undefined
     ): void {
       this.app.sendRTITimedMessage(data, destFederateID, destPortID, time);
     }
@@ -1917,7 +1917,7 @@ export class App extends Reactor {
     public sendRTIPortAbsent(
       destFederateID: number,
       destPortID: number,
-      additionalDelay: TimeValue
+      additionalDelay: TimeValue | undefined
     ): void {
       this.app.sendRTIPortAbsent(destFederateID, destPortID, additionalDelay);
     }
@@ -2078,7 +2078,7 @@ export class App extends Reactor {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: TimeValue
+    time: TimeValue | undefined
   ): void {
     throw new Error(
       "Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp"
@@ -2098,7 +2098,7 @@ export class App extends Reactor {
   protected sendRTIPortAbsent(
     destFederateID: number,
     destPortID: number,
-    additionalDelay: TimeValue
+    additionalDelay: TimeValue | undefined
   ): void {
     throw new Error(
       "Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp"
