@@ -292,7 +292,6 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
  * A network sender is a reactor containing a portAbsentReaction.
  */
 export class NetworkSender extends Reactor {
-  
   /**
    * The last reaction of a NetworkSender reactor is the "port absent" reaction.
    * @returns the "port absent" of this reactor
@@ -790,9 +789,9 @@ class RTIClient extends EventEmitter {
    * @param federatePortID The ID of the receiving port.
    */
   public sendRTIPortAbsent(
-    intendedTag: Tag,
     federateID: number,
-    federatePortID: number
+    federatePortID: number,
+    intendedTag: Tag
   ): void {
     const msg = Buffer.alloc(17);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
@@ -1505,7 +1504,7 @@ export class FederatedApp extends App {
     msg: T,
     destFederateID: number,
     destPortID: number,
-    time: TimeValue
+    time: TimeValue | undefined
   ): void {
     const absTime = this.util.getCurrentTag().getLaterTag(time).toBinary();
     Log.debug(this, () => {
@@ -1597,9 +1596,9 @@ export class FederatedApp extends App {
    * @param destPortID The ID of the receiving port.
    */
   public sendRTIPortAbsent(
-    additionalDelay: TimeValue,
     destFederateID: number,
-    destPortID: number
+    destPortID: number,
+    additionalDelay: TimeValue | undefined
   ): void {
     const intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
     Log.debug(this, () => {
@@ -1609,7 +1608,7 @@ export class FederatedApp extends App {
         )} to federate ID: ${destFederateID}` + ` port ID: ${destPortID}.`
       );
     });
-    this.rtiClient.sendRTIPortAbsent(intendedTag, destFederateID, destPortID);
+    this.rtiClient.sendRTIPortAbsent(destFederateID, destPortID, intendedTag);
   }
 
   /**
