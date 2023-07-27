@@ -70,7 +70,7 @@ export class Action<T> extends ScheduledTrigger<T> implements Read<T> {
 
     schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
       if (!(extraDelay instanceof TimeValue)) {
-        extraDelay = TimeValue.secs(0);
+        extraDelay = TimeValue.zero();
       }
 
       let tag = this.action.runtime.util.getCurrentTag();

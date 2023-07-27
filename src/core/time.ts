@@ -462,14 +462,12 @@ export class Tag {
    * Get a new time instant that represents this time instant plus
    * the given delay. The `microstep` of this time instant is ignored;
    * the returned time instant has a `microstep` of zero if the delay
-   * is greater than zero. If the delay equals zero, the tag is returned
-   * unchanged with its current `microstep`. If the delay is undefined,
-   * the tag is returned as it was.
+   * is greater than zero. If the delay equals zero or is undefined,
+   * the tag is returned unchanged with its current `microstep`.
    * @param delay The time interval to add to this time instant.
    */
   getLaterTag(delay: TimeValue | undefined): Tag {
     if (delay === undefined || delay.isZero()) {
-      // FIXME: Should a tag + zero returns one microstep after the tag?
       return this;
     } else {
       return new Tag(delay.add(this.time), 0);
