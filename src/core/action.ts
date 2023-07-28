@@ -70,7 +70,7 @@ export class Action<T> extends ScheduledTrigger<T> implements Read<T> {
 
     schedule(extraDelay: 0 | TimeValue, value: T, intendedTag?: Tag): void {
       if (!(extraDelay instanceof TimeValue)) {
-        extraDelay = TimeValue.secs(0);
+        extraDelay = TimeValue.zero();
       }
 
       let tag = this.action.runtime.util.getCurrentTag();
@@ -194,20 +194,12 @@ export class Dummy extends Action<unknown> {
   }
 }
 
-export enum PortStatus {
-  PRESENT,
-  ABSENT,
-  UNKNOWN
-}
 export class FederatePortAction<T> extends Action<T> {
-  portStatus: PortStatus;
   constructor(
     __parent__: Reactor,
     origin: Origin,
-    minDelay: TimeValue = TimeValue.secs(0)
+    minDelay: TimeValue = TimeValue.zero()
   ) {
     super(__parent__, origin, minDelay);
-
-    this.portStatus = PortStatus.UNKNOWN;
   }
 }

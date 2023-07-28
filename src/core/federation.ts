@@ -6,7 +6,8 @@ import type {
   FederateConfig,
   Reaction,
   Variable,
-  TaggedEvent
+  TaggedEvent,
+  SchedulableAction
 } from "./internal";
 import {
   Log,
@@ -16,7 +17,6 @@ import {
   getCurrentPhysicalTime,
   Alarm,
   App,
-  PortStatus,
   Reactor
 } from "./internal";
 // ---------------------------------------------------------------------//
@@ -304,48 +304,60 @@ abstract class NetworkReactor extends Reactor {
   }
 
   /**
-   * This function returns its own reactions. Those reactions are needed to add
-   * edges for TPO levels.
+   * This function returns this network reactor's own reactions. 
+   * The edges of those reactions (e.g. port absent reactions, port present reactions, ...) 
+   * should be added to the dependency graph according to TPO levels.
    * @returns
    */
   public getReactions():Array<Reaction<Variable[]>> {
     return this._getReactions();
   }
+}
 
+/**
+ * A network sender is a reactor containing a portAbsentReaction.
+ */
+export class NetworkSender extends NetworkReactor {
+  constructor(parent: Reactor, tpoLevel: number) {
+    super(parent, tpoLevel);
+  }
   /**
-   * This function is for NetworkSender reactors.
-   * The last reaction of a NetworkSender reactor is 'portAbsentReactor'.
-   * @returns portAbsentReactor of this NetworkSender reactor
+   * The last reaction of a NetworkSender reactor is the "port absent" reaction.
+   * @returns the "port absent" of this reactor
    */
-  public getLastReactioOrMutation(): Reaction<Variable[]> | undefined {
+  public getPortAbsentReaction(): Reaction<Variable[]> | undefined {
     return this._getLastReactionOrMutation();
   }
 }
 
+export enum PortStatus {
+  PRESENT,
+  ABSENT,
+  UNKNOWN
+}
+
 /**
- * A network reactor is a reactor handling network actions (NetworkReceiver and NetworkSender).
+ * A network receiver is a reactor handling a network input.
  */
 export class NetworkReceiver<T> extends NetworkReactor {
-  /*
-   * A FederatePortAction instance of this NetworkReactor. The action is only registered when this
-   * reactor is a network receiver. Otherwise, it is remained undefined.
+  /**
+   * A schedulable action of this NetworkReceiver's network input.
    */
-  private networkInputAction: FederatePortAction<T> | undefined = undefined;
-
-  // The port ID of networkInputAction. It is defined if this NetworkReactor is
-  // a network receiver.
-  private readonly portID: number;
-
-  constructor(parent: NetworkReactor, tpoLevel: number, portID: number) {
-    super(parent, tpoLevel);
-    this.portID = portID;
-  }
+  private networkInputSchedAction: SchedulableAction<T> | undefined;
 
   /**
-   * Getter for portID of this NetworkReactor.
+   * The information of origin of this NetworkReceiver's network input action.
    */
-  public getPortID(): number | undefined {
-    return this.portID;
+  private networkInputActionOrigin: Origin | undefined;
+
+  /**
+   * The status of the port of this NetworkReceiver
+   */
+  private portStatus: PortStatus;
+
+  constructor(parent: Reactor, tpoLevel: number) {
+    super(parent, tpoLevel);
+    this.portStatus = PortStatus.UNKNOWN;
   }
 
   /**
@@ -355,11 +367,18 @@ export class NetworkReceiver<T> extends NetworkReactor {
   public registerNetworkInputAction(
     networkInputAction: FederatePortAction<T>
   ): void {
-    this.networkInputAction = networkInputAction;
+    this.networkInputSchedAction = networkInputAction.asSchedulable(
+      this._getKey(networkInputAction)
+    );
+    this.networkInputActionOrigin = networkInputAction.origin;
   }
 
-  public setNetworkPortStatus(status: portStatus): void {
-    this.networkInputAction!.portStatus = status;
+  public getNetworkPortStatus(): PortStatus {
+    return this.portStatus;
+  }
+
+  public setNetworkPortStatus(status: PortStatus): void {
+    this.portStatus = status;
   }
 
   /**
@@ -368,29 +387,20 @@ export class NetworkReceiver<T> extends NetworkReactor {
    * @param portID The destination port ID of the message.
    * @param value The payload of the message.
    */
-  public handleMessage(portID: number, value: T): void {
+  public handleMessage(value: T): void {
     // Schedule this federate port's action.
     // This message is untimed, so schedule it immediately.
-    if (portID !== this.portID) {
-      this.util.reportError(
-        "FederatedApp attempts to pass the tagged message to the wrong port ID"
-      );
-      return;
-    }
-    if (this.networkInputAction !== undefined) {
-      this.networkInputAction
-        .asSchedulable(this._getKey(this.networkInputAction))
-        .schedule(0, value);
+    if (this.networkInputSchedAction !== undefined) {
+      this.networkInputSchedAction.schedule(0, value);
     }
   }
 
   /**
    * Handle a timed message being received from the RTI.
-   * This function is for NetworkReceiver reactors.
    * @param portID The destination port ID of the message.
    * @param value The payload of the message.
    */
-  public handleTimedMessage(portID: number, value: T, intendedTag: Tag): void {
+  public handleTimedMessage(value: T, intendedTag: Tag): void {
     // Schedule this federate port's action.
 
     /**
@@ -412,35 +422,15 @@ export class NetworkReceiver<T> extends NetworkReactor {
 
     // FIXME: implement decentralized control.
 
-    if (portID !== this.portID) {
-      this.util.reportError(
-        "FederatedApp attempts to pass the tagged message to the wrong port ID"
-      );
-      return;
-    }
-    if (this.networkInputAction !== undefined) {
-      if (this.networkInputAction.origin === Origin.logical) {
-        this.networkInputAction
-          .asSchedulable(this._getKey(this.networkInputAction))
-          .schedule(0, value, intendedTag);
-      } else {
+    if (this.networkInputSchedAction !== undefined) {
+      if (this.networkInputActionOrigin === Origin.logical) {
+        this.networkInputSchedAction.schedule(0, value, intendedTag);
+      } else if (this.networkInputActionOrigin === Origin.physical) {
         // The schedule function for physical actions implements
         // Tr = max(r, R + A)
-        this.networkInputAction
-          .asSchedulable(this._getKey(this.networkInputAction))
-          .schedule(0, value);
+        this.networkInputSchedAction.schedule(0, value);
       }
     }
-  }
-}
-
-/**
- * A network reactor is a reactor handling network actions (NetworkReceiver and NetworkSender).
- */
-export class NetworkSender extends NetworkReactor {
-
-  constructor(parent: Reactor, tpoLevel: number) {
-    super(parent, tpoLevel);
   }
 }
 
@@ -854,9 +844,9 @@ class RTIClient extends EventEmitter {
    * @param federatePortID The ID of the receiving port.
    */
   public sendRTIPortAbsent(
-    intendedTag: Tag,
     federateID: number,
-    federatePortID: number
+    federatePortID: number,
+    intendedTag: Tag
   ): void {
     const msg = Buffer.alloc(17);
     msg.writeUInt8(RTIMessageTypes.MSG_TYPE_PORT_ABSENT, 0);
@@ -1260,12 +1250,15 @@ export class FederatedApp extends App {
   /**
    * An array of network receivers
    */
-  private readonly networkReceivers: Array<NetworkReceiver<unknown>> = [];
+  private readonly networkReceivers = new Map<
+    number,
+    NetworkReceiver<unknown>
+  >();
 
   /**
    * An array of network senders
    */
-  private readonly networkSenders: Array<NetworkSender> = [];
+  private readonly networkSenders: NetworkSender[] = [];
 
   /**
    * An array of port absent reactions
@@ -1512,9 +1505,10 @@ export class FederatedApp extends App {
    * @param networkReceiver The designated network receiver reactor.
    */
   public registerNetworkReceiver(
+    portID: number,
     networkReceiver: NetworkReceiver<unknown>
   ): void {
-    this.networkReceivers.push(networkReceiver);
+    this.networkReceivers.set(portID, networkReceiver);
   }
 
   /**
@@ -1525,7 +1519,7 @@ export class FederatedApp extends App {
   public registerNetworkSender(networkSender: NetworkSender): void {
     this.networkSenders.push(networkSender);
 
-    const portAbsentReaction = networkSender.getLastReactioOrMutation();
+    const portAbsentReaction = networkSender.getPortAbsentReaction();
     if (portAbsentReaction !== undefined) {
       this.portAbsentReactions.add(portAbsentReaction);
     }
@@ -1555,7 +1549,7 @@ export class FederatedApp extends App {
    * 
    */
   protected resetStatusFieldsOnInputPorts():void {
-    for (const networkReceiver of this.networkReceivers) {
+    for (const networkReceiver of this.networkReceivers.values()) {
       networkReceiver.setNetworkPortStatus(PortStatus.UNKNOWN);
     }
     Log.debug(this, () => {
@@ -1619,7 +1613,7 @@ export class FederatedApp extends App {
     msg: T,
     destFederateID: number,
     destPortID: number,
-    time: TimeValue
+    time: TimeValue | undefined
   ): void {
     const absTime = this.util.getCurrentTag().getLaterTag(time).toBinary();
     Log.debug(this, () => {
@@ -1711,9 +1705,9 @@ export class FederatedApp extends App {
    * @param destPortID The ID of the receiving port.
    */
   public sendRTIPortAbsent(
-    additionalDelay: TimeValue,
     destFederateID: number,
-    destPortID: number
+    destPortID: number,
+    additionalDelay: TimeValue | undefined
   ): void {
     const intendedTag = this.util.getCurrentTag().getLaterTag(additionalDelay);
     Log.debug(this, () => {
@@ -1723,7 +1717,7 @@ export class FederatedApp extends App {
         )} to federate ID: ${destFederateID}` + ` port ID: ${destPortID}.`
       );
     });
-    this.rtiClient.sendRTIPortAbsent(intendedTag, destFederateID, destPortID);
+    this.rtiClient.sendRTIPortAbsent(destFederateID, destPortID, intendedTag);
   }
 
   /**
@@ -1738,7 +1732,7 @@ export class FederatedApp extends App {
    * 
    */
   _addEdgesForTpoLevels():void {
-    const networkReceivers = this.networkReceivers as NetworkReactor[];
+    const networkReceivers = Array.from(this.networkReceivers.values()) as NetworkReactor[];
     const networkReactors = networkReceivers.concat(this.networkSenders as NetworkReactor[]);
     networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
       return a.getTpoLevel() - b.getTpoLevel();
@@ -1814,10 +1808,12 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
-        for (const candidate of this.networkReceivers) {
-          if (candidate.getPortID() === destPortID) {
-            candidate.handleMessage(destPortID, value);
-          }
+        try {
+          this.networkReceivers.get(destPortID)?.handleMessage(value);
+        } catch (e) {
+          Log.error(this, () => {
+            return `${e}`;
+          });
         }
       }
     );
@@ -1832,12 +1828,12 @@ export class FederatedApp extends App {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const value: T = JSON.parse(messageBuffer.toString());
 
-        this.updateLastKnownStatusOnInputPort(tag, destPortID);
-        
-        for (const candidate of this.networkReceivers) {
-          if (candidate.getPortID() === destPortID) {
-            candidate.handleTimedMessage(destPortID, value, tag);
-          }
+        try {
+          this.networkReceivers.get(destPortID)?.handleTimedMessage(value, tag);
+        } catch (e) {
+          Log.error(this, () => {
+            return `${e}`;
+          });
         }
       }
     );

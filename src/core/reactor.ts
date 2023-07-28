@@ -1202,8 +1202,15 @@ export abstract class Reactor extends Component {
         }
       } else {
         // IN to OUT
-        // FIXME: Make this direct feedthrough false after the generated code deletes it.
-        return true;
+        if (
+          src._isContainedBy(this) &&
+          dst !== undefined &&
+          dst._isContainedBy(this)
+        ) {
+          return true;
+        } else {
+          return false;
+        }
       }
     }
   }
@@ -1767,12 +1774,12 @@ interface UtilityFunctions {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: TimeValue
+    time: TimeValue | undefined
   ) => void;
   sendRTIPortAbsent: (
-    additionalDealy: TimeValue,
     destFederateID: number,
-    destPortID: number
+    destPortID: number,
+    additionalDelay: TimeValue | undefined
   ) => void;
 }
 
@@ -1902,17 +1909,17 @@ export class App extends Reactor {
       data: T,
       destFederateID: number,
       destPortID: number,
-      time: TimeValue
+      time: TimeValue | undefined
     ): void {
       this.app.sendRTITimedMessage(data, destFederateID, destPortID, time);
     }
 
     public sendRTIPortAbsent(
-      additionalDelay: TimeValue,
       destFederateID: number,
-      destPortID: number
+      destPortID: number,
+      additionalDelay: TimeValue | undefined
     ): void {
-      this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
+      this.app.sendRTIPortAbsent(destFederateID, destPortID, additionalDelay);
     }
   })(this);
 
@@ -2071,7 +2078,7 @@ export class App extends Reactor {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: TimeValue
+    time: TimeValue | undefined
   ): void {
     throw new Error(
       "Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp"
@@ -2089,9 +2096,9 @@ export class App extends Reactor {
    * @param destPortID The ID of the receiving port.
    */
   protected sendRTIPortAbsent(
-    additionalDelay: TimeValue,
     destFederateID: number,
-    destPortID: number
+    destPortID: number,
+    additionalDelay: TimeValue | undefined
   ): void {
     throw new Error(
       "Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp"
