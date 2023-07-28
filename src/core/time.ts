@@ -118,6 +118,19 @@ export class TimeValue {
    * @param other The time value to add to this one.
    */
   add(other: TimeValue): TimeValue {
+    if (
+      (this.isNever() && other.isForever()) ||
+      (this.isForever() && other.isNever())
+    ) {
+      // The sum of minus infinity and infinity is zero.
+      return TimeValue.zero();
+    } else if (this.isNever() || other.isNever()) {
+      // The sum of minus infinity and a normal tag is minus infinity.
+      return TimeValue.never();
+    } else if (this.isForever() || other.isForever()) {
+      // The sum of infinity and a normal tag is infinity.
+      return TimeValue.forever();
+    }
     let seconds = this.seconds + other.seconds;
     let nanoseconds = this.nanoseconds + other.nanoseconds;
 
@@ -126,7 +139,14 @@ export class TimeValue {
       seconds += 1;
       nanoseconds -= TimeUnit.sec;
     }
-    return TimeValue.secsAndNs(seconds, nanoseconds);
+
+    // Check an overflow.
+    if (!Number.isSafeInteger(seconds)) {
+      // The overflow happens.
+      return TimeValue.forever();
+    } else {
+      return TimeValue.secsAndNs(seconds, nanoseconds);
+    }
   }
 
   /**
@@ -196,6 +216,14 @@ export class TimeValue {
 
   isNever(): boolean {
     if (this.seconds === Number.MIN_SAFE_INTEGER && this.nanoseconds === 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  isForever(): boolean {
+    if (this.seconds === Number.MAX_SAFE_INTEGER) {
       return true;
     } else {
       return false;
@@ -434,12 +462,12 @@ export class Tag {
    * Get a new time instant that represents this time instant plus
    * the given delay. The `microstep` of this time instant is ignored;
    * the returned time instant has a `microstep` of zero if the delay
-   * is greater than zero. If the delay equals zero, the tag is returned
-   * unchanged with its current `microstep`.
+   * is greater than zero. If the delay equals zero or is undefined,
+   * the tag is returned unchanged with its current `microstep`.
    * @param delay The time interval to add to this time instant.
    */
-  getLaterTag(delay: TimeValue): Tag {
-    if (delay.isZero() || delay.isNever()) {
+  getLaterTag(delay: TimeValue | undefined): Tag {
+    if (delay === undefined || delay.isZero()) {
       return this;
     } else {
       return new Tag(delay.add(this.time), 0);

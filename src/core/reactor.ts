@@ -1202,7 +1202,15 @@ export abstract class Reactor extends Component {
         }
       } else {
         // IN to OUT
-        return false;
+        if (
+          src._isContainedBy(this) &&
+          dst !== undefined &&
+          dst._isContainedBy(this)
+        ) {
+          return true;
+        } else {
+          return false;
+        }
       }
     }
   }
@@ -1766,12 +1774,12 @@ interface UtilityFunctions {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: number
+    time: TimeValue | undefined
   ) => void;
   sendRTIPortAbsent: (
-    additionalDealy: TimeValue,
     destFederateID: number,
-    destPortID: number
+    destPortID: number,
+    additionalDelay: TimeValue | undefined
   ) => void;
 }
 
@@ -1901,17 +1909,17 @@ export class App extends Reactor {
       data: T,
       destFederateID: number,
       destPortID: number,
-      time: number
+      time: TimeValue | undefined
     ): void {
       this.app.sendRTITimedMessage(data, destFederateID, destPortID, time);
     }
 
     public sendRTIPortAbsent(
-      additionalDelay: TimeValue,
       destFederateID: number,
-      destPortID: number
+      destPortID: number,
+      additionalDelay: TimeValue | undefined
     ): void {
-      this.app.sendRTIPortAbsent(additionalDelay, destFederateID, destPortID);
+      this.app.sendRTIPortAbsent(destFederateID, destPortID, additionalDelay);
     }
   })(this);
 
@@ -2070,7 +2078,7 @@ export class App extends Reactor {
     data: T,
     destFederateID: number,
     destPortID: number,
-    time: number
+    time: TimeValue | undefined
   ): void {
     throw new Error(
       "Cannot call sendRTIMessage from an App. sendRTIMessage may be called only from a FederatedApp"
@@ -2088,9 +2096,9 @@ export class App extends Reactor {
    * @param destPortID The ID of the receiving port.
    */
   protected sendRTIPortAbsent(
-    additionalDelay: TimeValue,
     destFederateID: number,
-    destPortID: number
+    destPortID: number,
+    additionalDelay: TimeValue | undefined
   ): void {
     throw new Error(
       "Cannot call sendRTIPortAbsent from an App. sendRTIPortAbsent may be called only from a FederatedApp"
@@ -2141,7 +2149,7 @@ export class App extends Reactor {
   /**
    * Priority set that keeps track of reactions at the current Logical time.
    */
-  private readonly _reactionQ = new ReactionQueue();
+  protected readonly _reactionQ = new ReactionQueue();
 
   /**
    * The physical time when execution began relative to January 1, 1970 00:00:00 UTC.
@@ -2281,7 +2289,7 @@ export class App extends Reactor {
     Log.global.debug("Finished handling all events at current time.");
   }
 
-  protected enqueueNetworkOutputControlReactions(): void {
+  protected enqueuePortAbsentReactions(): void {
     return undefined;
   }
 
@@ -2304,6 +2312,7 @@ export class App extends Reactor {
    * stimuli.
    */
   private _next(): void {
+    // TODO: Check the MLAA and execute only allowed reactions
     let nextEvent = this._eventQ.peek();
     if (nextEvent != null) {
       // Check whether the next event can be handled, or not quite yet.
@@ -2381,8 +2390,8 @@ export class App extends Reactor {
         nextEvent != null &&
         this._currentTag.isSimultaneousWith(nextEvent.tag)
       );
-      // enqueue networkOutputControlReactions
-      this.enqueueNetworkOutputControlReactions();
+      // enqueue portAbsentReactions
+      this.enqueuePortAbsentReactions();
 
       // React to all the events loaded onto the reaction queue.
       this._react();
@@ -2664,8 +2673,8 @@ export class App extends Reactor {
 
     Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
-    // enqueue networkOutputControlReactions
-    this.enqueueNetworkOutputControlReactions();
+    // enqueue portAbsentReactions
+    this.enqueuePortAbsentReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.
     this._react();
