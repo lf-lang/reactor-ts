@@ -291,7 +291,7 @@ abstract class NetworkReactor extends Reactor {
   // TPO level of this NetworkReactor
   protected readonly tpoLevel: number;
 
-  constructor (parent: Reactor, tpoLevel: number) {
+  constructor(parent: Reactor, tpoLevel: number) {
     super(parent);
     this.tpoLevel = tpoLevel;
   }
@@ -304,12 +304,12 @@ abstract class NetworkReactor extends Reactor {
   }
 
   /**
-   * This function returns this network reactor's own reactions. 
-   * The edges of those reactions (e.g. port absent reactions, port present reactions, ...) 
+   * This function returns this network reactor's own reactions.
+   * The edges of those reactions (e.g. port absent reactions, port present reactions, ...)
    * should be added to the dependency graph according to TPO levels.
    * @returns
    */
-  public getReactions():Array<Reaction<Variable[]>> {
+  public getReactions(): Array<Reaction<Variable[]>> {
     return this._getReactions();
   }
 }
@@ -318,9 +318,6 @@ abstract class NetworkReactor extends Reactor {
  * A network sender is a reactor containing a portAbsentReaction.
  */
 export class NetworkSender extends NetworkReactor {
-  constructor(parent: Reactor, tpoLevel: number) {
-    super(parent, tpoLevel);
-  }
   /**
    * The last reaction of a NetworkSender reactor is the "port absent" reaction.
    * @returns the "port absent" of this reactor
@@ -353,11 +350,18 @@ export class NetworkReceiver<T> extends NetworkReactor {
   /**
    * The status of the port of this NetworkReceiver
    */
-  private portStatus: PortStatus;
+  public portStatus: PortStatus;
+
+  /**
+   * Last known status of the port, either via a timed message, a port absent,
+   * or a TAG from the RTI.
+   */
+  public lastKnownStatusTag: Tag;
 
   constructor(parent: Reactor, tpoLevel: number) {
     super(parent, tpoLevel);
     this.portStatus = PortStatus.UNKNOWN;
+    this.lastKnownStatusTag = new Tag(TimeValue.never());
   }
 
   /**
@@ -373,9 +377,13 @@ export class NetworkReceiver<T> extends NetworkReactor {
     this.networkInputActionOrigin = networkInputAction.origin;
   }
 
-  public getNetworkPortStatus(): PortStatus {
-    return this.portStatus;
-  }
+  // public getNetworkPortStatus(): PortStatus {
+  //   return this.portStatus;
+  // }
+
+  // public getLastKnownStatusTag(): Tag {
+  //   return this.lastKnownStatusTag;
+  // }
 
   public setNetworkPortStatus(status: PortStatus): void {
     this.portStatus = status;
@@ -1526,29 +1534,80 @@ export class FederatedApp extends App {
   }
 
   /**
-   * 
-   * @param tag 
+   *
+   * @param tag
    */
-  private updateLastKnownStatusOnInputPorts(tag:Tag): void {
-    // FIXME: Fill this function
-    // this.updateMaxLevel(this.greatestTimeAdvanceGrant, this._isLastTAGProvisional);
+  private updateLastKnownStatusOnInputPorts(tag: Tag): void {
+    Log.debug(this, () => {
+      return "In update_last_known_status_on_input ports.";
+    });
+    let isAnyStatusChanged = false;
+    this.networkReceivers.forEach(
+      (networkReceiver: NetworkReceiver<unknown>, portID: number) => {
+        // This is called when a TAG is received.
+        // But it is possible for an input port to have received already
+        // a message with a larger tag (if there is an after delay on the
+        // connection), in which case, the last known status tag of the port
+        // is in the future and should not be rolled back. So in that case,
+        // we do not update the last known status tag.
+        if (tag.isGreaterThanOrEqualTo(networkReceiver.lastKnownStatusTag)) {
+          Log.debug(this, () => {
+            return (
+              `Updating the last known status tag of port ${portID} from ` +
+              `${networkReceiver.lastKnownStatusTag} to ${tag}.`
+            );
+          });
+          isAnyStatusChanged = true;
+        }
+      }
+    );
+    if (isAnyStatusChanged) {
+      this.updateMaxLevel(
+        this.greatestTimeAdvanceGrant,
+        this._isLastTAGProvisional
+      );
+    }
   }
 
   /**
-   * 
-   * @param tag 
-   * @param portID 
+   *
+   * @param tag
+   * @param portID
    */
-  private updateLastKnownStatusOnInputPort(tag:Tag, portID: number): void {
-    // FIXME: Fill this function
-    // this.updateMaxLevel(this.greatestTimeAdvanceGrant, this._isLastTAGProvisional);
+  private updateLastKnownStatusOnInputPort(tag: Tag, portID: number): void {
+    const networkReceiver = this.networkReceivers.get(portID);
+    if (networkReceiver !== undefined) {
+      if (tag.isGreaterThanOrEqualTo(networkReceiver.lastKnownStatusTag)) {
+        if (tag.isSimultaneousWith(networkReceiver.lastKnownStatusTag)) {
+          tag = tag.getMicroStepsLater(1);
+        }
+        Log.debug(this, () => {
+          return (
+            `Updating the last known status tag of port ${portID} from ` +
+            `${networkReceiver.lastKnownStatusTag} to ${tag}.`
+          );
+        });
+        networkReceiver.lastKnownStatusTag = tag;
+        this.updateMaxLevel(
+          this.greatestTimeAdvanceGrant,
+          this._isLastTAGProvisional
+        );
+      } else {
+        Log.debug(this, () => {
+          return (
+            `Attempt to update the last known status tag ` +
+            `of network input port ${portID} to an earlier tag was ignored.`
+          );
+        });
+      }
+    }
   }
 
   /**
    * @override
-   * 
+   *
    */
-  protected resetStatusFieldsOnInputPorts():void {
+  protected resetStatusFieldsOnInputPorts(): void {
     for (const networkReceiver of this.networkReceivers.values()) {
       networkReceiver.setNetworkPortStatus(PortStatus.UNKNOWN);
     }
@@ -1571,9 +1630,9 @@ export class FederatedApp extends App {
   /**
    * @brief Attempts to update the max level the reaction queue is allowed to advance to
    * for the current logical timestep.
-   * 
-   * @param tag 
-   * @param isProvisional 
+   *
+   * @param tag
+   * @param isProvisional
    */
   private updateMaxLevel(tag: Tag, isProvisional: boolean): void {
     // FIXME: Fill this function
@@ -1729,14 +1788,18 @@ export class FederatedApp extends App {
   }
 
   /**
-   * 
+   *
    */
-  _addEdgesForTpoLevels():void {
-    const networkReceivers = Array.from(this.networkReceivers.values()) as NetworkReactor[];
-    const networkReactors = networkReceivers.concat(this.networkSenders as NetworkReactor[]);
+  _addEdgesForTpoLevels(): void {
+    const networkReceivers = Array.from(
+      this.networkReceivers.values()
+    ) as NetworkReactor[];
+    const networkReactors = networkReceivers.concat(
+      this.networkSenders as NetworkReactor[]
+    );
     networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
       return a.getTpoLevel() - b.getTpoLevel();
-    })
+    });
 
     for (let i = 0; i < networkReactors.length - 1; i++) {
       for (const upstream of networkReactors[i].getReactions()) {
@@ -1870,7 +1933,7 @@ export class FederatedApp extends App {
                 this._isLastTAGProvisional = true;
                 this._requestImmediateInvocationOfNext();
                 */
-                // this.updateMaxLevel();
+        // this.updateMaxLevel();
       }
     });
 
