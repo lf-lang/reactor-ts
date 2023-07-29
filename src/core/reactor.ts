@@ -2293,7 +2293,9 @@ export class App extends Reactor {
     return undefined;
   }
 
-  protected resetStatusFieldsOnInputPorts(): void { return undefined; }
+  protected resetStatusFieldsOnInputPorts(): void {
+    return undefined;
+  }
 
   /**
    * Handle the next events on the event queue.
@@ -2340,7 +2342,7 @@ export class App extends Reactor {
 
       // this.resetStatusFieldsOnInputPorts();
 
-      // TODO: Seperate this part into the new function popEvents() and 
+      // TODO: Seperate this part into the new function popEvents() and
       //       make new overrided _next() function in the federation.ts
       // Start processing events. Execute all reactions that are triggered
       // at the current tag in topological order. After that, if the next

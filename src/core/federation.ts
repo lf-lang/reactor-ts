@@ -289,6 +289,8 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
 
 abstract class NetworkReactor extends Reactor {
   // TPO level of this NetworkReactor
+  // FIXME: There can be a network reactor without a TPO level when the input port has
+  // non-zero delay.
   protected readonly tpoLevel: number;
 
   constructor(parent: Reactor, tpoLevel: number) {
@@ -362,6 +364,10 @@ export class NetworkReceiver<T> extends NetworkReactor {
     super(parent, tpoLevel);
     this.portStatus = PortStatus.UNKNOWN;
     this.lastKnownStatusTag = new Tag(TimeValue.never());
+  }
+
+  public getNetworkInputActionOrigin(): Origin | undefined {
+    return this.networkInputActionOrigin;
   }
 
   /**
@@ -1562,10 +1568,7 @@ export class FederatedApp extends App {
       }
     );
     if (isAnyStatusChanged) {
-      this.updateMaxLevel(
-        this.greatestTimeAdvanceGrant,
-        this._isLastTAGProvisional
-      );
+      this.updateMaxLevel();
     }
   }
 
@@ -1588,14 +1591,11 @@ export class FederatedApp extends App {
           );
         });
         networkReceiver.lastKnownStatusTag = tag;
-        this.updateMaxLevel(
-          this.greatestTimeAdvanceGrant,
-          this._isLastTAGProvisional
-        );
+        this.updateMaxLevel();
       } else {
         Log.debug(this, () => {
           return (
-            `Attempt to update the last known status tag ` +
+            "Attempt to update the last known status tag " +
             `of network input port ${portID} to an earlier tag was ignored.`
           );
         });
@@ -1634,8 +1634,43 @@ export class FederatedApp extends App {
    * @param tag
    * @param isProvisional
    */
-  private updateMaxLevel(tag: Tag, isProvisional: boolean): void {
-    // FIXME: Fill this function
+  private updateMaxLevel(): void {
+    this.maxLevelAllowedToAdvance = Number.MAX_SAFE_INTEGER;
+    Log.debug(this, () => {
+      return `last TAG = ${this.greatestTimeAdvanceGrant.time}`;
+    });
+    if (
+      this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) ||
+      (this.util
+        .getCurrentTag()
+        .isSimultaneousWith(this.greatestTimeAdvanceGrant) &&
+        !this._isLastTAGProvisional)
+    ) {
+      Log.debug(this, () => {
+        return (
+          `Updated MLAA to ${
+            this.maxLevelAllowedToAdvance
+          } at time ${this.util.getElapsedLogicalTime()} ` +
+          `with lastTAG = ${
+            this.greatestTimeAdvanceGrant
+          } and current time ${this.util.getCurrentLogicalTime()}.`
+        );
+      });
+      return; // Safe to complete the current tag.
+    }
+    for (const networkReceiver of this.networkReceivers.values()) {
+      // FIXME: In update_max_level of federate.c, this operation is only applied
+      // for no delay input ports
+      if (
+        this.util
+          .getCurrentTag()
+          .isGreaterThan(this.greatestTimeAdvanceGrant) &&
+        networkReceiver.getNetworkInputActionOrigin() !== Origin.physical
+      ) {
+        // FIXME: Compare the current MLAA and input port's status and update it
+        // this.maxLevelAllowedToAdvance =
+      }
+    }
   }
 
   /**
