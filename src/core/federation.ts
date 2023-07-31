@@ -291,9 +291,9 @@ abstract class NetworkReactor extends Reactor {
   // TPO level of this NetworkReactor
   // FIXME: There can be a network reactor without a TPO level when the input port has
   // non-zero delay.
-  protected readonly tpoLevel: number;
+  protected readonly tpoLevel?: number;
 
-  constructor(parent: Reactor, tpoLevel: number) {
+  constructor(parent: Reactor, tpoLevel: number | undefined) {
     super(parent);
     this.tpoLevel = tpoLevel;
   }
@@ -301,7 +301,7 @@ abstract class NetworkReactor extends Reactor {
   /**
    * Getter for the TPO level of this NetworkReactor.
    */
-  public getTpoLevel(): number {
+  public getTpoLevel(): number | undefined {
     return this.tpoLevel;
   }
 
@@ -360,7 +360,7 @@ export class NetworkReceiver<T> extends NetworkReactor {
    */
   public lastKnownStatusTag: Tag;
 
-  constructor(parent: Reactor, tpoLevel: number) {
+  constructor(parent: Reactor, tpoLevel: number | undefined) {
     super(parent, tpoLevel);
     this.portStatus = PortStatus.UNKNOWN;
     this.lastKnownStatusTag = new Tag(TimeValue.never());
@@ -1830,10 +1830,21 @@ export class FederatedApp extends App {
       this.networkReceivers.values()
     ) as NetworkReactor[];
     const networkReactors = networkReceivers.concat(
-      this.networkSenders as NetworkReactor[]
+      this.networkSenders.filter(
+        (sender) => sender.getTpoLevel() !== undefined
+      ) as NetworkReactor[]
     );
-    networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
-      return a.getTpoLevel() - b.getTpoLevel();
+    networkReactors.sort((A: NetworkReactor, B: NetworkReactor): number => {
+      const tpoOfA = A.getTpoLevel();
+      const tpoOfB = B.getTpoLevel();
+      if (tpoOfA !== undefined && tpoOfB !== undefined) {
+        return tpoOfA - tpoOfB;
+      } else {
+        Log.error(this, () => {
+          return "Attempts to add edges for reactions without a TPO level.";
+        });
+        return 0;
+      }
     });
 
     for (let i = 0; i < networkReactors.length - 1; i++) {
