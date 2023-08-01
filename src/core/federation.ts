@@ -349,8 +349,6 @@ export class NetworkReceiver<T> extends NetworkReactor {
    */
   private networkInputActionOrigin: Origin | undefined;
 
-  private highestPriority: number = 0;
-
   /**
    * The status of the port of this NetworkReceiver
    */
@@ -379,12 +377,6 @@ export class NetworkReceiver<T> extends NetworkReactor {
       this._getKey(networkInputAction)
     );
     this.networkInputActionOrigin = networkInputAction.origin;
-
-    this.highestPriority = networkInputAction.getHighestPriority();
-  }
-
-  public getHighestPriority(): number {
-    return this.highestPriority;
   }
 
   public getNetworkInputActionOrigin(): Origin | undefined {
@@ -1435,30 +1427,35 @@ export class FederatedApp extends App {
   }
 
   /**
+   * @override
    * Iterate over all reactions in the reaction queue and execute them.
+   *
+   * @returns
    */
-    protected _react(): boolean {
-      let r: Reaction<Variable[]>;
-      while (this._reactionQ.size() > 0) {
-        r = this._reactionQ.peek();
-        console.log(r.getPriority());
-        if (r.getPriority() < this.maxLevelAllowedToAdvance) {
-          try {
-            r = this._reactionQ.pop();
-            r.doReact();
-          } catch (e) {
-            Log.error(this, () => `Exception occurred in reaction: ${r}: ${e}`);
-            // Allow errors in reactions to kill execution.
-            throw e;
-          }
-        } else {
-          Log.global.debug("Max level allowed to advance is higher than the next reaction's priority.");
-          return false
+  protected _react(): boolean {
+    let r: Reaction<Variable[]>;
+    while (this._reactionQ.size() > 0) {
+      r = this._reactionQ.peek();
+      console.log(r.getPriority());
+      if (r.getPriority() < this.maxLevelAllowedToAdvance) {
+        try {
+          r = this._reactionQ.pop();
+          r.doReact();
+        } catch (e) {
+          Log.error(this, () => `Exception occurred in reaction: ${r}: ${e}`);
+          // Allow errors in reactions to kill execution.
+          throw e;
         }
+      } else {
+        Log.global.debug(
+          "Max level allowed to advance is higher than the next reaction's priority."
+        );
+        return false;
       }
-      Log.global.debug("Finished handling all events at current time.");
-      return true;
     }
+    Log.global.debug("Finished handling all events at current time.");
+    return true;
+  }
 
   protected _iterationComplete(): void {
     const currentTime = this.util.getCurrentTag();
@@ -1698,12 +1695,13 @@ export class FederatedApp extends App {
       if (
         this.util
           .getCurrentTag()
-          .isGreaterThan(this.greatestTimeAdvanceGrant) &&
+          .isGreaterThan(networkReceiver.lastKnownStatusTag) &&
         networkReceiver.getNetworkInputActionOrigin() !== Origin.physical
       ) {
         // FIXME: Compare the current MLAA and input port's status and update it
-        if (this.maxLevelAllowedToAdvance < networkReceiver.getHighestPriority()) {
-          this.maxLevelAllowedToAdvance = networkReceiver.getHighestPriority();
+        const candidate = networkReceiver.getReactions()[0].getPriority();
+        if (this.maxLevelAllowedToAdvance < candidate) {
+          this.maxLevelAllowedToAdvance = candidate;
         }
         console.log(`MLAA = ${this.maxLevelAllowedToAdvance}`);
       }
@@ -1863,9 +1861,7 @@ export class FederatedApp extends App {
    *
    */
   _addEdgesForTpoLevels(): void {
-    const networkReceivers = Array.from(
-      this.networkReceivers.values()
-    ).filter(
+    const networkReceivers = Array.from(this.networkReceivers.values()).filter(
       (receiver) => receiver.getTpoLevel() !== undefined
     ) as NetworkReactor[];
     const networkReactors = networkReceivers.concat(
