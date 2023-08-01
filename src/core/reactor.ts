@@ -1833,6 +1833,8 @@ export class App extends Reactor {
    */
   private readonly _reactorsToRemove = new Array<Reactor>();
 
+  private _isReactionsRemaind = false;
+
   /**
    * Stores whether the last received TAG (Tag Advance Grant) was provisional.
    * Every federate starts out assuming that it has been granted a PTAG
@@ -2274,7 +2276,7 @@ export class App extends Reactor {
   /**
    * Iterate over all reactions in the reaction queue and execute them.
    */
-  private _react(): void {
+  protected _react(): boolean {
     let r: Reaction<Variable[]>;
     while (this._reactionQ.size() > 0) {
       try {
@@ -2287,6 +2289,7 @@ export class App extends Reactor {
       }
     }
     Log.global.debug("Finished handling all events at current time.");
+    return true;
   }
 
   protected enqueuePortAbsentReactions(): void {
@@ -2295,6 +2298,64 @@ export class App extends Reactor {
 
   protected resetStatusFieldsOnInputPorts(): void {
     return undefined;
+  }
+
+  protected _popEvents(nextEvent?: TaggedEvent<unknown>): void {
+    // Start processing events. Execute all reactions that are triggered
+    // at the current tag in topological order. After that, if the next
+    // event on the event queue has the same time (but a greater
+    // microstep), repeat. This prevents JS event loop from gaining
+    // control and imposing overhead. Asynchronous activity therefore
+    // might get blocked, but since the results of such activities are
+    // typically reported via physical actions, the tags of the
+    // resulting events would be in the future, anyway.
+    do {
+      // Keep popping the event queue until the next event has a different tag.
+      while (nextEvent?.tag.isSimultaneousWith(this._currentTag) ?? false) {
+        const trigger = nextEvent?.trigger;
+        this._eventQ.pop();
+        Log.debug(this, () => `Popped off the event queue: ${trigger}`);
+        // Handle timers.
+        if (trigger instanceof Timer) {
+          if (!trigger.period.isZero()) {
+            Log.debug(this, () => `Rescheduling timer ${trigger}`);
+
+            this.__runtime.schedule(
+              new TaggedEvent(
+                trigger,
+                this._currentTag.getLaterTag(trigger.period),
+                null
+              )
+            );
+          }
+        }
+
+        // Load reactions onto the reaction queue.
+        if (nextEvent != null) {
+          trigger?.update(nextEvent);
+        }
+        nextEvent?.trigger
+
+        // Look at the next event on the queue.
+        nextEvent = this._eventQ.peek();
+      }
+
+      // End of this execution step. Perform cleanup.
+      while (this._reactorsToRemove.length > 0) {
+        // const r = this._reactorsToRemove.pop();
+        // FIXME: doing this for the entire model at the end of execution
+        // could be a pretty significant performance hit, so we probably
+        // don't want to do this
+        // r?._unplug() FIXME: visibility
+      }
+
+      // Peek at the event queue to see whether we can process the next event
+      // or should give control back to the JS event loop.
+      nextEvent = this._eventQ.peek();
+    } while (
+      nextEvent != null &&
+      this._currentTag.isSimultaneousWith(nextEvent.tag)
+    );
   }
 
   /**
@@ -2319,90 +2380,43 @@ export class App extends Reactor {
     // TODO: Check the MLAA and execute only allowed reactions
     let nextEvent = this._eventQ.peek();
     if (nextEvent != null) {
-      // Check whether the next event can be handled, or not quite yet.
-      // A holdup can occur in a federated execution.
-      if (!this._canProceed(nextEvent)) {
-        // If this happens, then a TAG from the RTI will trigger the
-        // next invocation of _next.
-        return;
-      }
-      // If it is too early to handle the next event, set a timer for it
-      // (unless the "fast" option is enabled), and give back control to
-      // the JS event loop.
-      if (
-        getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time) &&
-        !this._fast
-      ) {
-        this._setAlarmOrYield(nextEvent.tag);
-        return;
-      }
-
-      // Advance logical time.
-      this._advanceTime(nextEvent.tag);
-
-      // this.resetStatusFieldsOnInputPorts();
-
-      // TODO: Seperate this part into the new function popEvents() and
-      //       make new overrided _next() function in the federation.ts
-      // Start processing events. Execute all reactions that are triggered
-      // at the current tag in topological order. After that, if the next
-      // event on the event queue has the same time (but a greater
-      // microstep), repeat. This prevents JS event loop from gaining
-      // control and imposing overhead. Asynchronous activity therefore
-      // might get blocked, but since the results of such activities are
-      // typically reported via physical actions, the tags of the
-      // resulting events would be in the future, anyway.
-      do {
-        // Keep popping the event queue until the next event has a different tag.
-        while (nextEvent?.tag.isSimultaneousWith(this._currentTag) ?? false) {
-          const trigger = nextEvent?.trigger;
-          this._eventQ.pop();
-          Log.debug(this, () => `Popped off the event queue: ${trigger}`);
-          // Handle timers.
-          if (trigger instanceof Timer) {
-            if (!trigger.period.isZero()) {
-              Log.debug(this, () => `Rescheduling timer ${trigger}`);
-
-              this.__runtime.schedule(
-                new TaggedEvent(
-                  trigger,
-                  this._currentTag.getLaterTag(trigger.period),
-                  null
-                )
-              );
-            }
-          }
-
-          // Load reactions onto the reaction queue.
-          if (nextEvent != null) {
-            trigger?.update(nextEvent);
-          }
-
-          // Look at the next event on the queue.
-          nextEvent = this._eventQ.peek();
+      if (!this._isReactionsRemaind) {
+        // Check whether the next event can be handled, or not quite yet.
+        // A holdup can occur in a federated execution.
+        if (!this._canProceed(nextEvent)) {
+          // If this happens, then a TAG from the RTI will trigger the
+          // next invocation of _next.
+          return;
+        }
+        // If it is too early to handle the next event, set a timer for it
+        // (unless the "fast" option is enabled), and give back control to
+        // the JS event loop.
+        if (
+          getCurrentPhysicalTime().isEarlierThan(nextEvent.tag.time) &&
+          !this._fast
+        ) {
+          this._setAlarmOrYield(nextEvent.tag);
+          return;
         }
 
-        // End of this execution step. Perform cleanup.
-        while (this._reactorsToRemove.length > 0) {
-          // const r = this._reactorsToRemove.pop();
-          // FIXME: doing this for the entire model at the end of execution
-          // could be a pretty significant performance hit, so we probably
-          // don't want to do this
-          // r?._unplug() FIXME: visibility
-        }
+        // Advance logical time.
+        this._advanceTime(nextEvent.tag);
 
-        // Peek at the event queue to see whether we can process the next event
-        // or should give control back to the JS event loop.
-        nextEvent = this._eventQ.peek();
-      } while (
-        nextEvent != null &&
-        this._currentTag.isSimultaneousWith(nextEvent.tag)
-      );
-      // enqueue portAbsentReactions
-      this.enqueuePortAbsentReactions();
+        // this.resetStatusFieldsOnInputPorts(); 
+          
+        // enqueue portAbsentReactions
+        this.enqueuePortAbsentReactions();
+      }
+
+      this._popEvents(nextEvent);
 
       // React to all the events loaded onto the reaction queue.
-      this._react();
+      if (this._react()) {
+        this._isReactionsRemaind = false;
+      } else {
+        this._isReactionsRemaind = true;
+        return;
+      }
       nextEvent = this._eventQ.peek();
 
       // Done handling events.

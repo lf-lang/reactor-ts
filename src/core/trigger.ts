@@ -41,6 +41,16 @@ export abstract class Trigger extends Component {
   public getContainer(): Reactor {
     return this._getContainer();
   }
+
+  public getHighestPriority(): number {
+    let highestPriority = 0;
+    for (const r of this.reactions) {
+      if (highestPriority < r.getPriority()) {
+        highestPriority = r.getPriority();
+      }
+    }
+    return highestPriority;
+  }
 }
 
 /**
