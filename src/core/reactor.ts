@@ -2302,9 +2302,7 @@ export class App extends Reactor {
     return undefined;
   }
 
-  protected _popEvents(
-    nextEvent?: TaggedEvent<unknown>
-  ): TaggedEvent<unknown> | undefined {
+  protected _popEvents(nextEvent?: TaggedEvent<unknown>): void {
     // Start processing events. Execute all reactions that are triggered
     // at the current tag in topological order. After that, if the next
     // event on the event queue has the same time (but a greater
@@ -2359,7 +2357,6 @@ export class App extends Reactor {
       nextEvent != null &&
       this._currentTag.isSimultaneousWith(nextEvent.tag)
     );
-    return nextEvent;
   }
 
   /**
@@ -2412,7 +2409,7 @@ export class App extends Reactor {
         this.enqueuePortAbsentReactions();
       }
 
-      nextEvent = this._popEvents(nextEvent);
+      this._popEvents(nextEvent);
 
       // React to all the events loaded onto the reaction queue.
       this._isDone = this._react();
@@ -2701,7 +2698,7 @@ export class App extends Reactor {
     this.enqueuePortAbsentReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.
-    this._react();
+    this._isDone = this._react();
 
     // Continue execution by processing the next event.
     this._next();
