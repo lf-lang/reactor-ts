@@ -1833,7 +1833,8 @@ export class App extends Reactor {
    */
   private readonly _reactorsToRemove = new Array<Reactor>();
 
-  private _isReactionsRemaind = false;
+  // FIXME: add a description
+  private _isDone = false;
 
   /**
    * Stores whether the last received TAG (Tag Advance Grant) was provisional.
@@ -2275,6 +2276,7 @@ export class App extends Reactor {
 
   /**
    * Iterate over all reactions in the reaction queue and execute them.
+   * FIXME: Update a description
    */
   protected _react(): boolean {
     let r: Reaction<Variable[]>;
@@ -2300,7 +2302,9 @@ export class App extends Reactor {
     return undefined;
   }
 
-  protected _popEvents(nextEvent?: TaggedEvent<unknown>): void {
+  protected _popEvents(
+    nextEvent?: TaggedEvent<unknown>
+  ): TaggedEvent<unknown> | undefined {
     // Start processing events. Execute all reactions that are triggered
     // at the current tag in topological order. After that, if the next
     // event on the event queue has the same time (but a greater
@@ -2334,7 +2338,7 @@ export class App extends Reactor {
         if (nextEvent != null) {
           trigger?.update(nextEvent);
         }
-        nextEvent?.trigger
+        nextEvent?.trigger;
 
         // Look at the next event on the queue.
         nextEvent = this._eventQ.peek();
@@ -2356,6 +2360,7 @@ export class App extends Reactor {
       nextEvent != null &&
       this._currentTag.isSimultaneousWith(nextEvent.tag)
     );
+    return nextEvent;
   }
 
   /**
@@ -2380,7 +2385,7 @@ export class App extends Reactor {
     // TODO: Check the MLAA and execute only allowed reactions
     let nextEvent = this._eventQ.peek();
     if (nextEvent != null) {
-      if (!this._isReactionsRemaind) {
+      if (this._isDone) {
         // Check whether the next event can be handled, or not quite yet.
         // A holdup can occur in a federated execution.
         if (!this._canProceed(nextEvent)) {
@@ -2402,19 +2407,17 @@ export class App extends Reactor {
         // Advance logical time.
         this._advanceTime(nextEvent.tag);
 
-        // this.resetStatusFieldsOnInputPorts(); 
-          
+        // this.resetStatusFieldsOnInputPorts();
+
         // enqueue portAbsentReactions
         this.enqueuePortAbsentReactions();
       }
 
-      this._popEvents(nextEvent);
+      nextEvent = this._popEvents(nextEvent);
 
       // React to all the events loaded onto the reaction queue.
-      if (this._react()) {
-        this._isReactionsRemaind = false;
-      } else {
-        this._isReactionsRemaind = true;
+      this._isDone = this._react();
+      if (!this._isDone) {
         return;
       }
       nextEvent = this._eventQ.peek();

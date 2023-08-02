@@ -1436,8 +1436,10 @@ export class FederatedApp extends App {
     let r: Reaction<Variable[]>;
     while (this._reactionQ.size() > 0) {
       r = this._reactionQ.peek();
-      console.log(r.getPriority());
-      if (r.getPriority() < this.maxLevelAllowedToAdvance) {
+      if (
+        this.upstreamFedIDs.length === 0 ||
+        r.getPriority() < this.maxLevelAllowedToAdvance
+      ) {
         try {
           r = this._reactionQ.pop();
           r.doReact();
@@ -1604,7 +1606,9 @@ export class FederatedApp extends App {
   }
 
   /**
-   *
+   * Update the last known status tag of a network input port
+   * to the value of "tag". This is the largest tag at which the status
+   * (present or absent) of the port was known.
    * @param tag
    * @param portID
    */
@@ -1613,6 +1617,9 @@ export class FederatedApp extends App {
     if (networkReceiver !== undefined) {
       if (tag.isGreaterThanOrEqualTo(networkReceiver.lastKnownStatusTag)) {
         if (tag.isSimultaneousWith(networkReceiver.lastKnownStatusTag)) {
+          // If the intended tag for an input port is equal to the last known status, we need
+          // to increment the microstep. This is a direct result of the behavior of the getLaterTag()
+          // semantics in time.ts.
           tag = tag.getMicroStepsLater(1);
         }
         Log.debug(this, () => {
@@ -1666,6 +1673,7 @@ export class FederatedApp extends App {
    * @param isProvisional
    */
   private updateMaxLevel(): void {
+    const prveMLAA = this.maxLevelAllowedToAdvance;
     this.maxLevelAllowedToAdvance = Number.MAX_SAFE_INTEGER;
     Log.debug(this, () => {
       return `last TAG = ${this.greatestTimeAdvanceGrant.time}`;
@@ -1700,11 +1708,16 @@ export class FederatedApp extends App {
       ) {
         // FIXME: Compare the current MLAA and input port's status and update it
         const candidate = networkReceiver.getReactions()[0].getPriority();
+        // console.log(`networkReceiver.getReactions()[0] = ${networkReceiver.getReactions()[0].toString()}`);
         if (this.maxLevelAllowedToAdvance < candidate) {
           this.maxLevelAllowedToAdvance = candidate;
         }
         console.log(`MLAA = ${this.maxLevelAllowedToAdvance}`);
       }
+    }
+
+    if (prveMLAA < this.maxLevelAllowedToAdvance) {
+      this._requestImmediateInvocationOfNext();
     }
   }
 
@@ -1974,6 +1987,7 @@ export class FederatedApp extends App {
 
         try {
           this.networkReceivers.get(destPortID)?.handleTimedMessage(value, tag);
+          this.updateLastKnownStatusOnInputPort(tag, destPortID);
         } catch (e) {
           Log.error(this, () => {
             return `${e}`;
@@ -2009,12 +2023,10 @@ export class FederatedApp extends App {
         // wake up _next, in case it was blocked by the old time advance grant
         // FIXME: Temporarily disabling PTAG handling until the
         // MLAA based execution is implemented.
-        /*
-                this.greatestTimeAdvanceGrant = tag;
-                this._isLastTAGProvisional = true;
-                this._requestImmediateInvocationOfNext();
-                */
-        // this.updateMaxLevel();
+        this.greatestTimeAdvanceGrant = tag;
+        this._isLastTAGProvisional = true;
+        this.updateMaxLevel();
+        this._requestImmediateInvocationOfNext();
       }
     });
 
