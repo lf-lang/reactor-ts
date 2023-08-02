@@ -1601,7 +1601,7 @@ export class FederatedApp extends App {
       }
     );
     if (isAnyStatusChanged) {
-      this.updateMaxLevel();
+      this._updateMaxLevel();
     }
   }
 
@@ -1629,7 +1629,7 @@ export class FederatedApp extends App {
           );
         });
         networkReceiver.lastKnownStatusTag = tag;
-        this.updateMaxLevel();
+        this._updateMaxLevel();
       } else {
         Log.debug(this, () => {
           return (
@@ -1672,7 +1672,7 @@ export class FederatedApp extends App {
    * @param tag
    * @param isProvisional
    */
-  private updateMaxLevel(): void {
+  private _updateMaxLevel(): void {
     const prveMLAA = this.maxLevelAllowedToAdvance;
     this.maxLevelAllowedToAdvance = Number.MAX_SAFE_INTEGER;
     Log.debug(this, () => {
@@ -1919,6 +1919,8 @@ export class FederatedApp extends App {
 
     this._loadStartupReactions();
 
+    this._updateMaxLevel();
+
     this.rtiClient.on("connected", () => {
       this.rtiClient.sendNeighborStructure(
         this.upstreamFedIDs,
@@ -2025,7 +2027,7 @@ export class FederatedApp extends App {
         // MLAA based execution is implemented.
         this.greatestTimeAdvanceGrant = tag;
         this._isLastTAGProvisional = true;
-        this.updateMaxLevel();
+        this._updateMaxLevel();
         this._requestImmediateInvocationOfNext();
       }
     });
