@@ -289,8 +289,6 @@ function isANodeJSCodedError(e: Error): e is NodeJSCodedError {
 
 abstract class NetworkReactor extends Reactor {
   // TPO level of this NetworkReactor
-  // FIXME: There can be a network reactor without a TPO level when the input port has
-  // non-zero delay.
   protected readonly tpoLevel?: number;
 
   constructor(parent: Reactor, tpoLevel: number | undefined) {
@@ -329,11 +327,11 @@ export class NetworkSender extends NetworkReactor {
   }
 }
 
-export enum PortStatus {
-  PRESENT,
-  ABSENT,
-  UNKNOWN
-}
+// export enum PortStatus {
+//   PRESENT,
+//   ABSENT,
+//   UNKNOWN
+// }
 
 /**
  * A network receiver is a reactor handling a network input.
@@ -352,7 +350,7 @@ export class NetworkReceiver<T> extends NetworkReactor {
   /**
    * The status of the port of this NetworkReceiver
    */
-  public portStatus: PortStatus;
+  // public portStatus: PortStatus;
 
   /**
    * Last known status of the port, either via a timed message, a port absent,
@@ -362,7 +360,7 @@ export class NetworkReceiver<T> extends NetworkReactor {
 
   constructor(parent: Reactor, tpoLevel: number | undefined) {
     super(parent, tpoLevel);
-    this.portStatus = PortStatus.UNKNOWN;
+    // this.portStatus = PortStatus.UNKNOWN;
     this.lastKnownStatusTag = new Tag(TimeValue.never());
   }
 
@@ -383,17 +381,9 @@ export class NetworkReceiver<T> extends NetworkReactor {
     return this.networkInputActionOrigin;
   }
 
-  // public getNetworkPortStatus(): PortStatus {
-  //   return this.portStatus;
+  // public setNetworkPortStatus(status: PortStatus): void {
+  //   this.portStatus = status;
   // }
-
-  // public getLastKnownStatusTag(): Tag {
-  //   return this.lastKnownStatusTag;
-  // }
-
-  public setNetworkPortStatus(status: PortStatus): void {
-    this.portStatus = status;
-  }
 
   /**
    * Handle a timed message being received from the RTI.
@@ -1574,13 +1564,12 @@ export class FederatedApp extends App {
 
   /**
    *
-   * @param tag
+   * @param tag The received TAG
    */
   private updateLastKnownStatusOnInputPorts(tag: Tag): void {
     Log.debug(this, () => {
       return "In update_last_known_status_on_input ports.";
     });
-    let isAnyStatusChanged = false;
     this.networkReceivers.forEach(
       (networkReceiver: NetworkReceiver<unknown>, portID: number) => {
         // This is called when a TAG is received.
@@ -1596,17 +1585,10 @@ export class FederatedApp extends App {
               `${networkReceiver.lastKnownStatusTag} to ${tag}.`
             );
           });
-          isAnyStatusChanged = true;
+          networkReceiver.lastKnownStatusTag = tag;
         }
       }
     );
-    if (isAnyStatusChanged) {
-      const prevMLAA = this.maxLevelAllowedToAdvance;
-      this._updateMaxLevel();
-      if (prevMLAA < this.maxLevelAllowedToAdvance) {
-        this._requestImmediateInvocationOfNext();
-      }
-    }
   }
 
   /**
@@ -1653,19 +1635,19 @@ export class FederatedApp extends App {
    * @override
    *
    */
-  protected resetStatusFieldsOnInputPorts(): void {
-    for (const networkReceiver of this.networkReceivers.values()) {
-      networkReceiver.setNetworkPortStatus(PortStatus.UNKNOWN);
-    }
-    Log.debug(this, () => {
-      return "Resetting port status fields.";
-    });
-    const prevMLAA = this.maxLevelAllowedToAdvance;
-    this._updateMaxLevel();
-    if (prevMLAA < this.maxLevelAllowedToAdvance) {
-      this._requestImmediateInvocationOfNext();
-    }
-  }
+  // protected resetStatusFieldsOnInputPorts(): void {
+  //   for (const networkReceiver of this.networkReceivers.values()) {
+  //     networkReceiver.setNetworkPortStatus(PortStatus.UNKNOWN);
+  //   }
+  //   Log.debug(this, () => {
+  //     return "Resetting port status fields.";
+  //   });
+  //   const prevMLAA = this.maxLevelAllowedToAdvance;
+  //   this._updateMaxLevel();
+  //   if (prevMLAA < this.maxLevelAllowedToAdvance) {
+  //     this._requestImmediateInvocationOfNext();
+  //   }
+  // }
 
   /**
    * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
@@ -1708,18 +1690,15 @@ export class FederatedApp extends App {
       });
       return; // Safe to complete the current tag.
     }
-    for (const networkReceiver of Array.from(this.networkReceivers.values()).filter(
-      (receiver) => receiver.getTpoLevel() !== undefined
-    )) {
-      // FIXME: In update_max_level of federate.c, this operation is only applied
-      // for no delay input ports
+    for (const networkReceiver of Array.from(
+      this.networkReceivers.values()
+    ).filter((receiver) => receiver.getTpoLevel() !== undefined)) {
       if (
         this.util
           .getCurrentTag()
           .isGreaterThan(networkReceiver.lastKnownStatusTag) &&
         networkReceiver.getNetworkInputActionOrigin() !== Origin.physical
       ) {
-        // FIXME: Compare the current MLAA and input port's status and update it
         const candidate = networkReceiver.getReactions()[0].getPriority();
         if (this.maxLevelAllowedToAdvance > candidate) {
           this.maxLevelAllowedToAdvance = candidate;
@@ -2012,31 +1991,48 @@ export class FederatedApp extends App {
 
       this.updateLastKnownStatusOnInputPorts(tag);
 
-      if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
+      if (this.greatestTimeAdvanceGrant.isSmallerThanOrEqualTo(tag)) {
         // Update the greatest time advance grant and immediately
         // wake up _next, in case it was blocked by the old time advance grant
         this.greatestTimeAdvanceGrant = tag;
         this._isLastTAGProvisional = false;
         this._requestImmediateInvocationOfNext();
+      } else {
+        Log.error(this, () => {
+          return (
+            `Received a TAG ${tag} that wasn't larger than the previous ` +
+            `TAG or PTAG ${this.greatestTimeAdvanceGrant}. Ignoring the TAG.`
+          );
+        });
       }
     });
 
-    this.rtiClient.on("provisionalTimeAdvanceGrant", (tag: Tag) => {
+    this.rtiClient.on("provisionalTimeAdvanceGrant", (ptag: Tag) => {
+      if (
+        ptag.isSmallerThan(this.greatestTimeAdvanceGrant) ||
+        (ptag.isSimultaneousWith(this.greatestTimeAdvanceGrant) &&
+          !this._isLastTAGProvisional)
+      ) {
+        Log.error(this, () => {
+          return (
+            `Received a PTAG ${ptag} that is equal to or earlier than` +
+            `an already received TAG ${this.greatestTimeAdvanceGrant}.`
+          );
+        });
+      }
       Log.debug(this, () => {
         return `Provisional Time Advance Grant received from RTI for ${String(
-          tag
+          ptag
         )}.`;
       });
-      if (this.greatestTimeAdvanceGrant.isSmallerThan(tag)) {
-        // Update the greatest time advance grant and immediately
-        // wake up _next, in case it was blocked by the old time advance grant
-        // FIXME: Temporarily disabling PTAG handling until the
-        // MLAA based execution is implemented.
-        this.greatestTimeAdvanceGrant = tag;
-        this._isLastTAGProvisional = true;
-        this._updateMaxLevel();
-        this._requestImmediateInvocationOfNext();
-      }
+      // Update the greatest time advance grant and immediately
+      // wake up _next, in case it was blocked by the old time advance grant
+      // FIXME: Temporarily disabling PTAG handling until the
+      // MLAA based execution is implemented.
+      this.greatestTimeAdvanceGrant = ptag;
+      this._isLastTAGProvisional = true;
+      this._updateMaxLevel();
+      this._requestImmediateInvocationOfNext();
     });
 
     this.rtiClient.on("stopRequest", (tag: Tag) => {

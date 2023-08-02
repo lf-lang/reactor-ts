@@ -2298,9 +2298,9 @@ export class App extends Reactor {
     return undefined;
   }
 
-  protected resetStatusFieldsOnInputPorts(): void {
-    return undefined;
-  }
+  // protected resetStatusFieldsOnInputPorts(): void {
+  //   return undefined;
+  // }
 
   protected _popEvents(nextEvent?: TaggedEvent<unknown>): void {
     // Start processing events. Execute all reactions that are triggered
@@ -2403,7 +2403,7 @@ export class App extends Reactor {
         // Advance logical time.
         this._advanceTime(nextEvent.tag);
 
-        this.resetStatusFieldsOnInputPorts();
+        // this.resetStatusFieldsOnInputPorts();
 
         // enqueue portAbsentReactions
         this.enqueuePortAbsentReactions();
