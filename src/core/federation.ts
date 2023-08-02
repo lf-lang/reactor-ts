@@ -1660,7 +1660,11 @@ export class FederatedApp extends App {
     Log.debug(this, () => {
       return "Resetting port status fields.";
     });
-    // this.updateMaxLevel(this.greatestTimeAdvanceGrant, this._isLastTAGProvisional);
+    const prevMLAA = this.maxLevelAllowedToAdvance;
+    this._updateMaxLevel();
+    if (prevMLAA < this.maxLevelAllowedToAdvance) {
+      this._requestImmediateInvocationOfNext();
+    }
   }
 
   /**
@@ -1704,7 +1708,9 @@ export class FederatedApp extends App {
       });
       return; // Safe to complete the current tag.
     }
-    for (const networkReceiver of this.networkReceivers.values()) {
+    for (const networkReceiver of Array.from(this.networkReceivers.values()).filter(
+      (receiver) => receiver.getTpoLevel() !== undefined
+    )) {
       // FIXME: In update_max_level of federate.c, this operation is only applied
       // for no delay input ports
       if (
@@ -1715,11 +1721,9 @@ export class FederatedApp extends App {
       ) {
         // FIXME: Compare the current MLAA and input port's status and update it
         const candidate = networkReceiver.getReactions()[0].getPriority();
-        // console.log(`networkReceiver.getReactions()[0] = ${networkReceiver.getReactions()[0].toString()}`);
-        if (this.maxLevelAllowedToAdvance < candidate) {
+        if (this.maxLevelAllowedToAdvance > candidate) {
           this.maxLevelAllowedToAdvance = candidate;
         }
-        console.log(`MLAA = ${this.maxLevelAllowedToAdvance}`);
       }
     }
   }
@@ -2030,11 +2034,8 @@ export class FederatedApp extends App {
         // MLAA based execution is implemented.
         this.greatestTimeAdvanceGrant = tag;
         this._isLastTAGProvisional = true;
-        const prevMLAA = this.maxLevelAllowedToAdvance;
         this._updateMaxLevel();
-        if (prevMLAA < this.maxLevelAllowedToAdvance) {
-          this._requestImmediateInvocationOfNext();
-        }
+        this._requestImmediateInvocationOfNext();
       }
     });
 
