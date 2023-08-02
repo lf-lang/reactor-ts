@@ -1601,7 +1601,11 @@ export class FederatedApp extends App {
       }
     );
     if (isAnyStatusChanged) {
+      const prevMLAA = this.maxLevelAllowedToAdvance;
       this._updateMaxLevel();
+      if (prevMLAA < this.maxLevelAllowedToAdvance) {
+        this._requestImmediateInvocationOfNext();
+      }
     }
   }
 
@@ -1629,7 +1633,11 @@ export class FederatedApp extends App {
           );
         });
         networkReceiver.lastKnownStatusTag = tag;
+        const prevMLAA = this.maxLevelAllowedToAdvance;
         this._updateMaxLevel();
+        if (prevMLAA < this.maxLevelAllowedToAdvance) {
+          this._requestImmediateInvocationOfNext();
+        }
       } else {
         Log.debug(this, () => {
           return (
@@ -1673,7 +1681,6 @@ export class FederatedApp extends App {
    * @param isProvisional
    */
   private _updateMaxLevel(): void {
-    const prveMLAA = this.maxLevelAllowedToAdvance;
     this.maxLevelAllowedToAdvance = Number.MAX_SAFE_INTEGER;
     Log.debug(this, () => {
       return `last TAG = ${this.greatestTimeAdvanceGrant.time}`;
@@ -1714,10 +1721,6 @@ export class FederatedApp extends App {
         }
         console.log(`MLAA = ${this.maxLevelAllowedToAdvance}`);
       }
-    }
-
-    if (prveMLAA < this.maxLevelAllowedToAdvance) {
-      this._requestImmediateInvocationOfNext();
     }
   }
 
@@ -2027,8 +2030,11 @@ export class FederatedApp extends App {
         // MLAA based execution is implemented.
         this.greatestTimeAdvanceGrant = tag;
         this._isLastTAGProvisional = true;
+        const prevMLAA = this.maxLevelAllowedToAdvance;
         this._updateMaxLevel();
-        this._requestImmediateInvocationOfNext();
+        if (prevMLAA < this.maxLevelAllowedToAdvance) {
+          this._requestImmediateInvocationOfNext();
+        }
       }
     });
 
