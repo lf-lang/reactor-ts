@@ -2338,7 +2338,6 @@ export class App extends Reactor {
         if (nextEvent != null) {
           trigger?.update(nextEvent);
         }
-        nextEvent?.trigger;
 
         // Look at the next event on the queue.
         nextEvent = this._eventQ.peek();
@@ -2407,7 +2406,7 @@ export class App extends Reactor {
         // Advance logical time.
         this._advanceTime(nextEvent.tag);
 
-        // this.resetStatusFieldsOnInputPorts();
+        this.resetStatusFieldsOnInputPorts();
 
         // enqueue portAbsentReactions
         this.enqueuePortAbsentReactions();

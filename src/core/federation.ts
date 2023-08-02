@@ -1882,9 +1882,9 @@ export class FederatedApp extends App {
         (sender) => sender.getTpoLevel() !== undefined
       ) as NetworkReactor[]
     );
-    networkReactors.sort((A: NetworkReactor, B: NetworkReactor): number => {
-      const tpoOfA = A.getTpoLevel();
-      const tpoOfB = B.getTpoLevel();
+    networkReactors.sort((a: NetworkReactor, b: NetworkReactor): number => {
+      const tpoOfA = a.getTpoLevel();
+      const tpoOfB = b.getTpoLevel();
       if (tpoOfA !== undefined && tpoOfB !== undefined) {
         return tpoOfA - tpoOfB;
       } else {
@@ -2070,10 +2070,7 @@ export class FederatedApp extends App {
       });
       // FIXME: Temporarily disabling portAbsent until the
       // MLAA based execution is implemented.
-      // this.updatelastKnownStatusTag(intendedTag, portID);
-      // if (this._isReactionRemainedAtThisTag === true) {
-      //     this._requestImmediateInvocationOfNext();
-      // }
+      this.updateLastKnownStatusOnInputPort(intendedTag, portID);
     });
 
     this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);
