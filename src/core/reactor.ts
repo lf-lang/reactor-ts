@@ -2294,7 +2294,7 @@ export class App extends Reactor {
     return true;
   }
 
-  protected enqueuePortAbsentReactions(): void {
+  protected _enqueuePortAbsentReactions(): void {
     return undefined;
   }
 
@@ -2406,7 +2406,7 @@ export class App extends Reactor {
         // this.resetStatusFieldsOnInputPorts();
 
         // enqueue portAbsentReactions
-        this.enqueuePortAbsentReactions();
+        this._enqueuePortAbsentReactions();
       }
 
       this._popEvents(nextEvent);
@@ -2694,8 +2694,6 @@ export class App extends Reactor {
 
     Log.info(this, () => `>>> Start of execution: ${this._currentTag}`);
     Log.info(this, () => Log.hr);
-    // enqueue portAbsentReactions
-    this.enqueuePortAbsentReactions();
 
     // Handle the reactions that were loaded onto the reaction queue.
     this._isDone = this._react();

@@ -1653,7 +1653,7 @@ export class FederatedApp extends App {
    * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
    * message to downstream federates if a given network output port is not present.
    */
-  protected enqueuePortAbsentReactions(): void {
+  protected _enqueuePortAbsentReactions(): void {
     this.portAbsentReactions.forEach((reaction) => {
       this._reactionQ.push(reaction);
     });
@@ -1705,6 +1705,16 @@ export class FederatedApp extends App {
         }
       }
     }
+    Log.debug(this, () => {
+      return (
+        `Updated MLAA to ${
+          this.maxLevelAllowedToAdvance
+        } at time ${this.util.getElapsedLogicalTime()} ` +
+        `with lastTAG = ${
+          this.greatestTimeAdvanceGrant
+        } and current time ${this.util.getCurrentLogicalTime()}.`
+      );
+    });
   }
 
   /**
@@ -1904,6 +1914,8 @@ export class FederatedApp extends App {
     this._analyzeDependencies();
 
     this._loadStartupReactions();
+
+    this._enqueuePortAbsentReactions();
 
     this._updateMaxLevel();
 
