@@ -2307,18 +2307,19 @@ export class App extends Reactor {
   }
 
   /**
-   *
-   * @param nextEvent
+   * Pop all events from event_q with timestamp equal to current tag,
+   * extract all the reactions triggered by these events, and stick them
+   * into the reaction queue.
    */
-  protected _popEvents(nextEvent?: TaggedEvent<unknown>): void {
-    // Start processing events. Execute all reactions that are triggered
-    // at the current tag in topological order. After that, if the next
-    // event on the event queue has the same time (but a greater
-    // microstep), repeat. This prevents JS event loop from gaining
-    // control and imposing overhead. Asynchronous activity therefore
-    // might get blocked, but since the results of such activities are
-    // typically reported via physical actions, the tags of the
-    // resulting events would be in the future, anyway.
+  private _popEvents(): void {
+    // Execute all reactions that are triggered at the current tag
+    // in topological order. After that, if the next event on the event queue
+    // has the same time (but a greater microstep), repeat. This prevents
+    // JS event loop from gaining control and imposing overhead. Asynchronous
+    // activity therefore might get blocked, but since the results of such
+    // activities are typically reported via physical actions, the tags of
+    // the resulting events would be in the future, anyway.
+    let nextEvent = this._eventQ.peek();
     do {
       // Keep popping the event queue until the next event has a different tag.
       while (nextEvent?.tag.isSimultaneousWith(this._currentTag) ?? false) {
@@ -2413,8 +2414,8 @@ export class App extends Reactor {
         // enqueue portAbsentReactions
         this._enqueuePortAbsentReactions();
       }
-
-      this._popEvents(nextEvent);
+      // Start processing events.
+      this._popEvents();
 
       // React to all the events loaded onto the reaction queue.
       this._isDone = this._react();
