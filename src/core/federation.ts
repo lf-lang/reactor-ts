@@ -327,12 +327,6 @@ export class NetworkSender extends NetworkReactor {
   }
 }
 
-// export enum PortStatus {
-//   PRESENT,
-//   ABSENT,
-//   UNKNOWN
-// }
-
 /**
  * A network receiver is a reactor handling a network input.
  */
@@ -346,11 +340,6 @@ export class NetworkReceiver<T> extends NetworkReactor {
    * The information of origin of this NetworkReceiver's network input action.
    */
   private networkInputActionOrigin: Origin | undefined;
-
-  /**
-   * The status of the port of this NetworkReceiver
-   */
-  // public portStatus: PortStatus;
 
   /**
    * Last known status of the port, either via a timed message, a port absent,
@@ -380,10 +369,6 @@ export class NetworkReceiver<T> extends NetworkReactor {
   public getNetworkInputActionOrigin(): Origin | undefined {
     return this.networkInputActionOrigin;
   }
-
-  // public setNetworkPortStatus(status: PortStatus): void {
-  //   this.portStatus = status;
-  // }
 
   /**
    * Handle a timed message being received from the RTI.
@@ -1400,7 +1385,7 @@ export class FederatedApp extends App {
           }
         }
         // FIXME: NET should be sent from a federate that doesn't have any upstream federates
-        //        See issue #.
+        //        See the issue #134.
         this.sendRTINextEventTag(nextEvent.tag);
         Log.debug(
           this,
@@ -1419,8 +1404,8 @@ export class FederatedApp extends App {
   /**
    * @override
    * Iterate over all reactions in the reaction queue and execute them.
-   *
-   * @returns
+   * If a reaction's priority is less than MLAA, stop executing and return.
+   * @returns Whether every reactions at this tag are executed.
    */
   protected _react(): boolean {
     let r: Reaction<Variable[]>;
@@ -1563,13 +1548,17 @@ export class FederatedApp extends App {
   }
 
   /**
-   *
+   *  Update the last known status tag of all network input ports
+   *  to the value of "tag", unless that the provided `tag` is less
+   *  than the last_known_status_tag of the port. This is called when
+   *  this federated receives a TAG.
    * @param tag The received TAG
    */
-  private updateLastKnownStatusOnInputPorts(tag: Tag): void {
+  private _updateLastKnownStatusOnInputPorts(tag: Tag): void {
     Log.debug(this, () => {
       return "In update_last_known_status_on_input ports.";
     });
+    let notify = false;
     this.networkReceivers.forEach(
       (networkReceiver: NetworkReceiver<unknown>, portID: number) => {
         // This is called when a TAG is received.
@@ -1586,19 +1575,24 @@ export class FederatedApp extends App {
             );
           });
           networkReceiver.lastKnownStatusTag = tag;
+          notify = true;
         }
       }
     );
+    if (notify) {
+      this._updateMaxLevel();
+    }
   }
 
   /**
    * Update the last known status tag of a network input port
    * to the value of "tag". This is the largest tag at which the status
    * (present or absent) of the port was known.
-   * @param tag
-   * @param portID
+   * @param tag The tag on which the latest status of network input
+   * ports is known.
+   * @param portID The port ID
    */
-  private updateLastKnownStatusOnInputPort(tag: Tag, portID: number): void {
+  private _updateLastKnownStatusOnInputPort(tag: Tag, portID: number): void {
     const networkReceiver = this.networkReceivers.get(portID);
     if (networkReceiver !== undefined) {
       if (tag.isGreaterThanOrEqualTo(networkReceiver.lastKnownStatusTag)) {
@@ -1632,25 +1626,7 @@ export class FederatedApp extends App {
   }
 
   /**
-   * @override
-   *
-   */
-  // protected resetStatusFieldsOnInputPorts(): void {
-  //   for (const networkReceiver of this.networkReceivers.values()) {
-  //     networkReceiver.setNetworkPortStatus(PortStatus.UNKNOWN);
-  //   }
-  //   Log.debug(this, () => {
-  //     return "Resetting port status fields.";
-  //   });
-  //   const prevMLAA = this.maxLevelAllowedToAdvance;
-  //   this._updateMaxLevel();
-  //   if (prevMLAA < this.maxLevelAllowedToAdvance) {
-  //     this._requestImmediateInvocationOfNext();
-  //   }
-  // }
-
-  /**
-   * Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
+   * Enqueue network port absent reactions that will send a MSG_TYPE_PORT_ABSENT
    * message to downstream federates if a given network output port is not present.
    */
   protected _enqueuePortAbsentReactions(): void {
@@ -1660,8 +1636,9 @@ export class FederatedApp extends App {
   }
 
   /**
-   * @brief Attempts to update the max level the reaction queue is allowed to advance to
-   * for the current logical timestep.
+   * Update the max level allowed to advance (MLAA) for the current logical timestep.
+   * If it's safe to complete the current tag by the last TAG, set the MLAA to the infinity.
+   * Else, check the network port's status and update the MLAA.
    *
    * @param tag
    * @param isProvisional
@@ -1867,7 +1844,9 @@ export class FederatedApp extends App {
   }
 
   /**
-   *
+   * Add edges between reactions of network sender and receiver reactors.
+   * @note Network reactors from a connection with a delay do not have a TPO leve and
+   * are ignored in this operation.
    */
   _addEdgesForTpoLevels(): void {
     const networkReceivers = Array.from(this.networkReceivers.values()).filter(
@@ -1885,7 +1864,7 @@ export class FederatedApp extends App {
         return tpoOfA - tpoOfB;
       } else {
         Log.error(this, () => {
-          return "Attempts to add edges for reactions without a TPO level.";
+          return "Attempts to add edges for reactions that do not have a TPO level.";
         });
         return 0;
       }
@@ -1987,7 +1966,7 @@ export class FederatedApp extends App {
 
         try {
           this.networkReceivers.get(destPortID)?.handleTimedMessage(value, tag);
-          this.updateLastKnownStatusOnInputPort(tag, destPortID);
+          this._updateLastKnownStatusOnInputPort(tag, destPortID);
         } catch (e) {
           Log.error(this, () => {
             return `${e}`;
@@ -2000,14 +1979,12 @@ export class FederatedApp extends App {
       Log.debug(this, () => {
         return `Time Advance Grant received from RTI for ${tag}.`;
       });
-
-      this.updateLastKnownStatusOnInputPorts(tag);
-
       if (this.greatestTimeAdvanceGrant.isSmallerThanOrEqualTo(tag)) {
         // Update the greatest time advance grant and immediately
         // wake up _next, in case it was blocked by the old time advance grant
         this.greatestTimeAdvanceGrant = tag;
         this._isLastTAGProvisional = false;
+        this._updateLastKnownStatusOnInputPorts(tag);
         this._requestImmediateInvocationOfNext();
       } else {
         Log.error(this, () => {
@@ -2039,8 +2016,6 @@ export class FederatedApp extends App {
       });
       // Update the greatest time advance grant and immediately
       // wake up _next, in case it was blocked by the old time advance grant
-      // FIXME: Temporarily disabling PTAG handling until the
-      // MLAA based execution is implemented.
       this.greatestTimeAdvanceGrant = ptag;
       this._isLastTAGProvisional = true;
       this._updateMaxLevel();
@@ -2087,7 +2062,7 @@ export class FederatedApp extends App {
       });
       // FIXME: Temporarily disabling portAbsent until the
       // MLAA based execution is implemented.
-      this.updateLastKnownStatusOnInputPort(intendedTag, portID);
+      this._updateLastKnownStatusOnInputPort(intendedTag, portID);
     });
 
     this.rtiClient.connectToRTI(this.rtiPort, this.rtiHost);

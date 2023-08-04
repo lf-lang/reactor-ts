@@ -1833,7 +1833,10 @@ export class App extends Reactor {
    */
   private readonly _reactorsToRemove = new Array<Reactor>();
 
-  // FIXME: add a description
+  /**
+   * Stores whether the current tag's reactions queue is empty.
+   * This will be false when a federate waits some network inputs.
+   */
   private _isDone = false;
 
   /**
@@ -2276,7 +2279,8 @@ export class App extends Reactor {
 
   /**
    * Iterate over all reactions in the reaction queue and execute them.
-   * FIXME: Update a description
+   * @returns Whether every reactions at this tag are executed. This can
+   * be false in the federated exection.
    */
   protected _react(): boolean {
     let r: Reaction<Variable[]>;
@@ -2294,14 +2298,18 @@ export class App extends Reactor {
     return true;
   }
 
+  /**
+   * Enqueue network port absent reactions. This function is overriden
+   * by federation.ts.
+   */
   protected _enqueuePortAbsentReactions(): void {
     return undefined;
   }
 
-  // protected resetStatusFieldsOnInputPorts(): void {
-  //   return undefined;
-  // }
-
+  /**
+   *
+   * @param nextEvent
+   */
   protected _popEvents(nextEvent?: TaggedEvent<unknown>): void {
     // Start processing events. Execute all reactions that are triggered
     // at the current tag in topological order. After that, if the next
@@ -2378,7 +2386,6 @@ export class App extends Reactor {
    * stimuli.
    */
   private _next(): void {
-    // TODO: Check the MLAA and execute only allowed reactions
     let nextEvent = this._eventQ.peek();
     if (nextEvent != null) {
       if (this._isDone) {
@@ -2402,8 +2409,6 @@ export class App extends Reactor {
 
         // Advance logical time.
         this._advanceTime(nextEvent.tag);
-
-        // this.resetStatusFieldsOnInputPorts();
 
         // enqueue portAbsentReactions
         this._enqueuePortAbsentReactions();
