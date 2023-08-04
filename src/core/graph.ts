@@ -392,6 +392,11 @@ export class SortablePrecedenceGraph<
         this.addNode(leaf);
         search(leaf, pg.getUpstreamNeighbors(leaf));
         visited.clear();
+      } else {
+        // leaf is not a type. It's upstream neighbors become a new leafs.
+        for (const newLeaf of pg.getUpstreamNeighbors(leaf)) {
+          leafs.add(newLeaf);
+        }
       }
     }
   }
