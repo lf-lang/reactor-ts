@@ -310,12 +310,12 @@ describe("add time value", function () {
     expect(
       new Tag(oneThousandMS, 0)
         .getLaterTag(straightZero)
-        .isSimultaneousWith(new Tag(oneThousandMS, 0))
+        .isSimultaneousWith(new Tag(oneThousandMS, 1))
     ).toBeTruthy();
     expect(
       new Tag(oneThousandMS, 1)
         .getLaterTag(straightZero)
-        .isSimultaneousWith(new Tag(oneThousandMS, 1))
+        .isSimultaneousWith(new Tag(oneThousandMS, 2))
     ).toBeTruthy();
   });
 

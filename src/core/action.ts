@@ -132,8 +132,6 @@ export class Action<T> extends ScheduledTrigger<T> implements Read<T> {
             )}`
         );
         tag = intendedTag;
-      } else if (delay.isEqualTo(TimeValue.zero())) {
-        tag = tag.getMicroStepsLater(1);
       }
 
       Log.debug(
