@@ -2350,14 +2350,14 @@ export class App extends Reactor {
         nextEvent = this._eventQ.peek();
       }
 
-      // End of this execution step. Perform cleanup.
-      while (this._reactorsToRemove.length > 0) {
-        // const r = this._reactorsToRemove.pop();
-        // FIXME: doing this for the entire model at the end of execution
-        // could be a pretty significant performance hit, so we probably
-        // don't want to do this
-        // r?._unplug() FIXME: visibility
-      }
+      // // End of this execution step. Perform cleanup.
+      // while (this._reactorsToRemove.length > 0) {
+      //   // const r = this._reactorsToRemove.pop();
+      //   // FIXME: doing this for the entire model at the end of execution
+      //   // could be a pretty significant performance hit, so we probably
+      //   // don't want to do this
+      //   // r?._unplug() FIXME: visibility
+      // }
 
       // Peek at the event queue to see whether we can process the next event
       // or should give control back to the JS event loop.

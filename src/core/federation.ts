@@ -1408,6 +1408,7 @@ export class FederatedApp extends App {
    * @returns Whether every reactions at this tag are executed.
    */
   protected _react(): boolean {
+    this._updateMaxLevel();
     let r: Reaction<Variable[]>;
     while (this._reactionQ.size() > 0) {
       r = this._reactionQ.peek();
@@ -1558,7 +1559,6 @@ export class FederatedApp extends App {
     Log.debug(this, () => {
       return "In update_last_known_status_on_input ports.";
     });
-    let notify = false;
     this.networkReceivers.forEach(
       (networkReceiver: NetworkReceiver<unknown>, portID: number) => {
         // This is called when a TAG is received.
@@ -1575,13 +1575,9 @@ export class FederatedApp extends App {
             );
           });
           networkReceiver.lastKnownStatusTag = tag;
-          notify = true;
         }
       }
     );
-    if (notify) {
-      this._updateMaxLevel();
-    }
   }
 
   /**
@@ -1896,8 +1892,6 @@ export class FederatedApp extends App {
 
     this._enqueuePortAbsentReactions();
 
-    this._updateMaxLevel();
-
     this.rtiClient.on("connected", () => {
       this.rtiClient.sendNeighborStructure(
         this.upstreamFedIDs,
@@ -2018,7 +2012,6 @@ export class FederatedApp extends App {
       // wake up _next, in case it was blocked by the old time advance grant
       this.greatestTimeAdvanceGrant = ptag;
       this._isLastTAGProvisional = true;
-      this._updateMaxLevel();
       this._requestImmediateInvocationOfNext();
     });
 
