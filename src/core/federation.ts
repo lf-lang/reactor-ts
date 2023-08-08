@@ -1777,6 +1777,22 @@ export class FederatedApp extends App {
    * advance logical time.
    */
   public sendRTINextEventTag(nextTag: Tag): void {
+    if (
+      this.upstreamFedIDs.length === 0 &&
+      this.downstreamFedIDs.length === 0
+    ) {
+      // This federate is not connected (except possibly by physical links)
+      // so there is no need for the RTI to get involved.
+      this.greatestTimeAdvanceGrant = nextTag;
+      this._requestImmediateInvocationOfNext();
+      Log.debug(this, () => {
+        return (
+          `Granted tag ${nextTag} because the federate has neither upstream` +
+          `nor downstream federates.`
+        );
+      });
+      return;
+    }
     Log.debug(this, () => {
       return `Sending RTI next event time with time: ${nextTag}`;
     });
