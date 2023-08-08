@@ -1381,6 +1381,7 @@ export class FederatedApp extends App {
               () => `Adding dummy event for time: ${physicalTime}`
             );
             this._addDummyEvent(new Tag(physicalTime));
+            this.sendRTINextEventTag(new Tag(physicalTime));
             return false;
           }
         }
@@ -1787,8 +1788,10 @@ export class FederatedApp extends App {
       this._requestImmediateInvocationOfNext();
       Log.debug(this, () => {
         return (
-          `Granted tag ${nextTag} because the federate has neither upstream` +
-          `nor downstream federates.`
+          "Granted tag " +
+          nextTag +
+          " because the federate has neither upstream " +
+          "nor downstream federates."
         );
       });
       return;
@@ -2047,9 +2050,12 @@ export class FederatedApp extends App {
         )}.`;
       });
       // Update the greatest time advance grant and immediately
-      // wake up _next, in case it was blocked by the old time advance grant
+      // wake up _next, in case it was blocked by the old time advance grant.
+      // Add a dummy event to send port absent messages if there is no scheduled
+      // reactions at the given tag.
       this.greatestTimeAdvanceGrant = ptag;
       this._isLastTAGProvisional = true;
+      this._addDummyEvent(ptag);
       this._requestImmediateInvocationOfNext();
     });
 
