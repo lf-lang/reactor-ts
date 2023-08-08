@@ -1431,7 +1431,7 @@ export class FederatedApp extends App {
         return false;
       }
     }
-    if (this.maxLevelAllowedToAdvance != Number.MAX_SAFE_INTEGER) {
+    if (this.maxLevelAllowedToAdvance !== Number.MAX_SAFE_INTEGER) {
       // The reaction queue is empty but some network receivers are waiting for
       // network inputs.
       return false;
