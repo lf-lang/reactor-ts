@@ -1431,6 +1431,11 @@ export class FederatedApp extends App {
         return false;
       }
     }
+    if (this.maxLevelAllowedToAdvance != Number.MAX_SAFE_INTEGER) {
+      // The reaction queue is empty but some network receivers are waiting for
+      // network inputs.
+      return false;
+    }
     Log.global.debug("Finished handling all events at current time.");
     return true;
   }
@@ -1873,6 +1878,23 @@ export class FederatedApp extends App {
         }
       }
     }
+  }
+
+  /**
+   * Start executing reactions.
+   */
+  protected _startExecuting(): void {
+    Log.info(this, () => Log.hr);
+    Log.info(this, () => Log.hr);
+
+    Log.info(
+      this,
+      () => `>>> Start of execution: ${this.util.getCurrentTag()}`
+    );
+    Log.info(this, () => Log.hr);
+
+    // Send RTI a NET and wait for PTAG or TAG.
+    this.sendRTINextEventTag(this.util.getCurrentTag());
   }
 
   /**

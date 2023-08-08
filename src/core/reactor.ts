@@ -1835,7 +1835,9 @@ export class App extends Reactor {
 
   /**
    * Stores whether the current tag's reactions queue is empty.
-   * This will be false when a federate waits some network inputs.
+   * This will be false when a federate waits for network inputs.
+   * Note that this should be initialized with false to handle startup
+   * reactions of each federate.
    */
   private _isDone = false;
 
@@ -2388,8 +2390,10 @@ export class App extends Reactor {
    */
   private _next(): void {
     let nextEvent = this._eventQ.peek();
-    if (nextEvent != null) {
-      if (this._isDone) {
+    if (nextEvent != null || !this._isDone) {
+      if (nextEvent != null && this._isDone) {
+        // We're trying to advance a tag to the next event.
+
         // Check whether the next event can be handled, or not quite yet.
         // A holdup can occur in a federated execution.
         if (!this._canProceed(nextEvent)) {
