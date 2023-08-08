@@ -1788,10 +1788,8 @@ export class FederatedApp extends App {
       this._requestImmediateInvocationOfNext();
       Log.debug(this, () => {
         return (
-          "Granted tag " +
-          nextTag +
-          " because the federate has neither upstream " +
-          "nor downstream federates."
+          `Granted tag ${nextTag} because the federate has neither ` +
+          "upstream nor downstream federates."
         );
       });
       return;
