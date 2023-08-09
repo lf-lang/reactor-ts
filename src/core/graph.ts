@@ -36,7 +36,7 @@ export class PrecedenceGraph<T> {
           }
         }
       } else {
-        this.adjacencyMap.set(k, v);
+        this.adjacencyMap.set(k, new Set(v));
         this.numberOfEdges += v.size;
       }
     }
