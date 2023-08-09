@@ -2301,10 +2301,9 @@ export class App extends Reactor {
   }
 
   /**
-   * Enqueue network port absent reactions. This function is overriden
-   * by federation.ts.
+   * This function is overriden by federation.ts.
    */
-  protected _enqueuePortAbsentReactions(): void {
+  protected _startTimeStep(): void {
     return undefined;
   }
 
@@ -2415,8 +2414,7 @@ export class App extends Reactor {
         // Advance logical time.
         this._advanceTime(nextEvent.tag);
 
-        // enqueue portAbsentReactions
-        this._enqueuePortAbsentReactions();
+        this._startTimeStep();
       }
       // Start processing events.
       this._popEvents();

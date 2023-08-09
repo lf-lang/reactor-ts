@@ -1409,7 +1409,6 @@ export class FederatedApp extends App {
    * @returns Whether every reactions at this tag are executed.
    */
   protected _react(): boolean {
-    this._updateMaxLevel();
     let r: Reaction<Variable[]>;
     while (this._reactionQ.size() > 0) {
       r = this._reactionQ.peek();
@@ -1565,6 +1564,7 @@ export class FederatedApp extends App {
     Log.debug(this, () => {
       return "In update_last_known_status_on_input ports.";
     });
+    let anyStatusChanged = false;
     this.networkReceivers.forEach(
       (networkReceiver: NetworkReceiver<unknown>, portID: number) => {
         // This is called when a TAG is received.
@@ -1581,9 +1581,13 @@ export class FederatedApp extends App {
             );
           });
           networkReceiver.lastKnownStatusTag = tag;
+          anyStatusChanged = true;
         }
       }
     );
+    if (anyStatusChanged) {
+      this._updateMaxLevel();
+    }
   }
 
   /**
@@ -1631,7 +1635,7 @@ export class FederatedApp extends App {
    * Enqueue network port absent reactions that will send a MSG_TYPE_PORT_ABSENT
    * message to downstream federates if a given network output port is not present.
    */
-  protected _enqueuePortAbsentReactions(): void {
+  private _enqueuePortAbsentReactions(): void {
     this.portAbsentReactions.forEach((reaction) => {
       this._reactionQ.push(reaction);
     });
@@ -1694,6 +1698,15 @@ export class FederatedApp extends App {
         } and current time ${this.util.getCurrentLogicalTime()}.`
       );
     });
+  }
+
+  /**
+   * @override
+   * Enqueue network port absent reactions and update max level for the new tag.
+   */
+  protected _startTimeStep(): void {
+    this._enqueuePortAbsentReactions();
+    this._updateMaxLevel();
   }
 
   /**
@@ -1929,7 +1942,7 @@ export class FederatedApp extends App {
 
     this._loadStartupReactions();
 
-    this._enqueuePortAbsentReactions();
+    this._startTimeStep();
 
     this.rtiClient.on("connected", () => {
       this.rtiClient.sendNeighborStructure(
@@ -2053,6 +2066,7 @@ export class FederatedApp extends App {
       // reactions at the given tag.
       this.greatestTimeAdvanceGrant = ptag;
       this._isLastTAGProvisional = true;
+      this._updateMaxLevel();
       this._addDummyEvent(ptag);
       this._requestImmediateInvocationOfNext();
     });
