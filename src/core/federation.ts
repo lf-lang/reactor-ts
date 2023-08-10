@@ -1653,10 +1653,38 @@ export class FederatedApp extends App {
   private _updateMaxLevel(): void {
     this.maxLevelAllowedToAdvance = Number.MAX_SAFE_INTEGER;
     Log.debug(this, () => {
-      return `last TAG = ${this.greatestTimeAdvanceGrant}`;
+      return `last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`;
     });
-    console.log(`last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`);
-    console.log(`current Tag = ${this.util.getCurrentTag()}`);
+    Log.debug(this, () => {
+      return `current Tag = (${this.util.getElapsedLogicalTime}, ${
+        this.util.getCurrentTag().microstep
+      })`;
+    });
+    Log.debug(this, () => {
+      return `this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) = ${this.util
+        .getCurrentTag()
+        .isSmallerThan(this.greatestTimeAdvanceGrant)}`;
+    });
+    Log.debug(this, () => {
+      return `this.util.getCurrentTag().isSimultaneousWith(this.greatestTimeAdvanceGrant) = ${this.util
+        .getCurrentTag()
+        .isSimultaneousWith(this.greatestTimeAdvanceGrant)}`;
+    });
+    Log.debug(this, () => {
+      return `is provisional? ${this._isLastTAGProvisional}`;
+    });
+    Log.debug(this, () => {
+      return `if (${
+        this.util
+          .getCurrentTag()
+          .isSmallerThan(this.greatestTimeAdvanceGrant) ||
+        (this.util
+          .getCurrentTag()
+          .isSimultaneousWith(this.greatestTimeAdvanceGrant) &&
+          !this._isLastTAGProvisional)
+      })`;
+    });
+
     if (
       this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) ||
       (this.util
@@ -1680,8 +1708,12 @@ export class FederatedApp extends App {
     for (const networkReceiver of Array.from(
       this.networkReceivers.values()
     ).filter((receiver) => receiver.getTpoLevel() !== undefined)) {
-      console.log(`lastKnown = ${networkReceiver.lastKnownStatusTag}, origin = ${networkReceiver.getNetworkInputActionOrigin()}`)
-      
+      console.log(
+        `lastKnown = ${
+          networkReceiver.lastKnownStatusTag
+        }, origin = ${networkReceiver.getNetworkInputActionOrigin()}`
+      );
+
       if (
         this.util
           .getCurrentTag()
