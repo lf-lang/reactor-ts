@@ -2073,7 +2073,7 @@ export class FederatedApp extends App {
       // Update the greatest time advance grant and update MLAA.
       this.greatestTimeAdvanceGrant = ptag;
       this._isLastTAGProvisional = true;
-      if (this._active !== true) {
+      if (!this._active) {
         // PTAG is received before starting execution, return.
         // The pending process of PTAG will be done in _startExecuting.
         return;
