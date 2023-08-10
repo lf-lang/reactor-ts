@@ -2301,6 +2301,7 @@ export class App extends Reactor {
   }
 
   /**
+   * Do the steps needed for the new logical tag.
    * This function is overriden by federation.ts.
    */
   protected _startTimeStep(): void {
@@ -2414,6 +2415,7 @@ export class App extends Reactor {
         // Advance logical time.
         this._advanceTime(nextEvent.tag);
 
+        // Start time step.
         this._startTimeStep();
       }
       // Start processing events.

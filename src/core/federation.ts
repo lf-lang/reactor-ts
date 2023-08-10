@@ -1381,6 +1381,7 @@ export class FederatedApp extends App {
               () => `Adding dummy event for time: ${physicalTime}`
             );
             this._addDummyEvent(new Tag(physicalTime));
+            // Notify the NET to the RTI.
             this.sendRTINextEventTag(new Tag(physicalTime));
             return false;
           }
@@ -1702,6 +1703,7 @@ export class FederatedApp extends App {
 
   /**
    * @override
+   * Do the steps needed for the new logical tag.
    * Enqueue network port absent reactions and update max level for the new tag.
    */
   protected _startTimeStep(): void {
@@ -2060,14 +2062,21 @@ export class FederatedApp extends App {
           ptag
         )}.`;
       });
-      // Update the greatest time advance grant and immediately
-      // wake up _next, in case it was blocked by the old time advance grant.
-      // Add a dummy event to send port absent messages if there is no scheduled
-      // reactions at the given tag.
+      // Update the greatest time advance grant and update MLAA.
       this.greatestTimeAdvanceGrant = ptag;
       this._isLastTAGProvisional = true;
       this._updateMaxLevel();
-      this._addDummyEvent(ptag);
+      // Possibly insert a dummy event into the event queue if current time is behind.
+      if (this.util.getCurrentTag().isSmallerThan(ptag)) {
+        this._addDummyEvent(ptag);
+        Log.debug(this, () => {
+          return (
+            `At tag ${this.util.getCurrentTag()}, inserting the event queue a dummy event ` +
+            `with tag ${ptag}.`
+          );
+        });
+      }
+      // Wake up _next, in case it was blocked by the old time advance grant.
       this._requestImmediateInvocationOfNext();
     });
 
