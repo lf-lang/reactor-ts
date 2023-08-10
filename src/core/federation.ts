@@ -2118,8 +2118,6 @@ export class FederatedApp extends App {
       Log.debug(this, () => {
         return `Port Absent received from RTI for ${intendedTag}.`;
       });
-      // FIXME: Temporarily disabling portAbsent until the
-      // MLAA based execution is implemented.
       this._updateLastKnownStatusOnInputPort(intendedTag, portID);
     });
 
