@@ -1653,8 +1653,11 @@ export class FederatedApp extends App {
   private _updateMaxLevel(): void {
     this.maxLevelAllowedToAdvance = Number.MAX_SAFE_INTEGER;
     Log.debug(this, () => {
-      return `last TAG = ${this.greatestTimeAdvanceGrant.time}`;
+      return `last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`;
     });
+    Log.debug(this, () => {
+      return `current Tag = ${this.util.getCurrentTag()}`;
+    })
     if (
       this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) ||
       (this.util
@@ -1662,6 +1665,9 @@ export class FederatedApp extends App {
         .isSimultaneousWith(this.greatestTimeAdvanceGrant) &&
         !this._isLastTAGProvisional)
     ) {
+      Log.debug(this, () => {
+        return "TAG is greater than the current tag";
+      })
       Log.debug(this, () => {
         return (
           `Updated MLAA to ${
@@ -1677,6 +1683,13 @@ export class FederatedApp extends App {
     for (const networkReceiver of Array.from(
       this.networkReceivers.values()
     ).filter((receiver) => receiver.getTpoLevel() !== undefined)) {
+      Log.debug(this, () => {
+        return `lastKnown = ${networkReceiver.lastKnownStatusTag}`;
+      });
+      Log.debug(this, () => {
+        return `origin = ${networkReceiver.getNetworkInputActionOrigin()}`;
+      });
+      
       if (
         this.util
           .getCurrentTag()
@@ -1684,6 +1697,9 @@ export class FederatedApp extends App {
         networkReceiver.getNetworkInputActionOrigin() !== Origin.physical
       ) {
         const candidate = networkReceiver.getReactions()[0].getPriority();
+        Log.debug(this, () => {
+          return `candidate = ${candidate}`;
+        });
         if (this.maxLevelAllowedToAdvance > candidate) {
           this.maxLevelAllowedToAdvance = candidate;
         }
