@@ -1656,23 +1656,13 @@ export class FederatedApp extends App {
       return `last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`;
     });
     console.log(`last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`)
-    console.log(`current Tag = (${this.util.getElapsedLogicalTime()}, ${
-      this.util.getCurrentTag().microstep
-    })`)
+    console.log(`current Tag = (${this.util.getCurrentTag()})`)
     console.log(`this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) = ${this.util
       .getCurrentTag()
-      .isSmallerThan(this.greatestTimeAdvanceGrant)}`)
-    console.log(`this.util.getCurrentTag().isSimultaneousWith(this.greatestTimeAdvanceGrant) = ${this.util
-        .getCurrentTag()
-        .isSimultaneousWith(this.greatestTimeAdvanceGrant)}`);
-    console.log(`if value = ${
-      this.util
-        .getCurrentTag()
-        .isSmallerThan(this.greatestTimeAdvanceGrant) ||
-      (this.util
-        .getCurrentTag()
-        .isSimultaneousWith(this.greatestTimeAdvanceGrant) &&
-        !this._isLastTAGProvisional)}`);
+      .isSmallerThan(this.greatestTimeAdvanceGrant)}`);
+    if (this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant)) {
+      console.log(`${this.util.getCurrentTag().time} < ${this.greatestTimeAdvanceGrant.time}`);
+    }
 
     if (
       this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) ||
