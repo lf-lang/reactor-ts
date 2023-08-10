@@ -1655,35 +1655,24 @@ export class FederatedApp extends App {
     Log.debug(this, () => {
       return `last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`;
     });
-    Log.debug(this, () => {
-      return `current Tag = (${this.util.getElapsedLogicalTime()}, ${
-        this.util.getCurrentTag().microstep
-      })`;
-    });
-    Log.debug(this, () => {
-      return `this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) = ${this.util
+    console.log(`last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`)
+    console.log(`current Tag = (${this.util.getElapsedLogicalTime()}, ${
+      this.util.getCurrentTag().microstep
+    })`)
+    console.log(`this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) = ${this.util
+      .getCurrentTag()
+      .isSmallerThan(this.greatestTimeAdvanceGrant)}`)
+    console.log(`this.util.getCurrentTag().isSimultaneousWith(this.greatestTimeAdvanceGrant) = ${this.util
         .getCurrentTag()
-        .isSmallerThan(this.greatestTimeAdvanceGrant)}`;
-    });
-    Log.debug(this, () => {
-      return `this.util.getCurrentTag().isSimultaneousWith(this.greatestTimeAdvanceGrant) = ${this.util
+        .isSimultaneousWith(this.greatestTimeAdvanceGrant)}`);
+    console.log(`if value = ${
+      this.util
         .getCurrentTag()
-        .isSimultaneousWith(this.greatestTimeAdvanceGrant)}`;
-    });
-    Log.debug(this, () => {
-      return `is provisional? ${this._isLastTAGProvisional}`;
-    });
-    Log.debug(this, () => {
-      return `if (${
-        this.util
-          .getCurrentTag()
-          .isSmallerThan(this.greatestTimeAdvanceGrant) ||
-        (this.util
-          .getCurrentTag()
-          .isSimultaneousWith(this.greatestTimeAdvanceGrant) &&
-          !this._isLastTAGProvisional)
-      })`;
-    });
+        .isSmallerThan(this.greatestTimeAdvanceGrant) ||
+      (this.util
+        .getCurrentTag()
+        .isSimultaneousWith(this.greatestTimeAdvanceGrant) &&
+        !this._isLastTAGProvisional)}`);
 
     if (
       this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) ||

@@ -242,17 +242,14 @@ export class TimeValue {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt|BigInt} for further information.
    */
   isEarlierThan(other: TimeValue): boolean {
-    console.log(`this.seconds = ${this.seconds}, other.seconds = ${other.seconds}`);
     if (this.seconds < other.seconds) {
       console.log("this.seconds < other.seconds");
       return true;
     }
-    console.log(`this.nanoseconds = ${this.nanoseconds}, other.seconds = ${other.nanoseconds}`);
     if (
       this.seconds === other.seconds &&
       this.nanoseconds < other.nanoseconds
     ) {
-      console.log("this.seconds = other.seconds, this.nanoseconds < other.nanoseconds")
       return true;
     }
     return false;
@@ -417,9 +414,6 @@ export class Tag {
    * @param other The time instant to compare against this one.
    */
   isSmallerThan(other: Tag): boolean {
-    console.log(`isEarlierThan(other.time) = ${this.time.isEarlierThan(other.time)}`);
-    console.log(`isEqualTo(other.time) = ${this.time.isEqualTo(other.time)}`);
-    console.log(`this.microstep < other.microstep = ${this.microstep < other.microstep}`);
     return (
       this.time.isEarlierThan(other.time) ||
       (this.time.isEqualTo(other.time) && this.microstep < other.microstep)
