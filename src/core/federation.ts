@@ -1653,11 +1653,10 @@ export class FederatedApp extends App {
   private _updateMaxLevel(): void {
     this.maxLevelAllowedToAdvance = Number.MAX_SAFE_INTEGER;
     Log.debug(this, () => {
-      return `last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`;
+      return `last TAG = ${this.greatestTimeAdvanceGrant}`;
     });
-    Log.debug(this, () => {
-      return `current Tag = ${this.util.getCurrentTag()}`;
-    })
+    console.log(`last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`);
+    console.log(`current Tag = ${this.util.getCurrentTag()}`);
     if (
       this.util.getCurrentTag().isSmallerThan(this.greatestTimeAdvanceGrant) ||
       (this.util
@@ -1665,9 +1664,7 @@ export class FederatedApp extends App {
         .isSimultaneousWith(this.greatestTimeAdvanceGrant) &&
         !this._isLastTAGProvisional)
     ) {
-      Log.debug(this, () => {
-        return "TAG is greater than the current tag";
-      })
+      console.log("TAG is greater than the current tag");
       Log.debug(this, () => {
         return (
           `Updated MLAA to ${
@@ -1683,12 +1680,7 @@ export class FederatedApp extends App {
     for (const networkReceiver of Array.from(
       this.networkReceivers.values()
     ).filter((receiver) => receiver.getTpoLevel() !== undefined)) {
-      Log.debug(this, () => {
-        return `lastKnown = ${networkReceiver.lastKnownStatusTag}`;
-      });
-      Log.debug(this, () => {
-        return `origin = ${networkReceiver.getNetworkInputActionOrigin()}`;
-      });
+      console.log(`lastKnown = ${networkReceiver.lastKnownStatusTag}, origin = ${networkReceiver.getNetworkInputActionOrigin()}`)
       
       if (
         this.util
@@ -1697,9 +1689,7 @@ export class FederatedApp extends App {
         networkReceiver.getNetworkInputActionOrigin() !== Origin.physical
       ) {
         const candidate = networkReceiver.getReactions()[0].getPriority();
-        Log.debug(this, () => {
-          return `candidate = ${candidate}`;
-        });
+        console.log(`candidate = ${candidate}`);
         if (this.maxLevelAllowedToAdvance > candidate) {
           this.maxLevelAllowedToAdvance = candidate;
         }
