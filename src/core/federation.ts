@@ -1927,6 +1927,14 @@ export class FederatedApp extends App {
 
     // Send RTI a NET and wait for PTAG or TAG.
     this.sendRTINextEventTag(this.util.getCurrentTag());
+
+    if (
+      this.greatestTimeAdvanceGrant.isSimultaneousWith(this.util.getStartTag())
+    ) {
+      // PTAG for the start tag is already received, call _next immediately.
+      this._updateMaxLevel();
+      this._requestImmediateInvocationOfNext();
+    }
   }
 
   /**
@@ -2065,6 +2073,11 @@ export class FederatedApp extends App {
       // Update the greatest time advance grant and update MLAA.
       this.greatestTimeAdvanceGrant = ptag;
       this._isLastTAGProvisional = true;
+      if (this._active !== true) {
+        // PTAG is received before starting execution, return.
+        // The pending process of PTAG will be done in _startExecuting.
+        return;
+      }
       this._updateMaxLevel();
       // Possibly insert a dummy event into the event queue if current time is behind.
       if (this.util.getCurrentTag().isSmallerThan(ptag)) {
