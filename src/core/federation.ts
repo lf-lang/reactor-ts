@@ -1656,7 +1656,7 @@ export class FederatedApp extends App {
       return `last TAG = ${this.greatestTimeAdvanceGrant}, is provisional? ${this._isLastTAGProvisional}`;
     });
     Log.debug(this, () => {
-      return `current Tag = (${this.util.getElapsedLogicalTime}, ${
+      return `current Tag = (${this.util.getElapsedLogicalTime()}, ${
         this.util.getCurrentTag().microstep
       })`;
     });
