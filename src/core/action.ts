@@ -83,7 +83,7 @@ export class Action<T> extends ScheduledTrigger<T> implements Read<T> {
       } else if (this.action instanceof FederatePortAction) {
         if (intendedTag === undefined) {
           throw new Error(
-            "Logical FederatedPortAction must have an intended tag from RTI."
+            "No intended tag given while attempting to schedule an event coming from another federate."
           );
         }
         if (
