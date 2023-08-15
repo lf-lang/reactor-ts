@@ -397,7 +397,9 @@ export class SortablePrecedenceGraph<
       } else {
         // Look further upstream for start nodes that match the type.
         for (const newStartNode of pg.getDownstreamNeighbors(node)) {
-          startNodes.add(newStartNode);
+          if (!visited.has(newStartNode)) {
+            startNodes.add(newStartNode);
+          }
         }
       }
     }
