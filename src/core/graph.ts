@@ -373,29 +373,31 @@ export class SortablePrecedenceGraph<
     if (pg == null || type == null) return;
 
     const visited = new Set();
-    const search = (parentNode: T, nodes: Set<unknown>): void => {
-      for (const node of nodes) {
-        if (node instanceof type) {
-          this.addEdge(node, parentNode);
-          if (!visited.has(node)) {
-            visited.add(node);
-            search(node, pg.getUpstreamNeighbors(node));
+    const startNodes = pg.getSourceNodes();
+
+    const search = (upstreamNode: T, downstreamNodes: Set<unknown>): void => {
+      for (const downstreamNode of downstreamNodes) {
+        if (downstreamNode instanceof type) {
+          this.addEdge(upstreamNode, downstreamNode);
+          if (!visited.has(downstreamNode)) {
+            visited.add(downstreamNode);
+            search(downstreamNode, pg.getDownstreamNeighbors(downstreamNode));
           }
         } else {
-          search(parentNode, pg.getUpstreamNeighbors(node));
+          // Look further downstream for neighbors that match the type.
+          search(upstreamNode, pg.getDownstreamNeighbors(downstreamNode));
         }
       }
     };
-    const leafs = pg.getSinkNodes();
-    for (const leaf of leafs) {
-      if (leaf instanceof type) {
-        this.addNode(leaf);
-        search(leaf, pg.getUpstreamNeighbors(leaf));
-        visited.clear();
+
+    for (const node of startNodes) {
+      if (node instanceof type) {
+        this.addNode(node);
+        search(node, pg.getDownstreamNeighbors(node));
       } else {
-        // leaf is not a type. It's upstream neighbors become a new leafs.
-        for (const newLeaf of pg.getUpstreamNeighbors(leaf)) {
-          leafs.add(newLeaf);
+        // Look further upstream for start nodes that match the type.
+        for (const newStartNode of pg.getDownstreamNeighbors(node)) {
+          startNodes.add(newStartNode);
         }
       }
     }
