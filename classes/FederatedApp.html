@@ -35,7 +35,7 @@ level reactor of a federated app.</p>
 <ul class="tsd-hierarchy">
 <li><span class="target">FederatedApp</span></li></ul></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1181">core/federation.ts:1181</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1225">core/federation.ts:1225</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -63,6 +63,7 @@ level reactor of a federated app.</p>
 <a href="FederatedApp.html#downstreamFedIDs" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>downstream<wbr/>FedIDs</span></a>
 <a href="FederatedApp.html#failure" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>failure</span></a>
 <a href="FederatedApp.html#greatestTimeAdvanceGrant" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>greatest<wbr/>Time<wbr/>Advance<wbr/>Grant</span></a>
+<a href="FederatedApp.html#maxLevelAllowedToAdvance" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>max<wbr/>Level<wbr/>Allowed<wbr/>To<wbr/>Advance</span></a>
 <a href="FederatedApp.html#minDelayFromPhysicalActionToFederateOutput" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>min<wbr/>Delay<wbr/>From<wbr/>Physical<wbr/>Action<wbr/>To<wbr/>Federate<wbr/>Output</span></a>
 <a href="FederatedApp.html#networkReceivers" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>network<wbr/>Receivers</span></a>
 <a href="FederatedApp.html#networkSenders" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>network<wbr/>Senders</span></a>
@@ -82,6 +83,7 @@ level reactor of a federated app.</p>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Methods</h3>
 <div class="tsd-index-list"><a href="FederatedApp.html#_addDummyEvent" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-2048"><rect fill="var(--color-icon-background)" stroke="#FF4DB8" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.162 16V7.24H10.578L11.514 10.072C11.602 10.328 11.674 10.584 11.73 10.84C11.794 11.088 11.842 11.28 11.874 11.416C11.906 11.28 11.954 11.088 12.018 10.84C12.082 10.584 12.154 10.324 12.234 10.06L13.122 7.24H14.538V16H13.482V12.82C13.482 12.468 13.49 12.068 13.506 11.62C13.53 11.172 13.558 10.716 13.59 10.252C13.622 9.78 13.654 9.332 13.686 8.908C13.726 8.476 13.762 8.1 13.794 7.78L12.366 12.16H11.334L9.894 7.78C9.934 8.092 9.97 8.456 10.002 8.872C10.042 9.28 10.078 9.716 10.11 10.18C10.142 10.636 10.166 11.092 10.182 11.548C10.206 12.004 10.218 12.428 10.218 12.82V16H9.162Z" fill="var(--color-text)"></path></g></svg><span>_add<wbr/>Dummy<wbr/>Event</span></a>
+<a href="FederatedApp.html#_addEdgesForTpoLevels" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_add<wbr/>Edges<wbr/>For<wbr/>Tpo<wbr/>Levels</span></a>
 <a href="FederatedApp.html#_advanceTime" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_advance<wbr/>Time</span></a>
 <a href="FederatedApp.html#_analyzeDependencies" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_analyze<wbr/>Dependencies</span></a>
 <a href="FederatedApp.html#_canProceed" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_can<wbr/>Proceed</span></a>
@@ -92,6 +94,7 @@ level reactor of a federated app.</p>
 <a href="FederatedApp.html#_deregister" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_deregister</span></a>
 <a href="FederatedApp.html#_determineStartAndEndOfExecution" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_determine<wbr/>Start<wbr/>And<wbr/>End<wbr/>Of<wbr/>Execution</span></a>
 <a href="FederatedApp.html#_disconnect" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_disconnect</span></a>
+<a href="FederatedApp.html#_enqueuePortAbsentReactions" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_enqueue<wbr/>Port<wbr/>Absent<wbr/>Reactions</span></a>
 <a href="FederatedApp.html#_finish" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_finish</span></a>
 <a href="FederatedApp.html#_getCausalityInterface" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_get<wbr/>Causality<wbr/>Interface</span></a>
 <a href="FederatedApp.html#_getContainer" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_get<wbr/>Container</span></a>
@@ -118,6 +121,7 @@ level reactor of a federated app.</p>
 <a href="FederatedApp.html#_iterationComplete" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_iteration<wbr/>Complete</span></a>
 <a href="FederatedApp.html#_linkToRuntimeObject" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_link<wbr/>To<wbr/>Runtime<wbr/>Object</span></a>
 <a href="FederatedApp.html#_loadStartupReactions" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_load<wbr/>Startup<wbr/>Reactions</span></a>
+<a href="FederatedApp.html#_react" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_react</span></a>
 <a href="FederatedApp.html#_receiveRuntimeObject" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_receive<wbr/>Runtime<wbr/>Object</span></a>
 <a href="FederatedApp.html#_register" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_register</span></a>
 <a href="FederatedApp.html#_requestImmediateInvocationOfNext" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_request<wbr/>Immediate<wbr/>Invocation<wbr/>Of<wbr/>Next</span></a>
@@ -126,10 +130,14 @@ level reactor of a federated app.</p>
 <a href="FederatedApp.html#_setEndOfExecution" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_set<wbr/>End<wbr/>Of<wbr/>Execution</span></a>
 <a href="FederatedApp.html#_shutdown" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_shutdown</span></a>
 <a href="FederatedApp.html#_start" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_start</span></a>
-<a href="FederatedApp.html#_startExecuting" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_start<wbr/>Executing</span></a>
+<a href="FederatedApp.html#_startExecuting" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_start<wbr/>Executing</span></a>
+<a href="FederatedApp.html#_startTimeStep" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_start<wbr/>Time<wbr/>Step</span></a>
 <a href="FederatedApp.html#_unplug" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_unplug</span></a>
 <a href="FederatedApp.html#_unsetTimer" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_unset<wbr/>Timer</span></a>
 <a href="FederatedApp.html#_unsetTimers" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_unset<wbr/>Timers</span></a>
+<a href="FederatedApp.html#_updateLastKnownStatusOnInputPort" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_update<wbr/>Last<wbr/>Known<wbr/>Status<wbr/>On<wbr/>Input<wbr/>Port</span></a>
+<a href="FederatedApp.html#_updateLastKnownStatusOnInputPorts" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_update<wbr/>Last<wbr/>Known<wbr/>Status<wbr/>On<wbr/>Input<wbr/>Ports</span></a>
+<a href="FederatedApp.html#_updateMaxLevel" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_update<wbr/>Max<wbr/>Level</span></a>
 <a href="FederatedApp.html#addDownstreamFederate" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Downstream<wbr/>Federate</span></a>
 <a href="FederatedApp.html#addMutation" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Mutation</span></a>
 <a href="FederatedApp.html#addReaction" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Reaction</span></a>
@@ -137,7 +145,6 @@ level reactor of a federated app.</p>
 <a href="FederatedApp.html#allWritable" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>all<wbr/>Writable</span></a>
 <a href="FederatedApp.html#canConnect" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>can<wbr/>Connect</span></a>
 <a href="FederatedApp.html#canConnectCall" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>can<wbr/>Connect<wbr/>Call</span></a>
-<a href="FederatedApp.html#enqueuePortAbsentReactions" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>enqueue<wbr/>Port<wbr/>Absent<wbr/>Reactions</span></a>
 <a href="FederatedApp.html#getBankIndex" class="tsd-index-link tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Bank<wbr/>Index</span></a>
 <a href="FederatedApp.html#nextReaction" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>next<wbr/>Reaction</span></a>
 <a href="FederatedApp.html#prevReaction" class="tsd-index-link tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>prev<wbr/>Reaction</span></a>
@@ -202,7 +209,7 @@ is the federateID and the rtiPort.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#constructor">constructor</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1381">core/federation.ts:1381</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1475">core/federation.ts:1475</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="__dummy" class="tsd-anchor"></a>
@@ -213,7 +220,7 @@ is the federateID and the rtiPort.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#__dummy">__dummy</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L218">core/reactor.ts:218</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L218">core/reactor.ts:218</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_active" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_active</span><a href="#_active" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_active</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div>
@@ -224,13 +231,13 @@ reacted to a shutdown action).</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_active">_active</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L203">core/reactor.ts:203</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L203">core/reactor.ts:203</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_alarm" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_alarm</span><a href="#_alarm" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_alarm</span><span class="tsd-signature-symbol">:</span> <a href="Alarm.html" class="tsd-signature-type tsd-kind-class">Alarm</a><span class="tsd-signature-symbol"> = ...</span></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_alarm">_alarm</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1811">core/reactor.ts:1811</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1811">core/reactor.ts:1811</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_dependencyGraph" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_dependency<wbr/>Graph</span><a href="#_dependencyGraph" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_dependency<wbr/>Graph</span><span class="tsd-signature-symbol">:</span> <a href="PrecedenceGraph.html" class="tsd-signature-type tsd-kind-class">PrecedenceGraph</a><span class="tsd-signature-symbol">&lt;</span><a href="Reaction.html" class="tsd-signature-type tsd-kind-class">Reaction</a><span class="tsd-signature-symbol">&lt;</span><a href="../types/Variable.html" class="tsd-signature-type tsd-kind-type-alias">Variable</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="Port.html" class="tsd-signature-type tsd-kind-class">Port</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
@@ -240,19 +247,19 @@ ports, reactions, and connections.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_dependencyGraph">_dependencyGraph</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L160">core/reactor.ts:160</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L160">core/reactor.ts:160</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_errorMessage" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <code class="tsd-tag ts-flagOptional">Optional</code> <span>_error<wbr/>Message</span><a href="#_errorMessage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_error<wbr/>Message</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_errorMessage">_errorMessage</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1815">core/reactor.ts:1815</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1815">core/reactor.ts:1815</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_errored" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_errored</span><a href="#_errored" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_errored</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_errored">_errored</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1813">core/reactor.ts:1813</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1813">core/reactor.ts:1813</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_immediateRef" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_immediate<wbr/>Ref</span><a href="#_immediateRef" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_immediate<wbr/>Ref</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type ">Immediate</span></div>
@@ -261,7 +268,7 @@ ports, reactions, and connections.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_immediateRef">_immediateRef</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2116">core/reactor.ts:2116</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2124">core/reactor.ts:2124</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_isLastTAGProvisional" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_is<wbr/>LastTAGProvisional</span><a href="#_isLastTAGProvisional" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_is<wbr/>LastTAGProvisional</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div>
@@ -272,7 +279,7 @@ at the start time, or if it has no upstream federates, a TAG.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_isLastTAGProvisional">_isLastTAGProvisional</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1841">core/reactor.ts:1841</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1849">core/reactor.ts:1849</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_keepAlive" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_keep<wbr/>Alive</span><a href="#_keepAlive" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_keep<wbr/>Alive</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div>
@@ -282,7 +289,7 @@ queue is empty.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_keepAlive">_keepAlive</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2147">core/reactor.ts:2147</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2155">core/reactor.ts:2155</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_key" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_key</span><a href="#_key" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol"> = ...</span></div>
@@ -292,13 +299,13 @@ grant access to its privileged functions.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_key">_key</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L20">core/component.ts:20</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L20">core/component.ts:20</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_name" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_name</span><a href="#_name" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_name</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_name">_name</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2188">core/reactor.ts:2188</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2196">core/reactor.ts:2196</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_reactionQ" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_reactionQ</span><a href="#_reactionQ" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_reactionQ</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">ReactionQueue</span><span class="tsd-signature-symbol"> = ...</span></div>
@@ -307,18 +314,18 @@ grant access to its privileged functions.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_reactionQ">_reactionQ</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2152">core/reactor.ts:2152</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2160">core/reactor.ts:2160</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_uuid" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_uuid</span><a href="#_uuid" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_uuid</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = ...</span></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_uuid">_uuid</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1817">core/reactor.ts:1817</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1817">core/reactor.ts:1817</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="downstreamFedIDs" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>downstream<wbr/>FedIDs</span><a href="#downstreamFedIDs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">downstream<wbr/>FedIDs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> = []</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1226">core/federation.ts:1226</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1278">core/federation.ts:1278</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="failure" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>failure</span><a href="#failure" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">failure</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> = ...</span></div>
@@ -335,7 +342,7 @@ grant access to its privileged functions.</p>
 <div class="tsd-comment tsd-typography"></div></li></ul></li></ul></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#failure">failure</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2203">core/reactor.ts:2203</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2211">core/reactor.ts:2211</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="greatestTimeAdvanceGrant" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>greatest<wbr/>Time<wbr/>Advance<wbr/>Grant</span><a href="#greatestTimeAdvanceGrant" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">greatest<wbr/>Time<wbr/>Advance<wbr/>Grant</span><span class="tsd-signature-symbol">:</span> <a href="Tag.html" class="tsd-signature-type tsd-kind-class">Tag</a><span class="tsd-signature-symbol"> = ...</span></div>
@@ -346,7 +353,15 @@ beyond this value.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1220">core/federation.ts:1220</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1272">core/federation.ts:1272</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="maxLevelAllowedToAdvance" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>max<wbr/>Level<wbr/>Allowed<wbr/>To<wbr/>Advance</span><a href="#maxLevelAllowedToAdvance" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">max<wbr/>Level<wbr/>Allowed<wbr/>To<wbr/>Advance</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 0</span></div>
+<div class="tsd-comment tsd-typography"><p>Variable to track how far in the reaction queue we can go until we need to wait for more network port statuses to be known.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1237">core/federation.ts:1237</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="minDelayFromPhysicalActionToFederateOutput" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>min<wbr/>Delay<wbr/>From<wbr/>Physical<wbr/>Action<wbr/>To<wbr/>Federate<wbr/>Output</span><a href="#minDelayFromPhysicalActionToFederateOutput" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">min<wbr/>Delay<wbr/>From<wbr/>Physical<wbr/>Action<wbr/>To<wbr/>Federate<wbr/>Output</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="TimeValue.html" class="tsd-signature-type tsd-kind-class">TimeValue</a><span class="tsd-signature-symbol"> = null</span></div>
@@ -354,7 +369,7 @@ beyond this value.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1231">core/federation.ts:1231</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1283">core/federation.ts:1283</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="networkReceivers" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>network<wbr/>Receivers</span><a href="#networkReceivers" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">network<wbr/>Receivers</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><a href="NetworkReceiver.html" class="tsd-signature-type tsd-kind-class">NetworkReceiver</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
@@ -362,7 +377,7 @@ beyond this value.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1193">core/federation.ts:1193</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1242">core/federation.ts:1242</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="networkSenders" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>network<wbr/>Senders</span><a href="#networkSenders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">network<wbr/>Senders</span><span class="tsd-signature-symbol">:</span> <a href="NetworkSender.html" class="tsd-signature-type tsd-kind-class">NetworkSender</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> = []</span></div>
@@ -370,12 +385,15 @@ beyond this value.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1201">core/federation.ts:1201</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1250">core/federation.ts:1250</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="portAbsentReactions" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>port<wbr/>Absent<wbr/>Reactions</span><a href="#portAbsentReactions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">port<wbr/>Absent<wbr/>Reactions</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="Reaction.html" class="tsd-signature-type tsd-kind-class">Reaction</a><span class="tsd-signature-symbol">&lt;</span><a href="../types/Variable.html" class="tsd-signature-type tsd-kind-type-alias">Variable</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">port<wbr/>Absent<wbr/>Reactions</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">Set</span><span class="tsd-signature-symbol">&lt;</span><a href="Reaction.html" class="tsd-signature-type tsd-kind-class">Reaction</a><span class="tsd-signature-symbol">&lt;</span><a href="../types/Variable.html" class="tsd-signature-type tsd-kind-type-alias">Variable</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = ...</span></div>
+<div class="tsd-comment tsd-typography"><p>An array of port absent reactions</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1203">core/federation.ts:1203</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1255">core/federation.ts:1255</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="rtiClient" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>rti<wbr/>Client</span><a href="#rtiClient" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">rti<wbr/>Client</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">RTIClient</span></div>
@@ -386,17 +404,17 @@ Federate&#39;s level of abstraction.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1188">core/federation.ts:1188</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1232">core/federation.ts:1232</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="rtiHost" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>rti<wbr/>Host</span><a href="#rtiHost" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">rti<wbr/>Host</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1235">core/federation.ts:1235</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1287">core/federation.ts:1287</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="rtiPort" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>rti<wbr/>Port</span><a href="#rtiPort" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">rti<wbr/>Port</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1233">core/federation.ts:1233</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1285">core/federation.ts:1285</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="shutdown" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>shutdown</span><a href="#shutdown" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">shutdown</span><span class="tsd-signature-symbol">:</span> <a href="Shutdown.html" class="tsd-signature-type tsd-kind-class">Shutdown</a></div>
@@ -405,7 +423,7 @@ Federate&#39;s level of abstraction.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#shutdown">shutdown</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L208">core/reactor.ts:208</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L208">core/reactor.ts:208</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="startup" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>startup</span><a href="#startup" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">startup</span><span class="tsd-signature-symbol">:</span> <a href="Startup.html" class="tsd-signature-type tsd-kind-class">Startup</a></div>
@@ -414,7 +432,7 @@ Federate&#39;s level of abstraction.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#startup">startup</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L213">core/reactor.ts:213</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L213">core/reactor.ts:213</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="stopRequestInfo" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>stop<wbr/>Request<wbr/>Info</span><a href="#stopRequestInfo" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">stop<wbr/>Request<wbr/>Info</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">StopRequestInfo</span><span class="tsd-signature-symbol"> = ...</span></div>
@@ -423,7 +441,7 @@ including the current state and the tag associated with the stop requested or st
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1209">core/federation.ts:1209</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1261">core/federation.ts:1261</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="success" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>success</span><a href="#success" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">success</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> = ...</span></div>
@@ -440,17 +458,17 @@ including the current state and the tag associated with the stop requested or st
 <div class="tsd-comment tsd-typography"></div></li></ul></li></ul></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#success">success</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2202">core/reactor.ts:2202</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2210">core/reactor.ts:2210</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="upstreamFedDelays" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>upstream<wbr/>Fed<wbr/>Delays</span><a href="#upstreamFedDelays" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">upstream<wbr/>Fed<wbr/>Delays</span><span class="tsd-signature-symbol">:</span> <a href="TimeValue.html" class="tsd-signature-type tsd-kind-class">TimeValue</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> = []</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1224">core/federation.ts:1224</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1276">core/federation.ts:1276</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="upstreamFedIDs" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>upstream<wbr/>FedIDs</span><a href="#upstreamFedIDs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">upstream<wbr/>FedIDs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> = []</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1222">core/federation.ts:1222</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1274">core/federation.ts:1274</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="util" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>util</span><a href="#util" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">util</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">UtilityFunctions</span><span class="tsd-signature-symbol"> = ...</span></div>
@@ -460,13 +478,13 @@ reaction code.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#util">util</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1847">core/reactor.ts:1847</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1855">core/reactor.ts:1855</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="pathSeparator" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <span>path<wbr/>Separator</span><a href="#pathSeparator" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">path<wbr/>Separator</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;.&quot;</span></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#pathSeparator">pathSeparator</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L14">core/component.ts:14</a></li></ul></aside></section></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L14">core/component.ts:14</a></li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_addDummyEvent" class="tsd-anchor"></a>
@@ -490,7 +508,21 @@ when there is any physical action triggering output port(s) in federated executi
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_addDummyEvent">_addDummyEvent</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2270">core/reactor.ts:2270</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2278">core/reactor.ts:2278</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member"><a id="_addEdgesForTpoLevels" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>_add<wbr/>Edges<wbr/>For<wbr/>Tpo<wbr/>Levels</span><a href="#_addEdgesForTpoLevels" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="tsd-signature tsd-anchor-link" id="_addEdgesForTpoLevels._addEdgesForTpoLevels-1"><span class="tsd-kind-call-signature">_add<wbr/>Edges<wbr/>For<wbr/>Tpo<wbr/>Levels</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_addEdgesForTpoLevels._addEdgesForTpoLevels-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Add edges between reactions of network sender and receiver reactors.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography">
+<h4>Note</h4><p>Network reactors from a connection with a delay do not have a TPO leve and
+are ignored in this operation.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1884">core/federation.ts:1884</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_advanceTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_advance<wbr/>Time</span><a href="#_advanceTime" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -507,7 +539,7 @@ when there is any physical action triggering output port(s) in federated executi
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_advanceTime">_advanceTime</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2255">core/reactor.ts:2255</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2263">core/reactor.ts:2263</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_analyzeDependencies" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_analyze<wbr/>Dependencies</span><a href="#_analyzeDependencies" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -523,7 +555,7 @@ never during execution.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_analyzeDependencies">_analyzeDependencies</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2584">core/reactor.ts:2584</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2615">core/reactor.ts:2615</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="_canProceed" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_can<wbr/>Proceed</span><a href="#_canProceed" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected">
@@ -547,7 +579,7 @@ closed. FIXME: what happens in that case? Will next be called?</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#_canProceed">_canProceed</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1299">core/federation.ts:1299</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1351">core/federation.ts:1351</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_cancelNext" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_cancel<wbr/>Next</span><a href="#_cancelNext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -559,7 +591,7 @@ closed. FIXME: what happens in that case? Will next be called?</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_cancelNext">_cancelNext</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2441">core/reactor.ts:2441</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2472">core/reactor.ts:2472</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_connect" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_connect</span><a href="#_connect" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -598,7 +630,7 @@ the caller&#39;s.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_connect">_connect</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1254">core/reactor.ts:1254</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1254">core/reactor.ts:1254</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_connectCall" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_connect<wbr/>Call</span><a href="#_connectCall" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -625,7 +657,7 @@ the caller&#39;s.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_connectCall">_connectCall</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1333">core/reactor.ts:1333</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1333">core/reactor.ts:1333</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_connectMulti" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_connect<wbr/>Multi</span><a href="#_connectMulti" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -650,7 +682,7 @@ the caller&#39;s.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_connectMulti">_connectMulti</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1268">core/reactor.ts:1268</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1268">core/reactor.ts:1268</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_deregister" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_deregister</span><a href="#_deregister" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -672,7 +704,7 @@ the key matches.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_deregister">_deregister</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L314">core/reactor.ts:314</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L314">core/reactor.ts:314</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_determineStartAndEndOfExecution" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_determine<wbr/>Start<wbr/>And<wbr/>End<wbr/>Of<wbr/>Execution</span><a href="#_determineStartAndEndOfExecution" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -698,7 +730,7 @@ been set.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_determineStartAndEndOfExecution">_determineStartAndEndOfExecution</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2630">core/reactor.ts:2630</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2661">core/reactor.ts:2661</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_disconnect" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_disconnect</span><a href="#_disconnect" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -731,7 +763,19 @@ If the destination node is not specified, all connections from the source node t
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_disconnect">_disconnect</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1469">core/reactor.ts:1469</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1469">core/reactor.ts:1469</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_enqueuePortAbsentReactions" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_enqueue<wbr/>Port<wbr/>Absent<wbr/>Reactions</span><a href="#_enqueuePortAbsentReactions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_enqueuePortAbsentReactions._enqueuePortAbsentReactions-1"><span class="tsd-kind-call-signature">_enqueue<wbr/>Port<wbr/>Absent<wbr/>Reactions</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_enqueuePortAbsentReactions._enqueuePortAbsentReactions-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Enqueue network port absent reactions that will send a MSG_TYPE_PORT_ABSENT
+message to downstream federates if a given network output port is not present.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1639">core/federation.ts:1639</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="_finish" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_finish</span><a href="#_finish" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected">
@@ -743,7 +787,7 @@ If the destination node is not specified, all connections from the source node t
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#_finish">_finish</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1355">core/federation.ts:1355</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1449">core/federation.ts:1449</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getCausalityInterface" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>Causality<wbr/>Interface</span><a href="#_getCausalityInterface" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -756,7 +800,7 @@ and the dependencies between them.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getCausalityInterface">_getCausalityInterface</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1379">core/reactor.ts:1379</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1379">core/reactor.ts:1379</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getContainer" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>Container</span><a href="#_getContainer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -768,7 +812,7 @@ and the dependencies between them.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getContainer">_getContainer</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L213">core/component.ts:213</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L213">core/component.ts:213</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getEndOfExecution" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>End<wbr/>Of<wbr/>Execution</span><a href="#_getEndOfExecution" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -780,7 +824,7 @@ and the dependencies between them.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getEndOfExecution">_getEndOfExecution</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2535">core/reactor.ts:2535</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2566">core/reactor.ts:2566</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getFirstReactionOrMutation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>First<wbr/>Reaction<wbr/>Or<wbr/>Mutation</span><a href="#_getFirstReactionOrMutation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -789,7 +833,7 @@ and the dependencies between them.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="Reaction.html" class="tsd-signature-type tsd-kind-class">Reaction</a><span class="tsd-signature-symbol">&lt;</span><a href="../types/Variable.html" class="tsd-signature-type tsd-kind-type-alias">Variable</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getFirstReactionOrMutation">_getFirstReactionOrMutation</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L982">core/reactor.ts:982</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L982">core/reactor.ts:982</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_getFullyQualifiedName" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_get<wbr/>Fully<wbr/>Qualified<wbr/>Name</span><a href="#_getFullyQualifiedName" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -802,7 +846,7 @@ The name is a path constructed as <code>[App]/[..]/[Container]/[This]</code>.</p
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getFullyQualifiedName">_getFullyQualifiedName</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L110">core/component.ts:110</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L110">core/component.ts:110</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="_getGreatestTimeAdvanceGrant" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_get<wbr/>Greatest<wbr/>Time<wbr/>Advance<wbr/>Grant</span><a href="#_getGreatestTimeAdvanceGrant" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -813,7 +857,7 @@ The name is a path constructed as <code>[App]/[..]/[Container]/[This]</code>.</p
 <h4 class="tsd-returns-title">Returns <a href="Tag.html" class="tsd-signature-type tsd-kind-class">Tag</a></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1256">core/federation.ts:1256</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1308">core/federation.ts:1308</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_getKey" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_get<wbr/>Key</span><a href="#_getKey" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -845,7 +889,7 @@ reactor and the component, with at most one level of indirection.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getKey">_getKey</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L378">core/reactor.ts:378</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L378">core/reactor.ts:378</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getLastMutation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>Last<wbr/>Mutation</span><a href="#_getLastMutation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -858,7 +902,7 @@ must have their reactions depend on this.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getLastMutation">_getLastMutation</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L975">core/reactor.ts:975</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L975">core/reactor.ts:975</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getLastReactionOrMutation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>Last<wbr/>Reaction<wbr/>Or<wbr/>Mutation</span><a href="#_getLastReactionOrMutation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -870,7 +914,7 @@ must have their reactions depend on this.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getLastReactionOrMutation">_getLastReactionOrMutation</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L994">core/reactor.ts:994</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L994">core/reactor.ts:994</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getMutations" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>Mutations</span><a href="#_getMutations" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -884,7 +928,7 @@ so changing it will not affect this reactor.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getMutations">_getMutations</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1011">core/reactor.ts:1011</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1011">core/reactor.ts:1011</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_getName" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_get<wbr/>Name</span><a href="#_getName" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -897,7 +941,7 @@ If no such string was found, return the name of the constructor.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getName">_getName</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L186">core/component.ts:186</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L186">core/component.ts:186</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getPrecedenceGraph" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>Precedence<wbr/>Graph</span><a href="#_getPrecedenceGraph" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -929,7 +973,7 @@ of this reactor&#39;s container; and</li>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getPrecedenceGraph">_getPrecedenceGraph</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L921">core/reactor.ts:921</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L921">core/reactor.ts:921</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_getReactionIndex" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_get<wbr/>Reaction<wbr/>Index</span><a href="#_getReactionIndex" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -949,7 +993,7 @@ of this reactor&#39;s container; and</li>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getReactionIndex">_getReactionIndex</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L563">core/reactor.ts:563</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L563">core/reactor.ts:563</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getReactions" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>Reactions</span><a href="#_getReactions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -961,7 +1005,7 @@ of this reactor&#39;s container; and</li>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getReactions">_getReactions</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L955">core/reactor.ts:955</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L955">core/reactor.ts:955</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_getReactionsAndMutations" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_get<wbr/>Reactions<wbr/>And<wbr/>Mutations</span><a href="#_getReactionsAndMutations" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -973,7 +1017,7 @@ of this reactor&#39;s container; and</li>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_getReactionsAndMutations">_getReactionsAndMutations</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L964">core/reactor.ts:964</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L964">core/reactor.ts:964</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_initializeMutationScope" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_initialize<wbr/>Mutation<wbr/>Scope</span><a href="#_initializeMutationScope" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -982,7 +1026,7 @@ of this reactor&#39;s container; and</li>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_initializeMutationScope">_initializeMutationScope</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L541">core/reactor.ts:541</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L541">core/reactor.ts:541</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_initializeReactionScope" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_initialize<wbr/>Reaction<wbr/>Scope</span><a href="#_initializeReactionScope" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -991,7 +1035,7 @@ of this reactor&#39;s container; and</li>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_initializeReactionScope">_initializeReactionScope</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L537">core/reactor.ts:537</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L537">core/reactor.ts:537</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_isContainedBy" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_is<wbr/>Contained<wbr/>By</span><a href="#_isContainedBy" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1011,7 +1055,7 @@ of this reactor&#39;s container; and</li>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_isContainedBy">_isContainedBy</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L86">core/component.ts:86</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L86">core/component.ts:86</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_isContainedByContainerOf" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_is<wbr/>Contained<wbr/>By<wbr/>Container<wbr/>Of</span><a href="#_isContainedByContainerOf" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1033,7 +1077,7 @@ this component.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_isContainedByContainerOf">_isContainedByContainerOf</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L99">core/component.ts:99</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L99">core/component.ts:99</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_isDownstream" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_is<wbr/>Downstream</span><a href="#_isDownstream" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1052,7 +1096,7 @@ given port can be connected to with an output port of this reactor.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_isDownstream">_isDownstream</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1022">core/reactor.ts:1022</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1022">core/reactor.ts:1022</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_isRegistered" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_is<wbr/>Registered</span><a href="#_isRegistered" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1067,7 +1111,7 @@ only moment that a component is allowed register with its container.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_isRegistered">_isRegistered</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L78">core/component.ts:78</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L78">core/component.ts:78</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_isUpstream" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_is<wbr/>Upstream</span><a href="#_isUpstream" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1086,7 +1130,7 @@ given port can be connected to an input port of this reactor.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_isUpstream">_isUpstream</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1041">core/reactor.ts:1041</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1041">core/reactor.ts:1041</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="_iterationComplete" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_iteration<wbr/>Complete</span><a href="#_iterationComplete" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected">
@@ -1095,7 +1139,7 @@ given port can be connected to an input port of this reactor.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#_iterationComplete">_iterationComplete</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1350">core/federation.ts:1350</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1444">core/federation.ts:1444</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_linkToRuntimeObject" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_link<wbr/>To<wbr/>Runtime<wbr/>Object</span><a href="#_linkToRuntimeObject" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1110,7 +1154,7 @@ a runtime error results.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_linkToRuntimeObject">_linkToRuntimeObject</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L68">core/component.ts:68</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L68">core/component.ts:68</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_loadStartupReactions" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_load<wbr/>Startup<wbr/>Reactions</span><a href="#_loadStartupReactions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1123,7 +1167,21 @@ app&#39;s instantiation onto the reaction queue.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_loadStartupReactions">_loadStartupReactions</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2661">core/reactor.ts:2661</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2692">core/reactor.ts:2692</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-protected"><a id="_react" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_react</span><a href="#_react" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-protected">
+<li class="tsd-signature tsd-anchor-link" id="_react._react-1"><span class="tsd-kind-call-signature">_react</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><a href="#_react._react-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Iterate over all reactions in the reaction queue and execute them.
+If a reaction&#39;s priority is less than MLAA, stop executing and return.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><p>Whether every reactions at this tag are executed.</p>
+
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<p>Overrides <a href="App.html">App</a>.<a href="App.html#_react">_react</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1412">core/federation.ts:1412</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_receiveRuntimeObject" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_receive<wbr/>Runtime<wbr/>Object</span><a href="#_receiveRuntimeObject" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1145,7 +1203,7 @@ runtime error.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_receiveRuntimeObject">_receiveRuntimeObject</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L246">core/reactor.ts:246</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L246">core/reactor.ts:246</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_register" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_register</span><a href="#_register" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1172,7 +1230,7 @@ upon creation.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_register">_register</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L265">core/reactor.ts:265</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L265">core/reactor.ts:265</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_requestImmediateInvocationOfNext" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_request<wbr/>Immediate<wbr/>Invocation<wbr/>Of<wbr/>Next</span><a href="#_requestImmediateInvocationOfNext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1184,7 +1242,7 @@ upon creation.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_requestImmediateInvocationOfNext">_requestImmediateInvocationOfNext</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2484">core/reactor.ts:2484</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2515">core/reactor.ts:2515</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="_requestRuntimeObject" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_request<wbr/>Runtime<wbr/>Object</span><a href="#_requestRuntimeObject" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1198,7 +1256,7 @@ upon creation.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_requestRuntimeObject">_requestRuntimeObject</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L283">core/reactor.ts:283</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L283">core/reactor.ts:283</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_setAlarmOrYield" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_set<wbr/>Alarm<wbr/>Or<wbr/>Yield</span><a href="#_setAlarmOrYield" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1214,7 +1272,7 @@ upon creation.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_setAlarmOrYield">_setAlarmOrYield</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2454">core/reactor.ts:2454</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2485">core/reactor.ts:2485</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_setEndOfExecution" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_set<wbr/>End<wbr/>Of<wbr/>Execution</span><a href="#_setEndOfExecution" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1231,7 +1289,7 @@ upon creation.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_setEndOfExecution">_setEndOfExecution</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2525">core/reactor.ts:2525</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2556">core/reactor.ts:2556</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="_shutdown" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_shutdown</span><a href="#_shutdown" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected">
@@ -1244,7 +1302,7 @@ upon creation.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#_shutdown">_shutdown</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1265">core/federation.ts:1265</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1317">core/federation.ts:1317</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="_start" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>_start</span><a href="#_start" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1260,19 +1318,32 @@ time message from the RTI.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#_start">_start</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1630">core/federation.ts:1630</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_startExecuting" class="tsd-anchor"></a>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1948">core/federation.ts:1948</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-protected"><a id="_startExecuting" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_start<wbr/>Executing</span><a href="#_startExecuting" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
+<ul class="tsd-signatures tsd-is-protected">
 <li class="tsd-signature tsd-anchor-link" id="_startExecuting._startExecuting-1"><span class="tsd-kind-call-signature">_start<wbr/>Executing</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_startExecuting._startExecuting-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Start executing reactions.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
-<p>Inherited from <a href="App.html">App</a>.<a href="App.html#_startExecuting">_startExecuting</a></p>
+<p>Overrides <a href="App.html">App</a>.<a href="App.html#_startExecuting">_startExecuting</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2670">core/reactor.ts:2670</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1918">core/federation.ts:1918</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-protected"><a id="_startTimeStep" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_start<wbr/>Time<wbr/>Step</span><a href="#_startTimeStep" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-protected">
+<li class="tsd-signature tsd-anchor-link" id="_startTimeStep._startTimeStep-1"><span class="tsd-kind-call-signature">_start<wbr/>Time<wbr/>Step</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_startTimeStep._startTimeStep-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Do the steps needed for the new logical tag.
+Enqueue network port absent reactions and update max level for the new tag.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<p>Overrides <a href="App.html">App</a>.<a href="App.html#_startTimeStep">_startTimeStep</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1709">core/federation.ts:1709</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_unplug" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_unplug</span><a href="#_unplug" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1286,7 +1357,7 @@ collection.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_unplug">_unplug</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L304">core/reactor.ts:304</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L304">core/reactor.ts:304</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_unsetTimer" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_unset<wbr/>Timer</span><a href="#_unsetTimer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1306,7 +1377,7 @@ collection.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_unsetTimer">_unsetTimer</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1531">core/reactor.ts:1531</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1531">core/reactor.ts:1531</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="_unsetTimers" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>_unset<wbr/>Timers</span><a href="#_unsetTimers" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1318,7 +1389,69 @@ collection.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#_unsetTimers">_unsetTimers</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2178">core/reactor.ts:2178</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2186">core/reactor.ts:2186</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_updateLastKnownStatusOnInputPort" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_update<wbr/>Last<wbr/>Known<wbr/>Status<wbr/>On<wbr/>Input<wbr/>Port</span><a href="#_updateLastKnownStatusOnInputPort" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_updateLastKnownStatusOnInputPort._updateLastKnownStatusOnInputPort-1"><span class="tsd-kind-call-signature">_update<wbr/>Last<wbr/>Known<wbr/>Status<wbr/>On<wbr/>Input<wbr/>Port</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tag</span>, <span class="tsd-kind-parameter">portID</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_updateLastKnownStatusOnInputPort._updateLastKnownStatusOnInputPort-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Update the last known status tag of a network input port
+to the value of &quot;tag&quot;. This is the largest tag at which the status
+(present or absent) of the port was known.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">tag</span>: <a href="Tag.html" class="tsd-signature-type tsd-kind-class">Tag</a></h5>
+<div class="tsd-comment tsd-typography"><p>The tag on which the latest status of network input
+ports is known.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li>
+<li>
+<h5><span class="tsd-kind-parameter">portID</span>: <span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p>The port ID</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1602">core/federation.ts:1602</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_updateLastKnownStatusOnInputPorts" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_update<wbr/>Last<wbr/>Known<wbr/>Status<wbr/>On<wbr/>Input<wbr/>Ports</span><a href="#_updateLastKnownStatusOnInputPorts" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_updateLastKnownStatusOnInputPorts._updateLastKnownStatusOnInputPorts-1"><span class="tsd-kind-call-signature">_update<wbr/>Last<wbr/>Known<wbr/>Status<wbr/>On<wbr/>Input<wbr/>Ports</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">tag</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_updateLastKnownStatusOnInputPorts._updateLastKnownStatusOnInputPorts-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Update the last known status tag of all network input ports
+ to the value of &quot;tag&quot;, unless that the provided <code>tag</code> is less
+ than the last_known_status_tag of the port. This is called when
+ this federated receives a TAG.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">tag</span>: <a href="Tag.html" class="tsd-signature-type tsd-kind-class">Tag</a></h5>
+<div class="tsd-comment tsd-typography"><p>The received TAG</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1564">core/federation.ts:1564</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_updateMaxLevel" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_update<wbr/>Max<wbr/>Level</span><a href="#_updateMaxLevel" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-is-private">
+<li class="tsd-signature tsd-anchor-link" id="_updateMaxLevel._updateMaxLevel-1"><span class="tsd-kind-call-signature">_update<wbr/>Max<wbr/>Level</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#_updateMaxLevel._updateMaxLevel-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Update the max level allowed to advance (MLAA) for the current logical timestep.
+If it&#39;s safe to complete the current tag by the last TAG, set the MLAA to the infinity.
+Else, check the network port&#39;s status and update the MLAA.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1653">core/federation.ts:1653</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="addDownstreamFederate" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>add<wbr/>Downstream<wbr/>Federate</span><a href="#addDownstreamFederate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1331,7 +1464,7 @@ collection.</p>
 <h5><span class="tsd-kind-parameter">fedID</span>: <span class="tsd-signature-type">number</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1243">core/federation.ts:1243</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1295">core/federation.ts:1295</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="addMutation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>add<wbr/>Mutation</span><a href="#addMutation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1384,7 +1517,7 @@ collection.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#addMutation">addMutation</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L840">core/reactor.ts:840</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L840">core/reactor.ts:840</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="addReaction" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>add<wbr/>Reaction</span><a href="#addReaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1451,7 +1584,7 @@ needs access must be included in the arguments.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#addReaction">addReaction</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L781">core/reactor.ts:781</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L781">core/reactor.ts:781</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="addUpstreamFederate" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>add<wbr/>Upstream<wbr/>Federate</span><a href="#addUpstreamFederate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1466,7 +1599,7 @@ needs access must be included in the arguments.</p>
 <h5><span class="tsd-kind-parameter">fedDelay</span>: <a href="TimeValue.html" class="tsd-signature-type tsd-kind-class">TimeValue</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1237">core/federation.ts:1237</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1289">core/federation.ts:1289</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="allWritable" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>all<wbr/>Writable</span><a href="#allWritable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1485,7 +1618,7 @@ needs access must be included in the arguments.</p>
 <h4 class="tsd-returns-title">Returns <a href="WritableMultiPort.html" class="tsd-signature-type tsd-kind-class">WritableMultiPort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">T</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#allWritable">allWritable</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L551">core/reactor.ts:551</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L551">core/reactor.ts:551</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="canConnect" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>can<wbr/>Connect</span><a href="#canConnect" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1529,7 +1662,7 @@ destination can only be connected to one source;</li>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#canConnect">canConnect</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1094">core/reactor.ts:1094</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1094">core/reactor.ts:1094</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="canConnectCall" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>can<wbr/>Connect<wbr/>Call</span><a href="#canConnectCall" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1556,20 +1689,7 @@ destination can only be connected to one source;</li>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#canConnectCall">canConnectCall</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1055">core/reactor.ts:1055</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member tsd-is-protected"><a id="enqueuePortAbsentReactions" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>enqueue<wbr/>Port<wbr/>Absent<wbr/>Reactions</span><a href="#enqueuePortAbsentReactions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<ul class="tsd-signatures tsd-is-protected">
-<li class="tsd-signature tsd-anchor-link" id="enqueuePortAbsentReactions.enqueuePortAbsentReactions-1"><span class="tsd-kind-call-signature">enqueue<wbr/>Port<wbr/>Absent<wbr/>Reactions</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#enqueuePortAbsentReactions.enqueuePortAbsentReactions-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-comment tsd-typography"><p>Enqueue network output control reactions that will send a MSG_TYPE_PORT_ABSENT
-message to downstream federates if a given network output port is not present.</p>
-</div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
-<p>Overrides <a href="App.html">App</a>.<a href="App.html#enqueuePortAbsentReactions">enqueuePortAbsentReactions</a></p>
-<ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1467">core/federation.ts:1467</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1055">core/reactor.ts:1055</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="getBankIndex" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Bank<wbr/>Index</span><a href="#getBankIndex" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1582,7 +1702,7 @@ if it is a member of one; return -1 otherwise.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#getBankIndex">getBankIndex</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L180">core/reactor.ts:180</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L180">core/reactor.ts:180</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="nextReaction" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>next<wbr/>Reaction</span><a href="#nextReaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1603,7 +1723,7 @@ succeeds it, or <code>undefined</code> if there is none.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#nextReaction">nextReaction</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L746">core/reactor.ts:746</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L746">core/reactor.ts:746</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="prevReaction" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>prev<wbr/>Reaction</span><a href="#prevReaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1624,7 +1744,7 @@ precedes it, or <code>undefined</code> if there is none.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#prevReaction">prevReaction</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L718">core/reactor.ts:718</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L718">core/reactor.ts:718</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="registerNetworkReceiver" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>register<wbr/>Network<wbr/>Receiver</span><a href="#registerNetworkReceiver" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1650,7 +1770,7 @@ In an alternative design, type information might be preserved. TODO(marten): Loo
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1442">core/federation.ts:1442</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1536">core/federation.ts:1536</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="registerNetworkSender" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>register<wbr/>Network<wbr/>Sender</span><a href="#registerNetworkSender" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1670,7 +1790,7 @@ FederatedApp to be used when register portAbsentReaction and add edges for TPO l
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1454">core/federation.ts:1454</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1548">core/federation.ts:1548</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected tsd-is-inherited"><a id="schedulable" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>schedulable</span><a href="#schedulable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected tsd-is-inherited">
@@ -1689,7 +1809,7 @@ FederatedApp to be used when register portAbsentReaction and add edges for TPO l
 <h4 class="tsd-returns-title">Returns <a href="../interfaces/Sched.html" class="tsd-signature-type tsd-kind-interface">Sched</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">T</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#schedulable">schedulable</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L577">core/reactor.ts:577</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L577">core/reactor.ts:577</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendRTILogicalTimeComplete" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>sendRTILogical<wbr/>Time<wbr/>Complete</span><a href="#sendRTILogicalTimeComplete" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1706,7 +1826,7 @@ this federate is ready to advance beyond the given logical time.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1529">core/federation.ts:1529</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1770">core/federation.ts:1770</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendRTIMessage" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>sendRTIMessage</span><a href="#sendRTIMessage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1742,7 +1862,7 @@ is untimed, and will be timestamped by the destination federate when it is recei
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#sendRTIMessage">sendRTIMessage</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1480">core/federation.ts:1480</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1721">core/federation.ts:1721</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendRTINextEventTag" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>sendRTINext<wbr/>Event<wbr/>Tag</span><a href="#sendRTINextEventTag" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1764,7 +1884,7 @@ advance logical time.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1554">core/federation.ts:1554</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1795">core/federation.ts:1795</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendRTIPortAbsent" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>sendRTIPort<wbr/>Absent</span><a href="#sendRTIPortAbsent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1796,7 +1916,7 @@ on this network port at the current logical time.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#sendRTIPortAbsent">sendRTIPortAbsent</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1598">core/federation.ts:1598</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1855">core/federation.ts:1855</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendRTIResign" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>sendRTIResign</span><a href="#sendRTIResign" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1808,7 +1928,7 @@ app is shutting down, and should not be directed any new messages.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1543">core/federation.ts:1543</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1784">core/federation.ts:1784</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendRTIStopRequest" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>sendRTIStop<wbr/>Request</span><a href="#sendRTIStopRequest" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1824,7 +1944,7 @@ app is shutting down, and should not be directed any new messages.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1565">core/federation.ts:1565</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1822">core/federation.ts:1822</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendRTIStopRequestReply" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>sendRTIStop<wbr/>Request<wbr/>Reply</span><a href="#sendRTIStopRequestReply" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1840,7 +1960,7 @@ app is shutting down, and should not be directed any new messages.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1577">core/federation.ts:1577</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1834">core/federation.ts:1834</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendRTITimedMessage" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>sendRTITimed<wbr/>Message</span><a href="#sendRTITimedMessage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1882,7 +2002,7 @@ when this function is called.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Overrides <a href="App.html">App</a>.<a href="App.html#sendRTITimedMessage">sendRTITimedMessage</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1503">core/federation.ts:1503</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1744">core/federation.ts:1744</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="setAdvanceMessageInterval" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Advance<wbr/>Message<wbr/>Interval</span><a href="#setAdvanceMessageInterval" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1896,7 +2016,7 @@ when this function is called.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#setAdvanceMessageInterval">setAdvanceMessageInterval</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L2171">core/reactor.ts:2171</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L2179">core/reactor.ts:2179</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="setMinDelayFromPhysicalActionToFederateOutput" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Min<wbr/>Delay<wbr/>From<wbr/>Physical<wbr/>Action<wbr/>To<wbr/>Federate<wbr/>Output</span><a href="#setMinDelayFromPhysicalActionToFederateOutput" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1909,7 +2029,7 @@ when this function is called.</p>
 <h5><span class="tsd-kind-parameter">minDelay</span>: <a href="TimeValue.html" class="tsd-signature-type tsd-kind-class">TimeValue</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1247">core/federation.ts:1247</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1299">core/federation.ts:1299</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="shutdownRTIClient" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>shutdownRTIClient</span><a href="#shutdownRTIClient" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -1921,7 +2041,7 @@ the RTI.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/federation.ts#L1618">core/federation.ts:1618</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/federation.ts#L1875">core/federation.ts:1875</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="toString" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>to<wbr/>String</span><a href="#toString" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1933,7 +2053,7 @@ the RTI.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#toString">toString</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L1555">core/reactor.ts:1555</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L1555">core/reactor.ts:1555</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="writable" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>writable</span><a href="#writable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1952,7 +2072,7 @@ the RTI.</p>
 <h4 class="tsd-returns-title">Returns <a href="WritablePort.html" class="tsd-signature-type tsd-kind-class">WritablePort</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">T</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#writable">writable</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/reactor.ts#L555">core/reactor.ts:555</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/reactor.ts#L555">core/reactor.ts:555</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="keyOfMatchingBank" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <span>key<wbr/>Of<wbr/>Matching<wbr/>Bank</span><a href="#keyOfMatchingBank" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1968,7 +2088,7 @@ the RTI.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#keyOfMatchingBank">keyOfMatchingBank</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L168">core/component.ts:168</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L168">core/component.ts:168</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="keyOfMatchingEntry" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <span>key<wbr/>Of<wbr/>Matching<wbr/>Entry</span><a href="#keyOfMatchingEntry" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -1996,7 +2116,7 @@ container</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#keyOfMatchingEntry">keyOfMatchingEntry</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L130">core/component.ts:130</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L130">core/component.ts:130</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-inherited"><a id="keyOfMatchingMultiport" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <span>key<wbr/>Of<wbr/>Matching<wbr/>Multiport</span><a href="#keyOfMatchingMultiport" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-inherited">
@@ -2025,7 +2145,7 @@ constituents is the given port</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Inherited from <a href="App.html">App</a>.<a href="App.html#keyOfMatchingMultiport">keyOfMatchingMultiport</a></p>
 <ul>
-<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/ed95e68/src/core/component.ts#L151">core/component.ts:151</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/lf-lang/reactor-ts/blob/bb9b0ea/src/core/component.ts#L151">core/component.ts:151</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -2062,6 +2182,7 @@ constituents is the given port</p>
 <li><a href="#downstreamFedIDs" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>downstream<wbr/>FedIDs</span></a></li>
 <li><a href="#failure" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>failure</span></a></li>
 <li><a href="#greatestTimeAdvanceGrant" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>greatest<wbr/>Time<wbr/>Advance<wbr/>Grant</span></a></li>
+<li><a href="#maxLevelAllowedToAdvance" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>max<wbr/>Level<wbr/>Allowed<wbr/>To<wbr/>Advance</span></a></li>
 <li><a href="#minDelayFromPhysicalActionToFederateOutput" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>min<wbr/>Delay<wbr/>From<wbr/>Physical<wbr/>Action<wbr/>To<wbr/>Federate<wbr/>Output</span></a></li>
 <li><a href="#networkReceivers" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>network<wbr/>Receivers</span></a></li>
 <li><a href="#networkSenders" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>network<wbr/>Senders</span></a></li>
@@ -2078,6 +2199,7 @@ constituents is the given port</p>
 <li><a href="#util" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>util</span></a></li>
 <li><a href="#pathSeparator" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>path<wbr/>Separator</span></a></li>
 <li><a href="#_addDummyEvent" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_add<wbr/>Dummy<wbr/>Event</span></a></li>
+<li><a href="#_addEdgesForTpoLevels" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_add<wbr/>Edges<wbr/>For<wbr/>Tpo<wbr/>Levels</span></a></li>
 <li><a href="#_advanceTime" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_advance<wbr/>Time</span></a></li>
 <li><a href="#_analyzeDependencies" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_analyze<wbr/>Dependencies</span></a></li>
 <li><a href="#_canProceed" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_can<wbr/>Proceed</span></a></li>
@@ -2088,6 +2210,7 @@ constituents is the given port</p>
 <li><a href="#_deregister" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_deregister</span></a></li>
 <li><a href="#_determineStartAndEndOfExecution" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_determine<wbr/>Start<wbr/>And<wbr/>End<wbr/>Of<wbr/>Execution</span></a></li>
 <li><a href="#_disconnect" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_disconnect</span></a></li>
+<li><a href="#_enqueuePortAbsentReactions" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_enqueue<wbr/>Port<wbr/>Absent<wbr/>Reactions</span></a></li>
 <li><a href="#_finish" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_finish</span></a></li>
 <li><a href="#_getCausalityInterface" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_get<wbr/>Causality<wbr/>Interface</span></a></li>
 <li><a href="#_getContainer" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_get<wbr/>Container</span></a></li>
@@ -2114,6 +2237,7 @@ constituents is the given port</p>
 <li><a href="#_iterationComplete" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_iteration<wbr/>Complete</span></a></li>
 <li><a href="#_linkToRuntimeObject" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_link<wbr/>To<wbr/>Runtime<wbr/>Object</span></a></li>
 <li><a href="#_loadStartupReactions" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_load<wbr/>Startup<wbr/>Reactions</span></a></li>
+<li><a href="#_react" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_react</span></a></li>
 <li><a href="#_receiveRuntimeObject" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_receive<wbr/>Runtime<wbr/>Object</span></a></li>
 <li><a href="#_register" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_register</span></a></li>
 <li><a href="#_requestImmediateInvocationOfNext" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_request<wbr/>Immediate<wbr/>Invocation<wbr/>Of<wbr/>Next</span></a></li>
@@ -2122,10 +2246,14 @@ constituents is the given port</p>
 <li><a href="#_setEndOfExecution" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_set<wbr/>End<wbr/>Of<wbr/>Execution</span></a></li>
 <li><a href="#_shutdown" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_shutdown</span></a></li>
 <li><a href="#_start" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_start</span></a></li>
-<li><a href="#_startExecuting" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_start<wbr/>Executing</span></a></li>
+<li><a href="#_startExecuting" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_start<wbr/>Executing</span></a></li>
+<li><a href="#_startTimeStep" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_start<wbr/>Time<wbr/>Step</span></a></li>
 <li><a href="#_unplug" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_unplug</span></a></li>
 <li><a href="#_unsetTimer" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_unset<wbr/>Timer</span></a></li>
 <li><a href="#_unsetTimers" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_unset<wbr/>Timers</span></a></li>
+<li><a href="#_updateLastKnownStatusOnInputPort" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_update<wbr/>Last<wbr/>Known<wbr/>Status<wbr/>On<wbr/>Input<wbr/>Port</span></a></li>
+<li><a href="#_updateLastKnownStatusOnInputPorts" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_update<wbr/>Last<wbr/>Known<wbr/>Status<wbr/>On<wbr/>Input<wbr/>Ports</span></a></li>
+<li><a href="#_updateMaxLevel" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>_update<wbr/>Max<wbr/>Level</span></a></li>
 <li><a href="#addDownstreamFederate" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Downstream<wbr/>Federate</span></a></li>
 <li><a href="#addMutation" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Mutation</span></a></li>
 <li><a href="#addReaction" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>add<wbr/>Reaction</span></a></li>
@@ -2133,7 +2261,6 @@ constituents is the given port</p>
 <li><a href="#allWritable" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>all<wbr/>Writable</span></a></li>
 <li><a href="#canConnect" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>can<wbr/>Connect</span></a></li>
 <li><a href="#canConnectCall" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>can<wbr/>Connect<wbr/>Call</span></a></li>
-<li><a href="#enqueuePortAbsentReactions" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>enqueue<wbr/>Port<wbr/>Absent<wbr/>Reactions</span></a></li>
 <li><a href="#getBankIndex" class="tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Bank<wbr/>Index</span></a></li>
 <li><a href="#nextReaction" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>next<wbr/>Reaction</span></a></li>
 <li><a href="#prevReaction" class="tsd-is-protected tsd-is-inherited"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>prev<wbr/>Reaction</span></a></li>
