@@ -51,7 +51,7 @@ describe("Intended tag tests", function () {
     const app = new ReactorWithFederatePortAction();
     expect(() => {
       app._start();
-    }).toThrowError("FederatedPortAction must have an intended tag from RTI.");
+    }).toThrowError("No intended tag given while attempting to schedule an event coming from another federate.");
   });
 
   it("Intended tag smaller than current tag", function () {

@@ -79,20 +79,11 @@ export class Action<T> extends ScheduledTrigger<T> implements Read<T> {
       tag = tag.getLaterTag(delay);
 
       if (this.action.origin === Origin.physical) {
-        // If the resulting timestamp from delay is less than the current physical time
-        // on the platform, then the timestamp becomes the current physical time.
-        // Otherwise the tag is computed like a logical action's tag.
-
-        const physicalTime = getCurrentPhysicalTime();
-        if (tag.time.isEarlierThan(physicalTime)) {
-          tag = new Tag(getCurrentPhysicalTime(), 0);
-        } else {
-          tag = tag.getMicroStepsLater(1);
-        }
+        tag = new Tag(getCurrentPhysicalTime(), 0).getLaterTag(delay);
       } else if (this.action instanceof FederatePortAction) {
         if (intendedTag === undefined) {
           throw new Error(
-            "FederatedPortAction must have an intended tag from RTI."
+            "No intended tag given while attempting to schedule an event coming from another federate."
           );
         }
         if (
@@ -132,8 +123,6 @@ export class Action<T> extends ScheduledTrigger<T> implements Read<T> {
             )}`
         );
         tag = intendedTag;
-      } else if (delay.isEqualTo(TimeValue.zero())) {
-        tag = tag.getMicroStepsLater(1);
       }
 
       Log.debug(
@@ -198,7 +187,7 @@ export class FederatePortAction<T> extends Action<T> {
   constructor(
     __parent__: Reactor,
     origin: Origin,
-    minDelay: TimeValue = TimeValue.secs(0)
+    minDelay: TimeValue = TimeValue.zero()
   ) {
     super(__parent__, origin, minDelay);
   }
