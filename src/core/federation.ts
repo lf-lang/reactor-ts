@@ -7,7 +7,8 @@ import type {
   Reaction,
   Variable,
   TaggedEvent,
-  SchedulableAction
+  SchedulableAction,
+  UtilityFunctions
 } from "./internal";
 import {
   Log,
@@ -1183,6 +1184,24 @@ class RTIClient extends EventEmitter {
       return "exiting handleSocketData";
     });
   }
+}
+interface FedreateUtilityFunctions extends UtilityFunctions {
+  sendRTIMessage: <T>(
+    data: T,
+    destFederateID: number,
+    destPortID: number
+  ) => void;
+  sendRTITimedMessage: <T>(
+    data: T,
+    destFederateID: number,
+    destPortID: number,
+    time: TimeValue | undefined
+  ) => void;
+  sendRTIPortAbsent: (
+    destFederateID: number,
+    destPortID: number,
+    additionalDelay: TimeValue | undefined
+  ) => void;
 }
 
 /**
