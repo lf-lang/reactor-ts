@@ -1637,7 +1637,9 @@ export class FederatedApp extends App {
    * message to downstream federates if a given network output port is not present.
    */
   private _enqueuePortAbsentReactions(): void {
+    console.log("In enqueuePortAbsentReactions");
     this.portAbsentReactions.forEach((reaction) => {
+      console.log(`Push {reaction.toString()}`);
       this._reactionQ.push(reaction);
     });
   }
