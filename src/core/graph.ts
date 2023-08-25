@@ -3,13 +3,56 @@
  * @author Marten Lohstroh <marten@berkeley.edu>
  */
 
+import { DebugLogger } from "util";
 import {Reaction} from "./reaction";
 import type {Sortable, Variable} from "./types";
-import {Log} from "./util";
+import {GraphDebugLogger, Log} from "./util";
+
+// TODO: find a way to to this with decorators. 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-explicit-any
+/* const debugLoggerDecorator = (target: any, context: ClassMethodDecoratorContext) => {
+  if (context.kind === "method") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return function (this: any, ...args: unknown[]): any {
+      console.log(`${context.name.toString()} is called.`);
+      console.log(`Tracestack: ${(new Error()).stack}`);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      return target.call(this, ...args);
+    }
+  }
+} */
+
+declare global {
+  // eslint-disable-next-line no-var
+  var graphDebugLogger: GraphDebugLogger | undefined;
+  // eslint-disable-next-line no-var
+  var recording: boolean;
+}
+
+const debugHelper = (stacktrace: Error): void => {
+  if (globalThis.recording) { return; }
+  // If recording now, do not record any subsequent operations, 
+  // as recursion hell might involve when calling `capture`, 
+  // causing infinite loop.
+  globalThis.recording = true;
+  if (globalThis.graphDebugLogger == null) {
+    return
+  }
+
+  const debuglogger = globalThis.graphDebugLogger;
+  debuglogger.capture(stacktrace);
+  globalThis.recording = false;
+};
 
 /**
  * A generic precedence graph.
  */
+
+export interface HierarchyGraphLevel<T> {
+  name: string,
+  nodes: T[],
+  childrenLevels: Array<HierarchyGraphLevel<T>>,
+}
 export class PrecedenceGraph<T> {
   /**
    * A map from nodes to the set of their upstream neighbors.
@@ -47,6 +90,7 @@ export class PrecedenceGraph<T> {
    * @param node
    */
   addNode(node: T): void {
+    debugHelper(new Error("addNode"));
     if (!this.adjacencyMap.has(node)) {
       this.adjacencyMap.set(node, new Set());
     }
@@ -137,6 +181,7 @@ export class PrecedenceGraph<T> {
    * @param downstream The node at which the directed edge ends.
    */
   addEdge(upstream: T, downstream: T): void {
+    debugHelper(new Error("addEdge"));
     const deps = this.adjacencyMap.get(downstream);
     if (deps == null) {
       this.adjacencyMap.set(downstream, new Set([upstream]));
@@ -189,10 +234,10 @@ export class PrecedenceGraph<T> {
    * @param edgesWithIssue An array containing arrays with [origin, effect].
    * Denotes edges in the graph that causes issues to the execution, will be visualized as `--x` in mermaid.
    */
-  toMermaidString(edgesWithIssue?: Array<[T, T]>): string {
+  toMermaidString(edgesWithIssue?: Array<[T, T]>, hierarchy?: HierarchyGraphLevel<T>, uniqueNames?: boolean): string {
     if (edgesWithIssue == null) edgesWithIssue = [];
-    let result = "graph";
-    const nodeToNumber = new Map<T, number>();
+    let result = "graph\n";
+    const nodeToSymbolString = new Map<T, string>();
     const getNodeString = (node: T, def: string): string => {
       if (node == null || node?.toString === Object.prototype.toString) {
         console.error(
@@ -205,27 +250,46 @@ export class PrecedenceGraph<T> {
       return node.toString();
     };
 
-    // Build a block here since we only need `counter` temporarily here
+    if (hierarchy != null) {
+      let counter = 0;
+      let subgraphCounter = 0;
+      const recurse = (h: HierarchyGraphLevel<T>, level: number): void => {
+        const indent = " ".repeat(level);
+        result += level === 0 ? "" : `${indent}subgraph "${(uniqueNames ?? false) ? h.name : `sg${subgraphCounter++}`}"\n`;
+        for (const v of h.nodes) {
+          result += `${indent} ${counter}["${getNodeString(v, String(counter))}"]\n`
+          nodeToSymbolString.set(v, `${counter++}`);
+        }
+        for (const c of h.childrenLevels) {
+          recurse(c, level + 1);
+        }
+        result += level === 0 ? "" :  `${indent}end\n`;
+      }
 
+      recurse(hierarchy, 0);
+    }
+    
+    // Build a block here since we only need `counter` temporarily here
     // We use numbers instead of names of reactors directly as node names
     // in mermaid.js because mermaid has strict restrictions regarding
     // what could be used as names of the node.
     {
       let counter = 0;
       for (const v of this.getNodes()) {
-        result += `\n${counter}["${getNodeString(v, String(counter))}"]`;
-        nodeToNumber.set(v, counter++);
+        if (nodeToSymbolString.has(v)) { continue; }
+        result += `\nmissing${counter}["${getNodeString(v, String(counter))}"]`;
+        nodeToSymbolString.set(v, `missing${counter++}`);
       }
     }
     // This is the effect
     for (const s of this.getNodes()) {
       // This is the origin
       for (const t of this.getUpstreamNeighbors(s)) {
-        result += `\n${nodeToNumber.get(t)}`;
+        result += `\n${nodeToSymbolString.get(t)}`;
         result += edgesWithIssue.some((v) => v[0] === t && v[1] === s)
           ? " --x "
           : " --> ";
-        result += `${nodeToNumber.get(s)}`;
+        result += `${nodeToSymbolString.get(s)}`;
       }
     }
     return result;

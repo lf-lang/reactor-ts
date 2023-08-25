@@ -42,7 +42,8 @@ import {
   Startup,
   Shutdown,
   WritableMultiPort,
-  Dummy
+  Dummy,
+  HierarchyGraphLevel
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
@@ -435,7 +436,11 @@ export abstract class Reactor extends Component {
       if (src instanceof CallerPort && dst instanceof CalleePort) {
         this.reactor._connectCall(src, dst);
       } else if (src instanceof IOPort && dst instanceof IOPort) {
-        this.reactor._connect(src, dst);
+        if (this.reactor.canConnect(src, dst) === 2) {
+          this.reactor._elevatedConnect(src, dst);
+        } else {
+          this.reactor._connect(src, dst);
+        }
       } else {
         // ERROR
       }
@@ -483,12 +488,15 @@ export abstract class Reactor extends Component {
     }
   };
 
+  _name: string;
+
   /**
    * Create a new reactor.
    * @param container The container of this reactor.
    */
-  constructor(container: Reactor | null) {
+  constructor(container: Reactor | null, name? : string) {
     super(container);
+    this._name = (name == null) ? this._key.description?.slice(0, 8) ?? "unknown reactor" : name;
     this._bankIndex = -1;
     if (container !== null) {
       const index = Bank.initializationMap.get(container);
@@ -785,7 +793,8 @@ export abstract class Reactor extends Component {
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
-    }
+    },
+    name?: string
   ): void {
     const calleePorts = trigs.filter((trig) => trig instanceof CalleePort);
 
@@ -799,7 +808,8 @@ export abstract class Reactor extends Component {
         args,
         react,
         deadline,
-        late
+        late,
+        name
       );
       if (trigs.length > 1) {
         // A procedure can only have a single trigger.
@@ -823,7 +833,8 @@ export abstract class Reactor extends Component {
         args,
         react,
         deadline,
-        late
+        late,
+        name
       );
       // Stage it directly if it to be triggered immediately.
       if (reaction.isTriggeredImmediately()) {
@@ -844,7 +855,8 @@ export abstract class Reactor extends Component {
     deadline?: TimeValue,
     late: (this: MutationSandbox, ...args: ArgList<T>) => void = () => {
       Log.global.warn("Deadline violation occurred!");
-    }
+    },
+    name?: string
   ): void {
     const mutation = new Mutation(
       this,
@@ -853,7 +865,8 @@ export abstract class Reactor extends Component {
       args,
       react,
       deadline,
-      late
+      late,
+      name
     );
     // Stage it directly if it to be triggered immediately.
     if (mutation.isTriggeredImmediately()) {
@@ -938,6 +951,35 @@ export abstract class Reactor extends Component {
     }
 
     return graph;
+  }
+
+  public _getNodeHierarchyLevels(depth = -1): HierarchyGraphLevel<Port<unknown> | Reaction<Variable[]>> {
+    this._addHierarchicalDependencies();
+    this._addRPCDependencies();
+
+    const hierarchy: HierarchyGraphLevel<Port<unknown> | Reaction<Variable[]>> = {
+      // names could be duplicate which mermaid don't like, better be unique
+      name: `${this._getFullyQualifiedName()}`,
+      // I think _getReactions and _getMutations might contain children reactions.
+      // So filter by owner might be needed?
+      nodes: ([...this._findOwnPorts()] as Array<(Port<unknown> | Reaction<Variable[]>)>)
+      // reactor is private so we must use bracket
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      .concat([...this._getReactions()].filter((x) => (x["reactor"] === this)))
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      .concat([...this._getMutations()].filter((x) => (x["reactor"] === this))),
+      childrenLevels: []
+    };
+
+    if (depth !== 0) {
+      // Sometimes there's duplicative children??
+      for (const r of this._getOwnReactors()) {
+        if (r._getContainer() === this) {
+          hierarchy.childrenLevels.push(r._getNodeHierarchyLevels(depth - 1));
+        }
+      }
+    }
+    return hierarchy;
   }
 
   /**
@@ -1091,7 +1133,7 @@ export abstract class Reactor extends Component {
    * @param src The start point of a new connection.
    * @param dst The end point of a new connection.
    */
-  public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean {
+  public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean | number {
     // Immediate rule out trivial self loops.
     if (src === dst) {
       throw Error("Source port and destination port are the same.");
@@ -1103,6 +1145,12 @@ export abstract class Reactor extends Component {
     const deps = this._dependencyGraph.getUpstreamNeighbors(dst); // FIXME this will change with multiplex ports
     if (deps !== undefined && deps.size > 0) {
       throw Error("Destination port is already occupied.");
+    }
+
+    if (! (src.checkKey(this._key) && dst.checkKey(this._key) )) {
+      // FIXME: dirty hack here
+      // Scoping issue. Does not possess valid key for src/dst.
+      return 2;
     }
 
     if (!this._runtime.isRunning()) {
@@ -1226,10 +1274,10 @@ export abstract class Reactor extends Component {
     dst: IOPort<R>
   ): void {
     Log.debug(this, () => `connecting ${src} and ${dst}`);
-    // Add dependency implied by connection to local graph.
-    this._dependencyGraph.addEdge(src, dst);
     // Register receiver for value propagation.
     const writer = dst.asWritable(this._getKey(dst));
+    // Add dependency implied by connection to local graph.
+    this._dependencyGraph.addEdge(src, dst);
     src
       .getManager(this._getKey(src))
       .addReceiver(writer as unknown as WritablePort<S>);
@@ -1554,6 +1602,45 @@ export abstract class Reactor extends Component {
    */
   toString(): string {
     return this._getFullyQualifiedName();
+  }
+
+  public _uncheckedAddChild<R extends Reactor, G extends unknown[]>(
+      constructor:new (container: Reactor, ...args: G) => R,
+      ...args: G
+    ): R {
+    const newReactor = new constructor(this, ...args);
+    return newReactor;
+  }
+
+  public _uncheckedAddSibling<R extends Reactor, G extends unknown[]>(
+    constructor:new (container: Reactor, ...args: G) => R,
+    ...args: G
+  ): R {
+    if (this._getContainer() == null) {
+      throw new Error(`Reactor ${this} does not have a parent. Sibling is not well-defined.`);
+    }
+    if (this._getContainer() === this) {
+      throw new Error(`Reactor ${this} is self-contained. Adding sibling creates logical issue.`);
+    }
+    return this._getContainer()._uncheckedAddChild(constructor, ...args);
+  }
+
+  public _elevatedConnect(...args: Parameters<Reactor["_connect"]>): ReturnType<Reactor["_connect"]> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let currentLevel: Reactor = this;
+    let atTopLevel = false;
+    while (currentLevel != null && !atTopLevel) {
+      if (currentLevel === currentLevel._getContainer()) {
+        atTopLevel = true;
+      }
+      try {
+        currentLevel._connect(...args);
+        return
+      } catch (error) {
+      }
+      currentLevel = currentLevel._getContainer();
+    }
+    throw new Error(`[DEBUG] _elevatedConnect: Elevated connect failed for ${this._getFullyQualifiedName()}.`);
   }
 }
 
@@ -2193,8 +2280,6 @@ export class App extends Reactor {
 
   private readonly snooze: Action<Tag>;
 
-  readonly _name: string;
-
   /**
    * Create a new top-level reactor.
    * @param executionTimeout Optional parameter to let the execution of the app time out.
@@ -2208,18 +2293,18 @@ export class App extends Reactor {
     keepAlive = false,
     fast = false,
     public success: () => void = () => undefined,
-    public failure: () => void = () => undefined
+    public failure: () => void = () => undefined,
+    name?: string
   ) {
-    super(null);
-
-    let name = this.constructor.name;
-    if (name === "") {
-      name = "app";
-    } else {
-      name = name.charAt(0).toLowerCase() + name.slice(1);
+    super(null, name);
+    
+    if (name == null) {
+      name = this.constructor.name;
+      if (name !== "") {
+        name = name.charAt(0).toLowerCase() + name.slice(1);
+      }
+      this._name = name;
     }
-    this._name = name;
-
     // Update pointer to runtime object for this reactor and
     // its startup and shutdown action since the inner class
     // instance this.__runtime isn't initialized up until here.

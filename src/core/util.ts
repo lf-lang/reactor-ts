@@ -1,4 +1,8 @@
 import ULog from "ulog";
+import { TimeValue } from "./time";
+import { Component } from "./component";
+import { Reactor } from "./reactor";
+import fs from 'fs';
 
 /**
  * Utilities for the reactor runtime.
@@ -182,5 +186,38 @@ export class Log {
         Log.global.warn(message.call(obj));
       }
     }
+  }
+}
+interface runtimeLog {
+  time: TimeValue,
+  graphMermaidString: string,
+  stacktrace: string,
+}
+
+export class GraphDebugLogger {
+  logs: runtimeLog[];
+  rootReactor: Reactor;
+
+  constructor(rootReactor: Reactor) {
+    this.logs = [];
+    this.rootReactor = rootReactor;
+  }
+
+  public capture(stacktrace?: Error): void {
+    const hierarchy = this.rootReactor._getNodeHierarchyLevels();
+    // _getPrecedenceGraph is private
+    const graph = this.rootReactor["_getPrecedenceGraph"]();
+    const str = graph.toMermaidString(undefined, hierarchy);
+    const time = this.rootReactor["util"].getElapsedLogicalTime();
+    this.logs.push({
+      time,
+      graphMermaidString: str,
+      stacktrace: stacktrace?.stack ?? "unknown"
+    });
+  }
+
+  public write(filepath: string): void {
+    // Blocking
+    fs.appendFileSync(filepath, JSON.stringify(this.logs), {flag: "a+"});
   }
 }

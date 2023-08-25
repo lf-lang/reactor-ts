@@ -1,5 +1,6 @@
 import type {Runtime} from "./internal";
 import {Reactor, App, MultiPort, IOPort, Bank} from "./internal";
+import {v4 as uuidv4} from "uuid";
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -17,7 +18,7 @@ export abstract class Component {
    * A symbol that identifies this component, and it also used to selectively
    * grant access to its privileged functions.
    */
-  protected _key = Symbol("Unique component identifier");
+  protected _key = Symbol(uuidv4());
 
   /**
    * The container of this component. Each component is contained by a
@@ -186,11 +187,9 @@ export abstract class Component {
   public _getName(): string {
     let name;
 
-    if (this instanceof App) {
+    if (this instanceof Reactor) {
       name = this._name;
-    } else {
-      name = Component.keyOfMatchingEntry(this, this._container);
-    }
+    } 
 
     if (name === "" && this instanceof IOPort) {
       name = Component.keyOfMatchingMultiport(this, this._container);
@@ -200,7 +199,7 @@ export abstract class Component {
       name = Component.keyOfMatchingBank(this, this._container);
     }
 
-    if (name !== "") {
+    if (name != null && name !== "") {
       return name;
     } else {
       return this.constructor.name;

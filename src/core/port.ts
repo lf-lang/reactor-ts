@@ -103,6 +103,10 @@ export abstract class IOPort<T> extends Port<T> {
     }
   }
 
+  public checkKey(key: symbol | undefined): boolean {
+    return this._key === key;
+  }
+
   /**
    * Only the holder of the key may obtain a writable port.
    * @param key
