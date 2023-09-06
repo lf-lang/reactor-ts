@@ -475,6 +475,20 @@ export abstract class Reactor extends Component {
     public delete(reactor: Reactor): void {
       reactor._delete();
     }
+
+    public addChild<R extends Reactor, G extends unknown[]>(
+      constructor: new (container: Reactor, ...args: G) => R,
+      ...args: G
+    ): R {
+      return this.reactor._addChild(constructor, ...args);
+    }
+
+    public addSibling<R extends Reactor, G extends unknown[]>(
+      constructor: new (container: Reactor, ...args: G) => R,
+      ...args: G
+    ): R {
+      return this.reactor._addSibling(constructor, ...args);
+    }
   };
 
   /**
@@ -1586,10 +1600,7 @@ export abstract class Reactor extends Component {
         `Reactor ${this} is self-contained. Adding sibling creates logical issue.`
       );
     }
-    const newReactor = this._getContainer()._addChild(
-      constructor,
-      ...args
-    );
+    const newReactor = this._getContainer()._addChild(constructor, ...args);
     this._creatorKeyChain.set(newReactor, newReactor._key);
     return newReactor;
   }
@@ -1832,6 +1843,16 @@ export interface MutationSandbox extends ReactionSandbox {
   delete: (reactor: Reactor) => void;
 
   getReactor: () => Reactor; // Container
+
+  addChild: <R extends Reactor, G extends unknown[]>(
+    constructor: new (container: Reactor, ...args: G) => R,
+    ...args: G
+  ) => R;
+
+  addSibling: <R extends Reactor, G extends unknown[]>(
+    constructor: new (container: Reactor, ...args: G) => R,
+    ...args: G
+  ) => R;
 
   // FIXME:
   // forkJoin(constructor: new () => Reactor, ): void;
