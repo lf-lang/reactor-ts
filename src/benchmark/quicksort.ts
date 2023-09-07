@@ -1,16 +1,11 @@
 import {
-  type WritablePort,
-  Parameter,
   InPort,
   OutPort,
   State,
-  Action,
   Reactor,
   App,
-  TimeValue,
-  Origin,
-  Log,
-  PrecedenceGraph
+  type TimeValue,
+  Log
 } from "../core/internal";
 
 // This is the thrshold for the quicksort algorithm, feeding sorters below this number will use Array.prototype.sort()
@@ -46,8 +41,8 @@ class QuickSorter extends Reactor {
   leftReactor: Reactor | undefined;
   rightReactor: Reactor | undefined;
 
-  constructor(parent: Reactor, name = "root") {
-    super(parent, name);
+  constructor(parent: Reactor) {
+    super(parent);
     this.parentReadPort = new InPort<number[]>(this);
     this.parentWritePort = new OutPort<number[]>(this);
     this.leftWritePort = new OutPort<number[]>(this);
@@ -82,10 +77,8 @@ class QuickSorter extends Reactor {
         numFragments
       ) {
         const hierarchyImplementation = (
-          useHierarchy
-            ? this.getReactor()._uncheckedAddChild
-            : this.getReactor()._uncheckedAddSibling
-        ).bind(this.getReactor());
+          useHierarchy ? this.addChild : this.addSibling
+        ).bind(this);
 
         const fullarr = parentReadPort.get();
         if (fullarr == null) {
@@ -109,14 +102,8 @@ class QuickSorter extends Reactor {
         );
 
         // First, create 2 new reactors
-        const leftReactor = hierarchyImplementation(
-          QuickSorter,
-          `${this.getReactor()._name}/l`
-        );
-        const rightReactor = hierarchyImplementation(
-          QuickSorter,
-          `${this.getReactor()._name}/r`
-        );
+        const leftReactor = hierarchyImplementation(QuickSorter);
+        const rightReactor = hierarchyImplementation(QuickSorter);
 
         // Connect ports accoringly
         this.connect(leftWritePort, leftReactor.parentReadPort);
@@ -197,7 +184,7 @@ class Supplier extends Reactor {
   rootReadPort: InPort<number[]>;
 
   constructor(parent: Reactor, arr: number[], name = "Innocent Supplier") {
-    super(parent, name);
+    super(parent);
     this.rootWritePort = new OutPort<number[]>(this);
     this.rootReadPort = new InPort<number[]>(this);
     this.addReaction(
@@ -230,8 +217,8 @@ class Arbiter extends App {
     success?: () => void,
     fail?: () => void
   ) {
-    super(timeout, keepAlive, fast, success, fail, name);
-    this.rootSorter = new QuickSorter(this, "root");
+    super(timeout, keepAlive, fast, success, fail);
+    this.rootSorter = new QuickSorter(this);
     this.supplier = new Supplier(this, arr);
     this._connect(this.supplier.rootWritePort, this.rootSorter.parentReadPort);
     this._connect(this.rootSorter.parentWritePort, this.supplier.rootReadPort);
