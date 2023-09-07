@@ -38,8 +38,8 @@ class QuickSorter extends Reactor {
   resultArr: State<number[]>;
   numFragments: State<number>;
 
-  leftReactor: Reactor | undefined;
-  rightReactor: Reactor | undefined;
+  leftReactor: State<QuickSorter | undefined>;
+  rightReactor: State<QuickSorter | undefined>;
 
   constructor(parent: Reactor) {
     super(parent);
@@ -52,6 +52,9 @@ class QuickSorter extends Reactor {
     this.resultArr = new State([]);
     this.numFragments = new State(0);
 
+    this.leftReactor = new State(undefined);
+    this.rightReactor = new State(undefined);
+
     // When the parent sends a message, we send it to children.
     this.addMutation(
       [this.parentReadPort],
@@ -63,7 +66,9 @@ class QuickSorter extends Reactor {
         this.leftReadPort,
         this.rightReadPort,
         this.resultArr,
-        this.numFragments
+        this.numFragments,
+        this.leftReactor,
+        this.rightReactor
       ],
       function (
         this,
@@ -74,7 +79,9 @@ class QuickSorter extends Reactor {
         leftread,
         rightread,
         resultArr,
-        numFragments
+        numFragments,
+        stateLeftReactor, // This is really cursed, but s_ is to indicate that this is a state
+        stateRightReactor
       ) {
         const hierarchyImplementation = (
           useHierarchy ? this.addChild : this.addSibling
@@ -105,6 +112,9 @@ class QuickSorter extends Reactor {
         const leftReactor = hierarchyImplementation(QuickSorter);
         const rightReactor = hierarchyImplementation(QuickSorter);
 
+        stateLeftReactor.set(leftReactor);
+        stateRightReactor.set(rightReactor);
+
         // Connect ports accoringly
         this.connect(leftWritePort, leftReactor.parentReadPort);
         this.connect(rightWritePort, rightReactor.parentReadPort);
@@ -117,17 +127,26 @@ class QuickSorter extends Reactor {
       }
     );
 
-    this.addReaction(
+    this.addMutation(
       [this.leftReadPort],
       [
         this.leftReadPort,
         this.resultArr,
         this.numFragments,
-        this.writable(this.parentWritePort)
+        this.writable(this.parentWritePort),
+        this.leftReactor
       ],
-      function (this, leftreadport, resultArr, numFragments, parentWrite) {
+      function (
+        this,
+        leftreadport,
+        resultArr,
+        numFragments,
+        parentWrite,
+        stateLeftReactor
+      ) {
         const leftResult = leftreadport.get();
         const myResult = resultArr.get();
+        const leftReactor = stateLeftReactor.get();
         if (leftResult == null) {
           throw Error("Left return null");
         }
@@ -136,9 +155,15 @@ class QuickSorter extends Reactor {
             "Result length is 0, but should contain at least the pivots."
           );
         }
+        if (leftReactor == null) {
+          throw Error("Right reactor is null.");
+        }
 
         console.log(`I received a result from my left! ${leftResult}!`);
         resultArr.set([...leftResult, ...myResult]);
+
+        this.delete(leftReactor);
+        stateLeftReactor.set(undefined);
 
         numFragments.set(numFragments.get() + 1);
         if (numFragments.get() === 3) {
@@ -147,17 +172,26 @@ class QuickSorter extends Reactor {
       }
     );
 
-    this.addReaction(
+    this.addMutation(
       [this.rightReadPort],
       [
         this.rightReadPort,
         this.resultArr,
         this.numFragments,
-        this.writable(this.parentWritePort)
+        this.writable(this.parentWritePort),
+        this.rightReactor
       ],
-      function (this, rightreadport, resultArr, numFragments, parentWrite) {
+      function (
+        this,
+        rightreadport,
+        resultArr,
+        numFragments,
+        parentWrite,
+        stateRightReactor
+      ) {
         const rightResult = rightreadport.get();
         const myResult = resultArr.get();
+        const rightReactor = stateRightReactor.get();
         if (rightResult == null) {
           throw Error("Right return null");
         }
@@ -166,9 +200,17 @@ class QuickSorter extends Reactor {
             "Result length is 0, but should contain at least the pivots."
           );
         }
+        if (rightReactor == null) {
+          throw Error("Right reactor is null.");
+        }
 
         console.log(`I received a result from my right! ${rightResult}!`);
         resultArr.set([...myResult, ...rightResult]);
+
+        // Destroy right reactor and the connection
+
+        this.delete(rightReactor);
+        stateRightReactor.set(undefined);
 
         numFragments.set(numFragments.get() + 1);
         if (numFragments.get() === 3) {
