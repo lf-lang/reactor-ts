@@ -293,7 +293,7 @@ export class Accumulator extends Reactor {
 
   toNextAccumulator = new OutPort<ConfirmExitMsg>(this);
 
-  constructor(parent: Reactor) {
+  constructor(parent: Quadrant) {
     super(parent);
 
     this.addReaction(
@@ -308,7 +308,8 @@ export class Accumulator extends Reactor {
         this.fromSecondQuadrant,
         this.fromThirdQuadrant,
         this.fromFourthQuadrant,
-        this.writable(this.toNextAccumulator)
+        this.writable(this.toNextAccumulator),
+        parent.writable(parent.toAccumulator)
       ],
       function (
         this,
@@ -316,7 +317,8 @@ export class Accumulator extends Reactor {
         fromSecondQuadrant,
         fromThirdQuadrant,
         fromFourthQuadrant,
-        toNextAccumulator
+        toNextAccumulator,
+        parentToAccumulator
       ) {
         // Reaction.
         if (
@@ -355,6 +357,14 @@ export class Accumulator extends Reactor {
             msgFromThirdQuadrant.quadrantReactors +
             msgFromFourthQuadrant.quadrantReactors;
           toNextAccumulator.set(
+            new ConfirmExitMsg(
+              numFacilities + 1, // Add one for the facility itself.
+              // (A quadrant with four children is considered as one facility in Akka-version implementation.)
+              numCustomers,
+              numQuadrantReactors + 1 // Add one for the quadrant reactor itself.
+            )
+          );
+          parentToAccumulator.set(
             new ConfirmExitMsg(
               numFacilities + 1, // Add one for the facility itself.
               // (A quadrant with four children is considered as one facility in Akka-version implementation.)
@@ -621,12 +631,9 @@ export class Quadrant extends Reactor {
             );
 
           // console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
-          const accumulator = new Accumulator(thisReactor);
-          const toAccumulatorOfQuadrant = (
-            toAccumulator as unknown as WritablePort<Msg>
-          ).getPort();
+          const accumulator = new Accumulator(thisReactor as Quadrant);
           // Connect Accumulator's output to Quadrant's output.
-          this.connect(accumulator.toNextAccumulator, toAccumulatorOfQuadrant);
+          // this.connect(accumulator.toNextAccumulator, toAccumulatorOfQuadrant);
 
           const firstChild = new Quadrant(
             thisReactor,
