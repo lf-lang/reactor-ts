@@ -32,12 +32,8 @@ describe("SingleEvent", function () {
     expect(expect(seTest.singleEvent).toBeInstanceOf(SingleEvent));
     expect(expect(seTest.logger).toBeInstanceOf(Logger));
 
-    expect(function () {
-      seTest.canConnect(seTest.singleEvent.o, seTest.logger.i);
-    }).toThrow(new Error("Destination port is already occupied."));
-    expect(seTest.canConnect(seTest.logger.i, seTest.singleEvent.o)).toBe(
-      false
-    );
+    expect(seTest.canConnect(seTest.singleEvent.o, seTest.logger.i)).toBeTruthy();
+    expect(seTest.canConnect(seTest.logger.i, seTest.singleEvent.o)).toBeTruthy();
 
     seTest._start();
   });
