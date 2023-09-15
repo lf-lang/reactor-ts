@@ -62,6 +62,19 @@ export function jgfValidate(gTotal: number, size: number): void {
     }
 }
 
+// This is not present in the original Savina benchmark.
+// There, an array of Actors are passed to other SORActor to allow them to communicate with their neighbours.
+// In reality, again, they only communicate with their neighbours, which are to these four directions.
+export enum Direction {
+    UP=0b00,
+    DOWN=0b01,
+    LEFT=0b10,
+    RIGHT=0b11,
+}
+// And to ensure that we don't want to shoot ourselves when reading our code, 
+// this is to help understand that connection to LEFT will be connected to connection from RIGHT.
+export const oppositeDirection = (direction: Direction): Direction => (direction ^ 0b01);
+
 export enum MessageTypes {
     sorBootMessage,
     sorResultMessage,
@@ -79,6 +92,9 @@ export class SorBorder {
 
 export interface SORBootMessage {
     messageType: MessageTypes.sorBootMessage;
+    // This is SucOverRelaxConfig.A.
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    A: number[][];
 }
 
 export interface SORResultMessage {

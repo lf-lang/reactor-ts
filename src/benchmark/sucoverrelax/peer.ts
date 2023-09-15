@@ -29,7 +29,7 @@ export class SORPeer extends Reactor {
         this.partStart = new State(partStart);
         this.matrixPart = new State(matrixPart);
         this.border = new State(border);
-        this.sorSource = new State(sorSour ce);
+        this.sorSource = new State(sorSource);
 
         this.portFromSORRunner = new InPort(this);
     }
