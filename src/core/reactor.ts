@@ -42,7 +42,8 @@ import {
   Startup,
   Shutdown,
   WritableMultiPort,
-  Dummy
+  Dummy,
+  ConnectablePort
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
@@ -440,16 +441,31 @@ export abstract class Reactor extends Component {
      * @param src
      * @param dst
      */
+
+    public connect<R, S extends R>(
+      src: ConnectablePort<S>,
+      dst: ConnectablePort<R>
+    ): void;
     public connect<A extends T, R, T, S extends R>(
-      src: CallerPort<A, R> | IOPort<S>,
-      dst: CalleePort<T, S> | IOPort<R>
+      src: CallerPort<A, R>,
+      dst: CalleePort<T, S>
+    ): void;
+    public connect<A extends T, R, T, S extends R>(
+      ...[src, dst]:
+        | [ConnectablePort<S>, ConnectablePort<R>]
+        | [CallerPort<A, R>, CalleePort<T, S>]
     ): void {
       if (src instanceof CallerPort && dst instanceof CalleePort) {
         this.reactor._connectCall(src, dst);
-      } else if (src instanceof IOPort && dst instanceof IOPort) {
-        this.reactor._connect(src, dst);
+      } else if (
+        src instanceof ConnectablePort &&
+        dst instanceof ConnectablePort
+      ) {
+        this.reactor._connect(src.getPort(), dst.getPort());
       } else {
-        // ERROR
+        throw Error(
+          "Logically unreachable code: src and dst type mismatch, Caller(ee) port cannot be connected to IOPort."
+        );
       }
     }
 
@@ -1804,10 +1820,13 @@ interface UtilityFunctions {
 }
 
 export interface MutationSandbox extends ReactionSandbox {
-  connect: <A extends T, R, T, S extends R>(
-    src: CallerPort<A, R> | IOPort<S>,
-    dst: CalleePort<T, S> | IOPort<R>
-  ) => void;
+  connect: {
+    <R, S extends R>(src: ConnectablePort<S>, dst: ConnectablePort<R>): void;
+    <A extends T, R, T, S extends R>(
+      src: CallerPort<A, R>,
+      dst: CalleePort<T, S>
+    ): void;
+  };
 
   disconnect: <R, S extends R>(src: IOPort<S>, dst?: IOPort<R>) => void;
 
