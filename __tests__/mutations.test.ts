@@ -92,7 +92,7 @@ class Computer extends Reactor {
             continue;
           }
           const x = new AddOne(this.getReactor(), id);
-          this.connect(src, x.input);
+          this.connect(src.asConnectable(), x.input.asConnectable());
         }
       }
     });
