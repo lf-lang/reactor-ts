@@ -153,6 +153,11 @@ export abstract class Reactor extends Component {
    */
   private readonly _keyChain = new Map<Component, symbol>();
 
+  // This is the keychain for creation, i.e. if Reactor R's mutation created reactor B,
+  // then R is B's creator, even if they are siblings. R should have access to B,
+  // at least semantically......?
+  private readonly _creatorKeyChain = new Map<Component, symbol>();
+
   /**
    * This graph has in it all the dependencies implied by this container's
    * ports, reactions, and connections.
@@ -387,6 +392,9 @@ export abstract class Reactor extends Component {
         return owner._getKey(component, this._keyChain.get(owner));
       }
     }
+    return component
+      .getContainer()
+      ._getKey(component, this._creatorKeyChain.get(component.getContainer()));
   }
 
   /**
@@ -466,6 +474,20 @@ export abstract class Reactor extends Component {
      */
     public delete(reactor: Reactor): void {
       reactor._delete();
+    }
+
+    public addChild<R extends Reactor, G extends unknown[]>(
+      constructor: new (container: Reactor, ...args: G) => R,
+      ...args: G
+    ): R {
+      return this.reactor._addChild(constructor, ...args);
+    }
+
+    public addSibling<R extends Reactor, G extends unknown[]>(
+      constructor: new (container: Reactor, ...args: G) => R,
+      ...args: G
+    ): R {
+      return this.reactor._addSibling(constructor, ...args);
     }
   };
 
@@ -1555,6 +1577,33 @@ export abstract class Reactor extends Component {
   toString(): string {
     return this._getFullyQualifiedName();
   }
+
+  protected _addChild<R extends Reactor, G extends unknown[]>(
+    constructor: new (container: Reactor, ...args: G) => R,
+    ...args: G
+  ): R {
+    const newReactor = new constructor(this, ...args);
+    return newReactor;
+  }
+
+  protected _addSibling<R extends Reactor, G extends unknown[]>(
+    constructor: new (container: Reactor, ...args: G) => R,
+    ...args: G
+  ): R {
+    if (this._getContainer() == null) {
+      throw new Error(
+        `Reactor ${this} does not have a parent. Sibling is not well-defined.`
+      );
+    }
+    if (this._getContainer() === this) {
+      throw new Error(
+        `Reactor ${this} is self-contained. Adding sibling creates logical issue.`
+      );
+    }
+    const newReactor = this._getContainer()._addChild(constructor, ...args);
+    this._creatorKeyChain.set(newReactor, newReactor._key);
+    return newReactor;
+  }
 }
 
 /*
@@ -1794,6 +1843,16 @@ export interface MutationSandbox extends ReactionSandbox {
   delete: (reactor: Reactor) => void;
 
   getReactor: () => Reactor; // Container
+
+  addChild: <R extends Reactor, G extends unknown[]>(
+    constructor: new (container: Reactor, ...args: G) => R,
+    ...args: G
+  ) => R;
+
+  addSibling: <R extends Reactor, G extends unknown[]>(
+    constructor: new (container: Reactor, ...args: G) => R,
+    ...args: G
+  ) => R;
 
   // FIXME:
   // forkJoin(constructor: new () => Reactor, ): void;
