@@ -1,7 +1,7 @@
 import { InMultiPort, InPort, MutationSandbox, OutMultiPort, OutPort, Parameter, Reactor, State, Variable, } from "../../core/internal";
 import { SORActor } from "./actor";
-import { SORPeer } from "./peer";
-import { Message, MessageTypes, SORBootMessage, SORBorderMessage, SORResultMessage, SORStartMessage, SorBorder, jacobi, omega, randomMatrix } from "./sorutils";
+import { SORPeer, SORPeer } from "./peer";
+import { Message, MessageTypes, SORBootMessage, SORBorderMessage, SORResultMessage, SORStartMessage, SorBorder, arrayOfDim, jacobi, omega, randomMatrix } from "./sorutils";
 
 export class SORRunner extends Reactor {
     protected s: State<number>;
@@ -69,31 +69,56 @@ export class SORRunner extends Reactor {
             }
         );
 
-        // SORRunner::process(mst: SorBootMessage) and SORRunner::boot
+        // SORRunner::process(msg: SorBootMessage) and SORRunner::boot
         this.addMutation(
             [this.portFromApp],
-            [this.portFromApp, this.expectingBoot, this.sorActors],
-            function(this, portFromApp, expectingBoot, sorActorsState) {
-                const { A } = portFromApp.get()!;
+            [this.portFromApp, this.expectingBoot, this.sorActors, this.sorPeer, this.writable (this.portToPeer)],
+            function(this, portFromApp, expectingBoot, sorActorsState, sorPeerState, portToPeer) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const randoms = portFromApp.get()!.A!;
 
                 const sorActors = sorActorsState.get();
                 expectingBoot.set(false);
                 // SORRunner::boot
                 const myBorder: SORActor[] = [];
-                const randoms = randomMatrix;
                 // In Scala/Akka, 0 until s is [0, s)
                 for (let i = 0; i < s; ++i) {
                     let c = i % 2;
                     for (let j = 0; j < part; ++j) {
                         const pos = i * (part + i) + j;
                         c = 1 - c;
-                        sorActors[pos] = this.addSibling(SORActor, pos, A[i][j], c, s, part + 1, omega, this.getReactor(), false);
-                        
+                        sorActors[pos] = this.addSibling(SORActor, pos, randoms[i][j], c, s, part + 1, omega, this.getReactor(), false);
+                        if (j === (part - 1)) {
+                            myBorder[i] = sorActors[pos];
+                        }
                     }
                 }
+                const partialMatrix = arrayOfDim([s, s - part], 0 as number);
+                for (let i = 0; i < s; ++i) {
+                    for (let j = 0; j < s - part; ++j) {
+                        partialMatrix[i][j] = randoms[i][j + part];
+                    }
+                }
+                const sorPeer = this.addSibling(SORPeer, s, part, partialMatrix, new SorBorder(myBorder), this.getReactor() as SORRunner);
+                this.connect(portToPeer.getPort(), sorPeer.portFromSORRunner);
+                sorPeerState.set(sorPeer);
+                portToPeer.set({
+                    messageType: MessageTypes.sorBootMessage,
+                    A: undefined
+                });
             }
-        )
+        );
 
+        this.addMutation(
+            [this.portsFromActors, this.portFromPeerResult],
+            [this.portsFromActors, this.portFromPeerResult, this.totalMsgRcv],
+            function (this, portsFromActors, portFromPeerResult, totalMsgRcvState) {
+                const message = 
+                
+                const totalMsgRcv = totalMsgRcvState.get();
+
+            }
+        );
 
     }
 

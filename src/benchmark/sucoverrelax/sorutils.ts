@@ -19,6 +19,30 @@ export class SavinaPRNG {
     }
 }
 
+// Some type gymnastics that replicates Array.ofDim in Akka/Scala
+// See https://stackoverflow.com/a/72139481 for reference
+// Usage: arrayOfDim([1,2,3,4], -1 as number) (the `as` part is very important)
+type NDArr<T extends number[], R> =
+    T extends [number, ...infer K]
+        ? K extends number[] ? 
+            Array<NDArr<K, R>>
+            : never
+        : R;
+
+export const arrayOfDim = <R, T extends number[] = number[]>(args: [...T], fill: R): NDArr<T, R> => {
+    if (args.length > 0) {
+        const dim = args[0];
+        const rest = args.slice(1);
+        const newArr = [];
+        for (let i = 0; i < dim; ++i) {
+            newArr[i] = arrayOfDim(rest, fill);
+        }
+        return newArr as NDArr<T, R>;
+    } else {
+        return fill as NDArr<T, R>;
+}
+};
+
 // This is not a recommended way to use JS, but whatever......
 
 export const refVal = [
@@ -94,7 +118,7 @@ export interface SORBootMessage {
     messageType: MessageTypes.sorBootMessage;
     // This is SucOverRelaxConfig.A.
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    A: number[][];
+    A: number[][] | undefined;
 }
 
 export interface SORResultMessage {
