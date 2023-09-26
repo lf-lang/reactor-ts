@@ -4,7 +4,8 @@ import {
   Timer,
   OutPort,
   InPort,
-  TimeValue
+  TimeValue,
+  IOPort
 } from "../src/core/internal";
 
 class Source extends Reactor {
@@ -189,3 +190,60 @@ describe("Creating reactors at runtime", function () {
 //     });
 
 // });
+describe("Test the result from refactor-canconnect: referencing ConnectablePort should not introduce any change in the causality graph", () => {
+  class InnocentReactor extends Reactor {
+    public inp = new InPort<never>(this);
+    public outp = new OutPort<never>(this);
+    public cip = new InPort<never>(this);
+    public oip = new OutPort<never>(this);
+    public child = new (class InnocentChild extends Reactor {
+      public oip = new OutPort<never>(this);
+      constructor(parent: InnocentReactor) {
+        super(parent);
+      }
+    })(this);
+
+    constructor(parent: TestApp) {
+      super(parent);
+
+      this.addMutation(
+        [this.startup],
+        [
+          this.inp,
+          this.writable(this.outp),
+          this.cip.asConnectable(),
+          this.oip.asConnectable(),
+          this.child.oip.asConnectable()
+        ],
+        function (this, a0, a1, a2, a3, a4) {
+          // This is current failing as we disallow direct feedthrough. Nevertheless I'm unsure why that is the case as of now?
+          // this.connect(a2, a3);
+          this.connect(a2, a4);
+        }
+      );
+    }
+  }
+
+  class TestApp extends App {
+    public child = new InnocentReactor(this);
+    constructor(done: () => void) {
+      super(undefined, undefined, undefined, () => {
+        const mut = this.child["_mutations"][1]; // M0 is the shutdown mutation; M1 is our mutation
+        const pg = this._getPrecedenceGraph();
+        // child.oip should be an island in the causality graph
+        expect(pg.getUpstreamNeighbors(this.child.oip).size).toBe(0);
+        expect(pg.getDownstreamNeighbors(this.child.oip).size).toBe(0);
+        // The only dependency child.child.oip should have is child.cip
+        expect(pg.getUpstreamNeighbors(this.child.child.oip).size).toBe(1);
+        expect(
+          pg.getUpstreamNeighbors(this.child.child.oip).has(this.child.cip)
+        ).toBeTruthy();
+        done();
+      });
+    }
+  }
+  test("test dependencies", (done) => {
+    const tapp = new TestApp(done);
+    tapp._start();
+  });
+});
