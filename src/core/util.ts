@@ -1,4 +1,4 @@
-import ULog from "ulog";
+import pino, {type Logger} from "pino";
 
 /**
  * Utilities for the reactor runtime.
@@ -8,14 +8,17 @@ import ULog from "ulog";
 
 /**
  * Log levels for `Log`.
+ * This LogLevel is inherited from ULog and is kept for compatibility/abstraction purposes.
+ * As we switch to pinojs, it adds `fatal` but lacks `log`.
  * @see Log
  */
 export enum LogLevel {
-  ERROR = 1,
-  WARN = 2,
-  INFO = 3,
-  LOG = 4,
-  DEBUG = 5
+  FATAL = "fatal",
+  ERROR = "error",
+  WARN = "warn",
+  INFO = "info",
+  LOG = "info",
+  DEBUG = "debug"
 }
 
 /**
@@ -31,28 +34,29 @@ export class Log {
   /**
    * Global instance of ulog that performs the logging.
    */
-  public static global = ULog("reactor-ts");
+  public static global = pino({
+    name: "reactor-ts"
+  });
 
   /**
    * Horizontal rule.
    */
-  public static hr =
-    "==============================================================================";
+  public static hr = "=".repeat(80);
 
   /**
    * Map that keeps track of active loggers.
    */
-  private static readonly loggers = new Map<string, ULog>();
+  private static readonly loggers = new Map<string, Logger>();
 
   /**
    * Get the logger instance associated with the given module.
    * If it does not exist, it is created.
    * @param module The name associated with the logger
    */
-  public static getInstance(module: string): ULog {
+  public static getInstance(module: string): Logger {
     let logger = Log.loggers.get(module);
     if (logger == null) {
-      logger = ULog(module);
+      logger = this.global.child({module});
       Log.loggers.set(module, logger);
     }
     return logger;
@@ -150,11 +154,11 @@ export class Log {
   ): void {
     if (module != null) {
       if (Log.global.level >= LogLevel.LOG) {
-        Log.getInstance(module).log(message.call(obj));
+        Log.getInstance(module).info(message.call(obj));
       }
     } else {
       if (Log.global.level >= LogLevel.LOG) {
-        Log.global.log(message.call(obj));
+        Log.global.info(message.call(obj));
       }
     }
   }
