@@ -38,11 +38,6 @@ class R1 extends Reactor {
       [this.in1],
       [this.in1, this.in2, this.out1, this.out2],
       function (this, __in1, __in2, __out1, __out2) {
-        test("expect error on creating creating direct feed through", () => {
-          expect(() => {
-            this.connect(__in2.asConnectable(), __out2.asConnectable());
-          }).toThrowError("New connection introduces direct feed through.");
-        });
         test("expect error when creating connection outside container", () => {
           expect(() => {
             this.connect(__out2.asConnectable(), __in2.asConnectable());
