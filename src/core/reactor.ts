@@ -1168,7 +1168,24 @@ export abstract class Reactor extends Component {
         return CanConnectResult.RT_CONNECTION_OUTSIDE_CONTAINER;
       }
 
-      // Take the local graph and merge in all the causality interfaces
+      /**
+       * TODO (axmmisaka): The following code is commented for multiple reasons:
+       * The causality interface check is not fully implemented so new checks are failing
+       * Second, direct feedthrough itself would not cause any problem *per se*.
+       * To ensure there is no cycle, the safest way is to check against the global dependency graph.
+       */
+
+      let app = this as Reactor;
+      while (app._getContainer() !== app) {
+        app = app._getContainer();
+      }
+      const graph = app._getPrecedenceGraph();
+      graph.addEdge(src, dst);
+      if (graph.hasCycle()) {
+        return CanConnectResult.RT_CYCLE;
+      }
+
+      /*       // Take the local graph and merge in all the causality interfaces
       // of contained reactors. Then:
       const graph = new PrecedenceGraph<Port<unknown> | Reaction<Variable[]>>();
       graph.addAll(this._dependencyGraph);
@@ -1194,7 +1211,7 @@ export abstract class Reactor extends Component {
         dst.getContainer() === src.getContainer()
       ) {
         return CanConnectResult.RT_DIRECT_FEED_THROUGH;
-      }
+      } */
 
       return CanConnectResult.SUCCESS;
     }
