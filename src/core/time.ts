@@ -129,7 +129,7 @@ export class TimeValue {
     let seconds = this.seconds + other.seconds;
     let nanoseconds = this.nanoseconds + other.nanoseconds;
 
-    if (nanoseconds >= TimeUnit.sec) {
+    if (nanoseconds >= TimeUnit.sec.valueOf()) {
       // Carry the second.
       seconds += 1;
       nanoseconds -= TimeUnit.sec;
@@ -170,7 +170,7 @@ export class TimeValue {
     let seconds = this.seconds * factor;
     let nanoseconds = this.nanoseconds * factor;
 
-    if (nanoseconds >= TimeUnit.sec) {
+    if (nanoseconds >= TimeUnit.sec.valueOf()) {
       // Carry seconds.
       const carry = Math.floor(nanoseconds / TimeUnit.sec);
       seconds += carry;
