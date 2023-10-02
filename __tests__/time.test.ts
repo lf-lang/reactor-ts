@@ -15,7 +15,7 @@ describe("time helper functions", function () {
   // Non-zero time intervals.
   const fiveSeconds: TimeValue = TimeValue.withUnits(5, TimeUnit.sec);
   const fiveSFiveUS: TimeValue = TimeValue.withUnits(5000005, TimeUnit.usec);
-  const fortyTwoDays: TimeValue = TimeValue.withUnits(42, TimeUnit.days);
+  const fortyTwoDays: TimeValue = TimeValue.withUnits(42, TimeUnit.day);
   const threeHundredUS: TimeValue = TimeValue.withUnits(300, TimeUnit.usec);
   const sevenPointFiveBillNS: TimeValue = TimeValue.withUnits(
     7500000000,
@@ -178,7 +178,7 @@ describe("add time value", function () {
     // This test should generate an error because we're trying to convert
     // a number which can't be represented as a numeric time interval.
     expect(() => {
-      TimeValue.withUnits(Number.MAX_SAFE_INTEGER, TimeUnit.weeks);
+      TimeValue.withUnits(Number.MAX_SAFE_INTEGER, TimeUnit.week);
     }).toThrowError();
   });
 
