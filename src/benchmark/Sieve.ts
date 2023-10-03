@@ -12,7 +12,7 @@ import {
   Log
 } from "../core/internal";
 
-Log.global.level = Log.levels.INFO;
+Log.setLevel(Log.LogLevel.INFO);
 class Ramp extends Reactor {
   next: Action<number>;
 

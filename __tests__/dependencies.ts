@@ -145,7 +145,7 @@ describe("Manually constructed precedence graphs", () => {
     graph.removeNode(nodes[1]);
     expect(graph.size()[0]).toEqual(5); // V
     expect(graph.size()[1]).toEqual(3); // E
-    Log.global.debug(graph.toString());
+    Log.globalLogger.debug(graph.toString());
     expect(graph.toString()).toBe(
       dontIndent`graph
         0["app.R[R3]"]
@@ -165,7 +165,7 @@ describe("Manually constructed precedence graphs", () => {
     graph.addEdge(nodes[3], nodes[2]);
     expect(graph.size()[0]).toEqual(6); // V
     expect(graph.size()[1]).toEqual(4); // E
-    Log.global.debug(graph.toString());
+    Log.globalLogger.debug(graph.toString());
     expect(graph.toString()).toBe(
       dontIndent`graph
         0["app.R[R3]"]
@@ -195,7 +195,7 @@ describe("Manually constructed precedence graphs", () => {
   it("introduce a cycle", () => {
     graph.addEdge(nodes[2], nodes[5]);
     expect(graph.updatePriorities(false)).toBeFalsy();
-    Log.global.debug(graph.toString());
+    Log.globalLogger.debug(graph.toString());
   });
 });
 
@@ -217,18 +217,18 @@ describe("ReactionQ", () => {
   var reactionQ = new PrioritySet<Priority>();
 
   for (let i = 0; i < 6; i++) {
-    Log.global.debug(
+    Log.globalLogger.debug(
       "Pushing node: " + i + " with prio: " + nodes[i].getPriority()
     );
     reactionQ.push(nodes[i]);
   }
 
   // duplicate insertions
-  Log.global.debug(
+  Log.globalLogger.debug(
     "Pushing duplicate node with prio: " + nodes[5].getPriority()
   );
   reactionQ.push(nodes[5]);
-  Log.global.debug(
+  Log.globalLogger.debug(
     "Pushing duplicate node with prio: " + nodes[1].getPriority()
   );
   reactionQ.push(nodes[1]);
@@ -237,7 +237,7 @@ describe("ReactionQ", () => {
     const r = reactionQ.pop();
     for (let i = 0; i < 6; i++) {
       if (Object.is(r, nodes[i])) {
-        Log.global.debug(
+        Log.globalLogger.debug(
           "Found matching node: " + i + " with prio: " + nodes[i].getPriority()
         );
       }
@@ -251,7 +251,7 @@ describe("ReactionQ", () => {
 
     for (let i = 0; i < 6; i++) {
       if (Object.is(r, nodes[i])) {
-        Log.global.debug(
+        Log.globalLogger.debug(
           "Found matching node: " + i + " with prio: " + nodes[i].getPriority()
         );
       }
@@ -264,7 +264,7 @@ describe("ReactionQ", () => {
     const r = reactionQ.pop();
     for (let i = 0; i < 6; i++) {
       if (Object.is(r, nodes[i])) {
-        Log.global.debug(
+        Log.globalLogger.debug(
           "Found matching node: " + i + " with prio: " + nodes[i].getPriority()
         );
       }
@@ -277,7 +277,7 @@ describe("ReactionQ", () => {
     const r = reactionQ.pop();
     for (let i = 0; i < 6; i++) {
       if (Object.is(r, nodes[i])) {
-        Log.global.debug(
+        Log.globalLogger.debug(
           "Found matching node: " + i + " with prio: " + nodes[i].getPriority()
         );
       }
@@ -290,7 +290,7 @@ describe("ReactionQ", () => {
     const r = reactionQ.pop();
     for (let i = 0; i < 6; i++) {
       if (Object.is(r, nodes[i])) {
-        Log.global.debug(
+        Log.globalLogger.debug(
           "Found matching node: " + i + " with prio: " + nodes[i].getPriority()
         );
       }
@@ -303,7 +303,7 @@ describe("ReactionQ", () => {
     const r = reactionQ.pop();
     for (let i = 0; i < 6; i++) {
       if (Object.is(r, nodes[i])) {
-        Log.global.debug(
+        Log.globalLogger.debug(
           "Found matching node: " + i + " with prio: " + nodes[i].getPriority()
         );
       }

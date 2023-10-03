@@ -9,7 +9,7 @@ import {
   App
 } from "../core/internal";
 
-Log.global.level = Log.levels.ERROR;
+Log.setLevel(Log.LogLevel.DEBUG);
 
 export class Ping extends Reactor {
   count: Parameter<number>;

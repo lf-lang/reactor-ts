@@ -7,184 +7,154 @@ import pino, {type Logger} from "pino";
  */
 
 /**
- * Log levels for `Log`.
- * This LogLevel is inherited from ULog and is kept for compatibility/abstraction purposes.
- * As we switch to pinojs, it adds `fatal` but lacks `log`.
- * @see Log
- */
-export enum LogLevel {
-  FATAL = "fatal",
-  ERROR = "error",
-  WARN = "warn",
-  INFO = "info",
-  LOG = "info",
-  DEBUG = "debug"
-}
-
-/**
  * Global logging facility that has multiple levels of severity.
  */
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export class Log {
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace Log {
   /**
-   * Available log levels.
+   * Log levels for `Log`.
+   * This LogLevel is inherited from ULog and is kept for compatibility/abstraction purposes.
+   * As we switch to pinojs, it adds `fatal` but lacks `log`.
+   * @see Log
    */
-  public static levels = LogLevel;
+  export enum LogLevel {
+    FATAL = "fatal",
+    ERROR = "error",
+    WARN = "warn",
+    INFO = "info",
+    DEBUG = "debug"
+  }
 
   /**
    * Global instance of ulog that performs the logging.
    */
-  public static global = pino({
+  export const globalLogger = pino({
     name: "reactor-ts"
   });
 
   /**
    * Horizontal rule.
    */
-  public static hr = "=".repeat(80);
+  export const hr = "=".repeat(80);
 
   /**
    * Map that keeps track of active loggers.
    */
-  private static readonly loggers = new Map<string, Logger>();
+  const loggers = new Map<string, Logger>();
 
   /**
    * Get the logger instance associated with the given module.
    * If it does not exist, it is created.
    * @param module The name associated with the logger
    */
-  public static getInstance(module: string): Logger {
-    let logger = Log.loggers.get(module);
+  export function getInstance(module: string): Logger {
+    let logger = loggers.get(module);
     if (logger == null) {
-      logger = this.global.child({module});
-      Log.loggers.set(module, logger);
+      logger = globalLogger.child({module});
+      loggers.set(module, logger);
     }
     return logger;
   }
 
-  /**
-   * Log a message with severity `LogLevel.DEBUG`. The `message` callback
-   * is only invoked if the ulog instance has a log level higher than
-   * `LogLevel.DEBUG`.
-   * @param obj The object to call the message callback on.
-   * @param message Callback that returns a message string.
-   * @param module The name associated with the logger.
-   * @see LogLevel
-   */
-  public static debug(
-    obj: unknown,
-    message: () => string,
-    module?: string
-  ): void {
+  export function setLevel(severity: LogLevel, module?: string): void {
     if (module != null) {
-      if (Log.global.level >= LogLevel.DEBUG) {
-        Log.getInstance(module).debug(message.call(obj));
+      const logger = loggers.get(module);
+      if (logger != null) {
+        logger.level = severity.valueOf();
       }
-    } else {
-      if (Log.global.level >= LogLevel.DEBUG) {
-        Log.global.debug(message.call(obj));
-      }
+      return;
     }
+    globalLogger.level = severity.valueOf();
   }
 
   /**
-   * Log a message with severity `LogLevel.ERROR`. The `message` callback
+   * Log a message with severity `severity`. The `message` callback
    * is only invoked if the ulog instance has a log level higher than
-   * `LogLevel.ERROR`.
+   * `severity`.
    * @param obj The object to call the message callback on.
    * @param message Callback that returns a message string.
    * @param module The name associated with the logger.
    * @see LogLevel
    */
-  public static error(
+  const logWithSeverity = (
+    severity: LogLevel,
+    obj: unknown,
+    message: () => string,
+    module?: string
+  ): void => {
+    const logger = module != null ? getInstance(module) : globalLogger;
+    if (!logger.isLevelEnabled(severity.valueOf())) {
+      return;
+    }
+    switch (severity) {
+      case LogLevel.FATAL: {
+        logger.fatal(message.call(obj));
+        break;
+      }
+      case LogLevel.ERROR: {
+        logger.error(message.call(obj));
+        break;
+      }
+      case LogLevel.WARN: {
+        logger.warn(message.call(obj));
+        break;
+      }
+      case LogLevel.INFO: {
+        logger.info(message.call(obj));
+        break;
+      }
+      case LogLevel.DEBUG: {
+        logger.debug(message.call(obj));
+        break;
+      }
+    }
+  };
+
+  export function fatal(
     obj: unknown,
     message: () => string,
     module?: string
   ): void {
-    if (module != null) {
-      if (Log.global.level >= LogLevel.ERROR) {
-        Log.getInstance(module).error(message.call(obj));
-      }
-    } else {
-      if (Log.global.level >= LogLevel.ERROR) {
-        // Log.global.error(message.call(obj));
-        console.error(message.call(obj));
-      }
-    }
+    logWithSeverity(LogLevel.FATAL, obj, message, module);
   }
 
-  /**
-   * Log a message with severity `LogLevel.INFO`. The `message` callback
-   * is only invoked if the ulog instance has a log level higher than
-   * `LogLevel.INFO`.
-   * @param obj The object to call the message callback on.
-   * @param message Callback that returns a message string.
-   * @param module The name associated with the logger.
-   * @see LogLevel
-   */
-  public static info(
+  export function error(
     obj: unknown,
     message: () => string,
     module?: string
   ): void {
-    if (module != null) {
-      if (Log.global.level >= LogLevel.INFO) {
-        Log.getInstance(module).info(message.call(obj));
-      }
-    } else {
-      if (Log.global.level >= LogLevel.INFO) {
-        Log.global.info(message.call(obj));
-      }
-    }
+    logWithSeverity(LogLevel.ERROR, obj, message, module);
   }
 
-  /**
-   * Log a message with severity `LogLevel.LOG`. The `message` callback
-   * is only invoked if the ulog instance has a log level higher than
-   * `LogLevel.LOG`.
-   * @param obj The object to call the message callback on.
-   * @param message Callback that returns a message string.
-   * @param module The name associated with the logger.
-   * @see LogLevel
-   */
-  public static log(
+  export function warn(
     obj: unknown,
     message: () => string,
     module?: string
   ): void {
-    if (module != null) {
-      if (Log.global.level >= LogLevel.LOG) {
-        Log.getInstance(module).info(message.call(obj));
-      }
-    } else {
-      if (Log.global.level >= LogLevel.LOG) {
-        Log.global.info(message.call(obj));
-      }
-    }
+    logWithSeverity(LogLevel.WARN, obj, message, module);
   }
 
-  /**
-   * Log a message with severity `LogLevel.WARN`. The `message` callback
-   * is only invoked if the ulog instance has a log level higher than
-   * `LogLevel.WARN`.
-   * @param obj The object to call the message callback on.
-   * @param message Callback that returns a message string.
-   * @param module The name associated with the logger.
-   * @see LogLevel
-   */
-  public static warn(
+  export function info(
     obj: unknown,
     message: () => string,
     module?: string
   ): void {
-    if (module != null) {
-      if (Log.global.level >= LogLevel.WARN) {
-        Log.getInstance(module).warn(message.call(obj));
-      }
-    } else {
-      if (Log.global.level >= LogLevel.WARN) {
-        Log.global.warn(message.call(obj));
-      }
-    }
+    logWithSeverity(LogLevel.INFO, obj, message, module);
+  }
+
+  export function log(
+    obj: unknown,
+    message: () => string,
+    module?: string
+  ): void {
+    logWithSeverity(LogLevel.INFO, obj, message, module);
+  }
+
+  export function debug(
+    obj: unknown,
+    message: () => string,
+    module?: string
+  ): void {
+    logWithSeverity(LogLevel.DEBUG, obj, message, module);
   }
 }
