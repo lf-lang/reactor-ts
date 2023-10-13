@@ -29,7 +29,15 @@ export namespace Log {
    * Global instance of ulog that performs the logging.
    */
   export const globalLogger = pino({
-    name: "reactor-ts"
+    name: "reactor-ts",
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+        sync: true,
+        ignore: "pid,hostname,time"
+      }
+    }
   });
 
   /**
