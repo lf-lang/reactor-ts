@@ -32,6 +32,7 @@
     },
     "scripts": {
         "build": "npx tsc",
+        "install": "npm run build",
         "check-style": "npx prettier --check src",
         "clean": "npx rimraf lib",
         "doc": "typedoc --out docs src/index.ts && touch docs/.nojekyll",
