@@ -36,7 +36,7 @@
         "clean": "npx rimraf lib",
         "doc": "typedoc --out docs src/index.ts && touch docs/.nojekyll",
         "format": "npx prettier --write src",
-        "prepublishOnly": "npm run clean && npm run build",
+        "prepare": "npm run clean && npm run build",
         "test": "jest --coverage",
         "lint": "npx eslint './src/**/*'"
     },
