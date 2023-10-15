@@ -18,7 +18,7 @@ import {
   App
 } from "../core/internal";
 
-Log.global.level = Log.levels.INFO;
+Log.setLevel(Log.LogLevel.INFO);
 
 class Point {
   x: number;

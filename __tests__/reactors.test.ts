@@ -8,7 +8,6 @@ import {
   TimeValue,
   Origin,
   Log,
-  LogLevel,
   Action
 } from "../src/core/internal";
 
@@ -163,7 +162,7 @@ describe("Testing deadlines", function () {
   jest.setTimeout(5000);
 
   it("Missed reaction deadline on InPort", (done) => {
-    Log.global.level = LogLevel.WARN;
+    Log.setLevel(Log.LogLevel.WARN);
 
     function fail() {
       throw new Error("Test has failed.");
@@ -187,7 +186,7 @@ describe("Testing deadlines", function () {
   it("Missed reaction deadline on the second reaction in the chain", (done) => {
     // let consoleOutput: string[] = []
 
-    Log.global.level = LogLevel.WARN;
+    Log.setLevel(Log.LogLevel.WARN);
 
     function fail() {
       throw new Error("Test has failed.");
@@ -219,7 +218,7 @@ describe("Testing deadlines", function () {
   });
 
   it("Missed deadline with custom message", (done) => {
-    Log.global.level = LogLevel.WARN;
+    Log.setLevel(Log.LogLevel.WARN);
 
     // let deadlineMissed:string = ""
 
@@ -233,7 +232,7 @@ describe("Testing deadlines", function () {
       done,
       fail,
       () => {
-        Log.global.warn("Deadline missed!");
+        Log.warn(null, () => "Deadline missed!");
       },
       TimeValue.withUnits(1, TimeUnit.nsec)
     );
@@ -274,7 +273,7 @@ describe("Testing Reactions", function () {
 
 describe("Testing Actions", function () {
   it("Mismatched logical time", () => {
-    Log.global.level = LogLevel.WARN;
+    Log.setLevel(Log.LogLevel.WARN);
 
     function fail() {
       throw new Error("Test has failed.");

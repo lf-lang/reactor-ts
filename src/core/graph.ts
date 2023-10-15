@@ -279,7 +279,7 @@ export class PrecedenceGraph<T> {
             // Start a new line when this is not the first match,
             // or when the current node is a start node.
             chain = [];
-            Log.global.debug("Starting new chain.");
+            Log.globalLogger.debug("Starting new chain.");
           }
 
           // Mark current node as visited.
@@ -288,13 +288,13 @@ export class PrecedenceGraph<T> {
           chain.push(node);
 
           if (chain.includes(v)) {
-            Log.global.debug("Cycle detected.");
+            Log.globalLogger.debug("Cycle detected.");
             printChain(v, chain);
           } else if (visited.has(v)) {
-            Log.global.debug("Overlapping chain detected.");
+            Log.globalLogger.debug("Overlapping chain detected.");
             printChain(v, chain);
           } else {
-            Log.global.debug("Adding link to the chain.");
+            Log.globalLogger.debug("Adding link to the chain.");
             buildChain(v, chain);
           }
           // Indicate that a match has been found.
@@ -302,7 +302,7 @@ export class PrecedenceGraph<T> {
         }
       }
       if (!match) {
-        Log.global.debug("End of chain.");
+        Log.globalLogger.debug("End of chain.");
         printChain(node, chain);
       }
     }

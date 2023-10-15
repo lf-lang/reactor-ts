@@ -168,7 +168,7 @@ describe("Creating reactors at runtime", function () {
   jest.setTimeout(5000);
 
   it("Reactor with periodic timer", (done) => {
-    // Log.global.level = LogLevel.DEBUG
+    // Log.global.level = Log.LogLevel.DEBUG
 
     const app = new Zeno(TimeValue.secs(4), done, () => {});
 
@@ -181,7 +181,7 @@ describe("Creating reactors at runtime", function () {
 //     jest.setTimeout(5000);
 
 //     it("Simple scatter gather", done => {
-//         Log.global.level = LogLevel.DEBUG
+//         Log.global.level = Log.LogLevel.DEBUG
 
 //         let app = new ScatterGather(TimeValue.secs(5),  done, () => {})
 

@@ -10,7 +10,6 @@ import {
   TimeValue,
   Origin,
   Log,
-  LogLevel,
   Action
 } from "../src/core/internal";
 

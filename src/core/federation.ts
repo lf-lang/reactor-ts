@@ -1318,7 +1318,7 @@ export class FederatedApp extends App {
     // Ignore federatate's _shutdown call if stop is requested.
     // The final shutdown should be done by calling super._shutdown.
     if (this.stopRequestInfo.state !== StopRequestState.NOT_SENT) {
-      Log.global.debug(
+      Log.globalLogger.debug(
         "Ignoring FederatedApp._shutdown() as stop is already requested to RTI."
       );
       return;
@@ -1330,7 +1330,7 @@ export class FederatedApp extends App {
     ) {
       this.sendRTIStopRequest(this.util.getCurrentTag().getMicroStepsLater(1));
     } else {
-      Log.global.debug(
+      Log.globalLogger.debug(
         "Ignoring FederatedApp._shutdown() since EndOfExecution is already set earlier than current tag." +
           `currentTag: ${this.util.getCurrentTag()} endTag: ${String(endTag)}`
       );
@@ -1396,7 +1396,7 @@ export class FederatedApp extends App {
             "received from the RTI is less than the timestamp of the " +
             "next event on the event queue"
         );
-        Log.global.debug("Exiting _next.");
+        Log.globalLogger.debug("Exiting _next.");
         return false;
       }
     }
@@ -1426,7 +1426,7 @@ export class FederatedApp extends App {
           throw e;
         }
       } else {
-        Log.global.debug(
+        Log.globalLogger.debug(
           "Max level allowed to advance is higher than the next reaction's priority."
         );
         return false;
@@ -1437,7 +1437,7 @@ export class FederatedApp extends App {
       // network inputs.
       return false;
     }
-    Log.global.debug("Finished handling all events at current time.");
+    Log.globalLogger.debug("Finished handling all events at current time.");
     return true;
   }
 

@@ -12,9 +12,9 @@ class OutputGetTest extends App {
     failure: () => void
   ) {
     super(timeout, true, false, success, failure);
-    Log.global.debug(">>>>>>>>----" + this.util);
+    Log.globalLogger.debug(">>>>>>>>----" + this.util);
     this.addReaction([this.t], [this.writable(this.o)], function (this, o) {
-      Log.global.debug(">>>>>>>>>>being triggered>>>>>>>>>>>");
+      Log.globalLogger.debug(">>>>>>>>>>being triggered>>>>>>>>>>>");
       if (o.get() != null) {
         throw new Error(
           "Calling get on an output before it has been set does not return null"

@@ -66,7 +66,7 @@ export class Reaction<T extends Variable[]>
     private readonly react: (...args: ArgList<T>) => void,
     private deadline?: TimeValue,
     private readonly late: (...args: ArgList<T>) => void = () => {
-      Log.global.warn("Deadline violation occurred!");
+      Log.globalLogger.warn("Deadline violation occurred!");
     }
   ) {}
 

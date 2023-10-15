@@ -1,4 +1,4 @@
-import {TimeUnit, TimeValue, LogLevel} from "./internal";
+import {TimeUnit, TimeValue, Log} from "./internal";
 
 // ---------------------------------------------------------------------//
 // Command Line Arguments Helper Functions                             //
@@ -9,10 +9,10 @@ import {TimeUnit, TimeValue, LogLevel} from "./internal";
  * Returns null if the input is malformed.
  * @param logging the raw command line argument
  */
-export function loggingCLAType(logging: string): LogLevel | null {
-  if (logging in LogLevel) {
-    type LevelString = keyof typeof LogLevel;
-    return LogLevel[logging as LevelString];
+export function loggingCLAType(logging: string): Log.LogLevel | null {
+  if (logging in Log.LogLevel) {
+    type LevelString = keyof typeof Log.LogLevel;
+    return Log.LogLevel[logging as LevelString];
   } else {
     return null;
   }
@@ -94,7 +94,7 @@ export interface ProcessedCommandLineArgs {
   keepalive: boolean | undefined;
   advanceMessageInterval: TimeValue | undefined;
   timeout: TimeValue | null | undefined;
-  logging: LogLevel | undefined;
+  logging: Log.LogLevel | undefined;
   id: string | undefined;
   help: boolean;
 }

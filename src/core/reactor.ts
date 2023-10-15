@@ -48,7 +48,7 @@ import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
 
 // Set the default log level.
-Log.global.level = Log.levels.ERROR;
+Log.setLevel(Log.LogLevel.ERROR);
 
 // --------------------------------------------------------------------------//
 // Interfaces                                                               //
@@ -784,7 +784,7 @@ export abstract class Reactor extends Component {
     react: (this: ReactionSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late: (this: ReactionSandbox, ...args: ArgList<T>) => void = () => {
-      Log.global.warn("Deadline violation occurred!");
+      Log.globalLogger.warn("Deadline violation occurred!");
     }
   ): void {
     const calleePorts = trigs.filter((trig) => trig instanceof CalleePort);
@@ -843,7 +843,7 @@ export abstract class Reactor extends Component {
     react: (this: MutationSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
     late: (this: MutationSandbox, ...args: ArgList<T>) => void = () => {
-      Log.global.warn("Deadline violation occurred!");
+      Log.globalLogger.warn("Deadline violation occurred!");
     }
   ): void {
     const mutation = new Mutation(
@@ -2296,7 +2296,7 @@ export class App extends Reactor {
         throw e;
       }
     }
-    Log.global.debug("Finished handling all events at current time.");
+    Log.globalLogger.debug("Finished handling all events at current time.");
     return true;
   }
 
@@ -2447,19 +2447,19 @@ export class App extends Reactor {
       this._finish();
     } else {
       if (nextEvent != null) {
-        Log.global.debug("Event queue not empty.");
+        Log.globalLogger.debug("Event queue not empty.");
         this._setAlarmOrYield(nextEvent.tag);
       } else {
         // The queue is empty, and no end of execution has been specified.
         if (this._keepAlive) {
           // Keep alive: snooze and wake up later.
-          Log.global.debug("Going to sleep.");
+          Log.globalLogger.debug("Going to sleep.");
           this.snooze
             .asSchedulable(this._getKey(this.snooze))
             .schedule(this._advanceMessageInterval, this._currentTag);
         } else {
           // Don't keep alive: initiate shutdown.
-          Log.global.debug("Initiating shutdown.");
+          Log.globalLogger.debug("Initiating shutdown.");
           this._shutdown();
         }
       }
@@ -2544,7 +2544,7 @@ export class App extends Reactor {
 
       this.schedulable(this.shutdown).schedule(0, null);
     } else {
-      Log.global.debug(
+      Log.globalLogger.debug(
         "Ignoring App._shutdown() call after shutdown has already started."
       );
     }
@@ -2615,9 +2615,9 @@ export class App extends Reactor {
   protected _analyzeDependencies(): void {
     Log.info(this, () => Log.hr);
     const initStart = getCurrentPhysicalTime();
-    Log.global.info(">>> Initializing");
+    Log.globalLogger.info(">>> Initializing");
 
-    Log.global.debug("Initiating startup sequence.");
+    Log.globalLogger.debug("Initiating startup sequence.");
 
     // Obtain the precedence graph, ensure it has no cycles,
     // and assign a priority to each reaction in the graph.
@@ -2634,7 +2634,7 @@ export class App extends Reactor {
     Log.debug(this, () => "After collapse: " + collapsed.toString());
 
     if (collapsed.updatePriorities(true)) {
-      Log.global.debug("No cycles.");
+      Log.globalLogger.debug("No cycles.");
     } else {
       throw new Error("Cycle in reaction graph.");
     }

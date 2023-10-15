@@ -3,7 +3,6 @@ import type {Reactor} from "../src/core/internal";
 import {
   App,
   Log,
-  LogLevel,
   loggingCLAType,
   booleanCLAType,
   stringCLAType,
@@ -26,9 +25,9 @@ describe("Logger functions", function () {
 
 describe("Test for Logger", () => {
   it("DEBUG Log", () => {
-    Log.global.level = LogLevel.DEBUG;
+    Log.setLevel(Log.LogLevel.DEBUG);
 
-    console.log("Log level is " + Log.global.level);
+    console.log("Log level is " + Log.globalLogger.level);
     Log.getInstance("test module");
     Log.debug(null, () => "test");
     Log.debug(null, () => "test", "test module");
@@ -65,7 +64,7 @@ describe("Test for Logger", () => {
     expect(Log.log).toHaveBeenCalledTimes(2);
     expect(Log.warn).toHaveBeenCalledTimes(2);
 
-    console.log(Log.global.level);
+    console.log(Log.globalLogger.level);
   });
 });
 
@@ -75,7 +74,7 @@ describe("Command Line Arguments Helper Functions Tests", () => {
     expect(loggingCLAType("")).toBeNull;
   });
   test("log level check", () => {
-    expect(loggingCLAType("ERROR")).toBe(1);
+    expect(loggingCLAType("ERROR")).toBe(Log.LogLevel.ERROR.valueOf());
   });
   test("boolean test for command line argument parsing", () => {
     expect(booleanCLAType("true")).toBe(true);

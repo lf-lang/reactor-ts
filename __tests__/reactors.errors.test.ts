@@ -6,8 +6,7 @@ import {
   InPort,
   TimeUnit,
   TimeValue,
-  Log,
-  LogLevel
+  Log
 } from "../src/core/internal";
 
 class R extends Reactor {
@@ -49,7 +48,7 @@ class R extends Reactor {
 }
 
 describe("Testing Error Cases", function () {
-  Log.global.level = LogLevel.DEBUG;
+  Log.setLevel(Log.LogLevel.DEBUG);
 
   it("Multiple reactions for a callee port", () => {
     var parent = new App();
