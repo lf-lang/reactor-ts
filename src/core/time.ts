@@ -13,15 +13,10 @@ export enum TimeUnit {
   usec = 1000,
   msec = 1000000,
   sec = 1000000000,
-  secs = 1000000000,
   minute = 60000000000,
-  minutes = 60000000000,
   hour = 3600000000000,
-  hours = 3600000000000,
   day = 86400000000000,
-  days = 86400000000000,
-  week = 604800000000000,
-  weeks = 604800000000000
+  week = 604800000000000
 }
 
 /**
@@ -134,7 +129,7 @@ export class TimeValue {
     let seconds = this.seconds + other.seconds;
     let nanoseconds = this.nanoseconds + other.nanoseconds;
 
-    if (nanoseconds >= TimeUnit.sec) {
+    if (nanoseconds >= TimeUnit.sec.valueOf()) {
       // Carry the second.
       seconds += 1;
       nanoseconds -= TimeUnit.sec;
@@ -175,7 +170,7 @@ export class TimeValue {
     let seconds = this.seconds * factor;
     let nanoseconds = this.nanoseconds * factor;
 
-    if (nanoseconds >= TimeUnit.sec) {
+    if (nanoseconds >= TimeUnit.sec.valueOf()) {
       // Carry seconds.
       const carry = Math.floor(nanoseconds / TimeUnit.sec);
       seconds += carry;
@@ -306,7 +301,7 @@ export class TimeValue {
     } else if (this.seconds === Number.MAX_SAFE_INTEGER) {
       buff.writeBigUInt64LE(BigInt(0x7fffffffffffffffn), 0);
     } else {
-      const billion = BigInt(TimeUnit.secs);
+      const billion = BigInt(TimeUnit.sec);
       const bigTime = BigInt(this.nanoseconds) + BigInt(this.seconds) * billion;
 
       // Ensure the TimeValue fits into a 64 unsigned integer.
@@ -327,7 +322,7 @@ export class TimeValue {
    * @param buffer A 64 bit unsigned integer. Little endian.
    */
   public static fromBinary(buffer: Buffer): TimeValue {
-    const billion = BigInt(TimeUnit.secs);
+    const billion = BigInt(TimeUnit.sec);
 
     // To avoid overflow and floating point errors, work with BigInts.
     const bigTime = buffer.readBigUInt64LE(0);
@@ -362,7 +357,7 @@ export class TimeValue {
       throw new Error("Negative time values are illegal.");
     }
 
-    const billion = BigInt(TimeUnit.secs);
+    const billion = BigInt(TimeUnit.sec);
 
     // To avoid overflow and floating point errors, work with BigInts.
     const bigT = BigInt(value) * BigInt(unit);
