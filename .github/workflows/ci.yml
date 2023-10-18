@@ -33,6 +33,10 @@ jobs:
         with: 
           path: "reactor-ts"
           fetch-depth: 0
+      - name: Check for PR Magic Reference, and set LF reference if one exists
+        uses: actions/github-script@v6
+        if: ${{ github.event_name }} == "pull_request"
+        
       - name: Read lingua-franca-ref.txt
         run: echo "lingua-franca-ref=$(cat ./reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
