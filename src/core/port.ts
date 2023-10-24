@@ -79,6 +79,10 @@ export abstract class WritablePort<T> implements ReadWrite<T> {
   abstract getPort(): IOPort<T>;
 }
 
+export abstract class ReadablePort<T> implements Read<T> {
+  abstract get(): T | undefined;
+}
+
 export abstract class WritableMultiPort<T> implements MultiReadWrite<T> {
   abstract get(index: number): T | undefined;
   abstract set(index: number, value: T): void;
@@ -103,7 +107,7 @@ export abstract class IOPort<T> extends Port<T> {
    * Return the value set to this port. Return `Absent` if the connected
    * output did not have its value set at the current logical time.
    */
-  public get(): T | Absent {
+  public _get(): T | Absent {
     if (this.isPresent()) {
       return this.value;
     } else {
@@ -127,6 +131,10 @@ export abstract class IOPort<T> extends Port<T> {
       "Referenced port is out of scope: " + this._getFullyQualifiedName()
     ); // FIXME: adjust messages for other methods as well
     // FIXME: we could potentially do this for reads/triggers as well just for scope rule enforcement
+  }
+
+  public asReadable(): ReadablePort<T> {
+    return this.writer;
   }
 
   /**
@@ -163,7 +171,7 @@ export abstract class IOPort<T> extends Port<T> {
     }
 
     public get(): T | Absent {
-      return this.port.get();
+      return this.port._get();
     }
 
     public getPort(): IOPort<T> {
@@ -173,6 +181,20 @@ export abstract class IOPort<T> extends Port<T> {
     public toString(): string {
       return this.port.toString();
     }
+  })(this);
+
+  protected reader = new (class implements ReadablePort<T>{
+    constructor(private readonly port: IOPort<T>) {
+    }
+
+    public get(): T | Absent {
+      return this.port._get();
+    }
+
+    public getPort(): IOPort<T> {
+      return this.port;
+    }
+
   })(this);
 
   /**
@@ -194,7 +216,7 @@ export abstract class IOPort<T> extends Port<T> {
     addReceiver(port: WritablePort<T>): void {
       this.port.receivers.add(port);
       if (this.port.runtime.isRunning()) {
-        const val = this.port.get();
+        const val = this.port._get();
         if (val !== undefined) {
           port.set(val);
         }

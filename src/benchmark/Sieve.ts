@@ -63,7 +63,7 @@ class Filter extends Reactor {
     this.addMutation(
       [this.inp],
       [
-        this.inp,
+        this.readable(this.inp),
         this.writable(this.out),
         this.out.asConnectable(),
         this.startPrime,

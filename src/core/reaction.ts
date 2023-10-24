@@ -6,7 +6,8 @@ import type {
   Reactor,
   TimeValue,
   ArgList,
-  Variable
+  Variable,
+  Trigger
 } from "./internal";
 import {Log, Timer, Tag, Startup} from "./internal";
 
@@ -61,7 +62,7 @@ export class Reaction<T extends Variable[]>
   constructor(
     private readonly reactor: Reactor,
     private readonly sandbox: ReactionSandbox,
-    readonly trigs: Variable[],
+    readonly trigs: Trigger[] | Trigger[][],
     readonly args: [...ArgList<T>],
     private readonly react: (...args: ArgList<T>) => void,
     private deadline?: TimeValue,
@@ -195,7 +196,7 @@ export class Mutation<T extends Variable[]> extends Reaction<T> {
   constructor(
     __parent__: Reactor,
     sandbox: MutationSandbox,
-    trigs: Variable[],
+    trigs: Trigger[] | Trigger[][],
     args: [...ArgList<T>],
     react: (...args: ArgList<T>) => void,
     deadline?: TimeValue,
