@@ -43,7 +43,8 @@ import {
   Shutdown,
   WritableMultiPort,
   Dummy,
-  ConnectablePort
+  ConnectablePort,
+  ReadablePort
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
@@ -599,6 +600,10 @@ export abstract class Reactor extends Component {
     return port.asWritable(this._getKey(port));
   }
 
+  public readable<T>(port: IOPort<T>) : ReadablePort<T> {
+    return port.asReadable();
+  }
+
   /**
    * Return the index of the reaction given as an argument.
    * @param reaction The reaction to return the index of.
@@ -822,7 +827,7 @@ export abstract class Reactor extends Component {
    * @param late
    */
   protected addReaction<T extends Variable[]>(
-    trigs: Variable[],
+    trigs: Trigger[] | Trigger[][],
     args: [...ArgList<T>],
     react: (this: ReactionSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
@@ -881,7 +886,7 @@ export abstract class Reactor extends Component {
   }
 
   protected addMutation<T extends Variable[]>(
-    trigs: Variable[],
+    trigs: Trigger[] | Trigger[][],
     args: [...ArgList<T>],
     react: (this: MutationSandbox, ...args: ArgList<T>) => void,
     deadline?: TimeValue,
