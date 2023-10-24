@@ -704,12 +704,12 @@ export abstract class Reactor extends Component {
     const effects = new Set<Port<unknown>>();
 
     for (const a of reaction.args) {
-      if (a instanceof IOPort) {
+      if (a instanceof ReadablePort) {
         this._dependencyGraph.addEdge(
-          a,
+          a.getPort(),
           reaction as unknown as Reaction<Variable[]>
         );
-        sources.add(a);
+        sources.add(a.getPort());
       } else if (a instanceof MultiPort) {
         a.channels().forEach((channel) => {
           this._dependencyGraph.addEdge(
@@ -1302,7 +1302,7 @@ export abstract class Reactor extends Component {
     src
       .getManager(this._getKey(src))
       .addReceiver(writer as unknown as WritablePort<S>);
-    const val = src.get();
+    const val = this.readable(src).get();
     if (this._runtime.isRunning() && val !== undefined) {
       writer.set(val);
     }

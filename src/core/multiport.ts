@@ -48,7 +48,7 @@ export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
   public static values<T>(ports: Array<IOPort<T>>): Array<T | Absent> {
     const values = new Array<T | Absent>(ports.length);
     for (let i = 0; i < values.length; i++) {
-      values[i] = ports[i].get();
+      values[i] = ports[i]._get();
     }
     return values;
   }
@@ -82,7 +82,7 @@ export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
 
   /** @inheritdoc */
   public get(index: number): T | undefined {
-    return this._channels[index].get();
+    return this._channels[index]._get();
   }
 
   /** @inheritdoc */
@@ -178,7 +178,7 @@ export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
 
     /** @inheritdoc */
     public get(index: number): T | undefined {
-      return this.port._channels[index].get();
+      return this.port._channels[index]._get();
     }
 
     /** @inheritdoc */
