@@ -489,13 +489,6 @@ export abstract class Reactor extends Component {
     }
 
     /**
-     * Return the reactor containing the mutation using this sandbox.
-     */
-    public getReactor(): Reactor {
-      return this.reactor;
-    }
-
-    /**
      * Mark the given reactor for deletion.
      *
      * @param reactor
@@ -1898,8 +1891,6 @@ export interface MutationSandbox extends ReactionSandbox {
 
   delete: (reactor: Reactor) => void;
 
-  getReactor: () => Reactor; // Container
-
   addChild: <R extends Reactor, G extends unknown[]>(
     constructor: new (container: Reactor, ...args: G) => R,
     ...args: G
@@ -1909,9 +1900,6 @@ export interface MutationSandbox extends ReactionSandbox {
     constructor: new (container: Reactor, ...args: G) => R,
     ...args: G
   ) => R;
-
-  // FIXME:
-  // forkJoin(constructor: new () => Reactor, ): void;
 }
 
 export interface ReactionSandbox {
