@@ -81,6 +81,7 @@ export abstract class WritablePort<T> implements ReadWrite<T> {
 
 export abstract class ReadablePort<T> implements Read<T> {
   abstract get(): T | undefined;
+  abstract getPort(): IOPort<T>;
 }
 
 export abstract class WritableMultiPort<T> implements MultiReadWrite<T> {
@@ -134,7 +135,7 @@ export abstract class IOPort<T> extends Port<T> {
   }
 
   public asReadable(): ReadablePort<T> {
-    return this.writer;
+    return this.reader;
   }
 
   /**
