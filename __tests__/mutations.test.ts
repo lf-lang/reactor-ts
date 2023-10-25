@@ -247,3 +247,101 @@ describe("Test the result from refactor-canconnect: referencing ConnectablePort 
     tapp._start();
   });
 });
+
+/* 
++-----------+      +------------------------+             
+| Useless   |      |    +--------------+    |             
+| Reactor   |------>--->|   Mutation 1 |    |             
+|           |      |    +--------------+    |             
++-----------+      | Mutation   |           |             
+                   | Holder     \           |             
+                   |    +--------v-----+    |             
+                   |    |   Mutation 2 |    |             
+                   |    +--------------+    |             
+                   +------------------------+              
+*/
+
+describe("Mutation phase 1: a mutation should not be able to make connection that directly lays on their upstream", () => {
+  class MutationHolder extends Reactor {
+    public inport: InPort<number>;
+    public mut1inport: InPort<number>;
+    public mut2inport: InPort<number>;
+    public trigger: InPort<boolean>;
+
+    constructor(parent: Reactor) {
+      super(parent);
+
+      this.inport = new InPort(this);
+      this.mut1inport = new InPort(this);
+      this.mut2inport = new InPort(this);
+      this.trigger = new InPort(this);
+
+      // M1
+      this.addMutation(
+        [this.trigger, this.mut1inport],
+        [
+          this.inport.asConnectable(),
+          this.mut1inport.asConnectable(),
+          this.mut2inport.asConnectable()
+        ],
+        function (this, inp, m1, m2) {
+          expect(() => {
+            this.connect(inp, m1);
+          }).toThrow();
+          expect(() => {
+            this.connect(inp, m2);
+          }).toReturn();
+        }
+      );
+
+      // M2
+      this.addMutation(
+        [this.trigger, this.mut2inport],
+        [
+          this.inport.asConnectable(),
+          this.mut1inport.asConnectable(),
+          this.mut2inport.asConnectable()
+        ],
+        function (this, inp, m1, m2) {
+          expect(() => {
+            this.connect(inp, m1);
+          }).toThrow();
+          expect(() => {
+            this.connect(inp, m2);
+          }).toThrow();
+        }
+      );
+    }
+  }
+
+  class TestApp extends App {
+    public child = new MutationHolder(this);
+    public trigger = new OutPort<boolean>(this);
+
+    constructor(done: () => void) {
+      super(undefined, undefined, undefined, () => {
+        done();
+      });
+
+      this.addMutation(
+        [this.startup],
+        [this.trigger.asConnectable(), this.child.trigger.asConnectable()],
+        function (this, myTrigger, childTrigger) {
+          this.connect(myTrigger, childTrigger);
+        }
+      );
+      this.addReaction(
+        [this.startup],
+        [this.writable(this.trigger)],
+        function (this, trigger) {
+          trigger.set(true);
+        }
+      );
+    }
+  }
+
+  test("test mutation", (done) => {
+    const tapp = new TestApp(done);
+    tapp._start();
+  });
+});
