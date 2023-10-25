@@ -23,7 +23,36 @@ jobs:
         if: ${{ github.event_name }} == "pull_request"
         with:
           script: |
-            console.log(context.payload.pull_request.body)
+            function analyzeMagic(str) {
+              if (str == null) {
+                  core.setOutput("hasMagic", "false");
+                  return;
+              }
+              ;
+              const line = str.split("\n", 1)[0];
+              console.log(line);
+              if (line.substring(0, 3) !== "!##" || !line.includes("=")) {
+                  core.setOutput("hasMagic", "false");
+                  return;
+              }
+              const seperator = line.indexOf("=");
+              const directive = line.substring(3, seperator);
+              const value = line.substring(seperator + 1);
+              console.log(directive, value);
+              switch (directive) {
+                case "lf-ref": {
+                    core.setOutput("hasMagic", "true");
+                    core.setOutput("lf-ref", value);
+                    break;
+                }
+                default: {
+                    console.log(`Invalid directive ${directive}`);
+                    core.setOutput("hasMagic", "false");
+                }
+              }
+            }
+            
+            analyzeMagic(context.payload.pull_request.body);
       - name: Read lingua-franca-ref.txt
         run: echo "lingua-franca-ref=$(cat ./reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
