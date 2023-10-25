@@ -38,7 +38,7 @@ jobs:
         if: ${{ github.event_name }} == "pull_request"
         with:
           script: |
-            console.log(payload.pull_request.body)
+            console.log(context.payload.pull_request.body)
       - name: Read lingua-franca-ref.txt
         run: echo "lingua-franca-ref=$(cat ./reactor-ts/lingua-franca-ref.txt)" >> $GITHUB_ENV
       - name: Check out lingua-franca repository
