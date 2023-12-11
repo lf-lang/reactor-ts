@@ -1929,7 +1929,7 @@ export class FederatedApp extends App {
     this.sendRTINextEventTag(this.util.getCurrentTag());
 
     if (
-      this.upstreamFedIDs.length == 0 ||
+      this.upstreamFedIDs.length === 0 ||
       this.greatestTimeAdvanceGrant.isSimultaneousWith(this.util.getStartTag())
     ) {
       // PTAG for the start tag is already received, call _next immediately.
