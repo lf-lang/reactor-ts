@@ -23,7 +23,7 @@ class TwoInTwoOut extends Reactor {
       super(container, 4);
       test("make port writable with invalid key", () => {
         expect(() => {
-          this.asWritable(Symbol());
+          this.asWritable(new App());
         }).toThrowError(
           `Referenced port is out of scope: myApp.${container._getName()}.foo`
         );
@@ -82,7 +82,7 @@ class TwoInTwoOut extends Reactor {
     );
     test("throw error on invalid access to manager", () => {
       expect(() => {
-        this.inp.getManager(Symbol());
+        this.inp.getManager(new App());
       }).toThrowError("Unable to grant access to manager.");
     });
     test("test for present channels prior to running", () => {

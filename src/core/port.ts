@@ -120,8 +120,8 @@ export abstract class IOPort<T> extends Port<T> {
    * @param key
    */
   public asWritable(reactor: Reactor): WritablePort<T> {
-    if (this._getContainer() === reactor) {
-      return this.writer;
+    if (this._isInScopeOf(reactor)) {
+        return this.writer;
     }
     throw Error(
       "Referenced port is out of scope: " + this._getFullyQualifiedName()
@@ -135,7 +135,7 @@ export abstract class IOPort<T> extends Port<T> {
    * (or the container thereof).
    */
   public getManager(reactor: Reactor): IOPortManager<T> {
-    if (this._getContainer() === reactor) {
+    if (this._isInScopeOf(reactor)) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");

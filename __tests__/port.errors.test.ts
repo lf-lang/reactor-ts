@@ -18,14 +18,14 @@ class R1 extends Reactor {
       });
       test("make port writable with invalid key", () => {
         expect(() => {
-          this.asWritable(Symbol());
+          this.asWritable(new App());
         }).toThrowError(
           "Referenced port is out of scope: " + this._getFullyQualifiedName()
         );
       });
       test("error on getting manager without valid key", () => {
         expect(() => {
-          this.getManager(Symbol());
+          this.getManager(new App());
         }).toThrowError("Unable to grant access to manager");
       });
     }

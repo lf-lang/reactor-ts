@@ -1,5 +1,5 @@
 import type {Runtime} from "./internal";
-import {Reactor, App, MultiPort, IOPort, Bank} from "./internal";
+import {Reactor, App, MultiPort, IOPort, Bank, Action} from "./internal";
 
 /**
  * Base class for named objects embedded in a hierarchy of reactors. Each
@@ -212,5 +212,15 @@ export abstract class Component {
    */
   protected _getContainer(): Reactor {
     return this._container;
+  }
+
+  protected _isInScopeOf(reactor: Reactor): boolean {
+    if (this._getContainer() === reactor) {
+      return true;
+    }
+    if (!(this instanceof Action) && this._getContainer()._getContainer() === reactor) {
+        return true;
+    }
+    return false;
   }
 }
