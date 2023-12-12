@@ -31,7 +31,7 @@ export abstract class Trigger extends Component {
    * wrong key is supplied, return undefined.
    * @param key The private key embedded in this trigger.
    */
-  abstract getManager(key: symbol | undefined): TriggerManager;
+  abstract getManager(reactor: Reactor): TriggerManager;
 
   /**
    * Return whether or not this trigger is present.
@@ -78,8 +78,8 @@ export abstract class ScheduledTrigger<T> extends Trigger {
     }
   }
 
-  public getManager(key: symbol | undefined): TriggerManager {
-    if (this._key === key) {
+  public getManager(reactor: Reactor): TriggerManager {
+    if (this._getContainer() === reactor) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");

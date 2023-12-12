@@ -119,8 +119,8 @@ export abstract class IOPort<T> extends Port<T> {
    * Only the holder of the key may obtain a writable port.
    * @param key
    */
-  public asWritable(key: symbol | undefined): WritablePort<T> {
-    if (this._key === key) {
+  public asWritable(reactor: Reactor): WritablePort<T> {
+    if (this._getContainer() === reactor) {
       return this.writer;
     }
     throw Error(
@@ -134,8 +134,8 @@ export abstract class IOPort<T> extends Port<T> {
    * @param container Reference to the container of this port
    * (or the container thereof).
    */
-  public getManager(key: symbol | undefined): IOPortManager<T> {
-    if (this._key === key) {
+  public getManager(reactor: Reactor): IOPortManager<T> {
+    if (this._getContainer() === reactor) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");

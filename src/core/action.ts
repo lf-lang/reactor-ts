@@ -45,15 +45,15 @@ export class Action<T> extends ScheduledTrigger<T> implements Read<T> {
     }
   }
 
-  public asSchedulable(key: symbol | undefined): Sched<T> {
-    if (this._key === key) {
+  public asSchedulable(reactor: Reactor): Sched<T> {
+    if (this._getContainer() === reactor) {
       return this.scheduler;
     }
     throw Error("Invalid reference to container.");
   }
 
-  public getManager(key: symbol | undefined): TriggerManager {
-    if (this._key === key) {
+  public getManager(reactor: Reactor): TriggerManager {
+    if (this._getContainer() === reactor) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");

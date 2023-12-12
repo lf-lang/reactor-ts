@@ -71,8 +71,8 @@ export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
    * Obtain a writable version of this port, provided that the caller holds the required key.
    * @param key
    */
-  public asWritable(key: symbol | undefined): WritableMultiPort<T> {
-    if (this._key === key) {
+  public asWritable(reactor: Reactor): WritableMultiPort<T> {
+    if (this._getContainer() === reactor) {
       return this.writer;
     }
     throw Error(
@@ -86,8 +86,8 @@ export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
   }
 
   /** @inheritdoc */
-  getManager(key: symbol | undefined): TriggerManager {
-    if (this._key === key) {
+  getManager(reactor: Reactor): TriggerManager {
+    if (this._getContainer() === reactor) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");
@@ -134,7 +134,7 @@ export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
     addReaction(reaction: Reaction<Variable[]>): void {
       this.port.channels().forEach((channel) => {
         channel
-          .getManager(this.getContainer()._getKey(channel))
+          .getManager(this.getContainer())
           .addReaction(reaction);
       });
     }
@@ -142,7 +142,7 @@ export abstract class MultiPort<T> extends Trigger implements MultiRead<T> {
     /** @inheritdoc */
     delReaction(reaction: Reaction<Variable[]>): void {
       this.port.channels().forEach((channel) => {
-        channel.getManager(this.port._key).delReaction(reaction);
+        channel.getManager(this.getContainer()).delReaction(reaction);
       });
     }
   })(this);

@@ -361,7 +361,7 @@ export class NetworkReceiver<T> extends NetworkReactor {
     networkInputAction: FederatePortAction<T>
   ): void {
     this.networkInputSchedAction = networkInputAction.asSchedulable(
-      this._getKey(networkInputAction)
+      this
     );
     this.networkInputActionOrigin = networkInputAction.origin;
   }

@@ -164,7 +164,7 @@ export abstract class Reactor extends Component {
    * Note: declare this class member before any other ones as they may
    * attempt to access it.
    */
-  private readonly _keyChain = new Map<Component, symbol>();
+  private readonly _keyChain = new Set<Component>();
 
   /**
    * This graph has in it all the dependencies implied by this container's
@@ -289,7 +289,7 @@ export abstract class Reactor extends Component {
     // Only add key if the component isn't a self-reference
     // and isn't already registered.
     if (component !== this && !this._keyChain.has(component)) {
-      this._keyChain.set(component, key);
+      this._keyChain.add(component);
     }
   }
 
@@ -315,7 +315,7 @@ export abstract class Reactor extends Component {
    * collection.
    */
   protected _unplug(): void {
-    this._getContainer()._deregister(this, this._key);
+    this._getContainer()._deregister(this);
   }
 
   /**
@@ -324,14 +324,8 @@ export abstract class Reactor extends Component {
    * @param reactor
    * @param key
    */
-  public _deregister(reactor: Reactor, key: symbol): void {
-    let found;
-    for (const v of this._keyChain.values()) {
-      if (v === key) {
-        found = true;
-        break;
-      }
-    }
+  public _deregister(reactor: Reactor): void {
+    const found = this._keyChain.has(reactor);
     if (found ?? false) {
       this._keyChain.delete(reactor);
       this._deleteConnections(reactor);
@@ -373,32 +367,6 @@ export abstract class Reactor extends Component {
     }
     if (index >= 0) {
       return all[index];
-    }
-  }
-
-  /**
-   * If the given component is owned by this reactor, look up its key and
-   * return it. Otherwise, if a key has been provided, and it matches the
-   * key of this reactor, also look up the component's key and return it.
-   * Otherwise, if the component is owned by a reactor that is owned by
-   * this reactor, request the component's key from that reactor and return
-   * it. If the component is an action, this request is not honored because
-   * actions are never supposed to be accessed across levels of hierarchy.
-   * @param component The component to look up the key for.
-   * @param key The key that verifies the containment relation between this
-   * reactor and the component, with at most one level of indirection.
-   */
-  public _getKey(component: Trigger, key?: symbol): symbol | undefined {
-    if (component._isContainedBy(this) || this._key === key) {
-      return this._keyChain.get(component);
-    } else if (
-      !(component instanceof Action) &&
-      component._isContainedByContainerOf(this)
-    ) {
-      const owner = component.getContainer();
-      if (owner !== null) {
-        return owner._getKey(component, this._keyChain.get(owner));
-      }
     }
   }
 
@@ -577,11 +545,11 @@ export abstract class Reactor extends Component {
   //
 
   public allWritable<T>(port: MultiPort<T>): WritableMultiPort<T> {
-    return port.asWritable(this._getKey(port));
+    return port.asWritable(this);
   }
 
   public writable<T>(port: IOPort<T>): WritablePort<T> {
-    return port.asWritable(this._getKey(port));
+    return port.asWritable(this);
   }
 
   /**
@@ -603,7 +571,7 @@ export abstract class Reactor extends Component {
   }
 
   protected schedulable<T>(action: Action<T>): Sched<T> {
-    return action.asSchedulable(this._getKey(action));
+    return action.asSchedulable(this);
   }
 
   private _recordDeps<T extends Variable[]>(reaction: Reaction<T>): void {
@@ -625,14 +593,14 @@ export abstract class Reactor extends Component {
     for (const t of reaction.trigs) {
       // Link the trigger to the reaction.
       if (t instanceof Trigger) {
-        t.getManager(this._getKey(t)).addReaction(
+        t.getManager(this).addReaction(
           reaction as unknown as Reaction<Variable[]>
         );
       } else if (t instanceof Array) {
         t.forEach((trigger) => {
           if (trigger instanceof Trigger) {
             trigger
-              .getManager(this._getKey(trigger))
+              .getManager(this)
               .addReaction(reaction as unknown as Reaction<Variable[]>);
           } else {
             throw new Error("Non-Trigger included in Triggers list.");
@@ -838,7 +806,7 @@ export abstract class Reactor extends Component {
       // Let the last caller point to the reaction that precedes this one.
       // This lets the first caller depend on it.
       port
-        .getManager(this._getKey(port))
+        .getManager(this)
         .setLastCaller(this._getLastReactionOrMutation());
       this._reactions.push(procedure as unknown as Procedure<Variable[]>);
       // FIXME: set priority manually if this happens at runtime.
@@ -914,8 +882,8 @@ export abstract class Reactor extends Component {
     // of the procedure (excluding the callee port itself).
     const calleePorts = this._findOwnCalleePorts();
     for (const p of calleePorts) {
-      const procedure = p.getManager(this._getKey(p)).getProcedure();
-      const lastCaller = p.getManager(this._getKey(p)).getLastCaller();
+      const procedure = p.getManager(this).getProcedure();
+      const lastCaller = p.getManager(this).getLastCaller();
       if (procedure != null && lastCaller != null) {
         const effects = this._dependencyGraph.getDownstreamNeighbors(procedure);
         for (const e of effects) {
@@ -1278,9 +1246,9 @@ export abstract class Reactor extends Component {
     // Add dependency implied by connection to local graph.
     this._dependencyGraph.addEdge(src, dst);
     // Register receiver for value propagation.
-    const writer = dst.asWritable(this._getKey(dst));
+    const writer = dst.asWritable(this);
     src
-      .getManager(this._getKey(src))
+      .getManager(this)
       .addReceiver(writer as unknown as WritablePort<S>);
     const val = src.get();
     if (this._runtime.isRunning() && val !== undefined) {
@@ -1395,8 +1363,8 @@ export abstract class Reactor extends Component {
       src.remotePort = dst as unknown as CalleePort<A, R>;
       // Register the caller in the callee reactor so that it can
       // establish dependencies on the callers.
-      const calleeManager = dst.getManager(this._getKey(dst));
-      const callerManager = src.getManager(this._getKey(src));
+      const calleeManager = dst.getManager(this);
+      const callerManager = src.getManager(this);
       const container = callerManager.getContainer();
       const callers = new Set<Reaction<Variable[]>>();
       container._dependencyGraph.getDownstreamNeighbors(src).forEach((dep) => {
@@ -1536,15 +1504,15 @@ export abstract class Reactor extends Component {
   ): void {
     Log.debug(this, () => `disconnecting ${src} and ${dst}`);
     if (dst instanceof IOPort) {
-      const writer = dst.asWritable(this._getKey(dst));
-      src.getManager(this._getKey(src)).delReceiver(writer);
+      const writer = dst.asWritable(this);
+      src.getManager(this).delReceiver(writer);
       this._dependencyGraph.removeEdge(src, dst);
     } else {
       const nodes = this._dependencyGraph.getDownstreamNeighbors(src);
       for (const node of nodes) {
         if (node instanceof IOPort) {
-          const writer = node.asWritable(this._getKey(node));
-          src.getManager(this._getKey(src)).delReceiver(writer);
+          const writer = node.asWritable(this);
+          src.getManager(this).delReceiver(writer);
           this._dependencyGraph.removeEdge(src, node);
         }
       }
@@ -1651,8 +1619,8 @@ export class CallerPort<A, R> extends Port<R> implements Write<A>, Read<R> {
    * @param container Reference to the container of this port
    * (or the container thereof).
    */
-  public getManager(key: symbol | undefined): TriggerManager {
-    if (this._key === key) {
+  public getManager(reactor: Reactor): TriggerManager {
+    if (this._getContainer() === reactor) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");
@@ -1723,8 +1691,8 @@ export class CalleePort<A, R> extends Port<A> implements Read<A>, Write<R> {
    *
    * @param key
    */
-  public getManager(key: symbol | undefined): CalleeManager {
-    if (this._key === key) {
+  public getManager(reactor: Reactor): CalleeManager {
+    if (this._getContainer() === reactor) {
       return this.manager;
     }
     throw Error("Unable to grant access to manager.");
@@ -2511,7 +2479,7 @@ export class App extends Reactor {
           // Keep alive: snooze and wake up later.
           Log.globalLogger.debug("Going to sleep.");
           this.snooze
-            .asSchedulable(this._getKey(this.snooze))
+            .asSchedulable(this)
             .schedule(this._advanceMessageInterval, this._currentTag);
         } else {
           // Don't keep alive: initiate shutdown.
