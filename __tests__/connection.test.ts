@@ -5,7 +5,8 @@ import {
   OutPort,
   InPort,
   TimeUnit,
-  TimeValue
+  TimeValue,
+  CanConnectResult
 } from "../src/core/internal";
 
 describe("Check canConnect", () => {
@@ -30,19 +31,19 @@ describe("Check canConnect", () => {
 
       it("canConnect success out->in", () => {
         expect(this.canConnect(this.source.out, this.destination.in)).toBe(
-          true
+          CanConnectResult.SUCCESS
         );
       });
 
       it("canConnect success out->out", () => {
         expect(this.canConnect(this.source.out, this.destination.out)).toBe(
-          true
+          CanConnectResult.SUCCESS
         );
       });
 
       it("canConnect failure", () => {
         expect(this.canConnect(this.destination.in, this.source.out)).toBe(
-          false
+          CanConnectResult.NOT_IN_SCOPE
         );
       });
     }
