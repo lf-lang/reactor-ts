@@ -946,7 +946,7 @@ export abstract class Reactor extends Component {
   private _getOwnReactors(): Reactor[] {
     return Array.from(this._keyChain.keys()).filter(
       (it) => it instanceof Reactor
-    ) ;
+    );
   }
 
   /**
