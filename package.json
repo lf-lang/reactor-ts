@@ -11,8 +11,8 @@
         "@types/microtime": "^2.1.0",
         "@types/nanotimer": "^0.3.0",
         "@types/node": "^20.4.9",
-        "@types/uuid": "^9.0.2",
-        "command-line-args": "^5.2.1",
+        "@types/uuid": "^10.0.0",
+        "command-line-args": "^6.0.0",
         "command-line-usage": "^7.0.1",
         "microtime": "^3.1.1",
         "nanotimer": "^0.3.15",
@@ -29,7 +29,7 @@
         "prettier": "^3.0.1",
         "rimraf": "^5.0.1",
         "ts-jest": "^29.1.1",
-        "typedoc": "^0.25.1"
+        "typedoc": "^0.26.3"
     },
     "scripts": {
         "build": "npx tsc",
