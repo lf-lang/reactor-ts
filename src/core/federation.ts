@@ -248,6 +248,18 @@ enum RTIMessageTypes {
   MSG_TYPE_NEIGHBOR_STRUCTURE = 24,
 
   /**
+   * Byte identifying a downstream next event tag (DNET) message sent
+   * from the RTI in centralized coordination.
+   * The next eight bytes will be the timestamp.
+   * The next four bytes will be the microstep.
+   * This signal from the RTI tells the destination federate the latest tag that
+   * the federate can safely skip sending a next event tag (NET) signal.
+   * In other words, the federate doesn't have to send NET signals with tags
+   * earlier than or equal to this tag unless it cannot advance to its next event tag.
+   */
+  MSG_TYPE_DOWNSTREAM_NEXT_EVENT_TAG = 26,
+
+  /**
    * Byte identifying an acknowledgment of the previously received MSG_TYPE_FED_IDS message
    * sent by the RTI to the federate
    * with a payload indicating the UDP port to use for clock synchronization.
@@ -1153,6 +1165,23 @@ class RTIClient extends EventEmitter {
           });
           this.emit("portAbsent", portID, intendedTag);
           bufferIndex += 17;
+          break;
+        }
+        case RTIMessageTypes.MSG_TYPE_DOWNSTREAM_NEXT_EVENT_TAG: {
+          // The next eight bytes are the timestamp.
+          // The next four bytes are the microstep.
+          Log.debug(this, () => {
+            return (
+              "Received an RTI MSG_TYPE_STOP_GRANTED. FIXME: No functionality has " +
+              "been implemented yet for a federate receiving a MSG_TYPE_STOP_GRANTED message " +
+              "from the RTI"
+            );
+          });
+          const tagBuffer = Buffer.alloc(12);
+          assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
+          const tag = Tag.fromBinary(tagBuffer);
+          // this.emit("downstreamNextEventTag", tag);
+          bufferIndex += 13;
           break;
         }
         case RTIMessageTypes.MSG_TYPE_ACK: {
