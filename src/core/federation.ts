@@ -1170,16 +1170,15 @@ class RTIClient extends EventEmitter {
         case RTIMessageTypes.MSG_TYPE_DOWNSTREAM_NEXT_EVENT_TAG: {
           // The next eight bytes are the timestamp.
           // The next four bytes are the microstep.
-          Log.debug(this, () => {
-            return (
-              "Received an RTI MSG_TYPE_STOP_GRANTED. FIXME: No functionality has " +
-              "been implemented yet for a federate receiving a MSG_TYPE_STOP_GRANTED message " +
-              "from the RTI"
-            );
-          });
           const tagBuffer = Buffer.alloc(12);
           assembledData.copy(tagBuffer, 0, bufferIndex + 1, bufferIndex + 13);
           const tag = Tag.fromBinary(tagBuffer);
+
+          Log.debug(this, () => {
+            return `Downstream next event tag (DNET) received from RTI for ${tag}.
+              FIXME: No functionality has been implemented yet for a federate receiving 
+              a MSG_TYPE_STOP_GRANTED message from the RTI`;
+          });
           // this.emit("downstreamNextEventTag", tag);
           bufferIndex += 13;
           break;
