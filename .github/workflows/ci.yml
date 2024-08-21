@@ -68,7 +68,7 @@ jobs:
         if: ${{ runner.os == 'macOS' || runner.os == 'Linux' }}
       - name: Perform Lingua Franca TypeScript tests
         run: |
-          ./gradlew targetTest -Ptarget=TypeScript -Druntime="file:/${{ github.workspace }}/reactor-ts"
+          ./gradlew targetTest -Ptarget=TypeScript -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.ref }}"
 
   lint:
     runs-on: ubuntu-latest
