@@ -558,7 +558,7 @@ class RTIClient extends EventEmitter {
     Log.debug(this, () => {
       return "Closing RTI connection by destroying and unrefing socket.";
     });
-    this.socket?.destroy();
+    this.socket?.end();
     this.socket?.unref(); // Allow the program to exit
   }
 
