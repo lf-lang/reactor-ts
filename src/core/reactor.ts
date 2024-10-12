@@ -944,9 +944,10 @@ export abstract class Reactor extends Component {
    * Return the reactors that this reactor owns.
    */
   private _getOwnReactors(): Reactor[] {
+    // eslint-disable-next-line
     return Array.from(this._keyChain.keys()).filter(
       (it) => it instanceof Reactor
-    );
+    ) as Reactor[];
   }
 
   /**
