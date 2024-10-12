@@ -1,6 +1,6 @@
 {
     "name": "@lf-lang/reactor-ts",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "description": "A reactor-oriented programming framework in TypeScript",
     "main": "lib/index.js",
     "types": "src",
