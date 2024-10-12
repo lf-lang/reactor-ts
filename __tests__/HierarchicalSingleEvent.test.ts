@@ -4,7 +4,8 @@ import {
   Parameter,
   OutPort,
   InPort,
-  TimeValue
+  TimeValue,
+  CanConnectResult
 } from "../src/core/internal";
 
 import {SingleEvent} from "../src/share/SingleEvent";
@@ -93,7 +94,7 @@ describe("HierarchicalSingleEvent", function () {
         seTest.seContainer.child.o,
         seTest.logContainer.child.i
       )
-    ).toBe(false);
+    ).toBe(CanConnectResult.NOT_IN_SCOPE);
 
     seTest._start();
   });

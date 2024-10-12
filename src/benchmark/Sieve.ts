@@ -1,5 +1,4 @@
 import {
-  type WritablePort,
   Parameter,
   InPort,
   OutPort,
@@ -66,11 +65,12 @@ class Filter extends Reactor {
       [
         this.inp,
         this.writable(this.out),
+        this.out.asConnectable(),
         this.startPrime,
         this.hasChild,
         this.localPrimes
       ],
-      function (this, inp, out, prime, hasChild, localPrimes) {
+      function (this, inp, outW, outC, prime, hasChild, localPrimes) {
         const p = inp.get();
         if (p !== undefined) {
           const seen = localPrimes.get();
@@ -96,14 +96,13 @@ class Filter extends Reactor {
                 // let x = this.create(Filter, [this.getReactor(), p])
                 // console.log("CREATED: " + x._getFullyQualifiedName())
                 // FIXME: weird hack. Maybe just accept writable ports as well?
-                const port = (out as unknown as WritablePort<number>).getPort();
-                this.connect(port, n.inp);
+                this.connect(outC, n.inp.asConnectable());
                 // FIXME: this updates the dependency graph, but it doesn't redo the topological sort
                 // For a pipeline like this one, it is not necessary, but in general it is.
                 // Can we avoid redoing the entire sort?
                 hasChild.set(true);
               } else {
-                out.set(p);
+                outW.set(p);
               }
             }
           }

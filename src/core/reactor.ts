@@ -42,7 +42,8 @@ import {
   Startup,
   Shutdown,
   WritableMultiPort,
-  Dummy
+  Dummy,
+  ConnectablePort
 } from "./internal";
 import {v4 as uuidv4} from "uuid";
 import {Bank} from "./bank";
@@ -59,6 +60,18 @@ Log.setLevel(Log.LogLevel.ERROR);
  */
 export interface Call<A, R> extends Write<A>, Read<R> {
   invoke: (args: A) => R | undefined;
+}
+
+export enum CanConnectResult {
+  SUCCESS = 0,
+  SELF_LOOP = "Source port and destination port are the same.",
+  DESTINATION_OCCUPIED = "Destination port is already occupied.",
+  DOWNSTREAM_WRITE_CONFLICT = "Write conflict: port is already occupied.",
+  NOT_IN_SCOPE = "Source and destination ports are not in scope.",
+  RT_CONNECTION_OUTSIDE_CONTAINER = "New connection is outside of container.",
+  RT_DIRECT_FEED_THROUGH = "New connection introduces direct feed through.",
+  RT_CYCLE = "New connection introduces cycle.",
+  MUTATION_CAUSALITY_LOOP = "New connection will change the causal effect of the mutation that triggered this connection."
 }
 
 /**
@@ -428,16 +441,31 @@ export abstract class Reactor extends Component {
      * @param src
      * @param dst
      */
+
+    public connect<R, S extends R>(
+      src: ConnectablePort<S>,
+      dst: ConnectablePort<R>
+    ): void;
     public connect<A extends T, R, T, S extends R>(
-      src: CallerPort<A, R> | IOPort<S>,
-      dst: CalleePort<T, S> | IOPort<R>
+      src: CallerPort<A, R>,
+      dst: CalleePort<T, S>
+    ): void;
+    public connect<A extends T, R, T, S extends R>(
+      ...[src, dst]:
+        | [ConnectablePort<S>, ConnectablePort<R>]
+        | [CallerPort<A, R>, CalleePort<T, S>]
     ): void {
       if (src instanceof CallerPort && dst instanceof CalleePort) {
         this.reactor._connectCall(src, dst);
-      } else if (src instanceof IOPort && dst instanceof IOPort) {
-        this.reactor._connect(src, dst);
+      } else if (
+        src instanceof ConnectablePort &&
+        dst instanceof ConnectablePort
+      ) {
+        this.reactor._connect(src.getPort(), dst.getPort());
       } else {
-        // ERROR
+        throw Error(
+          "Logically unreachable code: src and dst type mismatch, Caller(ee) port cannot be connected to IOPort."
+        );
       }
     }
 
@@ -1092,10 +1120,13 @@ export abstract class Reactor extends Component {
    * @param src The start point of a new connection.
    * @param dst The end point of a new connection.
    */
-  public canConnect<R, S extends R>(src: IOPort<S>, dst: IOPort<R>): boolean {
+  public canConnect<R, S extends R>(
+    src: IOPort<S>,
+    dst: IOPort<R>
+  ): CanConnectResult {
     // Immediate rule out trivial self loops.
     if (src === dst) {
-      throw Error("Source port and destination port are the same.");
+      return CanConnectResult.SELF_LOOP;
     }
 
     // Check the race condition
@@ -1103,7 +1134,7 @@ export abstract class Reactor extends Component {
     //     in addReaction)
     const deps = this._dependencyGraph.getUpstreamNeighbors(dst); // FIXME this will change with multiplex ports
     if (deps !== undefined && deps.size > 0) {
-      throw Error("Destination port is already occupied.");
+      return CanConnectResult.DESTINATION_OCCUPIED;
     }
 
     if (!this._runtime.isRunning()) {
@@ -1115,10 +1146,13 @@ export abstract class Reactor extends Component {
       // Rule out write conflicts.
       //   - (between reactors)
       if (this._dependencyGraph.getDownstreamNeighbors(dst).size > 0) {
-        return false;
+        return CanConnectResult.DOWNSTREAM_WRITE_CONFLICT;
       }
 
-      return this._isInScope(src, dst);
+      if (!this._isInScope(src, dst)) {
+        return CanConnectResult.NOT_IN_SCOPE;
+      }
+      return CanConnectResult.SUCCESS;
     } else {
       // Attempt to make a connection while executing.
       // Check the local dependency graph to figure out whether this change
@@ -1132,40 +1166,27 @@ export abstract class Reactor extends Component {
         src._isContainedBy(this) &&
         dst._isContainedBy(this)
       ) {
-        throw Error("New connection is outside of container.");
+        return CanConnectResult.RT_CONNECTION_OUTSIDE_CONTAINER;
       }
 
-      // Take the local graph and merge in all the causality interfaces
-      // of contained reactors. Then:
-      const graph = new PrecedenceGraph<Port<unknown> | Reaction<Variable[]>>();
-      graph.addAll(this._dependencyGraph);
+      /**
+       * TODO (axmmisaka): The following code is commented for multiple reasons:
+       * The causality interface check is not fully implemented so new checks are failing
+       * Second, direct feedthrough itself would not cause any problem *per se*.
+       * To ensure there is no cycle, the safest way is to check against the global dependency graph.
+       */
 
-      for (const r of this._getOwnReactors()) {
-        graph.addAll(r._getCausalityInterface());
+      let app = this as Reactor;
+      while (app._getContainer() !== app) {
+        app = app._getContainer();
       }
-
-      // Add the new edge.
+      const graph = app._getPrecedenceGraph();
       graph.addEdge(src, dst);
-
-      // 1) check for loops
-      const hasCycle = graph.hasCycle();
-
-      // 2) check for direct feed through.
-      // FIXME: This doesn't handle while direct feed thorugh cases.
-      let hasDirectFeedThrough = false;
-      if (src instanceof InPort && dst instanceof OutPort) {
-        hasDirectFeedThrough = dst.getContainer() === src.getContainer();
-      }
-      // Throw error cases
-      if (hasDirectFeedThrough && hasCycle) {
-        throw Error("New connection introduces direct feed through and cycle.");
-      } else if (hasCycle) {
-        throw Error("New connection introduces cycle.");
-      } else if (hasDirectFeedThrough) {
-        throw Error("New connection introduces direct feed through.");
+      if (graph.hasCycle()) {
+        return CanConnectResult.RT_CYCLE;
       }
 
-      return true;
+      return CanConnectResult.SUCCESS;
     }
   }
 
@@ -1259,11 +1280,14 @@ export abstract class Reactor extends Component {
     if (dst === undefined || dst === null) {
       throw new Error("Cannot connect unspecified destination");
     }
-    if (this.canConnect(src, dst)) {
-      this._uncheckedConnect(src, dst);
-    } else {
-      throw new Error(`ERROR connecting ${src} to ${dst}`);
+    const canConnectResult = this.canConnect(src, dst);
+    // I know, this looks a bit weird. But
+    if (canConnectResult !== CanConnectResult.SUCCESS) {
+      throw new Error(
+        `ERROR connecting ${src} to ${dst}. Reason is ${canConnectResult.valueOf()}`
+      );
     }
+    this._uncheckedConnect(src, dst);
   }
 
   protected _connectMulti<R, S extends R>(
@@ -1317,7 +1341,8 @@ export abstract class Reactor extends Component {
     }
 
     for (let i = 0; i < leftPorts.length && i < rightPorts.length; i++) {
-      if (!this.canConnect(leftPorts[i], rightPorts[i])) {
+      const canConnectResult = this.canConnect(leftPorts[i], rightPorts[i]);
+      if (canConnectResult !== CanConnectResult.SUCCESS) {
         throw new Error(
           `ERROR connecting ${leftPorts[i]} 
                     to ${rightPorts[i]} 
@@ -1785,10 +1810,13 @@ interface UtilityFunctions {
 }
 
 export interface MutationSandbox extends ReactionSandbox {
-  connect: <A extends T, R, T, S extends R>(
-    src: CallerPort<A, R> | IOPort<S>,
-    dst: CalleePort<T, S> | IOPort<R>
-  ) => void;
+  connect: {
+    <R, S extends R>(src: ConnectablePort<S>, dst: ConnectablePort<R>): void;
+    <A extends T, R, T, S extends R>(
+      src: CallerPort<A, R>,
+      dst: CalleePort<T, S>
+    ): void;
+  };
 
   disconnect: <R, S extends R>(src: IOPort<S>, dst?: IOPort<R>) => void;
 

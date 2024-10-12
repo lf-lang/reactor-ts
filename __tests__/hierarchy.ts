@@ -1,4 +1,4 @@
-import {Reactor, App, InPort, OutPort} from "../src/core/internal";
+import {Reactor, App, InPort, OutPort, CanConnectResult} from "../src/core/internal";
 
 class InOut extends Reactor {
   a = new InPort<string>(this);
@@ -36,65 +36,57 @@ describe("Container to Contained", () => {
   it("testing canConnect", () => {
     expect(
       app.container.canConnect(app.container.a, app.container.contained.a)
-    ).toBe(true);
+    ).toBe(CanConnectResult.SUCCESS);
     expect(
       app.container.canConnect(app.container.contained.a, app.container.a)
-    ).toBe(false);
+    ).toBe(CanConnectResult.NOT_IN_SCOPE);
     expect(
       app.container.canConnect(
         app.container.a,
         app.container.b
       )
-    ).toBe(true);
+    ).toBe(CanConnectResult.SUCCESS);
     expect(
       app.container.canConnect(
         app.container.contained.a,
         app.container.contained.b
       )
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.canConnect(
         app.container.contained.b,
         app.container.contained.a
       )
-    ).toBe(true);
+    ).toBeFalsy();
 
     expect(
       app.container.canConnect(app.container.a, app.container.contained.b)
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.canConnect(app.container.contained.b, app.container.a)
-    ).toBe(false);
+    ).toBeTruthy();
 
     expect(
       app.container.canConnect(app.container.b, app.container.contained.a)
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.canConnect(app.container.contained.a, app.container.b)
-    ).toBe(false);
+    ).toBeTruthy();
 
     expect(
       app.container.canConnect(app.container.b, app.container.contained.b)
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.canConnect(app.container.contained.b, app.container.b)
-    ).toBe(true);
+    ).toBeFalsy();
 
-    expect(app.container.canConnect(app.container.contained.a, app.foo.a)).toBe(
-      false
-    );
-    expect(app.container.canConnect(app.container.contained.a, app.foo.b)).toBe(
-      false
-    );
-    expect(app.container.canConnect(app.foo.a, app.container.contained.a)).toBe(
-      false
-    );
-    expect(app.container.canConnect(app.foo.a, app.container.contained.a)).toBe(
-      false
-    );
+    expect(app.container.canConnect(app.container.contained.a, app.foo.a)).toBeTruthy();
+    expect(app.container.canConnect(app.container.contained.a, app.foo.b)).toBeTruthy();
+    expect(app.container.canConnect(app.foo.a, app.container.contained.a)).toBeTruthy();
+    expect(app.container.canConnect(app.foo.a, app.container.contained.a)).toBeTruthy();
 
-    expect(app.container.canConnect(app.foo.a, app.container.b)).toBe(false);
-    expect(app.container.canConnect(app.foo.a, app.container.a)).toBe(false);
+    expect(app.container.canConnect(app.foo.a, app.container.b)).toBeTruthy();
+    expect(app.container.canConnect(app.foo.a, app.container.a)).toBeTruthy();
 
     // expect(app.container.contained).toBeDefined();
 
@@ -104,49 +96,49 @@ describe("Container to Contained", () => {
         app.container.contained.containedAgain.a,
         app.container.contained.a
       )
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.contained.canConnect(
         app.container.contained.containedAgain.b,
         app.container.contained.b
       )
-    ).toBe(true);
+    ).toBeFalsy();
     expect(
       app.container.contained.canConnect(
         app.container.contained.containedAgain.a,
         app.container.a
       )
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.contained.canConnect(
         app.container.contained.containedAgain.b,
         app.container.b
       )
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.contained.canConnect(
         app.container.contained.containedAgain.a,
         app.foo.a
       )
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.contained.canConnect(
         app.container.contained.containedAgain.b,
         app.foo.b
       )
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.contained.canConnect(
         app.container.contained.containedAgain.a,
         app.foo.a
       )
-    ).toBe(false);
+    ).toBeTruthy();
     expect(
       app.container.contained.canConnect(
         app.container.contained.containedAgain.b,
         app.foo.b
       )
-    ).toBe(false);
+    ).toBeTruthy();
     // }
   });
 });

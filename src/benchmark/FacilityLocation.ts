@@ -4,7 +4,7 @@
  *
  * @author Hokeun Kim (hokeunkim@berkeley.edu)
  */
-import type {WritablePort} from "../core/internal";
+import type {IOPort} from "../core/internal";
 import {
   Log,
   TimeValue,
@@ -428,6 +428,7 @@ export class Quadrant extends Reactor {
   childrenBoundaries = new State<Box[]>(new Array<Box>());
 
   totalCost = new State<number>(0);
+  trollPort = new OutPort<ConfirmExitMsg>(this);
 
   constructor(
     parent: Reactor,
@@ -525,14 +526,19 @@ export class Quadrant extends Reactor {
         this.writable(this.toSecondChild),
         this.writable(this.toThirdChild),
         this.writable(this.toFourthChild),
-        this.writable(this.toAccumulator),
+        this.toFirstChild.asConnectable(),
+        this.toSecondChild.asConnectable(),
+        this.toThirdChild.asConnectable(),
+        this.toFourthChild.asConnectable(),
+        this.toAccumulator.asConnectable(),
         this.localFacilities,
         this.knownFacilities,
         this.maxDepthOfKnownOpenFacility,
         this.supportCustomers,
         this.hasChildren,
         this.childrenBoundaries,
-        this.totalCost
+        this.totalCost,
+        this.writable(this.trollPort)
       ],
       function (
         this,
@@ -544,20 +550,26 @@ export class Quadrant extends Reactor {
         depth,
         fromProducer,
         toProducer,
-        toFirstChild,
-        toSecondChild,
-        toThirdChild,
-        toFourthChild,
-        toAccumulator,
+        toFirstChildW,
+        toSecondChildW,
+        toThirdChildW,
+        toFourthChildW,
+        toFirstChildC,
+        toSecondChildC,
+        toThirdChildC,
+        toFourthChildC,
+        toAccumulatorC,
         localFacilities,
         knownFacilities,
         maxDepthOfKnownOpenFacility,
         supportCustomers,
         hasChildren,
         childrenBoundaries,
-        totalCost
+        totalCost,
+        trollPort
       ) {
         const thisReactor = this.getReactor();
+        const toAccumulatorUpstreams: Array<IOPort<ConfirmExitMsg>> = [];
 
         // Helper functions for mutation reaction.
         const notifyParentOfFacility = function (p: Point): void {
@@ -622,11 +634,12 @@ export class Quadrant extends Reactor {
 
           // console.log(`Children boundaries: ${childrenBoundaries.get()[0]}, ${childrenBoundaries.get()[1]}, ${childrenBoundaries.get()[2]}, ${childrenBoundaries.get()[3]}`)
           const accumulator = new Accumulator(thisReactor);
-          const toAccumulatorOfQuadrant = (
-            toAccumulator as unknown as WritablePort<Msg>
-          ).getPort();
           // Connect Accumulator's output to Quadrant's output.
-          this.connect(accumulator.toNextAccumulator, toAccumulatorOfQuadrant);
+          toAccumulatorUpstreams.push(accumulator.toNextAccumulator);
+          this.connect(
+            accumulator.toNextAccumulator.asConnectable(),
+            toAccumulatorC
+          );
 
           const firstChild = new Quadrant(
             thisReactor,
@@ -640,11 +653,11 @@ export class Quadrant extends Reactor {
             maxDepthOfKnownOpenFacility.get(),
             Point.arrayClone(supportCustomers.get())
           );
-          const toFirstChildPort = (
-            toFirstChild as unknown as WritablePort<Msg>
-          ).getPort();
-          this.connect(toFirstChildPort, firstChild.fromProducer);
-          this.connect(firstChild.toAccumulator, accumulator.fromFirstQuadrant);
+          this.connect(toFirstChildC, firstChild.fromProducer.asConnectable());
+          this.connect(
+            firstChild.toAccumulator.asConnectable(),
+            accumulator.fromFirstQuadrant.asConnectable()
+          );
 
           const secondChild = new Quadrant(
             thisReactor,
@@ -658,13 +671,13 @@ export class Quadrant extends Reactor {
             maxDepthOfKnownOpenFacility.get(),
             Point.arrayClone(supportCustomers.get())
           );
-          const toSecondChildPort = (
-            toSecondChild as unknown as WritablePort<Msg>
-          ).getPort();
-          this.connect(toSecondChildPort, secondChild.fromProducer);
           this.connect(
-            secondChild.toAccumulator,
-            accumulator.fromSecondQuadrant
+            toSecondChildC,
+            secondChild.fromProducer.asConnectable()
+          );
+          this.connect(
+            secondChild.toAccumulator.asConnectable(),
+            accumulator.fromSecondQuadrant.asConnectable()
           );
 
           const thirdChild = new Quadrant(
@@ -679,11 +692,11 @@ export class Quadrant extends Reactor {
             maxDepthOfKnownOpenFacility.get(),
             Point.arrayClone(supportCustomers.get())
           );
-          const toThirdChildPort = (
-            toThirdChild as unknown as WritablePort<Msg>
-          ).getPort();
-          this.connect(toThirdChildPort, thirdChild.fromProducer);
-          this.connect(thirdChild.toAccumulator, accumulator.fromThirdQuadrant);
+          this.connect(toThirdChildC, thirdChild.fromProducer.asConnectable());
+          this.connect(
+            thirdChild.toAccumulator.asConnectable(),
+            accumulator.fromThirdQuadrant.asConnectable()
+          );
 
           const fourthChild = new Quadrant(
             thisReactor,
@@ -697,13 +710,13 @@ export class Quadrant extends Reactor {
             maxDepthOfKnownOpenFacility.get(),
             Point.arrayClone(supportCustomers.get())
           );
-          const toFourthChildPort = (
-            toFourthChild as unknown as WritablePort<Msg>
-          ).getPort();
-          this.connect(toFourthChildPort, fourthChild.fromProducer);
           this.connect(
-            fourthChild.toAccumulator,
-            accumulator.fromFourthQuadrant
+            toFourthChildC,
+            fourthChild.fromProducer.asConnectable()
+          );
+          this.connect(
+            fourthChild.toAccumulator.asConnectable(),
+            accumulator.fromFourthQuadrant.asConnectable()
           );
 
           supportCustomers.set(new Array<Point>());
@@ -733,16 +746,16 @@ export class Quadrant extends Reactor {
                 if (childrenBoundaries.get()[i].contains(point)) {
                   switch (i) {
                     case 0:
-                      toFirstChild.set(msg);
+                      toFirstChildW.set(msg);
                       break;
                     case 1:
-                      toSecondChild.set(msg);
+                      toSecondChildW.set(msg);
                       break;
                     case 2:
-                      toThirdChild.set(msg);
+                      toThirdChildW.set(msg);
                       break;
                     case 3:
-                      toFourthChild.set(msg);
+                      toFourthChildW.set(msg);
                       break;
                   }
                   break;
@@ -754,7 +767,12 @@ export class Quadrant extends Reactor {
           case RequestExitMsg:
             if (!hasChildren.get()) {
               // No children, number of facilities will be counted on parent's side.
-              toAccumulator.set(
+              toAccumulatorUpstreams.forEach((val) => {
+                this.disconnect(val, toAccumulatorC.getPort());
+              });
+              this.connect(trollPort.getPort().asConnectable(), toAccumulatorC);
+
+              trollPort.set(
                 new ConfirmExitMsg(
                   0, // facilities
                   supportCustomers.get().length, // supportCustomers
@@ -762,10 +780,10 @@ export class Quadrant extends Reactor {
                 )
               );
             } else {
-              toFirstChild.set(msg);
-              toSecondChild.set(msg);
-              toThirdChild.set(msg);
-              toFourthChild.set(msg);
+              toFirstChildW.set(msg);
+              toSecondChildW.set(msg);
+              toThirdChildW.set(msg);
+              toFourthChildW.set(msg);
             }
             break;
           default:
