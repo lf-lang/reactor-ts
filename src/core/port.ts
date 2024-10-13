@@ -7,7 +7,8 @@ import type {
   Absent,
   MultiReadWrite,
   ReadWrite,
-  Variable
+  Variable,
+  Read
 } from "./internal";
 import {Trigger, Log} from "./internal";
 
@@ -59,6 +60,13 @@ export abstract class Port<T> extends Trigger {
   }
 }
 
+export class ConnectablePort<T> implements Read<T> {
+  public get = (): Absent => undefined;
+  public getPort = (): IOPort<T> => this.port;
+
+  constructor(public port: IOPort<T>) {}
+}
+
 /**
  * Abstract class for a writable port. It is intended as a wrapper for a
  * regular port. In addition to a get method, it also has a set method and
@@ -101,6 +109,10 @@ export abstract class IOPort<T> extends Port<T> {
     } else {
       return undefined;
     }
+  }
+
+  public asConnectable(): ConnectablePort<T> {
+    return new ConnectablePort(this);
   }
 
   /**

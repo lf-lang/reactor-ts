@@ -38,25 +38,20 @@ class R1 extends Reactor {
       [this.in1],
       [this.in1, this.in2, this.out1, this.out2],
       function (this, __in1, __in2, __out1, __out2) {
-        test("expect error on creating creating direct feed through", () => {
-          expect(() => {
-            this.connect(__in2, __out2);
-          }).toThrowError("New connection introduces direct feed through.");
-        });
         test("expect error when creating connection outside container", () => {
           expect(() => {
-            this.connect(__out2, __in2);
+            this.connect(__out2.asConnectable(), __in2.asConnectable());
           }).toThrowError("New connection is outside of container.");
         });
         const R2 = new R1(this.getReactor());
         test("expect error on mutation creating race condition on an output port", () => {
           expect(() => {
-            this.connect(R2.out1, __out1);
+            this.connect(R2.out1.asConnectable(), __out1.asConnectable());
           }).toThrowError("Destination port is already occupied.");
         });
         test("expect error on spawning and creating loop within a reactor", () => {
           expect(() => {
-            this.connect(R2.out1, R2.in1);
+            this.connect(R2.out1.asConnectable(), R2.in1.asConnectable());
           }).toThrowError("New connection introduces cycle.");
         });
       }

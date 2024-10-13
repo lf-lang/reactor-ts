@@ -46,7 +46,7 @@ class R2 extends Reactor {
       function (this, __in, __out) {
         test("expect error to be thrown", () => {
           expect(() => {
-            this.connect(__out, __in);
+            this.connect(__out.asConnectable(), __in.asConnectable());
           }).toThrowError("New connection is outside of container.");
         });
       }
