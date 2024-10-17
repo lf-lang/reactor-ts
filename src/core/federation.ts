@@ -1176,10 +1176,8 @@ class RTIClient extends EventEmitter {
 
           Log.debug(this, () => {
             return `Downstream next event tag (DNET) received from RTI for ${tag}.
-              FIXME: No functionality has been implemented yet for a federate receiving 
-              a MSG_TYPE_STOP_GRANTED message from the RTI`;
+              DNET is not yet supported in TypeScript. Ignored.`;
           });
-          // this.emit("downstreamNextEventTag", tag);
           bufferIndex += 13;
           break;
         }
