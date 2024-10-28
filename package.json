@@ -19,7 +19,7 @@
         "pino": "^9.2.0",
         "pino-pretty": "^11.2.1",
         "typescript": "^5.1.6",
-        "uuid": "^10.0.0"
+        "uuid": "^11.0.1"
     },
     "devDependencies": {
         "@types/jest": "^29.5.3",
