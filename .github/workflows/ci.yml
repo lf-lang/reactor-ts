@@ -10,7 +10,7 @@ on:
 
 jobs:
   jest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out reactor-ts repository
         uses: actions/checkout@v3
@@ -26,7 +26,7 @@ jobs:
           npm run test
 
   lingua-franca:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out reactor-ts repository
         uses: actions/checkout@v3
@@ -71,7 +71,7 @@ jobs:
           ./gradlew targetTest -Ptarget=TypeScript -Druntime="git://github.com/lf-lang/reactor-ts.git#${{ github.ref }}"
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out reactor-ts repository
         uses: actions/checkout@v3
@@ -86,7 +86,7 @@ jobs:
           npm run lint
 
   prettier: 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out reactor-ts repository
         uses: actions/checkout@v3
