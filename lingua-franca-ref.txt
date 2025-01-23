@@ -1,1 +1,1 @@
-rti-DNET
+ubuntu-24.04
