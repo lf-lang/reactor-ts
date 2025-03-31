@@ -20,7 +20,7 @@ These steps ensure that you:
 4. are creating and pushing a tag with the appropriate version number.
 
 > [!NOTE]
-> Note that `<increment>` denote the size of the version increment (typically `patch`, `minor`, or `major`). See [NPM docs](https://docs.npmjs.com/cli/v8/commands/npm-version) for more info.
+> Note that `<increment>` denotes the size of the version increment (typically `patch`, `minor`, or `major`). See [NPM docs](https://docs.npmjs.com/cli/v8/commands/npm-version) for more info.
 
 > [!NOTE]
 > `npm version` bumps the version number in `package.json`, commits the change, and then creates (and prints) the corresponding tag.
