@@ -30,3 +30,4 @@ npm run doc
 - [Lingua Franca GitHub repo](https://repo.lf-lang.org)
 - [Lingua Franca website](https://www.lf-lang.org)
 - [Reactor-ts API Docs](https://lf-lang.github.io/reactor-ts)
+- [Npm registry for reactor-ts](https://www.npmjs.com/package/@lf-lang/reactor-ts)
